@@ -1,0 +1,85 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil | TravelMate{% endblock %}
+
+{% block body %}
+    <section class="home-hero">
+        <div class="home-hero__content">
+            <div class="home-hero__text">
+                <span class="home-hero__eyebrow">Explorez autrement avec TravelMate</span>
+
+                <h1 class="home-hero__title">
+                    Organisez vos voyages,
+                    partagez vos idées,
+                    créez des souvenirs inoubliables.
+                </h1>
+
+                <p class="home-hero__description">
+                    TravelMate vous aide à planifier chaque étape de votre aventure :
+                    destinations, hébergements, activités, budgets et voyages en groupe,
+                    dans un espace simple, inspirant et agréable à utiliser.
+                </p>
+
+                <div class="home-hero__actions">
+                    <a href="{{ path('app_home') }}"{# path('app_voyages') #} class="btn btn--primary">
+                        Commencer un voyage
+                    </a>
+
+                    <a href="{{ path('app_home') }}"{# path('app_destinations') #} class="btn btn--ghost">
+                        Découvrir les destinations
+                    </a>
+                </div>
+
+                <div class="home-hero__highlights">
+                    <div class="hero-highlight">
+                        <span class="hero-highlight__icon">✈️</span>
+                        <span>Planification claire</span>
+                    </div>
+                    <div class="hero-highlight">
+                        <span class="hero-highlight__icon">🤝</span>
+                        <span>Voyages collaboratifs</span>
+                    </div>
+                    <div class="hero-highlight">
+                        <span class="hero-highlight__icon">💰</span>
+                        <span>Budgets mieux maîtrisés</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-hero__media">
+                <div class="hero-visual-card">
+                    <img
+                        src="{{ asset('images/hero-img2.jpg') }}"
+                        alt="Voyage inspirant TravelMate"
+                        class="hero-visual-card__image"
+                    >
+
+                    <div class="hero-visual-card__badge hero-visual-card__badge--top">
+                        <span>🌍</span>
+                        <div>
+                            <strong>Inspirez votre prochain départ</strong>
+                            <small>Des idées, des plans, une seule plateforme</small>
+                        </div>
+                    </div>
+
+                    <div class="hero-visual-card__badge hero-visual-card__badge--bottom">
+                        <span>📌</span>
+                        <div>
+                            <strong>Destinations, activités, budgets</strong>
+                            <small>Tout votre voyage, au même endroit</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# Ton contenu d'accueil ensuite #}
+    <section class="surface-card" style="margin-top: 2rem;">
+        <h2 style="margin-bottom: .75rem;">Bienvenue sur TravelMate</h2>
+        <p style="color: var(--color-text-muted);">
+            Ici tu peux ajouter le contenu principal de ta page d’accueil.
+        </p>
+    </section>
+{% endblock %}

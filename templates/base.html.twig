@@ -1,24 +1,1168 @@
+{# templates/base.html.twig #}
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}TravelMate{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
+    {# Polices sobres et modernes #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:wght@500;600&display=swap" rel="stylesheet">
 
-        {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
-        {% if frankenphpHotReload %}
-        <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
-        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
-        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
-        {% endif %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+    {% block stylesheets %}
+        <style>
+            :root {
+                /* Palette principale */
+                --color-bg: #f8f4ed;
+                --color-surface: #fffdf9;
+                --color-surface-soft: #f3eadf;
+                --color-border: #e7dccd;
+
+                --color-text: #1f1a17;
+                --color-text-muted: #6e6258;
+
+                --color-primary: #c46f4b;      /* terracotta */
+                --color-primary-dark: #a85a39;
+                --color-secondary: #2f7f79;    /* teal */
+                --color-secondary-soft: #e4f1ef;
+                --color-accent: #ddbf8c;       /* sable doré */
+
+                --color-hover: rgba(196, 111, 75, 0.08);
+                --color-active: rgba(196, 111, 75, 0.14);
+                --color-shadow: rgba(71, 48, 35, 0.06);
+
+                --radius-sm: 10px;
+                --radius-md: 14px;
+                --radius-lg: 18px;
+                --radius-xl: 24px;
+
+                --navbar-height: 90px;
+                --container-width: 1500px;
+
+                --transition-fast: 180ms ease;
+                --transition-base: 260ms ease;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                font-family: 'Outfit', sans-serif;
+                background:
+                    radial-gradient(circle at top right, rgba(221, 191, 140, 0.16), transparent 22%),
+                    linear-gradient(180deg, #fbf8f2 0%, var(--color-bg) 100%);
+                color: var(--color-text);
+                min-height: 100vh;
+                line-height: 1.5;
+            }
+
+            a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+            img {
+                display: block;
+                max-width: 100%;
+            }
+
+            button {
+                font: inherit;
+            }
+
+            /* =========================
+               LAYOUT GLOBAL
+            ========================== */
+            .app-shell {
+                min-height: 100vh;
+            }
+
+            .app-navbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                height: var(--navbar-height);
+                background: rgba(255, 253, 249, 0.86);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                border-bottom: 1px solid rgba(231, 220, 205, 0.9);
+            }
+
+            .app-navbar__inner {
+                max-width: var(--container-width);
+                height: 100%;
+                margin: 0 auto;
+                padding: 0 1.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+            }
+
+            .app-main {
+                padding-top: calc(var(--navbar-height) + 1.5rem);
+                min-height: 100vh;
+            }
+
+            .app-main__inner {
+                max-width: var(--container-width);
+                margin: 0 auto;
+                padding: 1.25rem;
+            }
+
+            /* =========================
+               LOGO
+            ========================== */
+            .brand {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.75rem;
+                flex-shrink: 0;
+            }
+
+            .brand__mark {
+                width: 82px;
+                height: 82px;
+                border-radius: 14px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 253, 249, 0.86);
+            }
+
+            .brand__text {
+                display: flex;
+                flex-direction: column;
+                line-height: 1.05;
+            }
+
+            .brand__title {
+                font-family: 'Fraunces', serif;
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: var(--color-primary);
+                letter-spacing: -0.02em;
+            }
+
+            .brand__subtitle {
+                font-size: 0.68rem;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--color-text-muted);
+            }
+
+            /* =========================
+               NAVIGATION
+            ========================== */
+            .nav-wrap {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                justify-content: center;
+            }
+
+            .main-nav {
+                display: flex;
+                align-items: center;
+                gap: 0.35rem;
+                padding: 0.35rem;
+                background: rgba(243, 234, 223, 0.7);
+                border: 1px solid rgba(231, 220, 205, 0.85);
+                border-radius: 999px;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+
+            .main-nav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .main-nav__link {
+                white-space: nowrap;
+                padding: 0.72rem 1rem;
+                border-radius: 999px;
+                color: var(--color-text-muted);
+                font-size: 0.94rem;
+                font-weight: 500;
+                transition:
+                    background var(--transition-fast),
+                    color var(--transition-fast),
+                    transform var(--transition-fast);
+            }
+
+            .main-nav__link:hover {
+                background: var(--color-hover);
+                color: var(--color-primary);
+            }
+
+            .main-nav__link.is-active {
+                background: var(--color-primary);
+                color: #fff;
+            }
+
+            /* =========================
+               ACTIONS DROITE
+            ========================== */
+            .navbar-actions {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                flex-shrink: 0;
+            }
+
+            .icon-button {
+                position: relative;
+                width: 44px;
+                height: 44px;
+                border: 1px solid var(--color-border);
+                border-radius: 14px;
+                background: var(--color-surface);
+                color: var(--color-text-muted);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition:
+                    background var(--transition-fast),
+                    border-color var(--transition-fast),
+                    color var(--transition-fast),
+                    transform var(--transition-fast);
+                cursor: pointer;
+            }
+
+            .icon-button:hover {
+                background: var(--color-hover);
+                border-color: rgba(196, 111, 75, 0.28);
+                color: var(--color-primary);
+                transform: translateY(-1px);
+            }
+
+            .icon-button__badge {
+                position: absolute;
+                top: 7px;
+                right: 7px;
+                min-width: 18px;
+                height: 18px;
+                padding: 0 5px;
+                border-radius: 999px;
+                background: var(--color-primary);
+                color: #fff;
+                font-size: 0.68rem;
+                font-weight: 700;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid var(--color-surface);
+            }
+
+            /* =========================
+               MENU PROFIL
+            ========================== */
+            .profile-menu {
+                position: relative;
+            }
+
+            .profile-menu__trigger {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.35rem 0.45rem 0.35rem 0.35rem;
+                background: var(--color-surface);
+                border: 1px solid var(--color-border);
+                border-radius: 999px;
+                cursor: pointer;
+                transition:
+                    background var(--transition-fast),
+                    border-color var(--transition-fast),
+                    transform var(--transition-fast);
+            }
+
+            .profile-menu__trigger:hover {
+                background: var(--color-hover);
+                border-color: rgba(196, 111, 75, 0.28);
+                transform: translateY(-1px);
+            }
+
+            .profile-menu__avatar {
+                width: 42px;
+                height: 42px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid rgba(196, 111, 75, 0.16);
+                background: var(--color-surface-soft);
+            }
+
+            .profile-menu__meta {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                line-height: 1.15;
+            }
+
+            .profile-menu__name {
+                font-size: 0.92rem;
+                font-weight: 600;
+                color: var(--color-text);
+            }
+
+            .profile-menu__role {
+                font-size: 0.76rem;
+                color: var(--color-text-muted);
+            }
+
+            .profile-menu__chevron {
+                color: var(--color-text-muted);
+                transition: transform var(--transition-fast);
+            }
+
+            .profile-menu:hover .profile-menu__chevron,
+            .profile-menu:focus-within .profile-menu__chevron {
+                transform: rotate(180deg);
+            }
+
+            .profile-dropdown {
+                position: absolute;
+                top: calc(100% + 0.75rem);
+                right: 0;
+                width: 260px;
+                padding: 0.85rem;
+                background: rgba(255, 253, 249, 0.98);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-lg);
+                box-shadow: 0 16px 36px var(--color-shadow);
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(8px);
+                transition:
+                    opacity var(--transition-base),
+                    transform var(--transition-base),
+                    visibility var(--transition-base);
+            }
+
+            .profile-menu:hover .profile-dropdown,
+            .profile-menu:focus-within .profile-dropdown {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
+
+            .profile-dropdown__header {
+                padding: 0.35rem 0.35rem 0.85rem;
+                border-bottom: 1px solid var(--color-border);
+                margin-bottom: 0.65rem;
+            }
+
+            .profile-dropdown__title {
+                font-weight: 600;
+                color: var(--color-text);
+                font-size: 0.95rem;
+            }
+
+            .profile-dropdown__text {
+                color: var(--color-text-muted);
+                font-size: 0.82rem;
+                margin-top: 0.15rem;
+            }
+
+            .profile-dropdown__link {
+                display: flex;
+                align-items: center;
+                gap: 0.65rem;
+                padding: 0.8rem 0.85rem;
+                border-radius: 12px;
+                color: var(--color-text-muted);
+                transition:
+                    background var(--transition-fast),
+                    color var(--transition-fast);
+            }
+
+            .profile-dropdown__link:hover {
+                background: var(--color-hover);
+                color: var(--color-primary);
+            }
+
+            .profile-dropdown__footer {
+                margin-top: 0.65rem;
+                padding-top: 0.65rem;
+                border-top: 1px solid var(--color-border);
+            }
+
+            .profile-dropdown__logout {
+                display: flex;
+                align-items: center;
+                gap: 0.65rem;
+                width: 100%;
+                padding: 0.85rem;
+                border: 0;
+                border-radius: 12px;
+                background: rgba(196, 111, 75, 0.08);
+                color: var(--color-primary-dark);
+                font-weight: 600;
+                transition:
+                    background var(--transition-fast),
+                    transform var(--transition-fast);
+                cursor: pointer;
+            }
+
+            .profile-dropdown__logout:hover {
+                background: rgba(196, 111, 75, 0.14);
+                transform: translateY(-1px);
+            }
+
+            /* =========================
+               BOUTONS GLOBAUX
+            ========================== */
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                padding: 0.82rem 1.1rem;
+                border-radius: 999px;
+                border: 1px solid transparent;
+                background: var(--color-surface);
+                color: var(--color-text);
+                font-weight: 500;
+                transition:
+                    background var(--transition-fast),
+                    border-color var(--transition-fast),
+                    color var(--transition-fast),
+                    transform var(--transition-fast);
+                cursor: pointer;
+            }
+
+            .btn:hover {
+                transform: translateY(-1px);
+            }
+
+            .btn--primary {
+                background: var(--color-primary);
+                color: #fff;
+            }
+
+            .btn--primary:hover {
+                background: var(--color-primary-dark);
+            }
+
+            .btn--secondary {
+                background: var(--color-secondary-soft);
+                color: var(--color-secondary);
+                border-color: rgba(47, 127, 121, 0.18);
+            }
+
+            .btn--ghost {
+                background: transparent;
+                color: var(--color-text-muted);
+                border-color: var(--color-border);
+            }
+
+            .btn--ghost:hover {
+                color: var(--color-primary);
+                border-color: rgba(196, 111, 75, 0.28);
+                background: var(--color-hover);
+            }
+
+            /* =========================
+               CARTES / SURFACES DE BASE
+            ========================== */
+            .surface-card {
+                background: rgba(255, 253, 249, 0.92);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-xl);
+                padding: 1.5rem;
+            }
+
+            /* =========================
+               RESPONSIVE
+            ========================== */
+            @media (max-width: 1180px) {
+                .app-navbar__inner {
+                    gap: 0.75rem;
+                }
+
+                .profile-menu__meta {
+                    display: none;
+                }
+
+                .main-nav__link {
+                    padding-inline: 0.9rem;
+                    font-size: 0.9rem;
+                }
+            }
+
+            @media (max-width: 960px) {
+                .app-navbar {
+                    height: auto;
+                    min-height: var(--navbar-height);
+                }
+
+                .app-navbar__inner {
+                    min-height: var(--navbar-height);
+                    padding-block: 0.9rem;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+
+                .nav-wrap {
+                    order: 3;
+                    flex: 0 0 100%;
+                    justify-content: flex-start;
+                }
+
+                .main-nav {
+                    width: 100%;
+                    border-radius: 18px;
+                    padding: 0.4rem;
+                }
+
+                .app-main {
+                    padding-top: 9.5rem;
+                }
+            }
+
+            @media (max-width: 640px) {
+                :root {
+                    --navbar-height: 72px;
+                }
+
+                .app-navbar__inner,
+                .app-main__inner {
+                    padding-left: 1rem;
+                    padding-right: 1rem;
+                }
+
+                .brand__subtitle {
+                    display: none;
+                }
+
+                .navbar-actions {
+                    gap: 0.5rem;
+                }
+
+                .profile-menu__trigger {
+                    padding-right: 0.35rem;
+                }
+
+                .profile-menu__chevron {
+                    display: none;
+                }
+
+                .main-nav__link {
+                    font-size: 0.88rem;
+                    padding: 0.78rem 0.9rem;
+                }
+
+                .profile-dropdown {
+                    right: 0;
+                    width: min(88vw, 260px);
+                }
+
+                .app-main {
+                    padding-top: 9.25rem;
+                }
+            }
+
+
+            /* =========================
+            HERO ACCUEIL
+            ========================== */
+            .home-hero {
+                padding: 2rem 0 1rem;
+            }
+
+            .home-hero__content {
+                display: grid;
+                grid-template-columns: 1.1fr 0.9fr;
+                gap: 2rem;
+                align-items: center;
+                background: linear-gradient(135deg, rgba(255, 253, 249, 0.96), rgba(243, 234, 223, 0.9));
+                border: 1px solid var(--color-border);
+                border-radius: 32px;
+                padding: 2.2rem;
+                overflow: hidden;
+                position: relative;
+            }
+
+            .home-hero__content::before {
+                content: "";
+                position: absolute;
+                top: -80px;
+                right: -80px;
+                width: 220px;
+                height: 220px;
+                border-radius: 50%;
+                background: rgba(196, 111, 75, 0.08);
+            }
+
+            .home-hero__content::after {
+                content: "";
+                position: absolute;
+                bottom: -70px;
+                left: 35%;
+                width: 180px;
+                height: 180px;
+                border-radius: 50%;
+                background: rgba(47, 127, 121, 0.08);
+            }
+
+            .home-hero__text,
+            .home-hero__media {
+                position: relative;
+                z-index: 1;
+            }
+
+            .home-hero__eyebrow {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.45rem 0.9rem;
+                border-radius: 999px;
+                background: rgba(196, 111, 75, 0.1);
+                color: var(--color-primary);
+                font-size: 0.86rem;
+                font-weight: 600;
+                margin-bottom: 1rem;
+            }
+
+            .home-hero__title {
+                font-family: 'Fraunces', serif;
+                font-size: clamp(2rem, 4vw, 4rem);
+                line-height: 1.06;
+                letter-spacing: -0.03em;
+                color: var(--color-text);
+                margin-bottom: 1rem;
+                max-width: 11ch;
+            }
+
+            .home-hero__description {
+                font-size: 1rem;
+                color: var(--color-text-muted);
+                max-width: 58ch;
+                margin-bottom: 1.5rem;
+            }
+
+            .home-hero__actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.85rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .home-hero__highlights {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+
+            .hero-highlight {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.55rem;
+                padding: 0.7rem 0.95rem;
+                border-radius: 999px;
+                background: rgba(255, 253, 249, 0.82);
+                border: 1px solid var(--color-border);
+                color: var(--color-text-muted);
+                font-size: 0.9rem;
+            }
+
+            .hero-highlight__icon {
+                font-size: 1rem;
+            }
+
+            .hero-visual-card {
+                position: relative;
+                max-width: 520px;
+                margin-left: auto;
+                border-radius: 28px;
+                overflow: hidden;
+            }
+
+            .hero-visual-card__image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .hero-visual-card__badge {
+                position: absolute;
+                display: flex;
+                align-items: flex-start;
+                gap: 0.8rem;
+                background: rgba(255, 253, 249, 0.92);
+                border: 1px solid rgba(231, 220, 205, 0.92);
+                border-radius: 18px;
+                padding: 0.9rem 1rem;
+                box-shadow: 0 10px 30px rgba(71, 48, 35, 0.08);
+                max-width: 280px;
+            }
+
+            .hero-visual-card__badge strong {
+                display: block;
+                font-size: 0.92rem;
+                color: var(--color-text);
+                margin-bottom: 0.18rem;
+            }
+
+            .hero-visual-card__badge small {
+                display: block;
+                color: var(--color-text-muted);
+                line-height: 1.35;
+                font-size: 0.78rem;
+            }
+
+            .hero-visual-card__badge--top {
+                top: 1rem;
+                left: 1rem;
+            }
+
+            .hero-visual-card__badge--bottom {
+                right: 1rem;
+                bottom: 1rem;
+            }
+
+            /* =========================
+            FOOTER
+            ========================== */
+            .site-footer {
+                margin-top: 4rem;
+                padding: 2rem 0 1.25rem;
+            }
+
+            .site-footer__inner {
+                max-width: var(--container-width);
+                margin: 0 auto;
+                padding: 0 1.25rem;
+            }
+
+            .site-footer__grid {
+                display: grid;
+                grid-template-columns: 1.3fr 0.8fr 0.8fr 1fr;
+                gap: 2rem;
+                padding: 2rem 0;
+                border-top: 1px solid var(--color-border);
+            }
+
+            .brand--footer {
+                margin-bottom: 1rem;
+            }
+
+            .site-footer__tagline,
+            .site-footer__text {
+                color: var(--color-text-muted);
+                max-width: 34ch;
+                font-size: 0.95rem;
+            }
+
+            .site-footer__heading {
+                font-size: 1rem;
+                margin-bottom: 1rem;
+                color: var(--color-text);
+                font-weight: 700;
+            }
+
+            .site-footer__links {
+                list-style: none;
+                display: grid;
+                gap: 0.7rem;
+            }
+
+            .site-footer__links a {
+                color: var(--color-text-muted);
+                transition: color var(--transition-fast);
+            }
+
+            .site-footer__links a:hover {
+                color: var(--color-primary);
+            }
+
+            .site-footer__socials {
+                display: flex;
+                gap: 0.75rem;
+                margin: 1rem 0 1.1rem;
+            }
+
+            .social-link {
+                width: 42px;
+                height: 42px;
+                border-radius: 50%;
+                border: 1px solid var(--color-border);
+                background: var(--color-surface);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--color-text-muted);
+                font-size: 0.8rem;
+                font-weight: 700;
+                transition: all var(--transition-fast);
+            }
+
+            .social-link:hover {
+                color: var(--color-primary);
+                border-color: rgba(196, 111, 75, 0.28);
+                background: var(--color-hover);
+                transform: translateY(-1px);
+            }
+
+            .site-footer__apps {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+
+            .store-badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 124px;
+                padding: 0.78rem 1rem;
+                border-radius: 999px;
+                background: var(--color-surface-soft);
+                border: 1px solid var(--color-border);
+                color: var(--color-text);
+                font-size: 0.88rem;
+                font-weight: 600;
+                transition: all var(--transition-fast);
+            }
+
+            .store-badge:hover {
+                background: var(--color-hover);
+                color: var(--color-primary);
+            }
+
+            .site-footer__bottom {
+                padding-top: 1.25rem;
+                border-top: 1px solid var(--color-border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                color: var(--color-text-muted);
+                font-size: 0.88rem;
+            }
+
+            .site-footer__bottom-links {
+                display: flex;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .site-footer__bottom-links a {
+                color: var(--color-text-muted);
+            }
+
+            .site-footer__bottom-links a:hover {
+                color: var(--color-primary);
+            }
+
+            /* =========================
+            RESPONSIVE
+            ========================== */
+            @media (max-width: 980px) {
+                .home-hero__content {
+                    grid-template-columns: 1fr;
+                }
+
+                .home-hero__title {
+                    max-width: 100%;
+                }
+
+                .hero-visual-card {
+                    margin: 0 auto;
+                }
+
+                .site-footer__grid {
+                    grid-template-columns: 1fr 1fr;
+                }
+            }
+
+            @media (max-width: 640px) {
+                .home-hero__content {
+                    padding: 1.4rem;
+                    border-radius: 24px;
+                }
+
+                .hero-visual-card__image {
+                    height: 360px;
+                }
+
+                .hero-visual-card__badge {
+                    position: static;
+                    max-width: 100%;
+                    margin: 0.85rem;
+                }
+
+                .site-footer__grid {
+                    grid-template-columns: 1fr;
+                    gap: 1.5rem;
+                }
+
+                .site-footer__bottom {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+            }
+        </style>
+    {% endblock %}
+</head>
+<body>
+<div class="app-shell">
+    {# -----------------------------------------
+       Configuration simple des items de menu
+       Adapte les routes Symfony selon ton projet
+    ------------------------------------------ #}
+    {% set currentRoute = app.request.attributes.get('_route') %}
+    {% set navItems = [
+        { label: 'Accueil',        route: 'app_home' },
+        { label: 'Destinations',   route: 'app_destinations' },
+        { label: 'Hébergements',   route: 'app_hebergements' },
+        { label: 'Catégories',     route: 'app_categories' },
+        { label: 'Activités',      route: 'app_activites' },
+        { label: 'Voyages',        route: 'app_voyages' },
+        { label: 'Budgets',        route: 'app_budgets' }
+    ] %}
+
+    <header class="app-navbar">
+        <div class="app-navbar__inner">
+            {# Logo #}
+            <a href="{{ path('app_home') }}" class="brand" aria-label="Aller à l'accueil TravelMate">
+                <span class="brand__mark" aria-hidden="true">
+                {# Image located in travelmate_web/assets/images/logo.png #}
+                <img src="{{ asset('images/logo.png') }}" alt="Logo">
+                    
+                </span>
+
+                <span class="brand__text">
+                    <span class="brand__title">TravelMate</span>
+                    <span class="brand__subtitle">voyages collaboratifs</span>
+                </span>
+            </a>
+
+            {# Navigation principale #}
+            <div class="nav-wrap">
+                <nav class="main-nav" aria-label="Navigation principale">
+                    {% for item in navItems %}
+                        <a
+                            href="{{ path('app_home') }}" {# path(item.route) #}
+                            class="main-nav__link {{ currentRoute == item.route ? 'is-active' : '' }}"
+                        >
+                            {{ item.label }}
+                        </a>
+                    {% endfor %}
+                </nav>
+            </div>
+
+            {# Actions à droite #}
+            <div class="navbar-actions">
+                {# Notifications #}
+                <button class="icon-button" type="button" aria-label="Notifications">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M15 18H9M17 8C17 5.23858 14.7614 3 12 3C9.23858 3 7 5.23858 7 8V10.7639C7 11.4233 6.87041 12.0763 6.61803 12.6851L5.16568 16.1894C4.75614 17.1774 5.48244 18.25 6.55104 18.25H17.449C18.5176 18.25 19.2439 17.1774 18.8343 16.1894L17.382 12.6851C17.1296 12.0763 17 11.4233 17 10.7639V8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="icon-button__badge">3</span>
+                </button>
+
+                {# Profil #}
+                <div class="profile-menu">
+                    <button class="profile-menu__trigger" type="button" aria-label="Ouvrir le menu profil">
+                        <img
+                            class="profile-menu__avatar"
+                            src="{{ asset('images/profile-default.png') }}"
+                            alt="Photo de profil"
+                        >
+
+                        <span class="profile-menu__meta">
+                            <span class="profile-menu__name">
+                                {{ app.user ? app.user.userIdentifier : 'Mon profil' }}
+                            </span>
+                            <span class="profile-menu__role">Voyageur</span>
+                        </span>
+
+                        <span class="profile-menu__chevron" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                    </button>
+
+                    <div class="profile-dropdown">
+                        <div class="profile-dropdown__header">
+                            <div class="profile-dropdown__title">
+                                {{ app.user ? app.user.userIdentifier : 'Compte utilisateur' }}
+                            </div>
+                            <div class="profile-dropdown__text">
+                                Gérez votre espace TravelMate
+                            </div>
+                        </div>
+
+                        <a href="{{ path('app_home') }}" {# path('app_profile') #} class="profile-dropdown__link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M4 21C4 17.6863 7.58172 15 12 15C16.4183 15 20 17.6863 20 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            </svg>
+                            <span>Voir mon profil</span>
+                        </a>
+
+                        <a href="{{ path('app_home') }}" {# path('app_settings') #} class="profile-dropdown__link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 8.75C10.2051 8.75 8.75 10.2051 8.75 12C8.75 13.7949 10.2051 15.25 12 15.25C13.7949 15.25 15.25 13.7949 15.25 12C15.25 10.2051 13.7949 8.75 12 8.75Z" stroke="currentColor" stroke-width="1.7"/>
+                                <path d="M19.4 15C19.2667 15.3 19.1667 15.6167 19.1 15.95L20.35 17.25L17.25 20.35L15.95 19.1C15.6167 19.1667 15.3 19.2667 15 19.4L14.5 21H9.5L9 19.4C8.7 19.2667 8.38333 19.1667 8.05 19.1L6.75 20.35L3.65 17.25L4.9 15.95C4.83333 15.6167 4.73333 15.3 4.6 15L3 14.5V9.5L4.6 9C4.73333 8.7 4.83333 8.38333 4.9 8.05L3.65 6.75L6.75 3.65L8.05 4.9C8.38333 4.83333 8.7 4.73333 9 4.6L9.5 3H14.5L15 4.6C15.3 4.73333 15.6167 4.83333 15.95 4.9L17.25 3.65L20.35 6.75L19.1 8.05C19.1667 8.38333 19.2667 8.7 19.4 9L21 9.5V14.5L19.4 15Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Paramètres</span>
+                        </a>
+
+                        <div class="profile-dropdown__footer">
+                            <a href="{{ path('app_home') }}" {# path('app_logout') #} class="profile-dropdown__logout">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M15 17L20 12L15 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M20 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M12 20H6C4.89543 20 4 19.1046 4 18V6C4 4.89543 4.89543 4 6 4H12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                <span>Se déconnecter</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="app-main__inner">
+
+            {% if app.request.attributes.get('_route') == 'app_home' %}
+                <section class="home-hero">
+                    <div class="home-hero__content">
+                        <div class="home-hero__text">
+                            <span class="home-hero__eyebrow">Explorez autrement avec TravelMate</span>
+
+                            <h1 class="home-hero__title">
+                                Planifiez vos voyages avec envie, simplicité et liberté.
+                            </h1>
+
+                            <p class="home-hero__description">
+                                Trouvez l’inspiration, organisez vos séjours, collaborez avec vos proches
+                                et gardez chaque idée de voyage dans un espace clair et agréable.
+                            </p>
+
+                            <div class="home-hero__actions">
+                                <a href="{{ path('app_home') }}"{# path('app_voyages') #} class="btn btn--primary">
+                                    Créer mon voyage
+                                </a>
+                                <a href="{{ path('app_home') }}"{# path('app_destinations') #} class="btn btn--ghost">
+                                    Explorer
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="home-hero__media">
+                            <div class="hero-visual-card">
+                                <img
+                                    src="{{ asset('images/hero-img1.png') }}"
+                                    alt="TravelMate inspiration voyage"
+                                    class="hero-visual-card__image"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            {% endif %}
+
+            {% block body %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <div class="site-footer__grid">
+                <div class="site-footer__brand">
+                    <a href="{{ path('app_home') }}" class="brand brand--footer">
+                        <span class="brand__mark" aria-hidden="true">
+                            {# Image located in travelmate_web/assets/images/logo.png #}
+                            <img src="{{ asset('images/logo.png') }}" alt="Logo">
+                                
+                        </span>
+
+                        <span class="brand__text">
+                            <span class="brand__title">TravelMate</span>
+                            <span class="brand__subtitle">voyages collaboratifs</span>
+                        </span>
+                    </a>
+
+                    <p class="site-footer__tagline">
+                        Préparez vos voyages plus sereinement, collaborez facilement et gardez
+                        le contrôle sur chaque détail de votre aventure.
+                    </p>
+                </div>
+
+                <div class="site-footer__column">
+                    <h3 class="site-footer__heading">Plateforme</h3>
+                    <ul class="site-footer__links">
+                        <li><a href="{{ path('app_home') }}">Accueil</a></li>
+                        <li><a href="{{ path('app_home') }}"{# path('app_destinations') #}>Destinations</a></li>
+                        <li><a href="{{ path('app_home') }}"{# path('app_hebergements') #}>Hébergements</a></li>
+                        <li><a href="{{ path('app_home') }}"{# path('app_activites') #}>Activités</a></li>
+                    </ul>
+                </div>
+
+                <div class="site-footer__column">
+                    <h3 class="site-footer__heading">Organisation</h3>
+                    <ul class="site-footer__links">
+                        <li><a href="{{ path('app_home') }}"{# path('app_voyages') #}>Voyages</a></li>
+                        <li><a href="{{ path('app_home') }}"{# path('app_budgets') #}>Budgets</a></li>
+                        <li><a href="{{ path('app_home') }}"{# path('app_categories') #}>Catégories</a></li>
+                        <li><a href="{{ path('app_home') }}"{# path('app_profile') #}>Mon profil</a></li>
+                    </ul>
+                </div>
+
+                <div class="site-footer__column">
+                    <h3 class="site-footer__heading">Restez connectés</h3>
+
+                    <p class="site-footer__text">
+                        Suivez TravelMate et trouvez l’inspiration pour votre prochaine escapade.
+                    </p>
+
+                    <div class="site-footer__socials">
+                        <a href="#" class="social-link" aria-label="Instagram">
+                            <span>IG</span>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Facebook">
+                            <span>FB</span>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Twitter">
+                            <span>X</span>
+                        </a>
+                    </div>
+
+                    <div class="site-footer__apps">
+                        <a href="#" class="store-badge">App Store</a>
+                        <a href="#" class="store-badge">Google Play</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="site-footer__bottom">
+                <p>© {{ "now"|date("Y") }} TravelMate. Tous droits réservés.</p>
+                <div class="site-footer__bottom-links">
+                    <a href="#">Confidentialité</a>
+                    <a href="#">Conditions</a>
+                    <a href="#">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+{% block javascripts %}{% endblock %}
+</body>
 </html>
