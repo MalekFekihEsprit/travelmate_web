@@ -6,7 +6,6 @@ use App\Entity\Etape;
 use App\Entity\Itineraire;
 use App\Repository\EtapeRepository;
 use App\Repository\ItineraireRepository;
-use App\Repository\ActiviteRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -68,7 +67,7 @@ class EtapeFController extends AbstractController
     public function create(
         Request $request,
         ItineraireRepository $itineraireRepository,
-        ActiviteRepository $activiteRepository,
+        EtapeRepository $etapeRepository,
         EntityManagerInterface $entityManager
     ): Response {
         $itineraireId = $request->query->get('itineraireId');
@@ -93,9 +92,15 @@ class EtapeFController extends AbstractController
             }
 
             if (!empty($data['id_activite'])) {
-                $activite = $activiteRepository->find($data['id_activite']);
-                if ($activite) {
-                    $etape->setActivite($activite);
+                $voyage = $itineraire->getVoyage();
+                if ($voyage) {
+                    // Récupérer l'activité depuis les activités du voyage
+                    foreach ($voyage->getActivites() as $activite) {
+                        if ($activite->getId() == $data['id_activite']) {
+                            $etape->setActivite($activite);
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -110,7 +115,31 @@ class EtapeFController extends AbstractController
             ]);
         }
 
-        $activites = $activiteRepository->findAll();
+        // Récupérer les activités du voyage
+        $activites = [];
+        if ($itineraire->getVoyage()) {
+            $allActivites = $itineraire->getVoyage()->getActivites();
+            
+            // Récupérer les étapes du jour pour exclure les activités déjà utilisées
+            $etapesDuJour = $etapeRepository->findBy([
+                'itineraire' => $itineraire,
+                'numero_jour' => (int)$jour
+            ]);
+            
+            $activitesUtilisees = [];
+            foreach ($etapesDuJour as $etape) {
+                if ($etape->getActivite()) {
+                    $activitesUtilisees[] = $etape->getActivite()->getId();
+                }
+            }
+            
+            // Filtrer les activités pour exclure celles déjà utilisées
+            foreach ($allActivites as $activite) {
+                if (!in_array($activite->getId(), $activitesUtilisees)) {
+                    $activites[] = $activite;
+                }
+            }
+        }
 
         return $this->render('home/etape_form.html.twig', [
             'etape' => null,
@@ -126,7 +155,6 @@ class EtapeFController extends AbstractController
         int $id,
         Request $request,
         EtapeRepository $etapeRepository,
-        ActiviteRepository $activiteRepository,
         EntityManagerInterface $entityManager
     ): Response {
         $etape = $etapeRepository->find($id);
@@ -146,10 +174,18 @@ class EtapeFController extends AbstractController
             }
 
             if (!empty($data['id_activite'])) {
-                $activite = $activiteRepository->find($data['id_activite']);
-                if ($activite) {
-                    $etape->setActivite($activite);
+                $voyage = $etape->getItineraire()->getVoyage();
+                if ($voyage) {
+                    // Récupérer l'activité depuis les activités du voyage
+                    foreach ($voyage->getActivites() as $activite) {
+                        if ($activite->getId() == $data['id_activite']) {
+                            $etape->setActivite($activite);
+                            break;
+                        }
+                    }
                 }
+            } else {
+                $etape->setActivite(null);
             }
 
             $entityManager->flush();
@@ -161,7 +197,32 @@ class EtapeFController extends AbstractController
             ]);
         }
 
-        $activites = $activiteRepository->findAll();
+        // Récupérer les activités du voyage
+        $activites = [];
+        if ($etape->getItineraire()->getVoyage()) {
+            $allActivites = $etape->getItineraire()->getVoyage()->getActivites();
+            
+            // Récupérer les étapes du jour pour exclure les activités déjà utilisées
+            $etapesDuJour = $etapeRepository->findBy([
+                'itineraire' => $etape->getItineraire(),
+                'numero_jour' => $etape->getNumero_jour()
+            ]);
+            
+            $activitesUtilisees = [];
+            foreach ($etapesDuJour as $autreEtape) {
+                // Exclure l'activité de l'étape en cours d'édition
+                if ($autreEtape->getId_etape() !== $id && $autreEtape->getActivite()) {
+                    $activitesUtilisees[] = $autreEtape->getActivite()->getId();
+                }
+            }
+            
+            // Filtrer les activités pour exclure celles déjà utilisées
+            foreach ($allActivites as $activite) {
+                if (!in_array($activite->getId(), $activitesUtilisees)) {
+                    $activites[] = $activite;
+                }
+            }
+        }
 
         return $this->render('home/etape_form.html.twig', [
             'etape' => $etape,

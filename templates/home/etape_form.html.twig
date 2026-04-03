@@ -220,6 +220,12 @@
                             {% endfor %}
                         </select>
                     </div>
+                {% else %}
+                    <div class="form-group">
+                        <div style="padding: 1rem; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: var(--radius-md); color: var(--color-text-muted);">
+                            ⚠️ Aucune activité disponible pour ce jour. Toutes les activités ont déjà été assignées.
+                        </div>
+                    </div>
                 {% endif %}
 
                 <!-- Jour (caché, pré-rempli) -->
