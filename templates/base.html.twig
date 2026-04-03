@@ -189,6 +189,8 @@
             }
 
             .main-nav__link {
+                display: inline-flex;
+                align-items: center;
                 white-space: nowrap;
                 padding: 0.72rem 1rem;
                 border-radius: 999px;
@@ -209,6 +211,16 @@
             .main-nav__link.is-active {
                 background: var(--color-primary);
                 color: #fff;
+            }
+
+            .main-nav__link.is-disabled {
+                opacity: 0.58;
+                cursor: default;
+            }
+
+            .main-nav__link.is-disabled:hover {
+                background: transparent;
+                color: var(--color-text-muted);
             }
 
             /* =========================
@@ -923,13 +935,13 @@
     ------------------------------------------ #}
     {% set currentRoute = app.request.attributes.get('_route') %}
     {% set navItems = [
-        { label: 'Accueil',        route: 'app_home' },
-        { label: 'Destinations',   route: 'app_destinations' },
-        { label: 'Hébergements',   route: 'app_hebergements' },
-        { label: 'Catégories',     route: 'app_categories' },
-        { label: 'Activités',      route: 'app_activites' },
-        { label: 'Voyages',        route: 'app_voyages' },
-        { label: 'Budgets',        route: 'app_budgets' }
+        { label: 'Accueil',        route: 'app_home',    href: path('app_home') },
+        { label: 'Destinations',   route: null,          href: null },
+        { label: 'Hébergements',   route: null,          href: null },
+        { label: 'Catégories',     route: null,          href: null },
+        { label: 'Activités',      route: null,          href: null },
+        { label: 'Voyages',        route: 'app_voyages', href: path('app_voyages') },
+        { label: 'Budgets',        route: null,          href: null }
     ] %}
 
     <header class="app-navbar">
@@ -952,12 +964,18 @@
             <div class="nav-wrap">
                 <nav class="main-nav" aria-label="Navigation principale">
                     {% for item in navItems %}
-                        <a
-                            href="#" {# path(item.route) #}
-                            class="main-nav__link {{ currentRoute == item.route ? 'is-active' : '' }}"
-                        >
-                            {{ item.label }}
-                        </a>
+                        {% if item.href %}
+                            <a
+                                href="{{ item.href }}"
+                                class="main-nav__link {{ currentRoute == item.route ? 'is-active' : '' }}"
+                            >
+                                {{ item.label }}
+                            </a>
+                        {% else %}
+                            <span class="main-nav__link is-disabled" aria-disabled="true">
+                                {{ item.label }}
+                            </span>
+                        {% endif %}
                     {% endfor %}
                 </nav>
             </div>
@@ -1056,7 +1074,7 @@
                             </p>
 
                             <div class="home-hero__actions">
-                                <a href="#"{# path('app_voyages') #} class="btn btn--primary">
+                                <a href="{{ path('app_voyages') }}" class="btn btn--primary">
                                     Créer mon voyage
                                 </a>
                                 <a href="#"{# path('app_destinations') #} class="btn btn--ghost">
@@ -1118,7 +1136,7 @@
                 <div class="site-footer__column">
                     <h3 class="site-footer__heading">Organisation</h3>
                     <ul class="site-footer__links">
-                        <li><a href="#"{# path('app_voyages') #}>Voyages</a></li>
+                        <li><a href="{{ path('app_voyages') }}">Voyages</a></li>
                         <li><a href="#"{# path('app_budgets') #}>Budgets</a></li>
                         <li><a href="#"{# path('app_categories') #}>Catégories</a></li>
                         <li><a href="#"{# path('app_profile') #}>Mon profil</a></li>

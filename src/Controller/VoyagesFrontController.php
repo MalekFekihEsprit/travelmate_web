@@ -2,111 +2,172 @@
 
 namespace App\Controller;
 
+use App\Entity\Voyage;
+use App\Form\VoyageType;
+use App\Repository\DestinationRepository;
+use App\Repository\VoyageRepository;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class HomeController extends AbstractController
+class VoyagesFrontController extends AbstractController
 {
-    #[Route('/voyages', name: 'app_voyages')]
-    public function voyage(): Response
+    #[Route('/voyages', name: 'app_voyages', methods: ['GET'])]
+    public function index(VoyageRepository $voyageRepository): Response
     {
-        // Données des voyages (à remplacer par vos vraies données plus tard)
-        $voyages = [
-            [
-                'id' => 1,
-                'destination' => 'Paris',
-                'pays' => 'France',
-                'continent' => 'Europe',
-                'prix' => 1200,
-                'duree' => 7,
-                'inclus' => 'Vol + Hôtel',
-                'description' => 'Découvrez la ville lumière, ses monuments emblématiques et sa gastronomie.',
-                'emoji' => '🗼',
-                'etoiles' => '⭐⭐⭐⭐⭐',
-                'gradient_start' => '#FF6B6B',
-                'gradient_end' => '#EE5A24'
-            ],
-            [
-                'id' => 2,
-                'destination' => 'Tokyo',
-                'pays' => 'Japon',
-                'continent' => 'Asie',
-                'prix' => 2500,
-                'duree' => 10,
-                'inclus' => 'Vol + Hôtel + Petit déj',
-                'description' => 'Vivez une expérience unique au Japon entre tradition et modernité.',
-                'emoji' => '🗻',
-                'etoiles' => '⭐⭐⭐⭐⭐',
-                'gradient_start' => '#4ECDC4',
-                'gradient_end' => '#2C3E50'
-            ],
-            [
-                'id' => 3,
-                'destination' => 'New York',
-                'pays' => 'USA',
-                'continent' => 'Amérique',
-                'prix' => 1800,
-                'duree' => 8,
-                'inclus' => 'Vol + Hôtel',
-                'description' => 'Explorez la ville qui ne dort jamais, ses gratte-ciels et sa culture.',
-                'emoji' => '🗽',
-                'etoiles' => '⭐⭐⭐⭐',
-                'gradient_start' => '#F7B731',
-                'gradient_end' => '#F39C12'
-            ],
-            [
-                'id' => 4,
-                'destination' => 'Rome',
-                'pays' => 'Italie',
-                'continent' => 'Europe',
-                'prix' => 950,
-                'duree' => 6,
-                'inclus' => 'Vol + Hôtel',
-                'description' => 'Plongez dans l\'histoire de la Rome antique et sa cuisine italienne.',
-                'emoji' => '🏛️',
-                'etoiles' => '⭐⭐⭐⭐⭐',
-                'gradient_start' => '#A55D35',
-                'gradient_end' => '#8B4513'
-            ],
-            [
-                'id' => 5,
-                'destination' => 'Bali',
-                'pays' => 'Indonésie',
-                'continent' => 'Asie',
-                'prix' => 1500,
-                'duree' => 9,
-                'inclus' => 'Vol + Hôtel + Transferts',
-                'description' => 'Détendez-vous sur les plus belles plages et découvrez la culture balinaise.',
-                'emoji' => '🏝️',
-                'etoiles' => '⭐⭐⭐⭐⭐',
-                'gradient_start' => '#6AB04C',
-                'gradient_end' => '#2ECC71'
-            ],
-            [
-                'id' => 6,
-                'destination' => 'Marrakech',
-                'pays' => 'Maroc',
-                'continent' => 'Afrique',
-                'prix' => 800,
-                'duree' => 5,
-                'inclus' => 'Vol + Riad',
-                'description' => 'Imprégnez-vous de l\'ambiance des souks et des jardins luxuriants.',
-                'emoji' => '🐪',
-                'etoiles' => '⭐⭐⭐⭐',
-                'gradient_start' => '#E67E22',
-                'gradient_end' => '#D35400'
-            ],
-        ];
-
-        // Pagination (pour l'instant 1 page avec tous les voyages)
-        $current_page = 1;
-        $total_pages = 1;
+        $voyages = $voyageRepository->findBy([], ['date_debut' => 'ASC', 'titre_voyage' => 'ASC']);
+        $galleryPaths = $this->getVoyageGalleryPaths();
 
         return $this->render('home/voyages.html.twig', [
             'voyages' => $voyages,
-            'current_page' => $current_page,
-            'total_pages' => $total_pages,
+            'voyage_images' => $this->buildVoyageImageMap($voyages, $galleryPaths),
+            'hero_image' => $galleryPaths !== [] ? $galleryPaths[array_rand($galleryPaths)] : null,
+            'voyage_gallery_count' => count($galleryPaths),
         ]);
+    }
+
+    #[Route('/voyages/ajouter', name: 'app_voyages_new', methods: ['GET', 'POST'])]
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        DestinationRepository $destinationRepository
+    ): Response {
+        $voyage = new Voyage();
+        $voyage->setStatut('Planifie');
+
+        $form = $this->createForm(VoyageType::class, $voyage);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($voyage);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Le voyage a ete ajoute avec succes.');
+
+            return $this->redirectToRoute('app_voyages');
+        }
+
+        return $this->render('home/voyage_form.html.twig', [
+            'form' => $form->createView(),
+            'page_title' => 'Ajouter un voyage',
+            'page_description' => 'Creez un voyage avec un formulaire controle et une mise en page coherente avec TravelMate.',
+            'submit_label' => 'Enregistrer le voyage',
+            'has_destinations' => $destinationRepository->count([]) > 0,
+        ]);
+    }
+
+    #[Route('/voyages/{id_voyage}/modifier', name: 'app_voyages_edit', requirements: ['id_voyage' => '\\d+'], methods: ['GET', 'POST'])]
+    public function edit(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        DestinationRepository $destinationRepository,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage
+    ): Response {
+        $form = $this->createForm(VoyageType::class, $voyage);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Le voyage a ete modifie avec succes.');
+
+            return $this->redirectToRoute('app_voyages');
+        }
+
+        return $this->render('home/voyage_form.html.twig', [
+            'form' => $form->createView(),
+            'page_title' => 'Modifier le voyage',
+            'page_description' => 'Mettez a jour les informations du voyage .',
+            'submit_label' => 'Mettre a jour',
+            'has_destinations' => $destinationRepository->count([]) > 0,
+        ]);
+    }
+
+    #[Route('/voyages/{id_voyage}/supprimer', name: 'app_voyages_delete', requirements: ['id_voyage' => '\\d+'], methods: ['POST'])]
+    public function delete(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage
+    ): Response {
+        if (!$this->isCsrfTokenValid('delete_voyage_'.$voyage->getIdVoyage(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'La requete de suppression est invalide.');
+
+            return $this->redirectToRoute('app_voyages');
+        }
+
+        try {
+            $entityManager->remove($voyage);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Le voyage a ete supprime avec succes.');
+        } catch (ForeignKeyConstraintViolationException) {
+            $this->addFlash('error', 'Ce voyage ne peut pas etre supprime car il est lie a d\'autres donnees.');
+        }
+
+        return $this->redirectToRoute('app_voyages');
+    }
+
+    private function getVoyageGalleryPaths(): array
+    {
+        $directory = $this->getParameter('kernel.project_dir').DIRECTORY_SEPARATOR.'assets'.DIRECTORY_SEPARATOR.'images'.DIRECTORY_SEPARATOR.'imagesVoyage';
+
+        if (!is_dir($directory)) {
+            return [];
+        }
+
+        $paths = [];
+
+        foreach (scandir($directory) ?: [] as $fileName) {
+            if (in_array($fileName, ['.', '..'], true)) {
+                continue;
+            }
+
+            $extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
+
+            if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+                continue;
+            }
+
+            $paths[] = 'images/imagesVoyage/'.$fileName;
+        }
+
+        sort($paths, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return $paths;
+    }
+
+    /**
+     * @param Voyage[] $voyages
+     * @param string[] $galleryPaths
+     *
+     * @return array<int, string>
+     */
+    private function buildVoyageImageMap(array $voyages, array $galleryPaths): array
+    {
+        if ($galleryPaths === []) {
+            return [];
+        }
+
+        $shuffledPaths = $galleryPaths;
+        shuffle($shuffledPaths);
+
+        $imageMap = [];
+        $galleryCount = count($shuffledPaths);
+
+        foreach (array_values($voyages) as $index => $voyage) {
+            $voyageId = $voyage->getIdVoyage();
+
+            if ($voyageId === null) {
+                continue;
+            }
+
+            $imageMap[$voyageId] = $shuffledPaths[$index % $galleryCount];
+        }
+
+        return $imageMap;
     }
 }

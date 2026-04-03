@@ -5,6 +5,8 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 use App\Repository\VoyageRepository;
 
@@ -12,6 +14,13 @@ use App\Repository\VoyageRepository;
 #[ORM\Table(name: 'voyage')]
 class Voyage
 {
+    public const STATUTS = [
+        'Planifie',
+        'En cours',
+        'Termine',
+        'Annule',
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -29,6 +38,13 @@ class Voyage
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'Le titre du voyage est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 120,
+        minMessage: 'Le titre doit contenir au moins {{ limit }} caracteres.',
+        maxMessage: 'Le titre ne doit pas depasser {{ limit }} caracteres.'
+    )]
     private ?string $titre_voyage = null;
 
     public function getTitre_voyage(): ?string
@@ -43,6 +59,7 @@ class Voyage
     }
 
     #[ORM\Column(type: 'datetime', nullable: false)]
+    #[Assert\NotNull(message: 'La date de debut est obligatoire.')]
     private ?\DateTimeInterface $date_debut = null;
 
     public function getDate_debut(): ?\DateTimeInterface
@@ -57,6 +74,7 @@ class Voyage
     }
 
     #[ORM\Column(type: 'datetime', nullable: false)]
+    #[Assert\NotNull(message: 'La date de fin est obligatoire.')]
     private ?\DateTimeInterface $date_fin = null;
 
     public function getDate_fin(): ?\DateTimeInterface
@@ -71,6 +89,8 @@ class Voyage
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'Le statut est obligatoire.')]
+    #[Assert\Choice(choices: self::STATUTS, message: 'Veuillez choisir un statut valide.')]
     private ?string $statut = null;
 
     public function getStatut(): ?string
@@ -86,6 +106,7 @@ class Voyage
 
     #[ORM\ManyToOne(targetEntity: Destination::class, inversedBy: 'voyages')]
     #[ORM\JoinColumn(name: 'id_destination', referencedColumnName: 'id_destination')]
+    #[Assert\NotNull(message: 'La destination est obligatoire.')]
     private ?Destination $destination = null;
 
     public function getDestination(): ?Destination
@@ -255,6 +276,11 @@ class Voyage
         return $this->id_voyage;
     }
 
+    public static function getAvailableStatuts(): array
+    {
+        return self::STATUTS;
+    }
+
     public function getTitreVoyage(): ?string
     {
         return $this->titre_voyage;
@@ -289,6 +315,20 @@ class Voyage
         $this->date_fin = $date_fin;
 
         return $this;
+    }
+
+    #[Assert\Callback]
+    public function validateDates(ExecutionContextInterface $context): void
+    {
+        if (!$this->date_debut instanceof \DateTimeInterface || !$this->date_fin instanceof \DateTimeInterface) {
+            return;
+        }
+
+        if ($this->date_fin < $this->date_debut) {
+            $context->buildViolation('La date de fin doit etre posterieure ou egale a la date de debut.')
+                ->atPath('date_fin')
+                ->addViolation();
+        }
     }
 
 }
