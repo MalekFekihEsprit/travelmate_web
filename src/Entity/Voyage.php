@@ -238,9 +238,8 @@ class Voyage
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'voyages')]
-    
-    private Collection $users;
+    #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'voyage', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $participations;
 
     public function __construct()
     {
@@ -248,7 +247,36 @@ class Voyage
         $this->itineraires = new ArrayCollection();
         $this->paiements = new ArrayCollection();
         $this->activites = new ArrayCollection();
-        $this->users = new ArrayCollection();
+        $this->participations = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, Participation>
+     */
+    public function getParticipations(): Collection
+    {
+        if (!$this->participations instanceof Collection) {
+            $this->participations = new ArrayCollection();
+        }
+
+        return $this->participations;
+    }
+
+    public function addParticipation(Participation $participation): self
+    {
+        if (!$this->getParticipations()->contains($participation)) {
+            $this->getParticipations()->add($participation);
+            $participation->setVoyage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeParticipation(Participation $participation): self
+    {
+        $this->getParticipations()->removeElement($participation);
+
+        return $this;
     }
 
     /**
@@ -256,26 +284,42 @@ class Voyage
      */
     public function getUsers(): Collection
     {
-        if (!$this->users instanceof Collection) {
-            $this->users = new ArrayCollection();
-        }
-        return $this->users;
+        return new ArrayCollection(array_values(array_filter(
+            array_map(
+                static fn (Participation $participation): ?User => $participation->getUser(),
+                $this->getParticipations()->toArray()
+            )
+        )));
     }
 
-    public function addUser(User $user): self
+    public function addUser(User $user, string $roleParticipation = Participation::DEFAULT_ROLE): self
     {
-        if (!$this->getUsers()->contains($user)) {
-            $this->getUsers()->add($user);
-            $user->addVoyage($this);
+        foreach ($this->getParticipations() as $participation) {
+            if ($participation->getUser() === $user) {
+                $participation->setRoleParticipation($roleParticipation);
+
+                return $this;
+            }
         }
+
+        $participation = (new Participation())
+            ->setUser($user)
+            ->setVoyage($this)
+            ->setRoleParticipation($roleParticipation);
+
+        $this->addParticipation($participation);
+        $user->addParticipation($participation);
 
         return $this;
     }
 
     public function removeUser(User $user): self
     {
-        if ($this->getUsers()->removeElement($user)) {
-            $user->removeVoyage($this);
+        foreach ($this->getParticipations()->toArray() as $participation) {
+            if ($participation->getUser() === $user) {
+                $this->getParticipations()->removeElement($participation);
+                $user->getParticipations()->removeElement($participation);
+            }
         }
 
         return $this;

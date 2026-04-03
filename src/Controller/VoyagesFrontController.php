@@ -2,10 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Participation;
+use App\Entity\User;
 use App\Entity\Voyage;
 use App\Form\VoyageType;
 use App\Repository\ActiviteRepository;
 use App\Repository\DestinationRepository;
+use App\Repository\ParticipationRepository;
+use App\Repository\UserRepository;
 use App\Repository\VoyageRepository;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -164,8 +168,8 @@ class VoyagesFrontController extends AbstractController
                 $voyage->removeActivite($activite);
             }
 
-            foreach ($voyage->getUsers()->toArray() as $user) {
-                $voyage->removeUser($user);
+            foreach ($voyage->getParticipations()->toArray() as $participation) {
+                $entityManager->remove($participation);
             }
 
             foreach ($voyage->getBudgets()->toArray() as $budget) {
@@ -197,6 +201,147 @@ class VoyagesFrontController extends AbstractController
         }
 
         return $this->redirectToRoute('app_voyages');
+    }
+
+    #[Route('/voyages/{id_voyage}/participants', name: 'app_voyages_participants', requirements: ['id_voyage' => '\\d+'], methods: ['GET', 'POST'])]
+    public function participants(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ParticipationRepository $participationRepository,
+        UserRepository $userRepository,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage
+    ): Response {
+        $lastEmail = trim((string) $request->request->get('email', ''));
+        $lastRole = trim((string) $request->request->get('role_participation', Participation::DEFAULT_ROLE));
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('add_participant_'.$voyage->getIdVoyage(), (string) $request->request->get('_token'))) {
+                $this->addFlash('error', 'La requete d\'ajout du participant est invalide.');
+
+                return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+            }
+
+            if ($lastEmail === '') {
+                $this->addFlash('error', 'Veuillez saisir un email valide.');
+            } elseif (!in_array($lastRole, Participation::getAvailableRoles(), true)) {
+                $this->addFlash('error', 'Le role selectionne est invalide.');
+            } else {
+                $user = $userRepository->createQueryBuilder('user')
+                    ->andWhere('LOWER(user.email) = :email')
+                    ->setParameter('email', mb_strtolower($lastEmail))
+                    ->setMaxResults(1)
+                    ->getQuery()
+                    ->getOneOrNullResult();
+
+                if (!$user instanceof User) {
+                    $this->addFlash('error', 'Aucun utilisateur n\'a ete trouve avec cet email.');
+                } else {
+                    $participation = $participationRepository->findOneBy([
+                        'user' => $user,
+                        'voyage' => $voyage,
+                    ]);
+
+                    if ($participation instanceof Participation) {
+                        $participation->setRoleParticipation($lastRole);
+                        $this->addFlash('success', 'Le participant etait deja present. Son role a ete mis a jour.');
+                    } else {
+                        $participation = (new Participation())
+                            ->setUser($user)
+                            ->setVoyage($voyage)
+                            ->setRoleParticipation($lastRole);
+
+                        $entityManager->persist($participation);
+                        $this->addFlash('success', 'Le participant a ete ajoute au voyage avec succes.');
+                    }
+
+                    $entityManager->flush();
+
+                    return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+                }
+            }
+        }
+
+        return $this->render('home/voyage_participants.html.twig', [
+            'voyage' => $voyage,
+            'participants' => $participationRepository->findByVoyageOrdered($voyage),
+            'role_options' => Participation::getAvailableRoles(),
+            'last_email' => $lastEmail,
+            'last_role' => in_array($lastRole, Participation::getAvailableRoles(), true) ? $lastRole : Participation::DEFAULT_ROLE,
+        ]);
+    }
+
+    #[Route('/voyages/{id_voyage}/participants/{userId}/modifier', name: 'app_voyages_participants_update', requirements: ['id_voyage' => '\\d+', 'userId' => '\\d+'], methods: ['POST'])]
+    public function updateParticipant(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ParticipationRepository $participationRepository,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage,
+        #[MapEntity(mapping: ['userId' => 'id'])] User $user
+    ): Response {
+        if (!$this->isCsrfTokenValid('update_participant_'.$voyage->getIdVoyage().'_'.$user->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'La requete de modification du participant est invalide.');
+
+            return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+        }
+
+        $role = trim((string) $request->request->get('role_participation', Participation::DEFAULT_ROLE));
+
+        if (!in_array($role, Participation::getAvailableRoles(), true)) {
+            $this->addFlash('error', 'Le role selectionne est invalide.');
+
+            return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+        }
+
+        $participation = $participationRepository->findOneBy([
+            'user' => $user,
+            'voyage' => $voyage,
+        ]);
+
+        if (!$participation instanceof Participation) {
+            $this->addFlash('error', 'Ce participant n\'est pas associe a ce voyage.');
+
+            return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+        }
+
+        $participation->setRoleParticipation($role);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Le role du participant a ete mis a jour avec succes.');
+
+        return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+    }
+
+    #[Route('/voyages/{id_voyage}/participants/{userId}/supprimer', name: 'app_voyages_participants_delete', requirements: ['id_voyage' => '\\d+', 'userId' => '\\d+'], methods: ['POST'])]
+    public function deleteParticipant(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ParticipationRepository $participationRepository,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage,
+        #[MapEntity(mapping: ['userId' => 'id'])] User $user
+    ): Response {
+        if (!$this->isCsrfTokenValid('delete_participant_'.$voyage->getIdVoyage().'_'.$user->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'La requete de suppression du participant est invalide.');
+
+            return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+        }
+
+        $participation = $participationRepository->findOneBy([
+            'user' => $user,
+            'voyage' => $voyage,
+        ]);
+
+        if (!$participation instanceof Participation) {
+            $this->addFlash('error', 'Ce participant n\'est pas associe a ce voyage.');
+
+            return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+        }
+
+        $entityManager->remove($participation);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Le participant a ete retire du voyage avec succes.');
+
+        return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
     }
 
     private function getVoyageGalleryPaths(): array

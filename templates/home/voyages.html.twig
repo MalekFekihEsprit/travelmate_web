@@ -364,6 +364,17 @@
             border-color: rgba(47, 127, 121, 0.32);
         }
 
+        .voyage-action--participants {
+            background: rgba(214, 169, 91, 0.12);
+            color: #8c6521;
+            border-color: rgba(214, 169, 91, 0.24);
+        }
+
+        .voyage-action--participants:hover {
+            background: rgba(214, 169, 91, 0.18);
+            border-color: rgba(214, 169, 91, 0.34);
+        }
+
         .voyage-action--delete {
             background: rgba(196, 111, 75, 0.08);
             color: var(--color-primary-dark);
@@ -554,13 +565,6 @@
         </div>
 
         <div class="voyages-toolbar">
-            <div class="voyages-toolbar__top">
-                <div>
-                    <h2 class="voyages-toolbar__title">Recherche, tri et filtres</h2>
-                    <p class="voyages-toolbar__meta">Affichage de {{ results_count }} voyage{% if results_count > 1 %}s{% endif %} sur {{ all_voyages_count }}.</p>
-                </div>
-            </div>
-
             <form method="get" action="{{ path('app_voyages') }}" class="voyages-filter-form">
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-search">Recherche</label>
@@ -626,13 +630,22 @@
         </div>
 
         {% set successFlashes = app.flashes('success') %}
+        {% set warningFlashes = app.flashes('warning') %}
         {% set errorFlashes = app.flashes('error') %}
 
-        {% if successFlashes is not empty or errorFlashes is not empty %}
+        {% if successFlashes is not empty or warningFlashes is not empty or errorFlashes is not empty %}
             <div class="voyage-toast-stack" aria-live="polite" aria-atomic="true">
                 {% for message in successFlashes %}
                     <div class="voyage-flash voyage-flash--success" data-voyage-toast>
                         <strong class="voyage-flash__title">Operation reussie</strong>
+                        <div class="voyage-flash__message">{{ message }}</div>
+                        <button type="button" class="voyage-flash__close" data-voyage-toast-close aria-label="Fermer la notification">×</button>
+                    </div>
+                {% endfor %}
+
+                {% for message in warningFlashes %}
+                    <div class="voyage-flash voyage-flash--warning" data-voyage-toast>
+                        <strong class="voyage-flash__title">Attention</strong>
                         <div class="voyage-flash__message">{{ message }}</div>
                         <button type="button" class="voyage-flash__close" data-voyage-toast-close aria-label="Fermer la notification">×</button>
                     </div>
@@ -691,6 +704,16 @@
                             </div>
 
                             <div class="voyage-card__actions">
+                                <a href="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--participants" aria-label="Gerer les participants du voyage {{ voyage.titreVoyage }}" title="Participants">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M16 21V19.5C16 18.1193 14.8807 17 13.5 17H7.5C6.11929 17 5 18.1193 5 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M10.5 13C12.433 13 14 11.433 14 9.5C14 7.567 12.433 6 10.5 6C8.567 6 7 7.567 7 9.5C7 11.433 8.567 13 10.5 13Z" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M18 8.5C19.1046 8.5 20 9.39543 20 10.5C20 11.6046 19.1046 12.5 18 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M18.5 17C19.8807 17 21 18.1193 21 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                    <span class="sr-only">Participants</span>
+                                </a>
+
                                 <a href="{{ path('app_voyages_edit', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--edit" aria-label="Modifier le voyage {{ voyage.titreVoyage }}" title="Modifier">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
