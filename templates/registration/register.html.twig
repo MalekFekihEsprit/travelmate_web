@@ -1,0 +1,395 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .auth-shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 0 3rem;
+        }
+
+        .auth-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.05fr;
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        .auth-panel,
+        .auth-card {
+            border: 1px solid var(--color-border);
+            border-radius: 30px;
+            background: rgba(255, 253, 249, 0.94);
+        }
+
+        .auth-panel {
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.92));
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-panel::before {
+            content: "";
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(196, 111, 75, 0.08);
+        }
+
+        .auth-panel::after {
+            content: "";
+            position: absolute;
+            bottom: -80px;
+            left: -40px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(47, 127, 121, 0.08);
+        }
+
+        .auth-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .5rem .9rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.1);
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: .85rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-title {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1.05;
+            margin-bottom: 1rem;
+            color: var(--color-text);
+        }
+
+        .auth-text {
+            color: var(--color-text-muted);
+            max-width: 52ch;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-list {
+            display: grid;
+            gap: .85rem;
+        }
+
+        .auth-list__item {
+            display: flex;
+            gap: .8rem;
+            align-items: flex-start;
+            padding: .95rem 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 18px;
+            background: rgba(255, 253, 249, 0.78);
+        }
+
+        .auth-list__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(47, 127, 121, 0.12);
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .auth-card {
+            padding: 2rem;
+            box-shadow: 0 16px 36px rgba(71, 48, 35, 0.05);
+        }
+
+        .auth-card__title {
+            font-size: 1.55rem;
+            margin-bottom: .35rem;
+            color: var(--color-text);
+        }
+
+        .auth-card__subtitle {
+            color: var(--color-text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .flash-message {
+            padding: .95rem 1rem;
+            border-radius: 16px;
+            font-size: .95rem;
+            border: 1px solid transparent;
+        }
+
+        .flash-message--success {
+            background: rgba(47, 127, 121, 0.10);
+            border-color: rgba(47, 127, 121, 0.16);
+            color: #245f5a;
+        }
+
+        .flash-message--error {
+            background: rgba(191, 91, 91, 0.10);
+            border-color: rgba(191, 91, 91, 0.16);
+            color: #9e4747;
+        }
+
+        .flash-message--warning {
+            background: rgba(221, 191, 140, 0.18);
+            border-color: rgba(185, 135, 47, 0.16);
+            color: #8c6a2d;
+        }
+
+        .auth-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .auth-form-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .form-control-block {
+            display: grid;
+            gap: .45rem;
+        }
+
+        .form-control-block label {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: .94rem;
+        }
+
+        .form-control-block input,
+        .form-control-block textarea,
+        .form-control-block select {
+            width: 100%;
+            min-height: 50px;
+            padding: .9rem 1rem;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            color: var(--color-text);
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        .form-control-block input:focus,
+        .form-control-block textarea:focus,
+        .form-control-block select:focus {
+            border-color: rgba(196, 111, 75, 0.35);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.08);
+            background: #ffffff;
+        }
+
+        .form-help {
+            font-size: .82rem;
+            color: var(--color-text-muted);
+        }
+
+        .form-error {
+            color: #b84d4d;
+            font-size: .84rem;
+        }
+
+        .auth-submit {
+            width: 100%;
+            margin-top: 1.25rem;
+            min-height: 52px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--color-primary);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease;
+        }
+
+        .auth-submit:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .auth-bottom {
+            margin-top: 1rem;
+            text-align: center;
+            color: var(--color-text-muted);
+        }
+
+        .auth-bottom a {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 980px) {
+            .auth-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .auth-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-card,
+            .auth-panel {
+                padding: 1.35rem;
+                border-radius: 24px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="auth-shell">
+        <div class="auth-grid">
+            <div class="auth-panel">
+                <span class="auth-badge">✨ Rejoignez TravelMate</span>
+                <h1 class="auth-title">Préparez vos voyages avec simplicité et envie.</h1>
+                <p class="auth-text">
+                    Créez votre compte pour organiser vos séjours, suivre vos idées,
+                    partager vos projets de voyage et vivre une expérience plus fluide,
+                    plus belle et plus collaborative.
+                </p>
+
+                <div class="auth-list">
+                    <div class="auth-list__item">
+                        <span class="auth-list__icon">🌍</span>
+                        <div>
+                            <strong>Planifiez facilement</strong>
+                            <p class="form-help">Centralisez vos voyages, activités, budgets et inspirations.</p>
+                        </div>
+                    </div>
+
+                    <div class="auth-list__item">
+                        <span class="auth-list__icon">🔐</span>
+                        <div>
+                            <strong>Compte sécurisé</strong>
+                            <p class="form-help">Activation par code email avant utilisation.</p>
+                        </div>
+                    </div>
+
+                    <div class="auth-list__item">
+                        <span class="auth-list__icon">🤝</span>
+                        <div>
+                            <strong>Voyagez à plusieurs</strong>
+                            <p class="form-help">Préparez vos aventures avec vos amis et votre groupe.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-card">
+                <h2 class="auth-card__title">Créer un compte</h2>
+                <p class="auth-card__subtitle">
+                    Remplissez vos informations. Un code de vérification vous sera envoyé par email.
+                </p>
+
+                <div class="flash-stack">
+                    {% for message in app.flashes('success') %}
+                        <div class="flash-message flash-message--success">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="flash-message flash-message--error">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('warning') %}
+                        <div class="flash-message flash-message--warning">{{ message }}</div>
+                    {% endfor %}
+                </div>
+
+                {{ form_start(registrationForm, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                    <div class="auth-form-grid">
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.nom) }}
+                            {{ form_widget(registrationForm.nom) }}
+                            <div class="form-error">{{ form_errors(registrationForm.nom) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.prenom) }}
+                            {{ form_widget(registrationForm.prenom) }}
+                            <div class="form-error">{{ form_errors(registrationForm.prenom) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.dateNaissance) }}
+                            {{ form_widget(registrationForm.dateNaissance) }}
+                            <div class="form-error">{{ form_errors(registrationForm.dateNaissance) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.telephone) }}
+                            {{ form_widget(registrationForm.telephone) }}
+                            <div class="form-error">{{ form_errors(registrationForm.telephone) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(registrationForm.email) }}
+                            {{ form_widget(registrationForm.email) }}
+                            <div class="form-error">{{ form_errors(registrationForm.email) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(registrationForm.photoUrl) }}
+                            {{ form_widget(registrationForm.photoUrl) }}
+                            <div class="form-help">Optionnel. Vous pouvez coller un lien image.</div>
+                            <div class="form-error">{{ form_errors(registrationForm.photoUrl) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(registrationForm.photoFile) }}
+                            {{ form_widget(registrationForm.photoFile) }}
+                            <div class="form-help">Optionnel. Si vous importez une image, elle sera utilisée comme photo de profil.</div>
+                            <div class="form-error">{{ form_errors(registrationForm.photoFile) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.plainPassword.first) }}
+                            {{ form_widget(registrationForm.plainPassword.first) }}
+                            <div class="form-error">{{ form_errors(registrationForm.plainPassword.first) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.plainPassword.second) }}
+                            {{ form_widget(registrationForm.plainPassword.second) }}
+                            <div class="form-error">{{ form_errors(registrationForm.plainPassword.second) }}</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-submit">
+                        Créer mon compte
+                    </button>
+
+                {{ form_end(registrationForm) }}
+
+                <p class="auth-bottom">
+                    Vous avez déjà un compte ?
+                    <a href="#">Se connecter</a>
+                </p>
+            </div>
+        </div>
+    </section>
+{% endblock %}

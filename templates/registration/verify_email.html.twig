@@ -1,0 +1,207 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vérification email | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .verify-shell {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 2.5rem 0 3rem;
+        }
+
+        .verify-card {
+            border: 1px solid var(--color-border);
+            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.92));
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .verify-icon {
+            width: 78px;
+            height: 78px;
+            margin: 0 auto 1rem;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(47, 127, 121, 0.12);
+            font-size: 2rem;
+        }
+
+        .verify-title {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            margin-bottom: .6rem;
+            color: var(--color-text);
+        }
+
+        .verify-text {
+            color: var(--color-text-muted);
+            max-width: 52ch;
+            margin: 0 auto 1.5rem;
+        }
+
+        .verify-email {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            padding: .7rem 1rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.1);
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+
+        .verify-form {
+            max-width: 420px;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .verify-form label {
+            display: block;
+            margin-bottom: .45rem;
+            font-weight: 600;
+        }
+
+        .verify-form input {
+            width: 100%;
+            min-height: 54px;
+            text-align: center;
+            font-size: 1.4rem;
+            letter-spacing: .35rem;
+            border-radius: 18px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            padding: .9rem 1rem;
+            outline: none;
+        }
+
+        .verify-form input:focus {
+            border-color: rgba(196, 111, 75, 0.35);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.08);
+        }
+
+        .verify-errors {
+            color: #b84d4d;
+            font-size: .85rem;
+            margin-top: .45rem;
+        }
+
+        .verify-actions {
+            display: grid;
+            gap: .9rem;
+            margin-top: 1.25rem;
+        }
+
+        .verify-btn {
+            width: 100%;
+            min-height: 52px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--color-primary);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease;
+        }
+
+        .verify-btn:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .verify-link {
+            display: inline-block;
+            color: var(--color-secondary);
+            font-weight: 600;
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .flash-message {
+            padding: .95rem 1rem;
+            border-radius: 16px;
+            font-size: .95rem;
+            border: 1px solid transparent;
+            text-align: left;
+        }
+
+        .flash-message--success {
+            background: rgba(47, 127, 121, 0.10);
+            border-color: rgba(47, 127, 121, 0.16);
+            color: #245f5a;
+        }
+
+        .flash-message--error {
+            background: rgba(191, 91, 91, 0.10);
+            border-color: rgba(191, 91, 91, 0.16);
+            color: #9e4747;
+        }
+
+        .flash-message--info {
+            background: rgba(221, 191, 140, 0.18);
+            border-color: rgba(185, 135, 47, 0.16);
+            color: #8c6a2d;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="verify-shell">
+        <div class="verify-card">
+            <div class="verify-icon">📩</div>
+
+            <h1 class="verify-title">Vérifiez votre adresse email</h1>
+
+            <p class="verify-text">
+                Nous avons envoyé un code à 6 chiffres à l’adresse ci-dessous.
+                Saisissez-le pour activer votre compte TravelMate.
+            </p>
+
+            <div class="verify-email">
+                {{ user.email }}
+            </div>
+
+            <div class="flash-stack">
+                {% for message in app.flashes('success') %}
+                    <div class="flash-message flash-message--success">{{ message }}</div>
+                {% endfor %}
+                {% for message in app.flashes('error') %}
+                    <div class="flash-message flash-message--error">{{ message }}</div>
+                {% endfor %}
+                {% for message in app.flashes('info') %}
+                    <div class="flash-message flash-message--info">{{ message }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="verify-form">
+                {{ form_start(verifyForm, {'attr': {'novalidate': 'novalidate'}}) }}
+                    <div>
+                        {{ form_label(verifyForm.code) }}
+                        {{ form_widget(verifyForm.code) }}
+                        <div class="verify-errors">{{ form_errors(verifyForm.code) }}</div>
+                    </div>
+
+                    <div class="verify-actions">
+                        <button type="submit" class="verify-btn">
+                            Vérifier mon compte
+                        </button>
+
+                        <a class="verify-link" href="{{ path('app_resend_verification_code', {'id': user.id}) }}">
+                            Renvoyer le code
+                        </a>
+                    </div>
+                {{ form_end(verifyForm) }}
+            </div>
+        </div>
+    </section>
+{% endblock %}

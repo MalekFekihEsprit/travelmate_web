@@ -8,10 +8,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
 use App\Repository\UserRepository;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'user')]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -547,4 +549,27 @@ class User
         return $this;
     }
 
+    public function getPassword(): ?string
+    {
+        return $this->mot_de_passe;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        // Often email is used, but you can choose id or username
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        $role = $this->role ?: 'USER';
+
+        return match ($role) {
+            'ADMIN' => ['ROLE_ADMIN'],
+            default => ['ROLE_USER'],
+        };
+    }
+    public function eraseCredentials(): void
+    {
+    }
 }
