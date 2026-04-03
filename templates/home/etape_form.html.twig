@@ -1,0 +1,242 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }} | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .form-page {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            gap: 1.75rem;
+        }
+
+        .form-header {
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+
+        .form-header__title {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            color: var(--color-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header__subtitle {
+            color: var(--color-text-muted);
+            font-size: 1rem;
+        }
+
+        .form-card {
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
+        }
+
+        .form-group {
+            display: grid;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--color-primary);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            padding: 0.85rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(196, 111, 75, 0.1);
+            background: var(--color-surface);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.85rem;
+            justify-content: flex-end;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .btn-form {
+            padding: 0.85rem 1.75rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.95rem;
+        }
+
+        .btn-form.primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-form.primary:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(196, 111, 75, 0.25);
+        }
+
+        .btn-form.secondary {
+            background: transparent;
+            color: var(--color-text-muted);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-form.secondary:hover {
+            background: var(--color-hover);
+            color: var(--color-primary);
+        }
+
+        .form-info {
+            padding: 1rem;
+            background: rgba(47, 127, 121, 0.08);
+            border: 1px solid rgba(47, 127, 121, 0.2);
+            border-radius: var(--radius-md);
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-page {
+                padding: 0 1rem;
+            }
+
+            .form-card {
+                padding: 1.5rem;
+            }
+
+            .form-header__title {
+                font-size: 1.5rem;
+            }
+
+            .form-actions {
+                flex-wrap: wrap;
+                gap: 0.6rem;
+            }
+
+            .btn-form {
+                flex: 1;
+                min-width: 140px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="form-page">
+        <div class="form-header">
+            <h1 class="form-header__title">{{ title }}</h1>
+            <p class="form-header__subtitle">
+                {% if etape %}
+                    Modifiez les détails de cette étape
+                {% else %}
+                    Ajoutez des activités pour le jour {{ jour }}
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="form-card">
+            <div class="form-info">
+                📍 <strong>{{ itineraire.nom_itineraire }}</strong> - Jour {{ jour }}
+            </div>
+
+            <form method="POST" action="{% if etape %}{{ path('app_etapes_edit', {id: etape.id_etape}) }}{% else %}{{ path('app_etapes_create', {itineraireId: itineraire.id_itineraire, jour: jour}) }}{% endif %}">
+                <!-- Heure -->
+                <div class="form-group">
+                    <label for="heure" class="form-label">Heure</label>
+                    <input
+                        type="time"
+                        id="heure"
+                        name="heure"
+                        class="form-input"
+                        value="{% if etape and etape.heure %}{{ etape.heure|date('H:i') }}{% endif %}"
+                    />
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label for="description_etape" class="form-label required">Description</label>
+                    <textarea
+                        id="description_etape"
+                        name="description_etape"
+                        class="form-textarea"
+                        placeholder="Décrivez l'activité ou l'événement..."
+                        required
+                    >{{ etape ? etape.description_etape : '' }}</textarea>
+                </div>
+
+                <!-- Activité associée -->
+                {% if activites|length > 0 %}
+                    <div class="form-group">
+                        <label for="id_activite" class="form-label">Activité associée</label>
+                        <select id="id_activite" name="id_activite" class="form-select">
+                            <option value="">-- Aucune activité --</option>
+                            {% for activite in activites %}
+                                <option value="{{ activite.id }}" {% if etape and etape.activite and etape.activite.id == activite.id %}selected{% endif %}>
+                                    {{ activite.nom }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                <!-- Jour (caché, pré-rempli) -->
+                <input type="hidden" name="numero_jour" value="{{ jour }}" />
+
+                <!-- Boutons d'action -->
+                <div class="form-actions">
+                    <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="btn-form secondary">Annuler</a>
+                    <button type="submit" class="btn-form primary">
+                        {% if etape %}
+                            ✓ Enregistrer les modifications
+                        {% else %}
+                            + Créer l'étape
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

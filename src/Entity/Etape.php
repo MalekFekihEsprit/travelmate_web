@@ -30,14 +30,14 @@ class Etape
     }
 
     #[ORM\Column(type: 'time', nullable: false)]
-    private ?string $heure = null;
+    private ?\DateTimeInterface $heure = null;
 
-    public function getHeure(): ?string
+    public function getHeure(): ?\DateTimeInterface
     {
         return $this->heure;
     }
 
-    public function setHeure(string $heure): self
+    public function setHeure(\DateTimeInterface $heure): self
     {
         $this->heure = $heure;
         return $this;
