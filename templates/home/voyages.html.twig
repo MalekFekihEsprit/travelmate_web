@@ -1,0 +1,72 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Voyages | TravelMate{% endblock %}
+
+{% block body %}
+    <!-- PAGE HEADER -->
+    <section style="padding-top: 10rem; padding-bottom: 2rem;">
+        <div class="bg-holder" style="background-image:url({{ asset('assets/img/hero/hero-bg.svg') }});"></div>
+        <div class="container">
+            <div class="text-center">
+                <h3 class="fs-xl-10 fs-lg-8 fs-7 fw-bold font-cursive text-capitalize">Mes Voyages Disponibles</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- LISTE DES VOYAGES -->
+    <section class="pb-8" id="Voyages">
+        <div class="container">
+            <div class="row g-4">
+
+                {% for voyage in voyages %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card service-card shadow-hover rounded-3 h-100">
+                        <div style="background:linear-gradient(135deg,{{ voyage.gradient_start }},{{ voyage.gradient_end }});height:180px;border-radius:0.5rem 0.5rem 0 0;display:flex;align-items:center;justify-content:center;">
+                            <span style="font-size:3.5rem;">{{ voyage.emoji|raw }}</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-dark fw-medium" style="font-size:0.7rem;border-radius:1rem;">{{ voyage.continent }}</span>
+                                <span class="fw-bold">{{ voyage.prix }} TND</span>
+                            </div>
+                            <h4 class="mb-1">{{ voyage.destination }}{% if voyage.pays %}, {{ voyage.pays }}{% endif %}</h4>
+                            <p class="fw-medium text-secondary mb-3 fs--1">{{ voyage.duree }} jours &middot; {{ voyage.inclus }}</p>
+                            <p class="fw-medium mb-4 fs--1">{{ voyage.description }}</p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span style="color:#f4a532;">{{ voyage.etoiles|raw }}</span>
+                                <a href="/reserver/{{ voyage.id }}" class="btn btn-outline-dark fw-medium" style="font-size:0.75rem;border-radius:2rem;">Reserver</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12 text-center">
+                    <p class="fw-medium">Aucun voyage disponible pour le moment.</p>
+                </div>
+                {% endfor %}
+
+            </div>
+
+            {% if total_pages > 1 %}
+            <div class="d-flex justify-content-center mt-7">
+                <nav aria-label="Voyages pagination">
+                    <ul class="pagination">
+                        <li class="page-item {{ current_page == 1 ? 'disabled' : '' }}">
+                            <a class="page-link fw-medium" href="{{ current_page > 1 ? path('app_voyages', {'page': current_page - 1}) : '#' }}">Precedent</a>
+                        </li>
+                        {% for i in 1..total_pages %}
+                        <li class="page-item {{ i == current_page ? 'active' : '' }}">
+                            <a class="page-link fw-medium" href="{{ path('app_voyages', {'page': i}) }}">{{ i }}</a>
+                        </li>
+                        {% endfor %}
+                        <li class="page-item {{ current_page == total_pages ? 'disabled' : '' }}">
+                            <a class="page-link fw-medium" href="{{ current_page < total_pages ? path('app_voyages', {'page': current_page + 1}) : '#' }}">Suivant</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+        </div>
+    </section>
+{% endblock %}
