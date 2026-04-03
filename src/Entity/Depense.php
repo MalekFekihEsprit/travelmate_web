@@ -128,7 +128,7 @@ class Depense
     }
 
     #[ORM\ManyToOne(targetEntity: Budget::class, inversedBy: 'depenses')]
-    #[ORM\JoinColumn(name: 'id_budget', referencedColumnName: 'id_budget')]
+    #[ORM\JoinColumn(name: 'id_budget', referencedColumnName: 'id_budget', onDelete: 'CASCADE')]
     private ?Budget $budget = null;
 
     public function getBudget(): ?Budget

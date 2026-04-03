@@ -125,6 +125,94 @@
             gap: 1.35rem;
         }
 
+        .voyages-toolbar {
+            display: grid;
+            gap: 1rem;
+            padding: 1.35rem;
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 40px rgba(71, 48, 35, 0.06);
+        }
+
+        .voyages-toolbar__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .voyages-toolbar__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.45rem;
+        }
+
+        .voyages-toolbar__meta {
+            color: var(--color-text-muted);
+        }
+
+        .voyages-filter-form {
+            display: grid;
+            grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)) auto;
+            gap: 0.85rem;
+            align-items: end;
+        }
+
+        .voyages-filter-field {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .voyages-filter-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .voyages-filter-input {
+            width: 100%;
+            min-height: 46px;
+            padding: 0.8rem 0.95rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .voyages-filter-input:focus {
+            outline: none;
+            border-color: rgba(196, 111, 75, 0.55);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.12);
+        }
+
+        .voyages-filter-actions {
+            display: flex;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .voyages-filter-summary {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .voyages-filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.08);
+            color: var(--color-primary-dark);
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+
         .voyage-card {
             display: grid;
             grid-template-rows: 220px auto;
@@ -399,6 +487,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .voyages-filter-form {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .voyages-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -415,6 +507,11 @@
 
             .voyages-grid,
             .voyage-card__details {
+                grid-template-columns: 1fr;
+            }
+
+            .voyages-filter-form,
+            .voyages-filter-actions {
                 grid-template-columns: 1fr;
             }
 
@@ -443,8 +540,8 @@
 
                 <div class="voyages-hero__stats">
                     <div class="voyages-stat">
-                        <strong>{{ voyages|length }}</strong>
-                        <span>voyages affiches</span>
+                        <strong>{{ results_count }}</strong>
+                        <span>{{ has_active_filters ? 'resultats filtres' : 'voyages affiches' }}</span>
                     </div>
                 </div>
             </div>
@@ -454,6 +551,78 @@
                     <img src="{{ asset(hero_image) }}" alt="Paysage de voyage" class="voyages-hero__image">
                 {% endif %}
             </div>
+        </div>
+
+        <div class="voyages-toolbar">
+            <div class="voyages-toolbar__top">
+                <div>
+                    <h2 class="voyages-toolbar__title">Recherche, tri et filtres</h2>
+                    <p class="voyages-toolbar__meta">Affichage de {{ results_count }} voyage{% if results_count > 1 %}s{% endif %} sur {{ all_voyages_count }}.</p>
+                </div>
+            </div>
+
+            <form method="get" action="{{ path('app_voyages') }}" class="voyages-filter-form">
+                <div class="voyages-filter-field">
+                    <label class="voyages-filter-label" for="voyage-search">Recherche</label>
+                    <input id="voyage-search" type="search" name="search" value="{{ filters.search }}" class="voyages-filter-input" placeholder="Titre, destination ou pays">
+                </div>
+
+                <div class="voyages-filter-field">
+                    <label class="voyages-filter-label" for="voyage-statut">Statut</label>
+                    <select id="voyage-statut" name="statut" class="voyages-filter-input">
+                        <option value="">Tous les statuts</option>
+                        {% for status in status_options %}
+                            <option value="{{ status }}" {{ filters.statut == status ? 'selected' : '' }}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="voyages-filter-field">
+                    <label class="voyages-filter-label" for="voyage-destination">Destination</label>
+                    <select id="voyage-destination" name="destination" class="voyages-filter-input">
+                        <option value="">Toutes les destinations</option>
+                        {% for destination in destinations %}
+                            <option value="{{ destination.idDestination }}" {{ filters.destination == destination.idDestination ? 'selected' : '' }}>
+                                {{ destination.nomDestination }}{% if destination.paysDestination %} - {{ destination.paysDestination }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="voyages-filter-field">
+                    <label class="voyages-filter-label" for="voyage-sort">Tri</label>
+                    <select id="voyage-sort" name="sort" class="voyages-filter-input">
+                        {% for sortKey, sortLabel in sort_options %}
+                            <option value="{{ sortKey }}" {{ filters.sort == sortKey ? 'selected' : '' }}>{{ sortLabel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="voyages-filter-actions">
+                    <button type="submit" class="btn btn--primary">Appliquer</button>
+                    {% if has_active_filters %}
+                        <a href="{{ path('app_voyages') }}" class="btn btn--ghost">Reinitialiser</a>
+                    {% endif %}
+                </div>
+            </form>
+
+            {% if has_active_filters %}
+                <div class="voyages-filter-summary">
+                    {% if filters.search %}
+                        <span class="voyages-filter-chip">Recherche : {{ filters.search }}</span>
+                    {% endif %}
+                    {% if filters.statut %}
+                        <span class="voyages-filter-chip">Statut : {{ filters.statut }}</span>
+                    {% endif %}
+                    {% if filters.destination %}
+                        {% for destination in destinations %}
+                            {% if destination.idDestination == filters.destination %}
+                                <span class="voyages-filter-chip">Destination : {{ destination.nomDestination }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
 
         {% set successFlashes = app.flashes('success') %}
@@ -551,9 +720,19 @@
         {% else %}
             <div class="voyages-empty">
                 <h2>Aucun voyage enregistre</h2>
-                <p>Commencez par ajouter un premier voyage. Les cartes utiliseront ensuite aleatoirement les images du dossier imagesVoyage.</p>
+                <p>
+                    {% if has_active_filters %}
+                        Aucun voyage ne correspond a votre recherche ou a vos filtres actuels.
+                    {% else %}
+                        Commencez par ajouter un premier voyage. Les cartes utiliseront ensuite aleatoirement les images du dossier imagesVoyage.
+                    {% endif %}
+                </p>
                 <div>
-                    <a href="{{ path('app_voyages_new') }}" class="btn btn--primary">Creer un voyage</a>
+                    {% if has_active_filters %}
+                        <a href="{{ path('app_voyages') }}" class="btn btn--ghost">Effacer les filtres</a>
+                    {% else %}
+                        <a href="{{ path('app_voyages_new') }}" class="btn btn--primary">Creer un voyage</a>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}

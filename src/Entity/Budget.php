@@ -115,7 +115,7 @@ class Budget
     }
 
     #[ORM\ManyToOne(targetEntity: Voyage::class, inversedBy: 'budgets')]
-    #[ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage')]
+    #[ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage', onDelete: 'CASCADE')]
     private ?Voyage $voyage = null;
 
     public function getVoyage(): ?Voyage
@@ -129,7 +129,7 @@ class Budget
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Depense::class, mappedBy: 'budget')]
+    #[ORM\OneToMany(targetEntity: Depense::class, mappedBy: 'budget', cascade: ['remove'], orphanRemoval: true)]
     private Collection $depenses;
 
     public function __construct()

@@ -2,8 +2,10 @@
 
 namespace App\Form;
 
+use App\Entity\Activite;
 use App\Entity\Destination;
 use App\Entity\Voyage;
+use App\Repository\ActiviteRepository;
 use App\Repository\DestinationRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -39,9 +41,46 @@ class VoyageType extends AbstractType
 
                     return $pays ? sprintf('%s - %s', $nom, $pays) : $nom;
                 },
+                'choice_attr' => static function (Destination $destination): array {
+                    return [
+                        'data-destination-name' => (string) ($destination->getNomDestination() ?? $destination->getNom_destination() ?? ''),
+                        'data-destination-country' => (string) ($destination->getPaysDestination() ?? $destination->getPays_destination() ?? ''),
+                        'data-destination-region' => (string) ($destination->getRegionDestination() ?? $destination->getRegion_destination() ?? ''),
+                    ];
+                },
                 'attr' => [
                     'class' => 'travel-form__input',
                 ],
+            ])
+            ->add('activites', EntityType::class, [
+                'class' => Activite::class,
+                'label' => 'Activites',
+                'multiple' => true,
+                'expanded' => true,
+                'required' => false,
+                'by_reference' => false,
+                'query_builder' => static fn (ActiviteRepository $repository) => $repository
+                    ->createQueryBuilder('a')
+                    ->orderBy('a.nom', 'ASC'),
+                'choice_label' => static function (Activite $activite): string {
+                    $nom = $activite->getNom() ?? 'Activite';
+                    $lieu = $activite->getLieu();
+
+                    return $lieu ? sprintf('%s - %s', $nom, $lieu) : $nom;
+                },
+                'choice_attr' => static function (Activite $activite): array {
+                    $haystack = implode(' ', array_filter([
+                        $activite->getNom(),
+                        $activite->getLieu(),
+                    ]));
+
+                    return [
+                        'class' => 'voyage-activity-option__input',
+                        'data-activity-haystack' => $haystack,
+                        'data-activity-lieu' => (string) ($activite->getLieu() ?? ''),
+                        'data-activity-duree' => $activite->getDuree() !== null ? (string) $activite->getDuree() : '',
+                    ];
+                },
             ])
             ->add('date_debut', DateType::class, [
                 'label' => 'Date de debut',

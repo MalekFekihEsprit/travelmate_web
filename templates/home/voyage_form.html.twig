@@ -104,6 +104,79 @@
             box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.12);
         }
 
+        .travel-form__input--multiple {
+            min-height: 12rem;
+            padding-block: 0.55rem;
+        }
+
+        .travel-form__input--multiple option {
+            padding: 0.45rem 0.35rem;
+        }
+
+        .voyage-activity-picker {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.9rem;
+        }
+
+        .voyage-activity-option {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            padding: 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 253, 249, 0.92);
+            transition:
+                border-color var(--transition-fast),
+                background var(--transition-fast),
+                transform var(--transition-fast),
+                box-shadow var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .voyage-activity-option:hover {
+            transform: translateY(-1px);
+            border-color: rgba(196, 111, 75, 0.3);
+            box-shadow: 0 12px 24px rgba(71, 48, 35, 0.06);
+        }
+
+        .voyage-activity-option.is-hidden {
+            display: none;
+        }
+
+        .voyage-activity-option__input {
+            width: 1.05rem;
+            height: 1.05rem;
+            margin-top: 0.18rem;
+            accent-color: var(--color-primary);
+            flex-shrink: 0;
+        }
+
+        .voyage-activity-option__body {
+            display: grid;
+            gap: 0.28rem;
+        }
+
+        .voyage-activity-option__title {
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .voyage-activity-option__meta {
+            color: var(--color-text-muted);
+            font-size: 0.88rem;
+        }
+
+        .voyage-activity-empty {
+            padding: 1rem;
+            border: 1px dashed rgba(196, 111, 75, 0.28);
+            border-radius: var(--radius-lg);
+            color: var(--color-text-muted);
+            background: rgba(255, 253, 249, 0.72);
+        }
+
         .voyage-form__errors {
             color: var(--color-primary-dark);
             font-size: 0.86rem;
@@ -121,6 +194,12 @@
             padding-top: 0.5rem;
         }
 
+        .voyage-form__actions .btn[disabled] {
+            opacity: 0.72;
+            cursor: wait;
+            pointer-events: none;
+        }
+
         .voyage-form-flash {
             padding: 1rem 1.2rem;
             border-left: 4px solid var(--color-primary);
@@ -133,6 +212,10 @@
             }
 
             .voyage-form__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .voyage-activity-picker {
                 grid-template-columns: 1fr;
             }
         }
@@ -156,6 +239,12 @@
             </div>
         {% endif %}
 
+        {% if not has_activites %}
+            <div class="voyage-form-flash">
+                Aucune activite n'est disponible pour le moment. Ajoutez d'abord des activites pour pouvoir les associer au voyage.
+            </div>
+        {% endif %}
+
         <div class="voyage-form-card">
             <div class="voyage-form-card__header">
                 <div>
@@ -166,6 +255,7 @@
             </div>
 
             {{ form_start(form, {'attr': {'class': 'voyage-form'}}) }}
+                <input type="hidden" name="_voyage_form_nonce" value="{{ form_nonce }}">
                 <div class="voyage-form__errors">{{ form_errors(form) }}</div>
 
                 <div class="voyage-form__grid">
@@ -179,6 +269,39 @@
                         <label class="voyage-form__label" for="{{ form.destination.vars.id }}">{{ form.destination.vars.label }}</label>
                         {{ form_widget(form.destination) }}
                         <div class="voyage-form__errors">{{ form_errors(form.destination) }}</div>
+                    </div>
+
+                    <div class="voyage-form__field voyage-form__field--full">
+                        <label class="voyage-form__label" for="{{ form.activites.vars.id }}">{{ form.activites.vars.label }}</label>
+                        <div class="voyage-activity-picker" data-activity-picker>
+                            {% for activityField in form.activites %}
+                                {% set activityLieu = activityField.vars.attr['data-activity-lieu'] ?? '' %}
+                                {% set activityDuree = activityField.vars.attr['data-activity-duree'] ?? '' %}
+                                {% set activityHaystack = activityField.vars.attr['data-activity-haystack'] ?? '' %}
+
+                                <label class="voyage-activity-option" data-activity-option data-activity-haystack="{{ activityHaystack }}">
+                                    {{ form_widget(activityField) }}
+                                    <span class="voyage-activity-option__body">
+                                        <span class="voyage-activity-option__title">{{ activityField.vars.label }}</span>
+                                        <span class="voyage-activity-option__meta">
+                                            {% if activityLieu %}
+                                                {{ activityLieu }}
+                                            {% else %}
+                                                Lieu non precise
+                                            {% endif %}
+
+                                            {% if activityDuree %}
+                                                • {{ activityDuree }} h
+                                            {% endif %}
+                                        </span>
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="voyage-activity-empty" data-activity-empty>
+                            Selectionnez une destination pour afficher uniquement les activites correspondantes.
+                        </div>
+                        <div class="voyage-form__errors">{{ form_errors(form.activites) }}</div>
                     </div>
 
                     <div class="voyage-form__field">
@@ -207,4 +330,112 @@
             {{ form_end(form) }}
         </div>
     </section>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var voyageForm = document.querySelector('.voyage-form');
+            var submitButton = voyageForm ? voyageForm.querySelector('button[type="submit"]') : null;
+            var destinationField = document.getElementById('{{ form.destination.vars.id }}');
+            var activityOptions = document.querySelectorAll('[data-activity-option]');
+            var activityEmpty = document.querySelector('[data-activity-empty]');
+
+            if (voyageForm && submitButton) {
+                var initialSubmitLabel = submitButton.textContent;
+
+                voyageForm.addEventListener('submit', function (event) {
+                    if (voyageForm.dataset.submitting === 'true') {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    voyageForm.dataset.submitting = 'true';
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Enregistrement...';
+                });
+
+                window.addEventListener('pageshow', function () {
+                    voyageForm.dataset.submitting = 'false';
+                    submitButton.disabled = false;
+                    submitButton.textContent = initialSubmitLabel;
+                });
+            }
+
+            function normalize(value) {
+                return (value || '')
+                    .toString()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .trim();
+            }
+
+            function getDestinationTerms() {
+                var selectedOption = destinationField.options[destinationField.selectedIndex];
+
+                if (!selectedOption || !selectedOption.value) {
+                    return [];
+                }
+
+                return [
+                    selectedOption.dataset.destinationName,
+                    selectedOption.dataset.destinationCountry,
+                    selectedOption.dataset.destinationRegion,
+                ]
+                    .map(normalize)
+                    .filter(function (term) {
+                        return term.length > 0;
+                    });
+            }
+
+            function syncActivities() {
+                if (!destinationField || activityOptions.length === 0) {
+                    return;
+                }
+
+                var destinationTerms = getDestinationTerms();
+                var visibleCount = 0;
+
+                activityOptions.forEach(function (option) {
+                    var haystack = normalize(option.dataset.activityHaystack);
+                    var input = option.querySelector('input');
+                    var matches = destinationTerms.length > 0 && destinationTerms.some(function (term) {
+                        return haystack.includes(term);
+                    });
+
+                    option.classList.toggle('is-hidden', !matches);
+
+                    if (input) {
+                        input.disabled = !matches;
+
+                        if (!matches) {
+                            input.checked = false;
+                        }
+                    }
+
+                    if (matches) {
+                        visibleCount += 1;
+                    }
+                });
+
+                if (activityEmpty) {
+                    if (destinationTerms.length === 0) {
+                        activityEmpty.textContent = 'Selectionnez une destination pour afficher uniquement les activites correspondantes.';
+                        activityEmpty.hidden = false;
+                    } else if (visibleCount === 0) {
+                        activityEmpty.textContent = 'Aucune activite ne correspond a la destination choisie.';
+                        activityEmpty.hidden = false;
+                    } else {
+                        activityEmpty.hidden = true;
+                    }
+                }
+            }
+
+            if (destinationField && activityOptions.length > 0) {
+                destinationField.addEventListener('change', syncActivities);
+                syncActivities();
+            }
+        });
+    </script>
 {% endblock %}

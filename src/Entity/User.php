@@ -387,7 +387,7 @@ class User
             new ORM\JoinColumn(name: 'id', referencedColumnName: 'id')
         ],
         inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage')
+            new ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage', onDelete: 'CASCADE')
         ]
     )]
     private Collection $voyages;
@@ -417,13 +417,18 @@ class User
     {
         if (!$this->getVoyages()->contains($voyage)) {
             $this->getVoyages()->add($voyage);
+            $voyage->addUser($this);
         }
+
         return $this;
     }
 
     public function removeVoyage(Voyage $voyage): self
     {
-        $this->getVoyages()->removeElement($voyage);
+        if ($this->getVoyages()->removeElement($voyage)) {
+            $voyage->removeUser($this);
+        }
+
         return $this;
     }
 

@@ -120,7 +120,7 @@ class Voyage
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Budget::class, mappedBy: 'voyage')]
+    #[ORM\OneToMany(targetEntity: Budget::class, mappedBy: 'voyage', cascade: ['remove'], orphanRemoval: true)]
     private Collection $budgets;
 
     /**
@@ -148,7 +148,7 @@ class Voyage
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Itineraire::class, mappedBy: 'voyage')]
+    #[ORM\OneToMany(targetEntity: Itineraire::class, mappedBy: 'voyage', cascade: ['remove'], orphanRemoval: true)]
     private Collection $itineraires;
 
     /**
@@ -176,7 +176,7 @@ class Voyage
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Paiement::class, mappedBy: 'voyage')]
+    #[ORM\OneToMany(targetEntity: Paiement::class, mappedBy: 'voyage', cascade: ['remove'], orphanRemoval: true)]
     private Collection $paiements;
 
     /**
@@ -223,13 +223,18 @@ class Voyage
     {
         if (!$this->getActivites()->contains($activite)) {
             $this->getActivites()->add($activite);
+            $activite->addVoyage($this);
         }
+
         return $this;
     }
 
     public function removeActivite(Activite $activite): self
     {
-        $this->getActivites()->removeElement($activite);
+        if ($this->getActivites()->removeElement($activite)) {
+            $activite->removeVoyage($this);
+        }
+
         return $this;
     }
 
@@ -261,13 +266,18 @@ class Voyage
     {
         if (!$this->getUsers()->contains($user)) {
             $this->getUsers()->add($user);
+            $user->addVoyage($this);
         }
+
         return $this;
     }
 
     public function removeUser(User $user): self
     {
-        $this->getUsers()->removeElement($user);
+        if ($this->getUsers()->removeElement($user)) {
+            $user->removeVoyage($this);
+        }
+
         return $this;
     }
 
