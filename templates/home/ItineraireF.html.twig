@@ -544,16 +544,12 @@
                             <!-- Afficher les jours si disponibles -->
                             {% if itineraire.voyage and itineraire.voyage.date_debut and itineraire.voyage.date_fin %}
                                 {% set nbDays = (itineraire.voyage.date_fin|date('d') - itineraire.voyage.date_debut|date('d') + 1) %}
-                                {% set daysToShow = nbDays > 5 ? 5 : nbDays %}
                                 <div class="itineraire-card__days">
-                                    {% for day in range(1, daysToShow) %}
+                                    {% for day in range(1, nbDays + 1) %}
                                         <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: day}) }}" class="day-badge {% if day == 1 %}active{% endif %}" style="text-decoration: none; cursor: pointer;">
                                             J{{ day }}
                                         </a>
                                     {% endfor %}
-                                    {% if nbDays > 5 %}
-                                        <div class="day-badge">+{{ nbDays - 5 }}</div>
-                                    {% endif %}
                                 </div>
                             {% endif %}
                         </div>

@@ -67,6 +67,7 @@ class ItineraireFController extends AbstractController
     public function create(
         Request $request,
         VoyageRepository $voyageRepository,
+        ItineraireRepository $itineraireRepository,
         EntityManagerInterface $entityManager
     ): Response {
         $voyageId = $request->query->get('voyageId');
@@ -81,10 +82,59 @@ class ItineraireFController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
+            $errors = [];
+
+            // Validation du nom
+            if (empty($data['nom_itineraire'])) {
+                $errors[] = 'Le nom de l\'itinéraire est obligatoire.';
+            } elseif (strlen($data['nom_itineraire']) < 3) {
+                $errors[] = 'Le nom de l\'itinéraire doit contenir au minimum 3 caractères.';
+            }
+
+            // Validation de la description
+            if (empty($data['description_itineraire'])) {
+                $errors[] = 'La description est obligatoire.';
+            } elseif (strlen($data['description_itineraire']) < 10) {
+                $errors[] = 'La description doit contenir au minimum 10 caractères.';
+            }
+
+            // Validation du voyage
+            if (empty($data['id_voyage'])) {
+                $errors[] = 'Le voyage est obligatoire.';
+            }
+
+            // Vérifier l'unicité du nom pour ce voyage
+            if (!empty($data['nom_itineraire']) && !empty($data['id_voyage'])) {
+                $voyage = $voyageRepository->find($data['id_voyage']);
+                if ($voyage) {
+                    $itineraireExistant = $itineraireRepository->findOneBy([
+                        'voyage' => $voyage,
+                        'nom_itineraire' => $data['nom_itineraire']
+                    ]);
+                    if ($itineraireExistant) {
+                        $errors[] = 'Un itinéraire avec ce nom existe déjà pour ce voyage.';
+                    }
+                }
+            }
+
+            if (!empty($errors)) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error);
+                }
+                // Retourner au formulaire
+                $voyages = $voyageRepository->findAll();
+                return $this->render('home/itineraire_form.html.twig', [
+                    'itineraire' => null,
+                    'voyages' => $voyages,
+                    'title' => 'Créer un itinéraire',
+                    'voyageSelectionne' => $voyageSelectionne,
+                    'voyageId' => $voyageId,
+                ]);
+            }
 
             $itineraire = new Itineraire();
-            $itineraire->setNom_itineraire($data['nom_itineraire'] ?? '');
-            $itineraire->setDescription_itineraire($data['description_itineraire'] ?? '');
+            $itineraire->setNom_itineraire($data['nom_itineraire']);
+            $itineraire->setDescription_itineraire($data['description_itineraire']);
 
             // Lier au voyage
             if (isset($data['id_voyage'])) {
@@ -134,9 +184,55 @@ class ItineraireFController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
+            $errors = [];
 
-            $itineraire->setNom_itineraire($data['nom_itineraire'] ?? '');
-            $itineraire->setDescription_itineraire($data['description_itineraire'] ?? '');
+            // Validation du nom
+            if (empty($data['nom_itineraire'])) {
+                $errors[] = 'Le nom de l\'itinéraire est obligatoire.';
+            } elseif (strlen($data['nom_itineraire']) < 3) {
+                $errors[] = 'Le nom de l\'itinéraire doit contenir au minimum 3 caractères.';
+            }
+
+            // Validation de la description
+            if (empty($data['description_itineraire'])) {
+                $errors[] = 'La description est obligatoire.';
+            } elseif (strlen($data['description_itineraire']) < 10) {
+                $errors[] = 'La description doit contenir au minimum 10 caractères.';
+            }
+
+            // Vérifier l'unicité du nom pour ce voyage (en excluant l'itinéraire actuel)
+            if (!empty($data['nom_itineraire']) && !empty($data['id_voyage'])) {
+                $voyage = $voyageRepository->find($data['id_voyage']);
+                if ($voyage) {
+                    $itineraireExistant = $itineraireRepository->findOneBy([
+                        'voyage' => $voyage,
+                        'nom_itineraire' => $data['nom_itineraire']
+                    ]);
+                    if ($itineraireExistant && $itineraireExistant->getId_itineraire() !== $id) {
+                        $errors[] = 'Un itinéraire avec ce nom existe déjà pour ce voyage.';
+                    }
+                }
+            }
+
+            if (!empty($errors)) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error);
+                }
+                // Retourner au formulaire
+                $voyages = $voyageRepository->findAll();
+                $voyageSelectionne = $itineraire->getVoyage();
+                $voyageId = $voyageSelectionne ? $voyageSelectionne->getId_voyage() : null;
+                return $this->render('home/itineraire_form.html.twig', [
+                    'itineraire' => $itineraire,
+                    'voyages' => $voyages,
+                    'title' => 'Modifier l\'itinéraire',
+                    'voyageSelectionne' => $voyageSelectionne,
+                    'voyageId' => $voyageId,
+                ]);
+            }
+
+            $itineraire->setNom_itineraire($data['nom_itineraire']);
+            $itineraire->setDescription_itineraire($data['description_itineraire']);
 
             if (isset($data['id_voyage'])) {
                 $voyage = $voyageRepository->find($data['id_voyage']);

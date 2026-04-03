@@ -200,6 +200,27 @@
             margin-bottom: 1.5rem;
         }
 
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: rgba(39, 174, 96, 0.1);
+            border: 1px solid rgba(39, 174, 96, 0.3);
+            color: #27ae60;
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+
         @media (max-width: 768px) {
             .etapes-header {
                 flex-direction: column;
@@ -234,6 +255,21 @@
 
 {% block body %}
     <div class="etapes-page">
+        <!-- Messages Flash -->
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">
+                <span>✓</span>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-error">
+                <span>!</span>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+
         <!-- Header avec navigation -->
         <div class="etapes-header">
             <div class="etapes-header__left">
