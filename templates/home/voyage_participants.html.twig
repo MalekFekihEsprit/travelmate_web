@@ -271,13 +271,12 @@
 
         .participants-role-form {
             display: flex;
-            gap: 0.75rem;
             align-items: center;
             justify-content: flex-end;
-            flex-wrap: wrap;
         }
 
         .participants-role-form .participants-select {
+            width: 100%;
             min-width: 180px;
         }
 
@@ -286,6 +285,11 @@
             gap: 0.65rem;
             align-items: center;
             justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .participants-actions form {
+            display: flex;
         }
 
         .participants-icon-button {
@@ -392,14 +396,16 @@
 
             .participants-role-form,
             .participants-actions {
-                justify-content: stretch;
+                justify-content: flex-start;
             }
 
             .participants-role-form .participants-select,
-            .participants-role-form .participants-icon-button,
-            .participants-actions form,
-            .participants-actions .participants-icon-button {
+            .participants-actions {
                 width: 100%;
+            }
+
+            .participants-actions {
+                justify-content: flex-start;
             }
         }
     </style>
@@ -520,14 +526,17 @@
                                     {% endif %}
                                 </div>
 
-                                <form method="post" action="{{ path('app_voyages_participants_update', {'id_voyage': voyage.idVoyage, 'userId': participation.user.id}) }}" class="participants-role-form">
+                                <form id="participant-role-form-{{ participation.user.id }}" method="post" action="{{ path('app_voyages_participants_update', {'id_voyage': voyage.idVoyage, 'userId': participation.user.id}) }}" class="participants-role-form">
                                     <input type="hidden" name="_token" value="{{ csrf_token('update_participant_' ~ voyage.idVoyage ~ '_' ~ participation.user.id) }}">
                                     <select name="role_participation" class="participants-select" aria-label="Role de {{ participation.user.prenom }} {{ participation.user.nom }}">
                                         {% for role in role_options %}
                                             <option value="{{ role }}" {{ role == participation.roleParticipation ? 'selected' : '' }}>{{ role }}</option>
                                         {% endfor %}
                                     </select>
-                                    <button type="submit" class="participants-icon-button participants-icon-button--save" title="Mettre a jour le role" aria-label="Mettre a jour le role de {{ participation.user.prenom }} {{ participation.user.nom }}">
+                                </form>
+
+                                <div class="participants-actions">
+                                    <button type="submit" form="participant-role-form-{{ participation.user.id }}" class="participants-icon-button participants-icon-button--save" title="Mettre a jour le role" aria-label="Mettre a jour le role de {{ participation.user.prenom }} {{ participation.user.nom }}">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="M5 20H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                             <path d="M7 4H16L19 7V20H7V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
@@ -536,9 +545,6 @@
                                         </svg>
                                         <span class="sr-only">Enregistrer</span>
                                     </button>
-                                </form>
-
-                                <div class="participants-actions">
                                     <form method="post" action="{{ path('app_voyages_participants_delete', {'id_voyage': voyage.idVoyage, 'userId': participation.user.id}) }}" onsubmit="return confirm('Supprimer ce participant du voyage ?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete_participant_' ~ voyage.idVoyage ~ '_' ~ participation.user.id) }}">
                                         <button type="submit" class="participants-icon-button participants-icon-button--delete" title="Supprimer le participant" aria-label="Supprimer {{ participation.user.prenom }} {{ participation.user.nom }} du voyage">
