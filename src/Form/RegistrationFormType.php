@@ -44,10 +44,13 @@ class RegistrationFormType extends AbstractType
                     new Length(max: 255),
                 ],
             ])
-            ->add('dateNaissance', DateType::class, [
+            ->add('date_naissance', DateType::class, [
                 'label' => 'Date de naissance',
                 'widget' => 'single_text',
                 'html5' => true,
+                'required' => true,
+                'input' => 'datetime',  
+                'empty_data' => null,
                 'constraints' => [
                     new NotBlank(message: 'La date de naissance est obligatoire.'),
                 ],

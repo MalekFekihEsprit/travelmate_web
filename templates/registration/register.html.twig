@@ -335,9 +335,9 @@
                         </div>
 
                         <div class="form-control-block">
-                            {{ form_label(registrationForm.dateNaissance) }}
-                            {{ form_widget(registrationForm.dateNaissance) }}
-                            <div class="form-error">{{ form_errors(registrationForm.dateNaissance) }}</div>
+                            {{ form_label(registrationForm.date_naissance) }}
+                            {{ form_widget(registrationForm.date_naissance) }}
+                            <div class="form-error">{{ form_errors(registrationForm.date_naissance) }}</div>
                         </div>
 
                         <div class="form-control-block">
@@ -387,7 +387,7 @@
 
                 <p class="auth-bottom">
                     Vous avez déjà un compte ?
-                    <a href="#">Se connecter</a>
+                    <a href="{{ path('app_login') }}">Se connecter</a>
                 </p>
             </div>
         </div>
