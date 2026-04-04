@@ -11,7 +11,7 @@ security:
                 property: email
     firewalls:
         dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js|build)/
+            pattern: ^/(_(profiler|wdt)|css|images|js|build|uploads)/
             security: false
         main:
             lazy: true
@@ -19,8 +19,7 @@ security:
             custom_authenticator: App\Security\LoginFormAuthenticator
             logout:
                 path: app_logout
-                target: app_home
-
+                target: app_login
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
 
@@ -32,7 +31,7 @@ security:
     access_control:
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/profile, roles: ROLE_USER }
-        - { path: ^/dashboard, roles: ROLE_USER }
+        - { path: ^/dashboard, roles: ROLE_ADMIN }
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 

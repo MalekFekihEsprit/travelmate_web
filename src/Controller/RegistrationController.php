@@ -117,7 +117,7 @@ class RegistrationController extends AbstractController
 
         if ($user->isVerified()) {
             $this->addFlash('info', 'Votre compte est déjà vérifié.');
-            return $this->redirectToRoute('app_home');
+            return $this->redirectToRoute('app_login');
         }
 
         $form = $this->createForm(VerifyEmailCodeType::class);
@@ -133,7 +133,7 @@ class RegistrationController extends AbstractController
                 $entityManager->flush();
 
                 $this->addFlash('success', 'Votre compte a été vérifié avec succès. Vous pouvez maintenant vous connecter.');
-                return $this->redirectToRoute('app_home');
+                return $this->redirectToRoute('app_login');
             }
 
             $form->get('code')->addError(new FormError('Le code saisi est invalide.'));
@@ -160,7 +160,7 @@ class RegistrationController extends AbstractController
 
         if ($user->isVerified()) {
             $this->addFlash('info', 'Ce compte est déjà vérifié.');
-            return $this->redirectToRoute('app_home');
+            return $this->redirectToRoute('app_login');
         }
 
         $newCode = $this->generateVerificationCode();

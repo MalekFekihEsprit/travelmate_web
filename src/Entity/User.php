@@ -572,4 +572,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
     }
+
+    public function getProfileImage(): string
+    {
+        if ($this->photo_file_name) {
+            return '/uploads/profiles/'.$this->photo_file_name;
+        }
+
+        if ($this->photo_url) {
+            return $this->photo_url;
+        }
+
+        $email = trim(mb_strtolower((string) $this->email));
+        $hash = md5($email);
+
+        return 'https://www.gravatar.com/avatar/'.$hash.'?d=identicon&s=300';
+    }
 }
