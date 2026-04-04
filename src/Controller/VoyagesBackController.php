@@ -6,13 +6,18 @@ use App\Entity\Destination;
 use App\Entity\Voyage;
 use App\Repository\DestinationRepository;
 use App\Repository\VoyageRepository;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Twig\Environment;
 
 final class VoyagesBackController extends AbstractController
 {
@@ -38,6 +43,69 @@ final class VoyagesBackController extends AbstractController
 			editingVoyage: $editingVoyage instanceof Voyage ? $editingVoyage : null,
 			formErrors: []
 		);
+	}
+
+	#[Route('/admin/voyages/export/pdf', name: 'app_admin_voyages_export_pdf', methods: ['GET'])]
+	public function exportPdf(
+		Request $request,
+		VoyageRepository $voyageRepository,
+		Environment $twig
+	): Response {
+		$search = trim((string) $request->query->get('search', ''));
+		$voyages = $this->findBackOfficeVoyages($voyageRepository, $search);
+
+		$options = new Options();
+		$options->set('defaultFont', 'DejaVu Sans');
+		$options->set('isRemoteEnabled', false);
+
+		$dompdf = new Dompdf($options);
+		$dompdf->loadHtml($twig->render('admin/voyages_export_pdf.html.twig', [
+			'voyages' => $voyages,
+			'search' => $search,
+			'generated_at' => new \DateTimeImmutable(),
+		]));
+		$dompdf->setPaper('A4', 'landscape');
+		$dompdf->render();
+
+		$response = new Response($dompdf->output());
+		$disposition = $response->headers->makeDisposition(
+			ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+			'voyages-export.pdf'
+		);
+
+		$response->headers->set('Content-Type', 'application/pdf');
+		$response->headers->set('Content-Disposition', $disposition);
+
+		return $response;
+	}
+
+	#[Route('/admin/voyages/export/excel', name: 'app_admin_voyages_export_excel', methods: ['GET'])]
+	public function exportExcel(
+		Request $request,
+		VoyageRepository $voyageRepository
+	): StreamedResponse {
+		$search = trim((string) $request->query->get('search', ''));
+		$voyages = $this->findBackOfficeVoyages($voyageRepository, $search);
+
+		$response = new StreamedResponse(function () use ($voyages): void {
+			$handle = fopen('php://output', 'wb');
+
+			if ($handle === false) {
+				return;
+			}
+
+			fwrite($handle, "\xEF\xBB\xBF");
+			fputcsv($handle, ['ID', 'Titre', 'Date debut', 'Date fin', 'Statut', 'ID destination', 'Destination', 'Pays'], ';');
+			foreach ($voyages as $voyage) {
+				fputcsv($handle, $this->buildVoyageExportRow($voyage), ';');
+			}
+			fclose($handle);
+		});
+
+		$response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+		$response->headers->set('Content-Disposition', 'attachment; filename="voyages-export.csv"');
+
+		return $response;
 	}
 
 	#[Route('/admin/voyages/creer', name: 'app_admin_voyages_create', methods: ['POST'])]
@@ -299,6 +367,25 @@ final class VoyagesBackController extends AbstractController
 		$date = \DateTime::createFromFormat('Y-m-d', $value);
 
 		return $date instanceof \DateTime ? $date : null;
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function buildVoyageExportRow(Voyage $voyage): array
+	{
+		$destination = $voyage->getDestination();
+
+		return [
+			(string) ($voyage->getIdVoyage() ?? ''),
+			(string) ($voyage->getTitreVoyage() ?? ''),
+			$voyage->getDateDebut()?->format('Y-m-d') ?? '-',
+			$voyage->getDateFin()?->format('Y-m-d') ?? '-',
+			(string) ($voyage->getStatut() ?? ''),
+			(string) ($destination?->getIdDestination() ?? ''),
+			(string) ($destination?->getNomDestination() ?? ''),
+			(string) ($destination?->getPaysDestination() ?? ''),
+		];
 	}
 
 	/**

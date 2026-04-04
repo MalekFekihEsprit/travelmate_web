@@ -378,6 +378,21 @@
             margin-bottom: 1rem;
         }
 
+        .admin-voyages-list-card__summary {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .admin-voyages-list-card__actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
         .admin-voyages-list-card__title {
             font-family: 'Fraunces', serif;
             font-size: 1.4rem;
@@ -523,6 +538,15 @@
             .admin-voyages-form__actions {
                 flex-direction: column;
                 align-items: stretch;
+            }
+
+            .admin-voyages-list-card__actions {
+                justify-content: stretch;
+            }
+
+            .admin-voyages-list-card__actions .admin-action-btn {
+                width: 100%;
+                justify-content: center;
             }
 
             .admin-voyages-toasts {
@@ -727,11 +751,22 @@
 
         <section class="admin-card admin-voyages-list-card">
             <div class="admin-voyages-list-card__header">
-                <div>
-                    <span class="admin-card__eyebrow">Liste</span>
-                    <h2 class="admin-voyages-list-card__title">Liste des voyages</h2>
+                <div class="admin-voyages-list-card__summary">
+                    <div>
+                        <span class="admin-card__eyebrow">Liste</span>
+                        <h2 class="admin-voyages-list-card__title">Liste des voyages</h2>
+                    </div>
+                    <span class="admin-voyages-count">{{ voyages|length }}</span>
                 </div>
-                <span class="admin-voyages-count">{{ voyages|length }}</span>
+
+                <div class="admin-voyages-list-card__actions">
+                    <a href="{{ path('app_admin_voyages_export_pdf', {'search': app.request.query.get('search', '')}) }}" class="admin-action-btn admin-action-btn--secondary">
+                        <span>Exporter PDF</span>
+                    </a>
+                    <a href="{{ path('app_admin_voyages_export_excel', {'search': app.request.query.get('search', '')}) }}" class="admin-action-btn admin-action-btn--ghost">
+                        <span>Exporter Excel</span>
+                    </a>
+                </div>
             </div>
 
             <div class="admin-voyages-table-wrap">
