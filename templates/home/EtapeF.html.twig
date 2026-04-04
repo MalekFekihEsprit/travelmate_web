@@ -221,6 +221,87 @@
             color: #e74c3c;
         }
 
+        .etapes-toolbar {
+            padding: 1.25rem 1.35rem;
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
+        }
+
+        .etapes-toolbar__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.15rem;
+            color: var(--color-text);
+            margin: 0 0 1rem;
+        }
+
+        .etapes-filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .etapes-filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .etapes-filter-group label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .etapes-filter-group input,
+        .etapes-filter-group select {
+            padding: 0.65rem 0.85rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.95rem;
+        }
+
+        .etapes-filter-group input:focus,
+        .etapes-filter-group select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(196, 111, 75, 0.1);
+        }
+
+        .etapes-filter-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-etape-filter {
+            padding: 0.65rem 1.2rem;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-etape-reset {
+            padding: 0.65rem 1rem;
+            background: transparent;
+            color: var(--color-text-muted);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+        }
+
         @media (max-width: 768px) {
             .etapes-header {
                 flex-direction: column;
@@ -291,6 +372,29 @@
                 </a>
             </div>
         </div>
+
+        <section class="etapes-toolbar" aria-label="Recherche et tri des étapes">
+            <h2 class="etapes-toolbar__title">Recherche et tri</h2>
+            <form method="get" action="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="etapes-filter-row">
+                <div class="etapes-filter-group">
+                    <label for="etape-q">Recherche</label>
+                    <input type="search" id="etape-q" name="q" value="{{ search_q }}" placeholder="Description ou activité…" autocomplete="off">
+                </div>
+                <div class="etapes-filter-group">
+                    <label for="etape-sort">Tri</label>
+                    <select id="etape-sort" name="sort">
+                        <option value="heure_asc" {% if sort == 'heure_asc' %}selected{% endif %}>Heure ↑ croissant</option>
+                        <option value="heure_desc" {% if sort == 'heure_desc' %}selected{% endif %}>Heure ↓ décroissant</option>
+                        <option value="alpha_asc" {% if sort == 'alpha_asc' %}selected{% endif %}>Description A → Z</option>
+                        <option value="alpha_desc" {% if sort == 'alpha_desc' %}selected{% endif %}>Description Z → A</option>
+                    </select>
+                </div>
+                <div class="etapes-filter-actions">
+                    <button type="submit" class="btn-etape-filter">Appliquer</button>
+                    <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="btn-etape-reset">Réinitialiser</a>
+                </div>
+            </form>
+        </section>
 
         <!-- Liste des étapes -->
         {% if etapes|length > 0 %}

@@ -4,19 +4,52 @@ namespace App\Controller;
 
 use App\Entity\Itineraire;
 use App\Entity\Voyage;
-use App\Entity\Destination;
 use App\Repository\ItineraireRepository;
 use App\Repository\VoyageRepository;
-use App\Repository\DestinationRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
+use Twig\Environment;
 
 #[Route('/itineraires', name: 'app_itineraires_')]
 class ItineraireFController extends AbstractController
 {
+    private static function nombreJoursVoyage(?Voyage $voyage): ?int
+    {
+        if (!$voyage || !$voyage->getDate_debut() || !$voyage->getDate_fin()) {
+            return null;
+        }
+
+        return $voyage->getDate_fin()->diff($voyage->getDate_debut())->days + 1;
+    }
+
+    /**
+     * Libellé du type « Généré le vendredi 5 avril 2026 » sans dépendre de l'extension PHP intl.
+     */
+    private static function formatGeneratedLabelFr(\DateTimeInterface $at): string
+    {
+        $jours = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+        $mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+        $w = (int) $at->format('w');
+        $d = (int) $at->format('j');
+        $m = (int) $at->format('n');
+        $y = (int) $at->format('Y');
+
+        return sprintf(
+            'Généré le %s %d %s %d',
+            $jours[$w],
+            $d,
+            $mois[$m - 1],
+            $y
+        );
+    }
+
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(
         Request $request,
@@ -36,23 +69,35 @@ class ItineraireFController extends AbstractController
             throw $this->createNotFoundException('Voyage non trouvé');
         }
 
+        $search = mb_strtolower(trim((string) $request->query->get('q', '')));
+        $sort = (string) $request->query->get('sort', 'nom_asc');
+        if (!in_array($sort, ['nom_asc', 'nom_desc'], true)) {
+            $sort = 'nom_asc';
+        }
+
         // Récupérer tous les itinéraires liés à ce voyage
         $itineraires = $itineraireRepository->findBy(['voyage' => $voyageSelectionne]);
 
-        // Trier par date du voyage
-        usort($itineraires, function($a, $b) {
-            return $b->getVoyage()->getDate_debut() <=> $a->getVoyage()->getDate_debut();
+        if ($search !== '') {
+            $itineraires = array_values(array_filter($itineraires, static function (Itineraire $i) use ($search): bool {
+                $nom = mb_strtolower((string) $i->getNom_itineraire());
+                $desc = mb_strtolower((string) $i->getDescription_itineraire());
+
+                return str_contains($nom, $search) || str_contains($desc, $search);
+            }));
+        }
+
+        usort($itineraires, static function (Itineraire $a, Itineraire $b) use ($sort): int {
+            $cmp = strcasecmp((string) $a->getNom_itineraire(), (string) $b->getNom_itineraire());
+
+            return $sort === 'nom_desc' ? -$cmp : $cmp;
         });
 
-        // Compter les stats
-        $totalItineraires = count($itineraires);
-        $totalJours = 0;
-        foreach ($itineraires as $itineraire) {
-            if ($itineraire->getVoyage() && $itineraire->getVoyage()->getDate_debut() && $itineraire->getVoyage()->getDate_fin()) {
-                $diff = $itineraire->getVoyage()->getDate_fin()->diff($itineraire->getVoyage()->getDate_debut());
-                $totalJours += $diff->days + 1;
-            }
-        }
+        $voyageNbJours = self::nombreJoursVoyage($voyageSelectionne);
+
+        $tousItineraires = $itineraireRepository->findBy(['voyage' => $voyageSelectionne]);
+        $totalItineraires = count($tousItineraires);
+        $totalJours = $voyageNbJours ?? 0;
 
         return $this->render('home/ItineraireF.html.twig', [
             'itineraires' => $itineraires,
@@ -60,7 +105,74 @@ class ItineraireFController extends AbstractController
             'totalJours' => $totalJours,
             'voyageSelectionne' => $voyageSelectionne,
             'voyageId' => $voyageId,
+            'voyageNbJours' => $voyageNbJours,
+            'search_q' => trim((string) $request->query->get('q', '')),
+            'sort' => $sort,
         ]);
+    }
+
+    #[Route('/export/pdf', name: 'export_pdf', methods: ['GET'])]
+    public function exportPdf(
+        Request $request,
+        ItineraireRepository $itineraireRepository,
+        VoyageRepository $voyageRepository,
+        Environment $twig
+    ): Response {
+        $voyageId = $request->query->get('voyageId');
+        if (!$voyageId) {
+            throw $this->createNotFoundException('Voyage requis');
+        }
+
+        $voyage = $voyageRepository->find($voyageId);
+        if (!$voyage) {
+            throw $this->createNotFoundException('Voyage non trouvé');
+        }
+
+        $itineraires = $itineraireRepository->findBy(['voyage' => $voyage]);
+        usort($itineraires, static function (Itineraire $a, Itineraire $b): int {
+            return strcasecmp((string) $a->getNom_itineraire(), (string) $b->getNom_itineraire());
+        });
+
+        $voyageNbJours = self::nombreJoursVoyage($voyage);
+
+        $totalItineraires = count($itineraires);
+        $totalPlanifies = 0;
+        foreach ($itineraires as $itin) {
+            if ($itin->getEtapes()->count() > 0) {
+                ++$totalPlanifies;
+            }
+        }
+
+        $generatedAt = new \DateTimeImmutable('now', new \DateTimeZone(date_default_timezone_get()));
+        $generatedLabelFr = self::formatGeneratedLabelFr($generatedAt);
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($twig->render('home/itineraires_export_pdf.html.twig', [
+            'voyage' => $voyage,
+            'itineraires' => $itineraires,
+            'voyageNbJours' => $voyageNbJours,
+            'total_itineraires' => $totalItineraires,
+            'total_planifies' => $totalPlanifies,
+            'generated_at' => $generatedAt,
+            'generated_label_fr' => $generatedLabelFr,
+        ]));
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'Mes Itineraires - TravelMate.pdf';
+
+        $response = new Response($dompdf->output());
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set(
+            'Content-Disposition',
+            $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $filename)
+        );
+
+        return $response;
     }
 
     #[Route('/create', name: 'create', methods: ['GET', 'POST'])]

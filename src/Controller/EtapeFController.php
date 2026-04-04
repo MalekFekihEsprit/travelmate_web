@@ -48,18 +48,52 @@ class EtapeFController extends AbstractController
             'numero_jour' => $jour
         ]);
 
-        // Trier par heure
-        usort($etapes, function($a, $b) {
-            if (!$a->getHeure() || !$b->getHeure()) {
-                return 0;
-            }
-            return $a->getHeure() <=> $b->getHeure();
+        $search = mb_strtolower(trim((string) $request->query->get('q', '')));
+        if ($search !== '') {
+            $etapes = array_values(array_filter($etapes, static function (Etape $e) use ($search): bool {
+                $desc = mb_strtolower((string) $e->getDescription_etape());
+                $act = $e->getActivite() ? mb_strtolower((string) $e->getActivite()->getNom()) : '';
+
+                return str_contains($desc, $search) || ($act !== '' && str_contains($act, $search));
+            }));
+        }
+
+        $sort = (string) $request->query->get('sort', 'heure_asc');
+        if (!in_array($sort, ['heure_asc', 'heure_desc', 'alpha_asc', 'alpha_desc'], true)) {
+            $sort = 'heure_asc';
+        }
+
+        $cmpHeure = static function (Etape $a, Etape $b, bool $desc): int {
+            $ta = $a->getHeure()?->getTimestamp() ?? ($desc ? PHP_INT_MIN : PHP_INT_MAX);
+            $tb = $b->getHeure()?->getTimestamp() ?? ($desc ? PHP_INT_MIN : PHP_INT_MAX);
+            $c = $ta <=> $tb;
+
+            return $desc ? -$c : $c;
+        };
+
+        $cmpAlpha = static function (Etape $a, Etape $b, bool $desc): int {
+            $sa = mb_strtolower((string) $a->getDescription_etape());
+            $sb = mb_strtolower((string) $b->getDescription_etape());
+            $c = strcasecmp($sa, $sb);
+
+            return $desc ? -$c : $c;
+        };
+
+        usort($etapes, function (Etape $a, Etape $b) use ($sort, $cmpHeure, $cmpAlpha): int {
+            return match ($sort) {
+                'heure_desc' => $cmpHeure($a, $b, true),
+                'alpha_asc' => $cmpAlpha($a, $b, false),
+                'alpha_desc' => $cmpAlpha($a, $b, true),
+                default => $cmpHeure($a, $b, false),
+            };
         });
 
         return $this->render('home/EtapeF.html.twig', [
             'itineraire' => $itineraire,
             'jour' => $jour,
             'etapes' => $etapes,
+            'search_q' => trim((string) $request->query->get('q', '')),
+            'sort' => $sort,
         ]);
     }
 

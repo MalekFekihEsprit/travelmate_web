@@ -512,15 +512,42 @@
             </div>
             <div class="itineraires-hero__visual">
                 <div class="itineraires-hero__icon">📍</div>
-                <div style="display: flex; gap: 0.75rem; z-index: 1;">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; z-index: 1;">
                     <a href="{{ path('app_itineraires_create', {voyageId: voyageId}) }}" class="btn btn--primary itineraires-hero__cta">
                         + Créer
+                    </a>
+                    <a href="{{ path('app_itineraires_export_pdf', {voyageId: voyageId}) }}" class="btn btn--secondary itineraires-hero__cta">
+                        📄 PDF
                     </a>
                     <a href="{{ path('app_voyages') }}" class="btn btn--secondary itineraires-hero__cta">
                         ← Mes voyages
                     </a>
                 </div>
             </div>
+        </section>
+
+        <section class="itineraires-toolbar" aria-label="Recherche et tri">
+            <div class="itineraires-toolbar__top">
+                <h2 class="itineraires-toolbar__title">Filtrer les itinéraires</h2>
+            </div>
+            <form method="get" action="{{ path('app_itineraires_index') }}" class="filter-row">
+                <input type="hidden" name="voyageId" value="{{ voyageId }}">
+                <div class="filter-group">
+                    <label for="itineraire-q">Recherche</label>
+                    <input type="search" id="itineraire-q" name="q" value="{{ search_q }}" placeholder="Nom ou description…" autocomplete="off">
+                </div>
+                <div class="filter-group">
+                    <label for="itineraire-sort">Tri par nom</label>
+                    <select id="itineraire-sort" name="sort">
+                        <option value="nom_asc" {% if sort == 'nom_asc' %}selected{% endif %}>A → Z</option>
+                        <option value="nom_desc" {% if sort == 'nom_desc' %}selected{% endif %}>Z → A</option>
+                    </select>
+                </div>
+                <div class="filter-actions" style="align-self: end;">
+                    <button type="submit" class="btn-filter-apply">Appliquer</button>
+                    <a href="{{ path('app_itineraires_index', {voyageId: voyageId}) }}" class="btn-reset" style="display: inline-flex; align-items: center; text-decoration: none;">Réinitialiser</a>
+                </div>
+            </form>
         </section>
 
         <!-- Liste des itinéraires -->
@@ -542,10 +569,9 @@
                             </p>
 
                             <!-- Afficher les jours si disponibles -->
-                            {% if itineraire.voyage and itineraire.voyage.date_debut and itineraire.voyage.date_fin %}
-                                {% set nbDays = (itineraire.voyage.date_fin|date('d') - itineraire.voyage.date_debut|date('d') + 1) %}
+                            {% if voyageNbJours is not null and voyageNbJours > 0 %}
                                 <div class="itineraire-card__days">
-                                    {% for day in range(1, nbDays + 1) %}
+                                    {% for day in range(1, voyageNbJours + 1) %}
                                         <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: day}) }}" class="day-badge {% if day == 1 %}active{% endif %}" style="text-decoration: none; cursor: pointer;">
                                             J{{ day }}
                                         </a>
@@ -557,7 +583,6 @@
                         <!-- Boutons d'actions -->
                         <div class="itineraire-card__actions">
                             <a href="{{ path('app_itineraires_edit', {id: itineraire.id_itineraire}) }}" class="action-btn" title="Éditer">✏️</a>
-                            <button class="action-btn success" title="Exporter">📄</button>
                             <form method="POST" action="{{ path('app_itineraires_delete', {id: itineraire.id_itineraire}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet itinéraire?');">
                                 <button type="submit" class="action-btn danger" title="Supprimer">🗑️</button>
                             </form>
