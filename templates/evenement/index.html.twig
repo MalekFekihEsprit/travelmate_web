@@ -3,295 +3,487 @@
 {% block title %}Événements — TravelMate{% endblock %}
 
 {% block stylesheets %}
-    {{ parent() }}
-    <style>
-        /* ── Hero ── */
-        .ev-hero {
-            background: linear-gradient(135deg, rgba(47,127,121,0.12) 0%, rgba(196,111,75,0.07) 100%);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-            padding: 2.5rem 2rem;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-        .ev-hero__title {
-            font-family: 'Fraunces', serif;
-            font-size: 2rem;
-            font-weight: 600;
-            line-height: 1.15;
-        }
-        .ev-hero__title span { color: var(--color-secondary); }
-        .ev-hero__sub { color: var(--color-text-muted); font-size: 1rem; margin-top: 0.4rem; }
+{{ parent() }}
+<style>
 
-        /* ── Grille ── */
-        .ev-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
+/* ═══════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════ */
+.eve-hero {
+    position: relative;
+    height: 480px;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: flex-end;
+}
+.eve-hero__bg {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(to top, rgba(20,14,10,0.72) 0%, rgba(20,14,10,0.18) 55%, transparent 100%),
+        url('/uploads/evenements/event.png') center/cover no-repeat;
+    transform: scale(1.04);
+    transition: transform 8s ease;
+}
+.eve-hero:hover .eve-hero__bg { transform: scale(1); }
+.eve-hero__content {
+    position: relative;
+    padding: 2.5rem 3rem;
+    max-width: 640px;
+}
+.eve-hero__eyebrow {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+}
+.eve-hero__title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 0.85rem;
+    letter-spacing: -0.02em;
+}
+.eve-hero__desc {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.65;
+    max-width: 480px;
+    margin-bottom: 1.75rem;
+}
+.eve-hero__actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.btn-hero-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #fff;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.btn-hero-primary:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
+.btn-hero-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.3);
+    cursor: pointer;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.btn-hero-ghost:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
 
-        /* ── Carte événement ── */
-        .ev-card {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
-        }
-        .ev-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 18px 40px rgba(71,48,35,0.10);
-            border-color: rgba(47,127,121,0.3);
-        }
+.eve-hero__stats {
+    position: absolute;
+    bottom: 2.5rem;
+    right: 3rem;
+    display: flex;
+    gap: 1.5rem;
+}
+.hero-stat { text-align: center; color: #fff; }
+.hero-stat__num {
+    font-family: 'Fraunces', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1;
+}
+.hero-stat__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.6);
+    margin-top: 0.2rem;
+}
 
-        /* Image */
-        .ev-card__img-wrap {
-            position: relative;
-            height: 180px;
-            overflow: hidden;
-            background: var(--color-surface-soft);
-        }
-        .ev-card__img { width:100%;height:100%;object-fit:cover;transition:transform 0.4s ease; }
-        .ev-card:hover .ev-card__img { transform: scale(1.05); }
-        .ev-card__img-placeholder {
-            width:100%;height:100%;
-            display:flex;align-items:center;justify-content:center;
-            font-size:3rem;color:var(--color-text-muted);
-        }
+/* ═══════════════════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════════════════ */
+.search-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+.search-field {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    max-width: 360px;
+}
+.search-field__icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+}
+.search-field__input {
+    width: 100%;
+    padding: 0.72rem 1rem 0.72rem 2.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.search-field__input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(196,111,75,0.1);
+}
+.results-count {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+}
 
-        /* Date badge flottant */
-        .ev-date-badge {
-            position: absolute;
-            top: 0.75rem;
-            left: 0.75rem;
-            background: rgba(255,253,249,0.95);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            padding: 0.45rem 0.75rem;
-            text-align: center;
-            backdrop-filter: blur(8px);
-            min-width: 54px;
-        }
-        .ev-date-badge__day {
-            font-family: 'Fraunces', serif;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--color-secondary);
-            line-height: 1;
-        }
-        .ev-date-badge__month {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--color-text-muted);
-            margin-top: 0.1rem;
-        }
+/* ═══════════════════════════════════════════════════
+   GRILLE ÉVÉNEMENTS
+═══════════════════════════════════════════════════ */
+.eve-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
 
-        /* Places badge */
-        .ev-places-badge {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            border-radius: 999px;
-            padding: 0.3rem 0.7rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            backdrop-filter: blur(6px);
-        }
-        .ev-places-badge--ok      { background: rgba(47,127,121,0.88); color:#fff; }
-        .ev-places-badge--few     { background: rgba(200,160,50,0.88); color:#fff; }
-        .ev-places-badge--complet { background: rgba(150,30,30,0.85);  color:#fff; }
+.eve-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.eve-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.10);
+}
 
-        /* Corps */
-        .ev-card__body { padding:1.25rem; flex:1; display:flex; flex-direction:column; gap:0.6rem; }
-        .ev-card__title {
-            font-family: 'Fraunces', serif;
-            font-size: 1.1rem; font-weight: 600;
-            color: var(--color-text); line-height:1.2;
-        }
-        .ev-card__meta {
-            display:flex; align-items:center; gap:0.4rem;
-            font-size:0.83rem; color:var(--color-text-muted);
-        }
+.eve-card__img-wrap {
+    position: relative;
+    height: 200px;
+    background: var(--color-bg-soft);
+    overflow: hidden;
+}
+.eve-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+.eve-card:hover .eve-card__img { transform: scale(1.04); }
+.eve-card__img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-border);
+}
+.eve-card__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%);
+}
 
-        /* Progress bar places */
-        .ev-progress { margin-top: 0.5rem; }
-        .ev-progress__label {
-            display:flex; justify-content:space-between;
-            font-size:0.78rem; color:var(--color-text-muted); margin-bottom:0.3rem;
-        }
-        .ev-progress__bar {
-            height: 5px; border-radius: 999px;
-            background: var(--color-surface-soft);
-            overflow: hidden;
-        }
-        .ev-progress__fill {
-            height: 100%; border-radius: 999px;
-            background: var(--color-secondary);
-            transition: width 0.4s ease;
-        }
+.eve-card__badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--color-primary);
+    color: #fff;
+}
+.eve-card__badge--full {
+    background: #e53e3e;
+}
 
-        /* Footer carte */
-        .ev-card__footer {
-            margin-top: auto;
-            padding-top: 1rem;
-            border-top: 1px solid var(--color-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-        }
-        .ev-card__heure {
-            font-size: 0.85rem;
-            color: var(--color-text-muted);
-            display: flex; align-items: center; gap: 0.35rem;
-        }
-        .btn-join {
-            display: inline-flex; align-items: center; gap: 0.4rem;
-            padding: 0.6rem 1.1rem;
-            border-radius: 999px;
-            background: var(--color-secondary);
-            color: #fff;
-            font: inherit; font-size: 0.88rem; font-weight: 600;
-            border: none; cursor: pointer;
-            text-decoration: none;
-            transition: background var(--transition-fast), transform var(--transition-fast);
-        }
-        .btn-join:hover { background: #256860; transform: translateY(-1px); }
-        .btn-join--disabled {
-            background: var(--color-surface-soft);
-            color: var(--color-text-muted);
-            border: 1px solid var(--color-border);
-            cursor: not-allowed;
-        }
-        .btn-join--disabled:hover { transform: none; background: var(--color-surface-soft); }
+.eve-card__date-badge {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: rgba(255,255,255,0.95);
+    border-radius: var(--radius-md);
+    padding: 0.4rem 0.7rem;
+    text-align: center;
+    line-height: 1.2;
+    min-width: 48px;
+}
+.eve-card__date-day {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+.eve-card__date-month {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+}
 
-        /* ── Vide ── */
-        .ev-empty {
-            grid-column: 1/-1;
-            text-align: center; padding: 4rem 2rem;
-            color: var(--color-text-muted);
-        }
-        .ev-empty__icon { font-size: 3.5rem; margin-bottom: 1rem; }
-    </style>
+.eve-card__body {
+    padding: 1.25rem 1.5rem 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.eve-card__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.3;
+}
+.eve-card__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+.eve-card__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.84rem;
+    color: var(--color-text-muted);
+}
+.eve-card__footer {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.eve-places {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+}
+.eve-places strong { color: var(--color-text); }
+.btn-join {
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #fff;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.btn-join:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
+.btn-join--full {
+    background: var(--color-border);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+}
+.btn-join--full:hover { background: var(--color-border); transform: none; }
+
+.eve-empty {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--color-text-muted);
+}
+.eve-empty__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem;
+    color: var(--color-text);
+}
+
+</style>
 {% endblock %}
 
 {% block body %}
-{# Hero #}
-<div class="ev-hero">
-    <div>
-        <h1 class="ev-hero__title">Nos <span>Événements</span></h1>
-        <p class="ev-hero__sub">Rejoignez des expériences collectives à date fixe et rencontrez d'autres voyageurs</p>
-    </div>
-    <a href="{{ path('app_activites') }}" class="btn btn--ghost">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Voir les Activités
-    </a>
-</div>
 
-{# Grille #}
-<div class="ev-grid">
-    {% if evenements is empty %}
-        <div class="ev-empty">
-            <div class="ev-empty__icon">📅</div>
-            <div style="font-weight:600;color:var(--color-text);font-size:1.2rem;margin-bottom:0.4rem">Aucun événement à venir</div>
-            <p>De nouveaux événements seront bientôt annoncés. Restez connectés !</p>
+{# ═══════ HERO ═══════ #}
+<section class="eve-hero">
+    <div class="eve-hero__bg"></div>
+    <div class="eve-hero__content">
+        <span class="eve-hero__eyebrow">📅 Événements</span>
+        <h1 class="eve-hero__title">
+            Rejoignez des<br>expériences collectives
+        </h1>
+        <p class="eve-hero__desc">
+            Ateliers, sorties, rencontres culturelles —
+            participez à des événements uniques et rencontrez d'autres voyageurs.
+        </p>
+        <div class="eve-hero__actions">
+            <a href="#evenements" class="btn-hero-primary">
+                Explorer les événements
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="{{ path('app_activites') }}" class="btn-hero-ghost">
+                Voir les activités
+            </a>
         </div>
-    {% else %}
-        {% for evenement in evenements %}
-            {% set nbParticipants = evenement.participations|length %}
-            {% set placesRestantes = evenement.placesRestantes %}
-            {% set pct = evenement.nbPlaces > 0 ? ((nbParticipants / evenement.nbPlaces) * 100)|round : 0 %}
-            {% set isComplet = evenement.isComplet %}
-            {% set isFew = placesRestantes > 0 and placesRestantes <= 5 %}
+    </div>
+    <div class="eve-hero__stats">
+        <div class="hero-stat">
+            <div class="hero-stat__num">{{ evenements|length }}</div>
+            <div class="hero-stat__label">Événements</div>
+        </div>
+    </div>
+</section>
 
-            <div class="ev-card">
-                {# Image #}
-                <div class="ev-card__img-wrap">
-                    {% if evenement.imagePath %}
-                        <img src="{{ asset(evenement.imagePath|replace({'\\\\': '/'})) }}"
-                             alt="{{ evenement.titre }}" class="ev-card__img"
-                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                        <div class="ev-card__img-placeholder" style="display:none">🎉</div>
-                    {% else %}
-                        <div class="ev-card__img-placeholder">🎉</div>
-                    {% endif %}
+{# ═══════ SECTION ═══════ #}
+<div id="evenements">
 
-                    {# Date badge #}
-                    <div class="ev-date-badge">
-                        <div class="ev-date-badge__day">{{ evenement.date|date('d') }}</div>
-                        <div class="ev-date-badge__month">{{ evenement.date|date('M')|upper }}</div>
-                    </div>
+    <div class="search-bar">
+        <div class="search-field">
+            <span class="search-field__icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+            <input type="search" class="search-field__input" id="searchInput" placeholder="Rechercher un événement…">
+        </div>
+    </div>
 
-                    {# Places badge #}
-                    <div class="ev-places-badge {{ isComplet ? 'ev-places-badge--complet' : (isFew ? 'ev-places-badge--few' : 'ev-places-badge--ok') }}">
-                        {% if isComplet %}
-                            Complet
-                        {% elseif isFew %}
-                            ⚡ {{ placesRestantes }} place{{ placesRestantes > 1 ? 's' : '' }}
-                        {% else %}
-                            {{ placesRestantes }} places
-                        {% endif %}
-                    </div>
-                </div>
+    <p class="results-count">
+        <strong id="countNum">{{ evenements|length }}</strong>
+        événement{% if evenements|length != 1 %}s{% endif %} disponible{% if evenements|length != 1 %}s{% endif %}
+    </p>
 
-                {# Corps #}
-                <div class="ev-card__body">
-                    <div class="ev-card__title">{{ evenement.titre }}</div>
-
-                    <div class="ev-card__meta">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
-                        {{ evenement.lieu|slice(0,50) }}{{ evenement.lieu|length > 50 ? '…' : '' }}
-                    </div>
-
-                    <div class="ev-card__meta">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                        {{ evenement.date|date('d/m/Y') }}
-                    </div>
-
-                    {% if evenement.description %}
-                        <p style="font-size:0.85rem;color:var(--color-text-muted);line-height:1.55">
-                            {{ evenement.description|slice(0,100) }}{{ evenement.description|length > 100 ? '…' : '' }}
-                        </p>
-                    {% endif %}
-
-                    {# Progress places #}
-                    <div class="ev-progress">
-                        <div class="ev-progress__label">
-                            <span>{{ nbParticipants }} participant{{ nbParticipants != 1 ? 's' : '' }}</span>
-                            <span>{{ evenement.nbPlaces }} places</span>
-                        </div>
-                        <div class="ev-progress__bar">
-                            <div class="ev-progress__fill" style="width:{{ pct }}%;background:{{ isComplet ? '#8b1a1a' : (isFew ? '#9a7a10' : 'var(--color-secondary)') }}"></div>
-                        </div>
-                    </div>
-
-                    {# Footer #}
-                    <div class="ev-card__footer">
-                        <div class="ev-card__heure">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                            {{ evenement.heure|date('H\\hi') }}
-                        </div>
-
-                        <a href="{{ path('app_evenement_show', {id: evenement.id}) }}"
-                           class="btn-join {{ isComplet ? 'btn-join--disabled' : '' }}">
-                            {% if isComplet %}
-                                Complet
-                            {% else %}
-                                Rejoindre
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            {% endif %}
-                        </a>
-                    </div>
-                </div>
+    <div class="eve-grid" id="eveGrid">
+        {% if evenements is empty %}
+            <div class="eve-empty">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin:0 auto;color:var(--color-border)"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <div class="eve-empty__title">Aucun événement disponible</div>
+                <p>Revenez bientôt, de nouveaux événements arrivent.</p>
             </div>
-        {% endfor %}
-    {% endif %}
+        {% else %}
+            {% for evenement in evenements %}
+                {% set complet = evenement.isComplet %}
+                <a href="{{ path('app_evenement_show', {id: evenement.id}) }}"
+                   class="eve-card"
+                   data-titre="{{ evenement.titre|lower }}">
+
+                    <div class="eve-card__img-wrap">
+                        {% if evenement.imagePath %}
+                            <img src="{{ asset('uploads/evenements/' ~ evenement.imagePath) }}"
+                                 alt="{{ evenement.titre }}"
+                                 class="eve-card__img"
+                                 onerror="this.style.display='none'">
+                        {% else %}
+                            <div class="eve-card__img-placeholder">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                            </div>
+                        {% endif %}
+                        <div class="eve-card__overlay"></div>
+
+                        {% if complet %}
+                            <span class="eve-card__badge eve-card__badge--full">Complet</span>
+                        {% else %}
+                            <span class="eve-card__badge">Ouvert</span>
+                        {% endif %}
+
+                        <div class="eve-card__date-badge">
+                            <div class="eve-card__date-day">{{ evenement.date|date('d') }}</div>
+                            <div class="eve-card__date-month">{{ evenement.date|date('M') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="eve-card__body">
+                        <div class="eve-card__title">{{ evenement.titre }}</div>
+                        <div class="eve-card__meta">
+                            <div class="eve-card__meta-item">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                {{ evenement.lieu }}
+                            </div>
+                            <div class="eve-card__meta-item">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                {{ evenement.heure|date('H:i') }}
+                            </div>
+                            {% if evenement.description %}
+                                <div class="eve-card__meta-item" style="margin-top:.2rem;color:var(--color-text);opacity:.8;font-size:.82rem;line-height:1.4">
+                                    {{ evenement.description|slice(0,90) }}{% if evenement.description|length > 90 %}…{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="eve-card__footer">
+                            <div class="eve-places">
+                                <strong>{{ evenement.placesRestantes }}</strong> / {{ evenement.nbPlaces }} places
+                            </div>
+                            {% if complet %}
+                                <span class="btn-join btn-join--full">Complet</span>
+                            {% else %}
+                                <span class="btn-join">Rejoindre →</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        {% endif %}
+    </div>
 </div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+(function() {
+    const searchInput = document.getElementById('searchInput');
+    const cards       = document.querySelectorAll('.eve-card[data-titre]');
+    const countEl     = document.getElementById('countNum');
+
+    function filter() {
+        const q = searchInput.value.toLowerCase().trim();
+        let visible = 0;
+        cards.forEach(card => {
+            const show = !q || card.dataset.titre.includes(q);
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        if (countEl) countEl.textContent = visible;
+    }
+
+    searchInput.addEventListener('input', filter);
+
+    document.querySelector('a[href="#evenements"]')?.addEventListener('click', e => {
+        e.preventDefault();
+        document.getElementById('evenements').scrollIntoView({ behavior: 'smooth' });
+    });
+})();
+</script>
 {% endblock %}

@@ -206,16 +206,16 @@
 
 {# Flash messages #}
 {% for msg in app.flashes('success') %}
-    <div class="flash-success">✅ {{ msg }}</div>
+    <div class="flash-success"> {{ msg }}</div>
 {% endfor %}
 {% for msg in app.flashes('error') %}
-    <div class="flash-error">❌ {{ msg }}</div>
+    <div class="flash-error"> {{ msg }}</div>
 {% endfor %}
 
 {# Header #}
 <div class="page-header">
     <div>
-        <div class="page-header__title">🏄 Gestion des Activités</div>
+        <div class="page-header__title"> Gestion des Activités</div>
         <div class="page-header__sub">Créez, modifiez et gérez toutes les activités de la plateforme</div>
     </div>
     <a href="{{ path('app_activite_new') }}" class="btn btn--primary">

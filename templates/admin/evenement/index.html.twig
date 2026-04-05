@@ -56,12 +56,12 @@
 {% block body %}
 
 {% for msg in app.flashes('success') %}
-    <div class="flash-success">✅ {{ msg }}</div>
+    <div class="flash-success"> {{ msg }}</div>
 {% endfor %}
 
 <div class="page-header">
     <div>
-        <div class="page-header__title">📅 Gestion des Événements</div>
+        <div class="page-header__title">Gestion des Événements</div>
         <div class="page-header__sub">Planifiez et gérez les événements collaboratifs de la plateforme</div>
     </div>
     <a href="{{ path('app_evenement_new') }}" class="btn btn--primary">
