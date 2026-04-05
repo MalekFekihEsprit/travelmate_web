@@ -16,6 +16,22 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
+    public function searchForAdmin(?string $term): array
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->orderBy('u.created_at', 'DESC');
+
+        if ($term && trim($term) !== '') {
+            $term = '%'.mb_strtolower(trim($term)).'%';
+
+            $qb
+                ->andWhere('LOWER(u.nom) LIKE :term OR LOWER(u.prenom) LIKE :term OR LOWER(u.email) LIKE :term')
+                ->setParameter('term', $term);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */

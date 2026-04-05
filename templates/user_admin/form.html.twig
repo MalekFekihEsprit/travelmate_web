@@ -1,0 +1,394 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}{{ pageTitle }} | Administration TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-user-form-page {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .admin-page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.6rem;
+            border-radius: 28px;
+            border: 1px solid var(--admin-border);
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.9));
+        }
+
+        .admin-page-header__eyebrow {
+            display: inline-block;
+            margin-bottom: .45rem;
+            color: var(--admin-secondary);
+            font-size: .8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .admin-page-header__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.9rem;
+            line-height: 1.08;
+            color: var(--admin-text);
+            margin-bottom: .45rem;
+        }
+
+        .admin-page-header__desc {
+            max-width: 60ch;
+            color: var(--admin-text-muted);
+        }
+
+        .admin-page-header__actions {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .82rem 1.1rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all .18s ease;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn--primary {
+            background: var(--admin-primary);
+            color: #fff;
+        }
+
+        .btn--primary:hover {
+            background: var(--admin-primary-dark);
+        }
+
+        .btn--ghost {
+            background: transparent;
+            color: var(--admin-text-muted);
+            border-color: var(--admin-border);
+        }
+
+        .btn--ghost:hover {
+            background: rgba(196, 111, 75, 0.08);
+            color: var(--admin-primary);
+            border-color: rgba(196, 111, 75, 0.28);
+        }
+
+        .admin-form-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .admin-card {
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--admin-border);
+            border-radius: 26px;
+            padding: 1.25rem;
+            box-shadow: var(--admin-shadow-soft);
+        }
+
+        .preview-card {
+            position: sticky;
+            top: calc(var(--topbar-height) + 1rem);
+            text-align: center;
+        }
+
+        .preview-avatar {
+            width: 160px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            background: var(--admin-surface-alt);
+            border: 4px solid rgba(196,111,75,.12);
+        }
+
+        .preview-name {
+            font-family: 'Fraunces', serif;
+            font-size: 1.45rem;
+            color: var(--admin-text);
+            margin-bottom: .3rem;
+        }
+
+        .preview-email {
+            color: var(--admin-text-muted);
+            margin-bottom: .85rem;
+            word-break: break-word;
+        }
+
+        .preview-role {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .45rem .85rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.12);
+            color: var(--admin-primary);
+            font-weight: 700;
+            font-size: .84rem;
+        }
+
+        .form-title {
+            font-size: 1.3rem;
+            color: var(--admin-text);
+            margin-bottom: .35rem;
+        }
+
+        .form-subtitle {
+            color: var(--admin-text-muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .form-control-block {
+            display: grid;
+            gap: .45rem;
+        }
+
+        .form-control-block label {
+            font-weight: 600;
+            color: var(--admin-text);
+            font-size: .94rem;
+        }
+
+        .form-control-block input,
+        .form-control-block textarea,
+        .form-control-block select {
+            width: 100%;
+            min-height: 52px;
+            padding: .9rem 1rem;
+            border-radius: 16px;
+            border: 1px solid var(--admin-border);
+            background: #fffdfa;
+            color: var(--admin-text);
+            outline: none;
+        }
+
+        .form-control-block input:focus,
+        .form-control-block textarea:focus,
+        .form-control-block select:focus {
+            border-color: rgba(196, 111, 75, 0.35);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.08);
+        }
+
+        .form-help {
+            font-size: .82rem;
+            color: var(--admin-text-muted);
+        }
+
+        .form-error {
+            color: #b84d4d;
+            font-size: .84rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+            margin-top: 1.25rem;
+        }
+
+        @media (max-width: 980px) {
+            .admin-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-card {
+                position: static;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .admin-page-header {
+                padding: 1.2rem;
+            }
+
+            .admin-page-header__title {
+                font-size: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .flash-message {
+            padding: .95rem 1rem;
+            border-radius: 16px;
+            font-size: .95rem;
+            border: 1px solid transparent;
+        }
+
+        .flash-message--success {
+            background: rgba(47, 127, 121, 0.10);
+            border-color: rgba(47, 127, 121, 0.16);
+            color: #245f5a;
+        }
+
+        .flash-message--error {
+            background: rgba(191, 91, 91, 0.10);
+            border-color: rgba(191, 91, 91, 0.16);
+            color: #9e4747;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="admin-user-form-page">
+        <div class="admin-page-header">
+            <div>
+                <span class="admin-page-header__eyebrow">Administration</span>
+                <h1 class="admin-page-header__title">{{ pageTitle }}</h1>
+                <p class="admin-page-header__desc">{{ pageSubtitle }}</p>
+            </div>
+
+            <div class="admin-page-header__actions">
+                <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">
+                    Retour à la liste
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-form-grid">
+            <aside class="admin-card preview-card">
+                <img src="{{ profileImage }}" alt="Photo utilisateur" class="preview-avatar">
+
+                <div class="preview-name">
+                    {{ userEntity.prenom ?: 'Prénom' }} {{ userEntity.nom ?: 'Nom' }}
+                </div>
+
+                <div class="preview-email">
+                    {{ userEntity.email ?: 'email@example.com' }}
+                </div>
+
+                <span class="preview-role">
+                    {{ userEntity.role ?: 'USER' }}
+                </span>
+            </aside>
+
+            <div class="admin-card">
+                <h2 class="form-title">Informations du compte</h2>
+                <p class="form-subtitle">
+                    Renseignez les données principales de l’utilisateur.
+                </p>
+                <div class="flash-stack">
+                    {% for message in app.flashes('success') %}
+                        <div class="flash-message flash-message--success">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="flash-message flash-message--error">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                    <div class="form-grid">
+                        <div class="form-control-block">
+                            {{ form_label(form.nom) }}
+                            {{ form_widget(form.nom) }}
+                            <div class="form-error">{{ form_errors(form.nom) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(form.prenom) }}
+                            {{ form_widget(form.prenom) }}
+                            <div class="form-error">{{ form_errors(form.prenom) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(form.date_naissance) }}
+                            {{ form_widget(form.date_naissance) }}
+                            <div class="form-error">{{ form_errors(form.date_naissance) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(form.telephone) }}
+                            {{ form_widget(form.telephone) }}
+                            <div class="form-error">{{ form_errors(form.telephone) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(form.email) }}
+                            {{ form_widget(form.email) }}
+                            <div class="form-error">{{ form_errors(form.email) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(form.role) }}
+                            {{ form_widget(form.role) }}
+                            <div class="form-error">{{ form_errors(form.role) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(form.isVerified) }}
+                            {{ form_widget(form.isVerified) }}
+                            <div class="form-error">{{ form_errors(form.isVerified) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(form.plainPassword) }}
+                            {{ form_widget(form.plainPassword) }}
+                            <div class="form-help">
+                                {{ isEdit ? 'Laissez vide pour conserver le mot de passe actuel.' : 'Choisissez un mot de passe fort.' }}
+                            </div>
+                            <div class="form-error">{{ form_errors(form.plainPassword) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(form.photoUrl) }}
+                            {{ form_widget(form.photoUrl) }}
+                            <div class="form-help">Optionnel. Collez une URL image si vous ne souhaitez pas importer de fichier.</div>
+                            <div class="form-error">{{ form_errors(form.photoUrl) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(form.photoFile) }}
+                            {{ form_widget(form.photoFile) }}
+                            <div class="form-help">Optionnel. Si vous importez une photo, elle remplacera l’URL actuelle.</div>
+                            <div class="form-error">{{ form_errors(form.photoFile) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn--primary">
+                            {{ isEdit ? 'Enregistrer les modifications' : 'Créer l’utilisateur' }}
+                        </button>
+                        <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">
+                            Annuler
+                        </a>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </section>
+{% endblock %}

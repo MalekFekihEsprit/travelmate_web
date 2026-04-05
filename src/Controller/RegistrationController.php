@@ -58,31 +58,42 @@ class RegistrationController extends AbstractController
             );
             $user->setMotDePasse($hashedPassword);
 
+            // === PHOTO HANDLING (exactly like ProfileController) ===
             $photoFile = $form->get('photoFile')->getData();
+            $photoUrl = $form->get('photoUrl')->getData();
 
+            // Enforce only one method
+            if ($photoFile && $photoUrl) {
+                $this->addFlash('error', 'Veuillez choisir UNE SEULE méthode : soit uploader un fichier, soit entrer une URL, mais pas les deux.');
+                return $this->redirectToRoute('app_register');
+            }
+
+            // Case 1: File uploaded
             if ($photoFile) {
                 $originalFilename = pathinfo($photoFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$photoFile->guessExtension();
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $photoFile->guessExtension();
 
                 try {
                     $photoFile->move(
-                        $this->getParameter('kernel.project_dir').'/public/uploads/profiles',
+                        $this->getParameter('kernel.project_dir') . '/public/uploads/profiles',
                         $newFilename
                     );
                     $user->setPhotoFileName($newFilename);
-
-                    if (method_exists($user, 'setPhotoUrl')) {
-                        $user->setPhotoUrl(null);
-                    }
+                    $user->setPhotoUrl(null);
+                    $this->addFlash('success', 'Photo de profil importée avec succès.');
                 } catch (FileException $e) {
                     $this->addFlash('error', 'La photo n’a pas pu être importée.');
-                }
-            } else {
-                if (!$user->getPhotoUrl()) {
-                    $user->setPhotoUrl(null);
+                    // Continue registration without photo
                 }
             }
+            // Case 2: URL provided
+            elseif ($photoUrl) {
+                $user->setPhotoUrl($photoUrl);
+                $user->setPhotoFileName(null);
+                $this->addFlash('success', 'URL de la photo de profil enregistrée.');
+            }
+            // Case 3: No photo – keep null
 
             $entityManager->persist($user);
             $entityManager->flush();
@@ -91,7 +102,7 @@ class RegistrationController extends AbstractController
                 $this->sendVerificationEmail($mailer, $user, $verificationCode);
                 $this->addFlash('success', 'Un code de vérification a été envoyé à votre adresse email.');
             } catch (TransportExceptionInterface $e) {
-                $this->addFlash('warning', 'Compte créé, mais l’email n’a pas pu être envoyé. Vérifiez votre configuration mailer.');
+                $this->addFlash('warning', 'Compte créé, mais l’email n’a pas pu être envoyé.');
             }
 
             return $this->redirectToRoute('app_verify_email', ['id' => $user->getId()]);
