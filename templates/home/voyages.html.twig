@@ -218,11 +218,22 @@
             grid-template-rows: 220px auto;
             overflow: hidden;
             transition: transform var(--transition-base), box-shadow var(--transition-base);
+            cursor: pointer;
         }
 
         .voyage-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 24px 50px rgba(71, 48, 35, 0.12);
+        }
+
+        .voyage-card__body {
+            position: relative;
+            z-index: 2;
+        }
+
+        .voyage-card__media {
+            position: relative;
+            z-index: 1;
         }
 
         .voyage-card__media {
@@ -665,7 +676,7 @@
             <div class="voyages-grid">
                 {% for voyage in voyages %}
                     {% set voyageImage = voyage_images[voyage.idVoyage] ?? hero_image %}
-                    <article class="voyage-card">
+                    <article class="voyage-card" data-voyage-url="{{ path('app_itineraires_index', {'voyageId': voyage.id_voyage}) }}">
                         <div class="voyage-card__media">
                             {% if voyageImage %}
                                 <img src="{{ asset(voyageImage) }}" alt="Illustration du voyage {{ voyage.titreVoyage }}" class="voyage-card__image">
@@ -765,6 +776,7 @@
 {% block javascripts %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Gestion des toasts
             var toasts = document.querySelectorAll('[data-voyage-toast]');
 
             function hideToast(toast) {
@@ -790,6 +802,23 @@
                 window.setTimeout(function () {
                     hideToast(toast);
                 }, 4200);
+            });
+
+            // Rendre les cartes de voyage cliquables
+            var voyageCards = document.querySelectorAll('.voyage-card[data-voyage-url]');
+            
+            voyageCards.forEach(function (card) {
+                card.addEventListener('click', function (e) {
+                    // Ne pas naviguer si le clic vient d'un bouton d'action, d'un lien ou d'un formulaire
+                    if (e.target.closest('.voyage-action, button, a:not(.voyage-card), form, input')) {
+                        return;
+                    }
+                    
+                    var url = card.getAttribute('data-voyage-url');
+                    if (url) {
+                        window.location.href = url;
+                    }
+                });
             });
         });
     </script>
