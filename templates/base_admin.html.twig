@@ -894,7 +894,7 @@
                     </svg>
                 </button>
 
-                <a href="{{ path('app_admin_dashboard') }}" class="admin-brand" aria-label="Administration TravelMate">
+                <a href="{{ path('app_admin_users_stats') }}" class="admin-brand" aria-label="Administration TravelMate">
                     
                     <span class="brand__mark" aria-hidden="true">
                         {# Image located in travelmate_web/assets/images/logo.png #}
@@ -1005,8 +1005,8 @@
             <nav class="admin-nav" aria-label="Navigation administration">
                 <div class="admin-nav__section">Vue globale</div>
 
-                <a href="{{ path('app_admin_dashboard') }}"
-                   class="admin-nav__item {{ currentRoute == 'app_admin_dashboard' ? 'is-active' : '' }}">
+                <a href="{{ path('app_admin_users_stats') }}"
+                   class="admin-nav__item {{ currentRoute == 'app_admin_users_stats' ? 'is-active' : '' }}">
                     
                     <span>Tableau de bord</span>
                 </a>

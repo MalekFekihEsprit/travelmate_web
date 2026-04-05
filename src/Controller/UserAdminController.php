@@ -25,11 +25,25 @@ class UserAdminController extends AbstractController
     public function index(Request $request, UserRepository $userRepository): Response
     {
         $search = trim((string) $request->query->get('q', ''));
-        $users = $userRepository->searchForAdmin($search);
+        $role = trim((string) $request->query->get('role', ''));
+        $sort = trim((string) $request->query->get('sort', 'newest'));
+
+        $allowedSorts = ['newest', 'oldest', 'name_asc', 'name_desc'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'newest';
+        }
+
+        if (!in_array($role, ['', 'ADMIN', 'USER'], true)) {
+            $role = '';
+        }
+
+        $users = $userRepository->searchForAdmin($search, $role ?: null, $sort);
 
         return $this->render('user_admin/index.html.twig', [
             'users' => $users,
             'search' => $search,
+            'selectedRole' => $role,
+            'selectedSort' => $sort,
         ]);
     }
 
@@ -255,5 +269,29 @@ class UserAdminController extends AbstractController
 
         $this->addFlash('success', 'L’utilisateur a été supprimé avec succès.');
         return $this->redirectToRoute('app_admin_users');
+    }
+
+    #[Route('/stats', name: 'app_admin_users_stats', methods: ['GET'])]
+    public function stats(UserRepository $userRepository): Response
+    {
+        $totalUsers = $userRepository->countAllUsers();
+        $adminCount = $userRepository->countByRole('ADMIN');
+        $userCount = $userRepository->countByRole('USER');
+
+        $adminPercentage = $totalUsers > 0 ? round(($adminCount / $totalUsers) * 100, 1) : 0;
+        $userPercentage = $totalUsers > 0 ? round(($userCount / $totalUsers) * 100, 1) : 0;
+
+        $registrationsByDay = $userRepository->getRegistrationsByDay(7);
+        $maxRegistrations = !empty($registrationsByDay) ? max($registrationsByDay) : 0;
+
+        return $this->render('user_admin/stats.html.twig', [
+            'totalUsers' => $totalUsers,
+            'adminCount' => $adminCount,
+            'userCount' => $userCount,
+            'adminPercentage' => $adminPercentage,
+            'userPercentage' => $userPercentage,
+            'registrationsByDay' => $registrationsByDay,
+            'maxRegistrations' => $maxRegistrations,
+        ]);
     }
 }

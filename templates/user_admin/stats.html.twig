@@ -1,0 +1,336 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Statistiques utilisateurs | Administration TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .stats-page {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .admin-page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.6rem;
+            border-radius: 28px;
+            border: 1px solid var(--admin-border);
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.9));
+        }
+
+        .admin-page-header__eyebrow {
+            display: inline-block;
+            margin-bottom: .45rem;
+            color: var(--admin-secondary);
+            font-size: .8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .admin-page-header__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.9rem;
+            line-height: 1.08;
+            color: var(--admin-text);
+            margin-bottom: .45rem;
+        }
+
+        .admin-page-header__desc {
+            max-width: 60ch;
+            color: var(--admin-text-muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .82rem 1.1rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all .18s ease;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn--ghost {
+            background: transparent;
+            color: var(--admin-text-muted);
+            border-color: var(--admin-border);
+        }
+
+        .btn--ghost:hover {
+            background: rgba(196, 111, 75, 0.08);
+            color: var(--admin-primary);
+            border-color: rgba(196, 111, 75, 0.28);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card,
+        .chart-card {
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--admin-border);
+            border-radius: 26px;
+            padding: 1.25rem;
+            box-shadow: var(--admin-shadow-soft);
+        }
+
+        .stat-card__label {
+            display: block;
+            color: var(--admin-text-muted);
+            font-size: .84rem;
+            margin-bottom: .35rem;
+        }
+
+        .stat-card__value {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--admin-text);
+            line-height: 1;
+        }
+
+        .stat-card__meta {
+            display: block;
+            margin-top: .45rem;
+            color: var(--admin-text-muted);
+            font-size: .84rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 1rem;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            color: var(--admin-text);
+            margin-bottom: .35rem;
+        }
+
+        .chart-subtitle {
+            color: var(--admin-text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .role-bars {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .role-bar__top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: .4rem;
+            color: var(--admin-text-muted);
+            font-size: .9rem;
+        }
+
+        .role-bar__top strong {
+            color: var(--admin-text);
+        }
+
+        .progress {
+            height: 14px;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.10);
+            overflow: hidden;
+        }
+
+        .progress span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+        }
+
+        .progress--admin span {
+            background: linear-gradient(90deg, var(--admin-primary), #d69372);
+        }
+
+        .progress--user {
+            background: rgba(47, 127, 121, 0.10);
+        }
+
+        .progress--user span {
+            background: linear-gradient(90deg, var(--admin-secondary), #63aaa4);
+        }
+
+        .daily-chart {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: .75rem;
+            align-items: end;
+            min-height: 280px;
+            padding-top: 1rem;
+        }
+
+        .daily-chart__item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: end;
+            gap: .65rem;
+            min-height: 260px;
+        }
+
+        .daily-chart__value {
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--admin-text);
+        }
+
+        .daily-chart__bar-wrap {
+            width: 100%;
+            max-width: 52px;
+            height: 190px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            background: rgba(243, 234, 223, 0.45);
+            border-radius: 18px;
+            padding: .4rem;
+        }
+
+        .daily-chart__bar {
+            width: 100%;
+            border-radius: 14px;
+            background: linear-gradient(180deg, var(--admin-secondary), var(--admin-primary));
+            min-height: 10px;
+            transition: height .3s ease;
+        }
+
+        .daily-chart__label {
+            font-size: .8rem;
+            color: var(--admin-text-muted);
+            text-align: center;
+        }
+
+        @media (max-width: 980px) {
+            .charts-grid,
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .admin-page-header {
+                padding: 1.2rem;
+            }
+
+            .admin-page-header__title {
+                font-size: 1.5rem;
+            }
+
+            .daily-chart {
+                gap: .45rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="stats-page">
+        <div class="admin-page-header">
+            <div>
+                <span class="admin-page-header__eyebrow">Administration</span>
+                <h1 class="admin-page-header__title">Statistiques utilisateurs</h1>
+                <p class="admin-page-header__desc">
+                    Analyse rapide de la répartition des rôles et de l’évolution des inscriptions.
+                </p>
+            </div>
+
+            <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">
+                Retour à la liste
+            </a>
+        </div>
+
+        <div class="stats-grid">
+            <article class="stat-card">
+                <span class="stat-card__label">Total utilisateurs</span>
+                <span class="stat-card__value">{{ totalUsers }}</span>
+                <span class="stat-card__meta">Comptes présents dans la plateforme</span>
+            </article>
+
+            <article class="stat-card">
+                <span class="stat-card__label">Administrateurs</span>
+                <span class="stat-card__value">{{ adminCount }}</span>
+                <span class="stat-card__meta">{{ adminPercentage }}% du total</span>
+            </article>
+
+            <article class="stat-card">
+                <span class="stat-card__label">Utilisateurs standards</span>
+                <span class="stat-card__value">{{ userCount }}</span>
+                <span class="stat-card__meta">{{ userPercentage }}% du total</span>
+            </article>
+        </div>
+
+        <div class="charts-grid">
+            <article class="chart-card">
+                <h2 class="chart-title">Répartition des rôles</h2>
+                <p class="chart-subtitle">
+                    Visualisation simple de la part des administrateurs et des utilisateurs.
+                </p>
+
+                <div class="role-bars">
+                    <div>
+                        <div class="role-bar__top">
+                            <span>Administrateurs</span>
+                            <strong>{{ adminCount }} ({{ adminPercentage }}%)</strong>
+                        </div>
+                        <div class="progress progress--admin">
+                            <span style="width: {{ adminPercentage }}%;"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="role-bar__top">
+                            <span>Utilisateurs</span>
+                            <strong>{{ userCount }} ({{ userPercentage }}%)</strong>
+                        </div>
+                        <div class="progress progress--user">
+                            <span style="width: {{ userPercentage }}%;"></span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="chart-card">
+                <h2 class="chart-title">Inscriptions sur 7 jours</h2>
+                <p class="chart-subtitle">
+                    Nombre de comptes créés chaque jour sur les 7 derniers jours.
+                </p>
+
+                <div class="daily-chart">
+                    {% for date, count in registrationsByDay %}
+                        {% set height = maxRegistrations > 0 ? (count / maxRegistrations) * 100 : 5 %}
+                        <div class="daily-chart__item">
+                            <div class="daily-chart__value">{{ count }}</div>
+                            <div class="daily-chart__bar-wrap">
+                                <div class="daily-chart__bar" style="height: {{ height < 8 and count > 0 ? 8 : height }}%;"></div>
+                            </div>
+                            <div class="daily-chart__label">
+                                {{ date|date('d/m') }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+        </div>
+    </section>
+{% endblock %}

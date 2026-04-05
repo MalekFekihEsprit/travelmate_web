@@ -83,18 +83,16 @@
         }
 
         .toolbar {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .toolbar__top {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
-        }
-
-        .toolbar__left {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
             flex-wrap: wrap;
         }
 
@@ -107,23 +105,36 @@
             font-size: .84rem;
         }
 
-        .search-form {
-            display: flex;
+        .filters-form {
+            display: grid;
+            grid-template-columns: minmax(240px, 1.5fr) 180px 180px auto auto;
             gap: .75rem;
-            flex-wrap: wrap;
+            align-items: end;
         }
 
-        .search-form input {
-            min-width: 280px;
+        .filters-form__group {
+            display: grid;
+            gap: .4rem;
+        }
+
+        .filters-form__group label {
+            font-size: .82rem;
+            color: var(--admin-text-muted);
+            font-weight: 700;
+        }
+
+        .filters-form input,
+        .filters-form select {
             min-height: 46px;
             padding: .8rem 1rem;
-            border-radius: 999px;
+            border-radius: 14px;
             border: 1px solid var(--admin-border);
             background: #fffdfa;
             outline: none;
         }
 
-        .search-form input:focus {
+        .filters-form input:focus,
+        .filters-form select:focus {
             border-color: rgba(196, 111, 75, 0.35);
             box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.08);
         }
@@ -279,6 +290,12 @@
             background: rgba(191, 91, 91, 0.18);
         }
 
+        @media (max-width: 1100px) {
+            .filters-form {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         @media (max-width: 760px) {
             .admin-page-header {
                 padding: 1.2rem;
@@ -288,9 +305,8 @@
                 font-size: 1.5rem;
             }
 
-            .search-form input {
-                min-width: 100%;
-                width: 100%;
+            .filters-form {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -303,14 +319,13 @@
                 <span class="admin-page-header__eyebrow">Administration</span>
                 <h1 class="admin-page-header__title">Gestion des utilisateurs</h1>
                 <p class="admin-page-header__desc">
-                    Consultez, recherchez, ajoutez, modifiez et supprimez les comptes utilisateurs de la plateforme.
+                    Consultez, recherchez, filtrez, triez, ajoutez, modifiez et supprimez les comptes utilisateurs.
                 </p>
             </div>
 
             <div class="admin-page-header__actions">
-                <a href="{{ path('app_admin_users_new') }}" class="btn btn--primary">
-                    + Ajouter un utilisateur
-                </a>
+                <a href="{{ path('app_admin_users_stats') }}" class="btn btn--ghost">Voir les statistiques</a>
+                <a href="{{ path('app_admin_users_new') }}" class="btn btn--primary">+ Ajouter un utilisateur</a>
             </div>
         </div>
 
@@ -325,23 +340,46 @@
 
         <div class="admin-card">
             <div class="toolbar">
-                <div class="toolbar__left">
+                <div class="toolbar__top">
                     <span class="toolbar__count">
                         {{ users|length }} utilisateur{{ users|length > 1 ? 's' : '' }}
                     </span>
                 </div>
 
-                <form method="get" class="search-form">
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ search }}"
-                        placeholder="Rechercher par nom, prénom ou email..."
-                    >
-                    <button type="submit" class="btn btn--ghost">Rechercher</button>
-                    {% if search %}
-                        <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Réinitialiser</a>
-                    {% endif %}
+                <form method="get" class="filters-form">
+                    <div class="filters-form__group">
+                        <label for="q">Recherche</label>
+                        <input
+                            id="q"
+                            type="text"
+                            name="q"
+                            value="{{ search }}"
+                            placeholder="Nom, prénom ou email..."
+                        >
+                    </div>
+
+                    <div class="filters-form__group">
+                        <label for="role">Rôle</label>
+                        <select name="role" id="role">
+                            <option value="" {{ selectedRole == '' ? 'selected' : '' }}>Tous</option>
+                            <option value="ADMIN" {{ selectedRole == 'ADMIN' ? 'selected' : '' }}>Administrateurs</option>
+                            <option value="USER" {{ selectedRole == 'USER' ? 'selected' : '' }}>Utilisateurs</option>
+                        </select>
+                    </div>
+
+                    <div class="filters-form__group">
+                        <label for="sort">Tri</label>
+                        <select name="sort" id="sort">
+                            <option value="newest" {{ selectedSort == 'newest' ? 'selected' : '' }}>Plus récents</option>
+                            <option value="oldest" {{ selectedSort == 'oldest' ? 'selected' : '' }}>Plus anciens</option>
+                            <option value="name_asc" {{ selectedSort == 'name_asc' ? 'selected' : '' }}>Nom A-Z</option>
+                            <option value="name_desc" {{ selectedSort == 'name_desc' ? 'selected' : '' }}>Nom Z-A</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn--ghost">Appliquer</button>
+
+                    <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Réinitialiser</a>
                 </form>
             </div>
 
@@ -389,9 +427,9 @@
                                             </a>
 
                                             <form method="post"
-                                                action="{{ path('app_admin_users_delete', {'id': user.id}) }}"
-                                                class="danger-inline"
-                                                onsubmit="return confirm('Voulez-vous vraiment supprimer cet utilisateur ?');">
+                                                  action="{{ path('app_admin_users_delete', {'id': user.id}) }}"
+                                                  class="danger-inline"
+                                                  onsubmit="return confirm('Voulez-vous vraiment supprimer cet utilisateur ?');">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
                                                 <button type="submit" class="btn btn-delete">
                                                     Supprimer
@@ -406,7 +444,7 @@
                 </div>
             {% else %}
                 <div class="empty-state">
-                    Aucun utilisateur trouvé.
+                    Aucun utilisateur trouvé avec ces critères.
                 </div>
             {% endif %}
         </div>
