@@ -1,0 +1,367 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Gestion des Activités — Admin TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .page-header__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+        .page-header__sub {
+            font-size: 0.88rem;
+            color: var(--admin-text-muted);
+            margin-top: 0.2rem;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            text-align: center;
+        }
+        .stat-card__num {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+            line-height: 1;
+        }
+        .stat-card__label {
+            font-size: 0.8rem;
+            color: var(--admin-text-muted);
+            margin-top: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .admin-card {
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+        .admin-card__header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--admin-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .admin-card__title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--admin-text);
+        }
+        .search-wrap {
+            position: relative;
+            min-width: 220px;
+        }
+        .search-wrap__icon {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--admin-text-muted);
+            pointer-events: none;
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.65rem 1rem 0.65rem 2.5rem;
+            border: 1px solid var(--admin-border);
+            border-radius: 999px;
+            background: var(--admin-bg);
+            font: inherit;
+            font-size: 0.88rem;
+            color: var(--admin-text);
+            outline: none;
+            transition: border-color var(--transition-fast);
+        }
+        .search-input:focus { border-color: var(--admin-primary); }
+
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table th {
+            text-align: left;
+            padding: 0 1.5rem 0.85rem;
+            border-bottom: 1px solid var(--admin-border);
+            color: var(--admin-text-muted);
+            font-size: 0.73rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 700;
+        }
+        .admin-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(231,220,205,0.6);
+            font-size: 0.92rem;
+            vertical-align: middle;
+        }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background: rgba(196,111,75,0.03); }
+
+        .act-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+            background: var(--admin-bg);
+            border: 1px solid var(--admin-border);
+            flex-shrink: 0;
+        }
+        .act-thumb-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            background: var(--admin-bg);
+            border: 1px solid var(--admin-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .act-info { display: flex; align-items: center; gap: 0.85rem; }
+        .act-name { font-weight: 600; color: var(--admin-text); font-size: 0.94rem; }
+        .act-lieu { font-size: 0.8rem; color: var(--admin-text-muted); margin-top: 0.1rem; }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .pill--active   { background: var(--admin-success-soft); color: var(--admin-success); }
+        .pill--inactive { background: var(--admin-surface-alt); color: var(--admin-text-muted); }
+        .pill--attente  { background: var(--admin-warning-soft); color: var(--admin-warning); }
+        .pill--facile   { background: rgba(47,127,121,0.1); color: var(--admin-secondary); }
+        .pill--moyen    { background: var(--admin-warning-soft); color: var(--admin-warning); }
+        .pill--difficile{ background: rgba(196,111,75,0.12); color: var(--admin-primary-dark); }
+        .pill--expert   { background: var(--admin-danger-soft); color: var(--admin-danger); }
+
+        .actions-cell { display: flex; align-items: center; gap: 0.5rem; }
+        .btn-icon {
+            width: 34px; height: 34px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--admin-border);
+            background: var(--admin-surface);
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--admin-text-muted);
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-icon:hover { background: var(--admin-bg); color: var(--admin-primary); border-color: var(--admin-primary); }
+        .btn-icon--danger:hover { color: var(--admin-danger); border-color: var(--admin-danger); background: var(--admin-danger-soft); }
+
+        .empty-state {
+            padding: 3rem 1.5rem;
+            text-align: center;
+            color: var(--admin-text-muted);
+        }
+        .empty-state__icon { font-size: 3rem; margin-bottom: 0.75rem; }
+        .empty-state__title { font-weight: 600; color: var(--admin-text); margin-bottom: 0.35rem; }
+
+        .flash-success {
+            background: var(--admin-success-soft);
+            border: 1px solid rgba(60,139,114,0.25);
+            color: var(--admin-success);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1.25rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.9rem;
+        }
+        .flash-error {
+            background: var(--admin-danger-soft);
+            border: 1px solid rgba(191,91,91,0.25);
+            color: var(--admin-danger);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1.25rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.9rem;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+{# Flash messages #}
+{% for msg in app.flashes('success') %}
+    <div class="flash-success">✅ {{ msg }}</div>
+{% endfor %}
+{% for msg in app.flashes('error') %}
+    <div class="flash-error">❌ {{ msg }}</div>
+{% endfor %}
+
+{# Header #}
+<div class="page-header">
+    <div>
+        <div class="page-header__title">🏄 Gestion des Activités</div>
+        <div class="page-header__sub">Créez, modifiez et gérez toutes les activités de la plateforme</div>
+    </div>
+    <a href="{{ path('app_activite_new') }}" class="btn btn--primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Nouvelle activité
+    </a>
+</div>
+
+{# Stats #}
+{% set nbActive   = activites|filter(a => a.statut == 'Active')|length %}
+{% set nbInactive = activites|filter(a => a.statut == 'Inactive')|length %}
+{% set nbAttente  = activites|filter(a => a.statut == 'En attente')|length %}
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-card__num">{{ activites|length }}</div>
+        <div class="stat-card__label">Total</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__num" style="color:var(--admin-success)">{{ nbActive }}</div>
+        <div class="stat-card__label">Actives</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__num" style="color:var(--admin-text-muted)">{{ nbInactive }}</div>
+        <div class="stat-card__label">Inactives</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__num" style="color:var(--admin-warning)">{{ nbAttente }}</div>
+        <div class="stat-card__label">En attente</div>
+    </div>
+</div>
+
+{# Table #}
+<div class="admin-card">
+    <div class="admin-card__header">
+        <div class="admin-card__title">Liste des activités</div>
+        <div class="search-wrap">
+            <span class="search-wrap__icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+            <input type="search" class="search-input" id="searchAdmin" placeholder="Rechercher…">
+        </div>
+    </div>
+
+    <div style="overflow-x:auto">
+        <table class="admin-table" id="adminTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Activité</th>
+                    <th>Catégorie</th>
+                    <th>Budget</th>
+                    <th>Difficulté</th>
+                    <th>Durée</th>
+                    <th>Statut</th>
+                    <th>Avis</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if activites is empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-state__icon">🏖️</div>
+                                <div class="empty-state__title">Aucune activité</div>
+                                <p>Commencez par créer votre première activité.</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    {% for activite in activites %}
+                        <tr data-search="{{ activite.nom|lower }} {{ activite.lieu|lower }}">
+                            <td style="color:var(--admin-text-muted);font-size:0.8rem">{{ activite.id }}</td>
+                            <td>
+                                <div class="act-info">
+                                    {% if activite.imagePath %}
+                                        <img src="{{ asset(activite.imagePath|replace({'\\\\': '/'})) }}"
+                                             class="act-thumb" alt="{{ activite.nom }}"
+                                             onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+                                        <div class="act-thumb-placeholder" style="display:none">🌄</div>
+                                    {% else %}
+                                        <div class="act-thumb-placeholder">🌄</div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="act-name">{{ activite.nom }}</div>
+                                        {% if activite.lieu %}
+                                            <div class="act-lieu">📍 {{ activite.lieu|slice(0,35) }}{{ activite.lieu|length > 35 ? '…' : '' }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ activite.categorie ? activite.categorie.nom : '—' }}</td>
+                            <td><strong>{{ activite.budget }} TND</strong></td>
+                            <td>
+                                {% set diff = activite.niveaudifficulte|lower %}
+                                <span class="pill pill--{{ diff }}">{{ activite.niveaudifficulte }}</span>
+                            </td>
+                            <td>{{ activite.duree }}h</td>
+                            <td>
+                                {% set s = activite.statut|lower %}
+                                <span class="pill pill--{{ s == 'en attente' ? 'attente' : s }}">
+                                    {{ activite.statut }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if activite.avis|length > 0 %}
+                                    <span style="color:#f59e0b">★</span> {{ activite.moyenneAvis }} <span style="color:var(--admin-text-muted);font-size:0.8rem">({{ activite.avis|length }})</span>
+                                {% else %}
+                                    <span style="color:var(--admin-text-muted);font-size:0.82rem">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    <a href="{{ path('app_activite_show', {id: activite.id}) }}"
+                                       class="btn-icon" title="Voir" target="_blank">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+                                    </a>
+                                    <a href="{{ path('app_activite_edit', {id: activite.id}) }}"
+                                       class="btn-icon" title="Modifier">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                    </a>
+                                    <form method="post" action="{{ path('app_activite_delete', {id: activite.id}) }}"
+                                          onsubmit="return confirm('Supprimer « {{ activite.nom }} » ? Cette action est irréversible.')">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ activite.id) }}">
+                                        <button type="submit" class="btn-icon btn-icon--danger" title="Supprimer">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    document.getElementById('searchAdmin').addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('#adminTable tbody tr[data-search]').forEach(row => {
+            row.style.display = row.dataset.search.includes(q) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

@@ -80,6 +80,8 @@ class Activite
     public function getImagePath(): ?string { return $this->imagePath; }
     public function setImagePath(?string $imagePath): self { $this->imagePath = $imagePath; return $this; }
 
+    // ── Relations ────────────────────────────────────────────────────────────
+
     #[ORM\OneToMany(targetEntity: Etape::class, mappedBy: 'activite')]
     private Collection $etapes;
 
@@ -101,6 +103,8 @@ class Activite
         $this->voyages = new ArrayCollection();
     }
 
+    // ── Etapes ───────────────────────────────────────────────────────────────
+
     /** @return Collection<int, Etape> */
     public function getEtapes(): Collection
     {
@@ -119,6 +123,8 @@ class Activite
         $this->getEtapes()->removeElement($etape);
         return $this;
     }
+
+    // ── Avis ─────────────────────────────────────────────────────────────────
 
     /** @return Collection<int, Avis> */
     public function getAvis(): Collection
@@ -142,6 +148,9 @@ class Activite
         return $this;
     }
 
+    /**
+     * Calcule la moyenne des notes (appelé par getMoyenneAvis).
+     */
     public function getMoyenneNotes(): float
     {
         $avis = $this->getAvis();
@@ -150,6 +159,16 @@ class Activite
         foreach ($avis as $a) $total += $a->getNote();
         return round($total / $avis->count(), 1);
     }
+
+    /**
+     * Alias utilisé dans les templates Twig : activite.moyenneAvis
+     */
+    public function getMoyenneAvis(): float
+    {
+        return $this->getMoyenneNotes();
+    }
+
+    // ── Voyages ──────────────────────────────────────────────────────────────
 
     /** @return Collection<int, Voyage> */
     public function getVoyages(): Collection
