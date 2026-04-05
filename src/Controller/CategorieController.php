@@ -24,8 +24,15 @@ class CategorieController extends AbstractController
     }
 
     #[Route('/categories/{id}', name: 'app_categorie_show', methods: ['GET'])]
-    public function show(Categorie $categorie): Response
+    public function show(int $id, CategorieRepository $categorieRepository): Response
     {
+        // LEFT JOIN sur les activités en une seule requête — pas de N+1
+        $categorie = $categorieRepository->findWithActivites($id);
+
+        if (!$categorie) {
+            throw $this->createNotFoundException('Catégorie introuvable.');
+        }
+
         return $this->render('categorie/show.html.twig', [
             'categorie' => $categorie,
         ]);
