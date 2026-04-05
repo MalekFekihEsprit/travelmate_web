@@ -31,6 +31,10 @@ class ProfileController extends AbstractController
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
+        // Redirect to login if not authenticated
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
         $baseTemplate = $user && in_array('ROLE_ADMIN', $user->getRoles()) ? 'base_admin.html.twig' : 'base.html.twig';
         // Store old photo info before form handling
         $oldPhotoFileName = $user->getPhotoFileName();
