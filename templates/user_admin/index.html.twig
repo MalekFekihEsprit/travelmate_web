@@ -309,7 +309,150 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .users-table th[data-sort] {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 20px;
+        }
+
+        .users-table th[data-sort]:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .sort-arrow {
+            position: absolute;
+            right: 8px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
     </style>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const table = document.querySelector('.users-table');
+        if (!table) return;
+
+        const headers = table.querySelectorAll('thead th[data-sort]');
+        let currentSort = { column: null, direction: 'asc' };
+
+        headers.forEach(header => {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', () => sortTable(header));
+        });
+
+        function sortTable(header) {
+            const columnIndex = Array.from(header.parentElement.children).indexOf(header);
+            const sortType = header.getAttribute('data-sort');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Toggle direction if same column, else default to asc
+            if (currentSort.column === columnIndex) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+            }
+            currentSort.column = columnIndex;
+
+            // Sort rows
+            rows.sort((rowA, rowB) => {
+                let cellA = rowA.children[columnIndex];
+                let cellB = rowB.children[columnIndex];
+                let valueA, valueB;
+
+                switch (sortType) {
+                    case 'string':
+                        // For "Utilisateur" column, we need to get the name from inner div
+                        if (columnIndex === 0) {
+                            const nameA = cellA.querySelector('.user-cell__name');
+                            const nameB = cellB.querySelector('.user-cell__name');
+                            valueA = nameA ? nameA.textContent.trim() : '';
+                            valueB = nameB ? nameB.textContent.trim() : '';
+                        } else {
+                            valueA = cellA.textContent.trim();
+                            valueB = cellB.textContent.trim();
+                        }
+                        return compareStrings(valueA, valueB, currentSort.direction);
+                    
+                    case 'role':
+                        const roleOrder = { 'ADMIN': 1, 'USER': 2 };
+                        const roleA = cellA.querySelector('.status-pill--role-admin, .status-pill--role-user');
+                        const roleB = cellB.querySelector('.status-pill--role-admin, .status-pill--role-user');
+                        valueA = roleA ? (roleA.classList.contains('status-pill--role-admin') ? 'ADMIN' : 'USER') : '';
+                        valueB = roleB ? (roleB.classList.contains('status-pill--role-admin') ? 'ADMIN' : 'USER') : '';
+                        return compareNumbers(roleOrder[valueA] || 3, roleOrder[valueB] || 3, currentSort.direction);
+                    
+                    case 'verification':
+                        const verifiedOrder = { 'Vérifié': 1, 'Non vérifié': 2 };
+                        const statusSpanA = cellA.querySelector('.status-pill--success, .status-pill--warning');
+                        const statusSpanB = cellB.querySelector('.status-pill--success, .status-pill--warning');
+                        valueA = statusSpanA ? statusSpanA.textContent.trim() : '';
+                        valueB = statusSpanB ? statusSpanB.textContent.trim() : '';
+                        return compareNumbers(verifiedOrder[valueA] || 3, verifiedOrder[valueB] || 3, currentSort.direction);
+                    
+                    case 'date':
+                        // Parse date from format "dd/mm/yyyy HH:ii"
+                        const dateA = parseDate(cellA.textContent.trim());
+                        const dateB = parseDate(cellB.textContent.trim());
+                        return compareNumbers(dateA, dateB, currentSort.direction);
+                    
+                    default:
+                        return 0;
+                }
+            });
+
+            // Reorder rows in the DOM
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Update visual indicator on headers (optional)
+            updateSortIcons(header);
+        }
+
+        function compareStrings(a, b, direction) {
+            a = a.toLowerCase();
+            b = b.toLowerCase();
+            if (a === b) return 0;
+            const result = a > b ? 1 : -1;
+            return direction === 'asc' ? result : -result;
+        }
+
+        function compareNumbers(a, b, direction) {
+            if (a === b) return 0;
+            const result = a > b ? 1 : -1;
+            return direction === 'asc' ? result : -result;
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr || dateStr === '—') return 0;
+            // Format: "dd/mm/yyyy HH:ii"
+            const [datePart, timePart] = dateStr.split(' ');
+            const [day, month, year] = datePart.split('/');
+            const [hour, minute] = timePart ? timePart.split(':') : ['00', '00'];
+            return new Date(year, month - 1, day, hour, minute).getTime();
+        }
+
+        function updateSortIcons(clickedHeader) {
+            // Remove any existing arrow indicators
+            headers.forEach(h => {
+                h.classList.remove('sort-asc', 'sort-desc');
+                // Optional: remove inner arrow spans
+                const arrow = h.querySelector('.sort-arrow');
+                if (arrow) arrow.remove();
+            });
+
+            // Add arrow to current column
+            const arrowSpan = document.createElement('span');
+            arrowSpan.className = 'sort-arrow';
+            arrowSpan.textContent = currentSort.direction === 'asc' ? ' ↑' : ' ↓';
+            clickedHeader.appendChild(arrowSpan);
+            clickedHeader.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+    });
+    </script>
 {% endblock %}
 
 {% block body %}
@@ -367,16 +510,6 @@
                         </select>
                     </div>
 
-                    <div class="filters-form__group">
-                        <label for="sort">Tri</label>
-                        <select name="sort" id="sort">
-                            <option value="newest" {{ selectedSort == 'newest' ? 'selected' : '' }}>Plus récents</option>
-                            <option value="oldest" {{ selectedSort == 'oldest' ? 'selected' : '' }}>Plus anciens</option>
-                            <option value="name_asc" {{ selectedSort == 'name_asc' ? 'selected' : '' }}>Nom A-Z</option>
-                            <option value="name_desc" {{ selectedSort == 'name_desc' ? 'selected' : '' }}>Nom Z-A</option>
-                        </select>
-                    </div>
-
                     <button type="submit" class="btn btn--ghost">Appliquer</button>
 
                     <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Réinitialiser</a>
@@ -388,11 +521,11 @@
                     <table class="users-table">
                         <thead>
                             <tr>
-                                <th>Utilisateur</th>
-                                <th>Téléphone</th>
-                                <th>Rôle</th>
-                                <th>Vérification</th>
-                                <th>Date création</th>
+                                <th data-sort="string">Utilisateur</th>
+                                <th data-sort="string">Téléphone</th>
+                                <th data-sort="role">Rôle</th>
+                                <th data-sort="verification">Vérification</th>
+                                <th data-sort="date">Date création</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>

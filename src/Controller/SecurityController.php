@@ -16,7 +16,7 @@ class SecurityController extends AbstractController
             $roles = $this->getUser()->getRoles();
 
             if (in_array('ROLE_ADMIN', $roles, true)) {
-                return $this->redirectToRoute('app_admin_dashboard');
+                return $this->redirectToRoute('app_admin_users_stats');
             }
 
             return $this->redirectToRoute('app_home');

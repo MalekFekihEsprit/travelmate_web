@@ -588,4 +588,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return 'https://www.gravatar.com/avatar/'.$hash.'?d=identicon&s=300';
     }
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $last_login = null;
+    public function getLastLogin(): ?\DateTimeInterface { return $this->last_login; }
+    public function setLastLogin(?\DateTimeInterface $last_login): self { $this->last_login = $last_login; return $this; }
 }

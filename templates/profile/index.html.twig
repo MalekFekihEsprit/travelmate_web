@@ -1,9 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends base_template %}
 
 {% block title %}Mon profil | TravelMate{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('styles/base.css') }}">
     <style>
         .profile-shell {
             max-width: 1250px;

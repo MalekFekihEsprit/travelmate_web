@@ -21,7 +21,6 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-#[IsGranted('ROLE_USER')]
 class ProfileController extends AbstractController
 {
     #[Route('/profile', name: 'app_profile')]
@@ -32,7 +31,7 @@ class ProfileController extends AbstractController
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
-        
+        $baseTemplate = $user && in_array('ROLE_ADMIN', $user->getRoles()) ? 'base_admin.html.twig' : 'base.html.twig';
         // Store old photo info before form handling
         $oldPhotoFileName = $user->getPhotoFileName();
         $oldPhotoUrl = $user->getPhotoUrl();
@@ -109,6 +108,7 @@ class ProfileController extends AbstractController
         ]);
         return $this->render('profile/index.html.twig', [
             'user' => $user,
+            'base_template' => $baseTemplate,
             'profileForm' => $profileForm,
             'changePasswordForm' => $changePasswordForm,
             'deleteAccountForm' => $deleteAccountForm

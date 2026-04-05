@@ -940,17 +940,21 @@
 
                 <div class="admin-user">
                     <button class="admin-user__trigger" type="button" aria-label="Ouvrir le menu administrateur">
-                        <img
-                            class="admin-user__avatar"
-                            src="{{ asset('images/profile-default.jpg') }}"
-                            alt="Photo administrateur"
-                        >
+                        {% if app.user  %}
+                            <img src="{{ app.user.profileImage }}" alt="Photo de profil" class="admin-user__avatar">
+                        {% else %}
+                            <img
+                                class="admin-user__avatar"
+                                src="{{ asset('images/profile-default.png') }}"
+                                alt="Photo de profil"
+                            >
+                        {% endif %}
 
                         <span class="admin-user__meta">
                             <span class="admin-user__name">
                                 {{ app.user ? app.user.userIdentifier : 'Administrateur' }}
                             </span>
-                            <span class="admin-user__role">Admin</span>
+                            <span class="admin-user__role">Administrateur</span>
                         </span>
                     </button>
 
@@ -1014,7 +1018,7 @@
                 <div class="admin-nav__section">Gestion</div>
 
                 <a href="{{ path('app_admin_users') }}"
-                   class="admin-nav__item {{ currentRoute starts with 'app_admin_users' ? 'is-active' : '' }}">
+                   class="admin-nav__item {{ currentRoute == 'app_admin_users' ? 'is-active' : '' }}">
                     
                     <span>Utilisateurs</span>
                 </a>

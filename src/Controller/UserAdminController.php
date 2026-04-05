@@ -26,24 +26,17 @@ class UserAdminController extends AbstractController
     {
         $search = trim((string) $request->query->get('q', ''));
         $role = trim((string) $request->query->get('role', ''));
-        $sort = trim((string) $request->query->get('sort', 'newest'));
-
-        $allowedSorts = ['newest', 'oldest', 'name_asc', 'name_desc'];
-        if (!in_array($sort, $allowedSorts, true)) {
-            $sort = 'newest';
-        }
 
         if (!in_array($role, ['', 'ADMIN', 'USER'], true)) {
             $role = '';
         }
 
-        $users = $userRepository->searchForAdmin($search, $role ?: null, $sort);
+        $users = $userRepository->searchForAdmin($search, $role ?: null);
 
         return $this->render('user_admin/index.html.twig', [
             'users' => $users,
             'search' => $search,
             'selectedRole' => $role,
-            'selectedSort' => $sort,
         ]);
     }
 
@@ -274,17 +267,47 @@ class UserAdminController extends AbstractController
     #[Route('/stats', name: 'app_admin_users_stats', methods: ['GET'])]
     public function stats(UserRepository $userRepository): Response
     {
+        // Basic role stats
         $totalUsers = $userRepository->countAllUsers();
         $adminCount = $userRepository->countByRole('ADMIN');
         $userCount = $userRepository->countByRole('USER');
+        $adminPercentage = $totalUsers ? round(($adminCount / $totalUsers) * 100, 1) : 0;
+        $userPercentage = $totalUsers ? round(($userCount / $totalUsers) * 100, 1) : 0;
 
-        $adminPercentage = $totalUsers > 0 ? round(($adminCount / $totalUsers) * 100, 1) : 0;
-        $userPercentage = $totalUsers > 0 ? round(($userCount / $totalUsers) * 100, 1) : 0;
+        // Verification stats
+        $verifiedCount = $userRepository->countVerifiedUsers();
+        $unverifiedCount = $userRepository->countUnverifiedUsers();
+        $verifiedPercentage = $totalUsers ? round(($verifiedCount / $totalUsers) * 100, 1) : 0;
 
+        // Activity stats (requires last_login field)
+        $activeLast30 = $userRepository->countActiveUsersLastDays(30);
+        $activePercentage = $totalUsers ? round(($activeLast30 / $totalUsers) * 100, 1) : 0;
+
+        // Registration trends (last 7 days)
         $registrationsByDay = $userRepository->getRegistrationsByDay(7);
-        $maxRegistrations = !empty($registrationsByDay) ? max($registrationsByDay) : 0;
+        $maxRegistrations = $registrationsByDay ? max($registrationsByDay) : 0;
+        $avgDailyRegistrations = $registrationsByDay ? round(array_sum($registrationsByDay) / count($registrationsByDay), 1) : 0;
+        $peakDay = $registrationsByDay ? array_keys($registrationsByDay, max($registrationsByDay))[0] : null;
 
+        // Extended trend (last 30 days) – optional for a chart
+        $registrationsLast30 = $userRepository->getRegistrationsByDayExtended(30);
+        $max30 = $registrationsLast30 ? max($registrationsLast30) : 0;
+
+        // Growth vs previous period
+        $growth = $userRepository->getRegistrationGrowth();
+
+        // ⭐ NEW: Age statistics
+        $ageDistribution = $userRepository->getAgeDistribution();
+        $averageAge = $userRepository->getAverageAge();
+        $youngestAge = $userRepository->getYoungestAge();
+        $oldestAge = $userRepository->getOldestAge();
+        $birthYears = $userRepository->getUsersByBirthYear();
+        
+        // Calculate total for percentages
+        $totalWithAge = array_sum($ageDistribution) - ($ageDistribution['unknown'] ?? 0);
+        
         return $this->render('user_admin/stats.html.twig', [
+            // Existing
             'totalUsers' => $totalUsers,
             'adminCount' => $adminCount,
             'userCount' => $userCount,
@@ -292,6 +315,26 @@ class UserAdminController extends AbstractController
             'userPercentage' => $userPercentage,
             'registrationsByDay' => $registrationsByDay,
             'maxRegistrations' => $maxRegistrations,
+
+            // New
+            'verifiedCount' => $verifiedCount,
+            'unverifiedCount' => $unverifiedCount,
+            'verifiedPercentage' => $verifiedPercentage,
+            'activeLast30' => $activeLast30,
+            'activePercentage' => $activePercentage,
+            'avgDailyRegistrations' => $avgDailyRegistrations,
+            'peakDay' => $peakDay,
+            'registrationsLast30' => $registrationsLast30,
+            'max30' => $max30,
+            'growth' => $growth,
+
+            // ⭐ NEW age stats
+            'ageDistribution' => $ageDistribution,
+            'averageAge' => $averageAge,
+            'youngestAge' => $youngestAge,
+            'oldestAge' => $oldestAge,
+            'birthYears' => $birthYears,
+            'totalWithAge' => $totalWithAge,
         ]);
     }
 }
