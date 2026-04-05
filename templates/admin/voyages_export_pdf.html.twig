@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Export PDF des voyages</title>
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 12px;
+            color: #1f1a17;
+        }
+
+        .header {
+            margin-bottom: 18px;
+        }
+
+        .title {
+            margin: 0 0 6px;
+            font-size: 22px;
+        }
+
+        .meta {
+            color: #71665c;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #e7dccd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f4ebdf;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fcfaf6;
+        }
+
+        .muted {
+            color: #71665c;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">Tableau des voyages</h1>
+        <div class="meta">Export genere le {{ generated_at|date('d/m/Y H:i') }}</div>
+        {% if search is not empty %}
+            <div class="meta">Filtre de recherche : {{ search }}</div>
+        {% endif %}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Titre</th>
+                <th>Date debut</th>
+                <th>Date fin</th>
+                <th>Statut</th>
+                <th>ID destination</th>
+                <th>Destination</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for voyage in voyages %}
+                <tr>
+                    <td>{{ voyage.idVoyage }}</td>
+                    <td>{{ voyage.titreVoyage }}</td>
+                    <td>{{ voyage.dateDebut ? voyage.dateDebut|date('Y-m-d') : '-' }}</td>
+                    <td>{{ voyage.dateFin ? voyage.dateFin|date('Y-m-d') : '-' }}</td>
+                    <td>{{ voyage.statut ?: 'Sans statut' }}</td>
+                    <td>{{ voyage.destination ? voyage.destination.idDestination : '-' }}</td>
+                    <td>
+                        {{ voyage.destination ? voyage.destination.nomDestination : 'Non definie' }}
+                        {% if voyage.destination and voyage.destination.paysDestination %}
+                            <div class="muted">{{ voyage.destination.paysDestination }}</div>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7">Aucun voyage disponible.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

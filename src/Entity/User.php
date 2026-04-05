@@ -382,17 +382,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Voyage::class, inversedBy: 'users')]
-    #[ORM\JoinTable(
-        name: 'participation',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'id', referencedColumnName: 'id')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage')
-        ]
-    )]
-    private Collection $voyages;
+    #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $participations;
 
     public function __construct()
     {
@@ -401,7 +392,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->destinations = new ArrayCollection();
         $this->hebergements = new ArrayCollection();
         $this->paiements = new ArrayCollection();
-        $this->voyages = new ArrayCollection();
+        $this->participations = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, Participation>
+     */
+    public function getParticipations(): Collection
+    {
+        if (!$this->participations instanceof Collection) {
+            $this->participations = new ArrayCollection();
+        }
+
+        return $this->participations;
+    }
+
+    public function addParticipation(Participation $participation): self
+    {
+        if (!$this->getParticipations()->contains($participation)) {
+            $this->getParticipations()->add($participation);
+            $participation->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeParticipation(Participation $participation): self
+    {
+        $this->getParticipations()->removeElement($participation);
+
+        return $this;
     }
 
     /**
@@ -409,23 +429,44 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getVoyages(): Collection
     {
-        if (!$this->voyages instanceof Collection) {
-            $this->voyages = new ArrayCollection();
-        }
-        return $this->voyages;
+        return new ArrayCollection(array_values(array_filter(
+            array_map(
+                static fn (Participation $participation): ?Voyage => $participation->getVoyage(),
+                $this->getParticipations()->toArray()
+            )
+        )));
     }
 
-    public function addVoyage(Voyage $voyage): self
+    public function addVoyage(Voyage $voyage, string $roleParticipation = Participation::DEFAULT_ROLE): self
     {
-        if (!$this->getVoyages()->contains($voyage)) {
-            $this->getVoyages()->add($voyage);
+        foreach ($this->getParticipations() as $participation) {
+            if ($participation->getVoyage() === $voyage) {
+                $participation->setRoleParticipation($roleParticipation);
+
+                return $this;
+            }
         }
+
+        $participation = (new Participation())
+            ->setUser($this)
+            ->setVoyage($voyage)
+            ->setRoleParticipation($roleParticipation);
+
+        $this->addParticipation($participation);
+        $voyage->addParticipation($participation);
+
         return $this;
     }
 
     public function removeVoyage(Voyage $voyage): self
     {
-        $this->getVoyages()->removeElement($voyage);
+        foreach ($this->getParticipations()->toArray() as $participation) {
+            if ($participation->getVoyage() === $voyage) {
+                $this->getParticipations()->removeElement($participation);
+                $voyage->getParticipations()->removeElement($participation);
+            }
+        }
+
         return $this;
     }
 

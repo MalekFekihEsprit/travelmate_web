@@ -219,7 +219,7 @@ class Activite
             new ORM\JoinColumn(name: 'id', referencedColumnName: 'id')
         ],
         inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage')
+            new ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage', onDelete: 'CASCADE')
         ]
     )]
     private Collection $voyages;
