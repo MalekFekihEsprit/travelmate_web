@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Destination;
 use App\Form\DestinationType;
 use App\Repository\DestinationRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -42,17 +43,51 @@ final class DestinationController extends AbstractController
     }
 
     #[Route('/new', name: 'app_destination_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, UserRepository $userRepository): Response
     {
         $destination = new Destination();
         $form = $this->createForm(DestinationType::class, $destination);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($destination);
-            $entityManager->flush();
+        if ($form->isSubmitted()) {
+            // Check if form is valid
+            if (!$form->isValid()) {
+                // Form has validation errors, they will be displayed in the template
+                return $this->render('destination/new.html.twig', [
+                    'destination' => $destination,
+                    'form' => $form,
+                ]);
+            }
 
-            return $this->redirectToRoute('app_destination_index', [], Response::HTTP_SEE_OTHER);
+            // Get logged-in user or use user with id 2 as default
+            $user = $this->getUser();
+            if (!$user) {
+                $user = $userRepository->find(2);
+            }
+            
+            if (!$user) {
+                $this->addFlash('error', 'Aucun utilisateur n\'a été trouvé');
+                return $this->render('destination/new.html.twig', [
+                    'destination' => $destination,
+                    'form' => $form,
+                ]);
+            }
+
+            $destination->setUser($user);
+
+            try {
+                $entityManager->persist($destination);
+                $entityManager->flush();
+                
+                $this->addFlash('success', 'La destination a été créée avec succès');
+                return $this->redirectToRoute('app_destination_index', [], Response::HTTP_SEE_OTHER);
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Une erreur est survenue: ' . $e->getMessage());
+                return $this->render('destination/new.html.twig', [
+                    'destination' => $destination,
+                    'form' => $form,
+                ]);
+            }
         }
 
         return $this->render('destination/new.html.twig', [
