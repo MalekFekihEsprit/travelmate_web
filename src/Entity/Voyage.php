@@ -5,6 +5,8 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 use App\Repository\VoyageRepository;
 
@@ -12,6 +14,13 @@ use App\Repository\VoyageRepository;
 #[ORM\Table(name: 'voyage')]
 class Voyage
 {
+    public const STATUTS = [
+        'Planifie',
+        'En cours',
+        'Termine',
+        'Annule',
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -29,6 +38,13 @@ class Voyage
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'Le titre du voyage est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 120,
+        minMessage: 'Le titre doit contenir au moins {{ limit }} caracteres.',
+        maxMessage: 'Le titre ne doit pas depasser {{ limit }} caracteres.'
+    )]
     private ?string $titre_voyage = null;
 
     public function getTitre_voyage(): ?string
@@ -43,6 +59,7 @@ class Voyage
     }
 
     #[ORM\Column(type: 'datetime', nullable: false)]
+    #[Assert\NotNull(message: 'La date de debut est obligatoire.')]
     private ?\DateTimeInterface $date_debut = null;
 
     public function getDate_debut(): ?\DateTimeInterface
@@ -57,6 +74,7 @@ class Voyage
     }
 
     #[ORM\Column(type: 'datetime', nullable: false)]
+    #[Assert\NotNull(message: 'La date de fin est obligatoire.')]
     private ?\DateTimeInterface $date_fin = null;
 
     public function getDate_fin(): ?\DateTimeInterface
@@ -71,6 +89,8 @@ class Voyage
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'Le statut est obligatoire.')]
+    #[Assert\Choice(choices: self::STATUTS, message: 'Veuillez choisir un statut valide.')]
     private ?string $statut = null;
 
     public function getStatut(): ?string
@@ -86,6 +106,7 @@ class Voyage
 
     #[ORM\ManyToOne(targetEntity: Destination::class, inversedBy: 'voyages')]
     #[ORM\JoinColumn(name: 'id_destination', referencedColumnName: 'id_destination')]
+    #[Assert\NotNull(message: 'La destination est obligatoire.')]
     private ?Destination $destination = null;
 
     public function getDestination(): ?Destination
@@ -99,7 +120,7 @@ class Voyage
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Budget::class, mappedBy: 'voyage')]
+    #[ORM\OneToMany(targetEntity: Budget::class, mappedBy: 'voyage', cascade: ['remove'], orphanRemoval: true)]
     private Collection $budgets;
 
     /**
@@ -127,7 +148,7 @@ class Voyage
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Itineraire::class, mappedBy: 'voyage')]
+    #[ORM\OneToMany(targetEntity: Itineraire::class, mappedBy: 'voyage', cascade: ['remove'], orphanRemoval: true)]
     private Collection $itineraires;
 
     /**
@@ -155,7 +176,7 @@ class Voyage
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Paiement::class, mappedBy: 'voyage')]
+    #[ORM\OneToMany(targetEntity: Paiement::class, mappedBy: 'voyage', cascade: ['remove'], orphanRemoval: true)]
     private Collection $paiements;
 
     /**
@@ -202,19 +223,23 @@ class Voyage
     {
         if (!$this->getActivites()->contains($activite)) {
             $this->getActivites()->add($activite);
+            $activite->addVoyage($this);
         }
+
         return $this;
     }
 
     public function removeActivite(Activite $activite): self
     {
-        $this->getActivites()->removeElement($activite);
+        if ($this->getActivites()->removeElement($activite)) {
+            $activite->removeVoyage($this);
+        }
+
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'voyages')]
-    
-    private Collection $users;
+    #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'voyage', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $participations;
 
     public function __construct()
     {
@@ -222,7 +247,36 @@ class Voyage
         $this->itineraires = new ArrayCollection();
         $this->paiements = new ArrayCollection();
         $this->activites = new ArrayCollection();
-        $this->users = new ArrayCollection();
+        $this->participations = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, Participation>
+     */
+    public function getParticipations(): Collection
+    {
+        if (!$this->participations instanceof Collection) {
+            $this->participations = new ArrayCollection();
+        }
+
+        return $this->participations;
+    }
+
+    public function addParticipation(Participation $participation): self
+    {
+        if (!$this->getParticipations()->contains($participation)) {
+            $this->getParticipations()->add($participation);
+            $participation->setVoyage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeParticipation(Participation $participation): self
+    {
+        $this->getParticipations()->removeElement($participation);
+
+        return $this;
     }
 
     /**
@@ -230,29 +284,55 @@ class Voyage
      */
     public function getUsers(): Collection
     {
-        if (!$this->users instanceof Collection) {
-            $this->users = new ArrayCollection();
-        }
-        return $this->users;
+        return new ArrayCollection(array_values(array_filter(
+            array_map(
+                static fn (Participation $participation): ?User => $participation->getUser(),
+                $this->getParticipations()->toArray()
+            )
+        )));
     }
 
-    public function addUser(User $user): self
+    public function addUser(User $user, string $roleParticipation = Participation::DEFAULT_ROLE): self
     {
-        if (!$this->getUsers()->contains($user)) {
-            $this->getUsers()->add($user);
+        foreach ($this->getParticipations() as $participation) {
+            if ($participation->getUser() === $user) {
+                $participation->setRoleParticipation($roleParticipation);
+
+                return $this;
+            }
         }
+
+        $participation = (new Participation())
+            ->setUser($user)
+            ->setVoyage($this)
+            ->setRoleParticipation($roleParticipation);
+
+        $this->addParticipation($participation);
+        $user->addParticipation($participation);
+
         return $this;
     }
 
     public function removeUser(User $user): self
     {
-        $this->getUsers()->removeElement($user);
+        foreach ($this->getParticipations()->toArray() as $participation) {
+            if ($participation->getUser() === $user) {
+                $this->getParticipations()->removeElement($participation);
+                $user->getParticipations()->removeElement($participation);
+            }
+        }
+
         return $this;
     }
 
     public function getIdVoyage(): ?int
     {
         return $this->id_voyage;
+    }
+
+    public static function getAvailableStatuts(): array
+    {
+        return self::STATUTS;
     }
 
     public function getTitreVoyage(): ?string
@@ -289,6 +369,20 @@ class Voyage
         $this->date_fin = $date_fin;
 
         return $this;
+    }
+
+    #[Assert\Callback]
+    public function validateDates(ExecutionContextInterface $context): void
+    {
+        if (!$this->date_debut instanceof \DateTimeInterface || !$this->date_fin instanceof \DateTimeInterface) {
+            return;
+        }
+
+        if ($this->date_fin < $this->date_debut) {
+            $context->buildViolation('La date de fin doit etre posterieure ou egale a la date de debut.')
+                ->atPath('date_fin')
+                ->addViolation();
+        }
     }
 
 }

@@ -1,0 +1,825 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Voyages | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .voyages-page {
+            display: grid;
+            gap: 1.75rem;
+        }
+
+        .voyages-hero,
+        .voyages-empty,
+        .voyage-flash,
+        .voyage-card {
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 40px rgba(71, 48, 35, 0.06);
+        }
+
+        .voyages-hero {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+            gap: 1.4rem;
+            padding: 2rem;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(221, 191, 140, 0.28), transparent 30%),
+                linear-gradient(135deg, rgba(255, 253, 249, 0.98), rgba(243, 234, 223, 0.92));
+        }
+
+        .voyages-hero__content {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+        }
+
+        .voyages-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--color-primary);
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .voyages-hero__title {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.2rem, 3vw, 3.5rem);
+            line-height: 1.05;
+            margin-bottom: 0.85rem;
+        }
+
+        .voyages-hero__text {
+            color: var(--color-text-muted);
+            max-width: 58ch;
+            font-size: 1rem;
+        }
+
+        .voyages-hero__actions {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .voyages-hero__stats {
+            display: grid;
+            grid-template-columns: minmax(0, 220px);
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .voyages-stat {
+            padding: 1rem;
+            border: 1px solid rgba(231, 220, 205, 0.85);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.62);
+        }
+
+        .voyages-stat strong {
+            display: block;
+            font-family: 'Fraunces', serif;
+            font-size: 1.55rem;
+            color: var(--color-text);
+        }
+
+        .voyages-stat span {
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+        }
+
+        .voyages-hero__visual {
+            position: relative;
+            min-height: 280px;
+            border-radius: calc(var(--radius-xl) - 4px);
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(196, 111, 75, 0.18), rgba(47, 127, 121, 0.2));
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .voyages-hero__visual::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(22, 18, 15, 0.04), rgba(22, 18, 15, 0.55));
+        }
+
+        .voyages-hero__image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .voyages-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.35rem;
+        }
+
+        .voyages-toolbar {
+            display: grid;
+            gap: 1rem;
+            padding: 1.35rem;
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 40px rgba(71, 48, 35, 0.06);
+        }
+
+        .voyages-toolbar__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .voyages-toolbar__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.45rem;
+        }
+
+        .voyages-toolbar__meta {
+            color: var(--color-text-muted);
+        }
+
+        .voyages-filter-form {
+            display: grid;
+            grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)) auto;
+            gap: 0.85rem;
+            align-items: end;
+        }
+
+        .voyages-filter-field {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .voyages-filter-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .voyages-filter-input {
+            width: 100%;
+            min-height: 46px;
+            padding: 0.8rem 0.95rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .voyages-filter-input:focus {
+            outline: none;
+            border-color: rgba(196, 111, 75, 0.55);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.12);
+        }
+
+        .voyages-filter-actions {
+            display: flex;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .voyages-filter-summary {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .voyages-filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.08);
+            color: var(--color-primary-dark);
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+
+        .voyage-card {
+            display: grid;
+            grid-template-rows: 220px auto;
+            overflow: hidden;
+            transition: transform var(--transition-base), box-shadow var(--transition-base);
+            cursor: pointer;
+        }
+
+        .voyage-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 50px rgba(71, 48, 35, 0.12);
+        }
+
+        .voyage-card__body {
+            position: relative;
+            z-index: 2;
+        }
+
+        .voyage-card__media {
+            position: relative;
+            z-index: 1;
+        }
+
+        .voyage-card__media {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(196, 111, 75, 0.22), rgba(47, 127, 121, 0.18));
+        }
+
+        .voyage-card__media::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(22, 18, 15, 0.1), rgba(22, 18, 15, 0.56));
+        }
+
+        .voyage-card__image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 360ms ease;
+        }
+
+        .voyage-card:hover .voyage-card__image {
+            transform: scale(1.04);
+        }
+
+        .voyage-card__top {
+            position: absolute;
+            inset: auto 1rem 1rem 1rem;
+            z-index: 1;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            background: rgba(255, 253, 249, 0.88);
+            backdrop-filter: blur(10px);
+        }
+
+        .voyage-card__status {
+            display: inline-flex;
+            padding: 0.42rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(47, 127, 121, 0.12);
+            color: var(--color-secondary);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .voyage-card__title {
+            margin: 1rem 0 0.35rem;
+            font-family: 'Fraunces', serif;
+            font-size: 1.35rem;
+        }
+
+        .voyage-card__destination {
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+
+        .voyage-card__body {
+            padding: 1.4rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .voyage-card__headline {
+            display: grid;
+            gap: 0.35rem;
+        }
+
+        .voyage-card__meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+        }
+
+        .voyage-card__details {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .voyage-card__detail {
+            padding: 0.9rem;
+            border-radius: var(--radius-md);
+            background: var(--color-surface-soft);
+        }
+
+        .voyage-card__detail-label {
+            display: block;
+            margin-bottom: 0.35rem;
+            color: var(--color-text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .voyage-card__detail-value {
+            font-weight: 600;
+        }
+
+        .voyage-card__actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .voyage-action {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--color-border);
+            border-radius: 14px;
+            background: var(--color-surface);
+            color: var(--color-text-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition:
+                transform var(--transition-fast),
+                background var(--transition-fast),
+                color var(--transition-fast),
+                border-color var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .voyage-action:hover {
+            transform: translateY(-1px);
+        }
+
+        .voyage-action--edit {
+            background: rgba(47, 127, 121, 0.08);
+            color: var(--color-secondary);
+            border-color: rgba(47, 127, 121, 0.2);
+        }
+
+        .voyage-action--edit:hover {
+            background: rgba(47, 127, 121, 0.14);
+            border-color: rgba(47, 127, 121, 0.32);
+        }
+
+        .voyage-action--participants {
+            background: rgba(214, 169, 91, 0.12);
+            color: #8c6521;
+            border-color: rgba(214, 169, 91, 0.24);
+        }
+
+        .voyage-action--participants:hover {
+            background: rgba(214, 169, 91, 0.18);
+            border-color: rgba(214, 169, 91, 0.34);
+        }
+
+        .voyage-action--delete {
+            background: rgba(196, 111, 75, 0.08);
+            color: var(--color-primary-dark);
+            border-color: rgba(168, 90, 57, 0.22);
+        }
+
+        .voyage-action--delete:hover {
+            background: rgba(196, 111, 75, 0.16);
+            border-color: rgba(168, 90, 57, 0.34);
+        }
+
+        .voyage-delete-form {
+            margin: 0;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .voyage-toast-stack {
+            position: fixed;
+            top: calc(var(--navbar-height) + 1rem);
+            right: 1.25rem;
+            z-index: 1200;
+            display: grid;
+            gap: 0.85rem;
+            width: min(360px, calc(100vw - 2rem));
+        }
+
+        .voyage-flash {
+            position: relative;
+            padding: 1rem 3.2rem 1rem 1.2rem;
+            animation: voyage-toast-in 260ms ease;
+        }
+
+        .voyage-flash--success {
+            border-left: 4px solid var(--color-secondary);
+        }
+
+        .voyage-flash--error,
+        .voyage-flash--warning {
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .voyage-flash.is-hiding {
+            animation: voyage-toast-out 220ms ease forwards;
+        }
+
+        .voyage-flash__title {
+            display: block;
+            margin-bottom: 0.2rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .voyage-flash__message {
+            color: var(--color-text-muted);
+            line-height: 1.45;
+        }
+
+        .voyage-flash__close {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            width: 32px;
+            height: 32px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(31, 26, 23, 0.06);
+            color: var(--color-text-muted);
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: background var(--transition-fast), color var(--transition-fast);
+        }
+
+        .voyage-flash__close:hover {
+            background: rgba(196, 111, 75, 0.12);
+            color: var(--color-primary);
+        }
+
+        .voyages-empty {
+            padding: 2rem;
+            text-align: center;
+            display: grid;
+            gap: 1rem;
+        }
+
+        @keyframes voyage-toast-in {
+            from {
+                opacity: 0;
+                transform: translate3d(18px, -12px, 0);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes voyage-toast-out {
+            from {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+            to {
+                opacity: 0;
+                transform: translate3d(24px, -10px, 0);
+            }
+        }
+
+        @media (max-width: 1080px) {
+            .voyages-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .voyages-filter-form {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .voyages-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 820px) {
+            .voyages-hero {
+                padding: 1.5rem;
+            }
+
+            .voyages-hero__stats {
+                grid-template-columns: 1fr;
+            }
+
+            .voyages-grid,
+            .voyage-card__details {
+                grid-template-columns: 1fr;
+            }
+
+            .voyages-filter-form,
+            .voyages-filter-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .voyage-toast-stack {
+                right: 1rem;
+                left: 1rem;
+                width: auto;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="voyages-page">
+        <div class="voyages-hero">
+            <div class="voyages-hero__content">
+                <span class="voyages-hero__eyebrow">VOYAGES</span>
+                <h1 class="voyages-hero__title">Consultez et pilotez vos voyages avec plus de clarté</h1>
+                <p class="voyages-hero__text">
+                    Retrouvez vos sejours dans une interface plus visuelle, avec une galerie inspiree par les images du dossier imagesVoyage.
+                </p>
+
+                <div class="voyages-hero__actions">
+                    <a href="{{ path('app_voyages_new') }}" class="btn btn--primary">Ajouter un voyage</a>
+                </div>
+
+                <div class="voyages-hero__stats">
+                    <div class="voyages-stat">
+                        <strong>{{ results_count }}</strong>
+                        <span>{{ has_active_filters ? 'resultats filtres' : 'voyages affiches' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="voyages-hero__visual" aria-hidden="true">
+                {% if hero_image %}
+                    <img src="{{ asset(hero_image) }}" alt="Paysage de voyage" class="voyages-hero__image">
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="voyages-toolbar">
+            <form method="get" action="{{ path('app_voyages') }}" class="voyages-filter-form">
+                <div class="voyages-filter-field">
+                    <label class="voyages-filter-label" for="voyage-search">Recherche</label>
+                    <input id="voyage-search" type="search" name="search" value="{{ filters.search }}" class="voyages-filter-input" placeholder="Titre, destination ou pays">
+                </div>
+
+                <div class="voyages-filter-field">
+                    <label class="voyages-filter-label" for="voyage-statut">Statut</label>
+                    <select id="voyage-statut" name="statut" class="voyages-filter-input">
+                        <option value="">Tous les statuts</option>
+                        {% for status in status_options %}
+                            <option value="{{ status }}" {{ filters.statut == status ? 'selected' : '' }}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="voyages-filter-field">
+                    <label class="voyages-filter-label" for="voyage-destination">Destination</label>
+                    <select id="voyage-destination" name="destination" class="voyages-filter-input">
+                        <option value="">Toutes les destinations</option>
+                        {% for destination in destinations %}
+                            <option value="{{ destination.idDestination }}" {{ filters.destination == destination.idDestination ? 'selected' : '' }}>
+                                {{ destination.nomDestination }}{% if destination.paysDestination %} - {{ destination.paysDestination }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="voyages-filter-field">
+                    <label class="voyages-filter-label" for="voyage-sort">Tri</label>
+                    <select id="voyage-sort" name="sort" class="voyages-filter-input">
+                        {% for sortKey, sortLabel in sort_options %}
+                            <option value="{{ sortKey }}" {{ filters.sort == sortKey ? 'selected' : '' }}>{{ sortLabel }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="voyages-filter-actions">
+                    <button type="submit" class="btn btn--primary">Appliquer</button>
+                    {% if has_active_filters %}
+                        <a href="{{ path('app_voyages') }}" class="btn btn--ghost">Reinitialiser</a>
+                    {% endif %}
+                </div>
+            </form>
+
+            {% if has_active_filters %}
+                <div class="voyages-filter-summary">
+                    {% if filters.search %}
+                        <span class="voyages-filter-chip">Recherche : {{ filters.search }}</span>
+                    {% endif %}
+                    {% if filters.statut %}
+                        <span class="voyages-filter-chip">Statut : {{ filters.statut }}</span>
+                    {% endif %}
+                    {% if filters.destination %}
+                        {% for destination in destinations %}
+                            {% if destination.idDestination == filters.destination %}
+                                <span class="voyages-filter-chip">Destination : {{ destination.nomDestination }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        {% set successFlashes = app.flashes('success') %}
+        {% set warningFlashes = app.flashes('warning') %}
+        {% set errorFlashes = app.flashes('error') %}
+
+        {% if successFlashes is not empty or warningFlashes is not empty or errorFlashes is not empty %}
+            <div class="voyage-toast-stack" aria-live="polite" aria-atomic="true">
+                {% for message in successFlashes %}
+                    <div class="voyage-flash voyage-flash--success" data-voyage-toast>
+                        <strong class="voyage-flash__title">Operation reussie</strong>
+                        <div class="voyage-flash__message">{{ message }}</div>
+                        <button type="button" class="voyage-flash__close" data-voyage-toast-close aria-label="Fermer la notification">×</button>
+                    </div>
+                {% endfor %}
+
+                {% for message in warningFlashes %}
+                    <div class="voyage-flash voyage-flash--warning" data-voyage-toast>
+                        <strong class="voyage-flash__title">Attention</strong>
+                        <div class="voyage-flash__message">{{ message }}</div>
+                        <button type="button" class="voyage-flash__close" data-voyage-toast-close aria-label="Fermer la notification">×</button>
+                    </div>
+                {% endfor %}
+
+                {% for message in errorFlashes %}
+                    <div class="voyage-flash voyage-flash--error" data-voyage-toast>
+                        <strong class="voyage-flash__title">Action impossible</strong>
+                        <div class="voyage-flash__message">{{ message }}</div>
+                        <button type="button" class="voyage-flash__close" data-voyage-toast-close aria-label="Fermer la notification">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if voyages is not empty %}
+            <div class="voyages-grid">
+                {% for voyage in voyages %}
+                    {% set voyageImage = voyage_images[voyage.idVoyage] ?? hero_image %}
+                    <article class="voyage-card" data-voyage-url="{{ path('app_itineraires_index', {'voyageId': voyage.id_voyage}) }}">
+                        <div class="voyage-card__media">
+                            {% if voyageImage %}
+                                <img src="{{ asset(voyageImage) }}" alt="Illustration du voyage {{ voyage.titreVoyage }}" class="voyage-card__image">
+                            {% endif %}
+
+                            <div class="voyage-card__top">
+                                <span class="voyage-card__status">{{ voyage.statut }}</span>
+                                <h2 class="voyage-card__title">{{ voyage.titreVoyage }}</h2>
+                                <p class="voyage-card__destination">
+                                    {% if voyage.destination %}
+                                        {{ voyage.destination.nomDestination }}
+                                        {% if voyage.destination.paysDestination %}
+                                            , {{ voyage.destination.paysDestination }}
+                                        {% endif %}
+                                    {% else %}
+                                        Destination non definie
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="voyage-card__body">
+                            <div class="voyage-card__headline">
+                                <div class="voyage-card__meta">Organisation personnelle et collaborative</div>
+                            </div>
+
+                            <div class="voyage-card__details">
+                                <div class="voyage-card__detail">
+                                    <span class="voyage-card__detail-label">Date de debut</span>
+                                    <span class="voyage-card__detail-value">{{ voyage.dateDebut ? voyage.dateDebut|date('d/m/Y') : '-' }}</span>
+                                </div>
+                                <div class="voyage-card__detail">
+                                    <span class="voyage-card__detail-label">Date de fin</span>
+                                    <span class="voyage-card__detail-value">{{ voyage.dateFin ? voyage.dateFin|date('d/m/Y') : '-' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="voyage-card__actions">
+                                <a href="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--participants" aria-label="Gerer les participants du voyage {{ voyage.titreVoyage }}" title="Participants">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M16 21V19.5C16 18.1193 14.8807 17 13.5 17H7.5C6.11929 17 5 18.1193 5 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M10.5 13C12.433 13 14 11.433 14 9.5C14 7.567 12.433 6 10.5 6C8.567 6 7 7.567 7 9.5C7 11.433 8.567 13 10.5 13Z" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M18 8.5C19.1046 8.5 20 9.39543 20 10.5C20 11.6046 19.1046 12.5 18 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M18.5 17C19.8807 17 21 18.1193 21 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                    <span class="sr-only">Participants</span>
+                                </a>
+
+                                <a href="{{ path('app_voyages_edit', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--edit" aria-label="Modifier le voyage {{ voyage.titreVoyage }}" title="Modifier">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M13.5 8.5L16.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span class="sr-only">Modifier</span>
+                                </a>
+
+                                <form method="post" action="{{ path('app_voyages_delete', {'id_voyage': voyage.idVoyage}) }}" class="voyage-delete-form" onsubmit="return confirm('Supprimer ce voyage ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_voyage_' ~ voyage.idVoyage) }}">
+                                    <button type="submit" class="voyage-action voyage-action--delete" aria-label="Supprimer le voyage {{ voyage.titreVoyage }}" title="Supprimer">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M4 7H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                            <path d="M9 7V5.5C9 4.67157 9.67157 4 10.5 4H13.5C14.3284 4 15 4.67157 15 5.5V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                            <path d="M7 7L7.8 18.2C7.87717 19.2804 8.77596 20.1191 9.85909 20.1191H14.1409C15.224 20.1191 16.1228 19.2804 16.2 18.2L17 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                            <path d="M10 11V16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                            <path d="M14 11V16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                        <span class="sr-only">Supprimer</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="voyages-empty">
+                <h2>Aucun voyage enregistre</h2>
+                <p>
+                    {% if has_active_filters %}
+                        Aucun voyage ne correspond a votre recherche ou a vos filtres actuels.
+                    {% else %}
+                        Commencez par ajouter un premier voyage. Les cartes utiliseront ensuite aleatoirement les images du dossier imagesVoyage.
+                    {% endif %}
+                </p>
+                <div>
+                    {% if has_active_filters %}
+                        <a href="{{ path('app_voyages') }}" class="btn btn--ghost">Effacer les filtres</a>
+                    {% else %}
+                        <a href="{{ path('app_voyages_new') }}" class="btn btn--primary">Creer un voyage</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Gestion des toasts
+            var toasts = document.querySelectorAll('[data-voyage-toast]');
+
+            function hideToast(toast) {
+                if (!toast || toast.classList.contains('is-hiding')) {
+                    return;
+                }
+
+                toast.classList.add('is-hiding');
+                window.setTimeout(function () {
+                    toast.remove();
+                }, 220);
+            }
+
+            toasts.forEach(function (toast) {
+                var closeButton = toast.querySelector('[data-voyage-toast-close]');
+
+                if (closeButton) {
+                    closeButton.addEventListener('click', function () {
+                        hideToast(toast);
+                    });
+                }
+
+                window.setTimeout(function () {
+                    hideToast(toast);
+                }, 4200);
+            });
+
+            // Rendre les cartes de voyage cliquables
+            var voyageCards = document.querySelectorAll('.voyage-card[data-voyage-url]');
+            
+            voyageCards.forEach(function (card) {
+                card.addEventListener('click', function (e) {
+                    // Ne pas naviguer si le clic vient d'un bouton d'action, d'un lien ou d'un formulaire
+                    if (e.target.closest('.voyage-action, button, a:not(.voyage-card), form, input')) {
+                        return;
+                    }
+                    
+                    var url = card.getAttribute('data-voyage-url');
+                    if (url) {
+                        window.location.href = url;
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
