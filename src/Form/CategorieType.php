@@ -18,7 +18,7 @@ class CategorieType extends AbstractType
             ->add('nom', TextType::class, [
                 'label' => 'Nom de la catégorie',
                 'attr'  => [
-                    'placeholder' => 'Ex: Sports extrêmes',
+                    'placeholder' => '⚠ Obligatoire — unique, entre 3 et 100 caractères',
                     'minlength'   => 3,
                     'maxlength'   => 100,
                 ],
@@ -27,21 +27,21 @@ class CategorieType extends AbstractType
                 'label' => 'Description',
                 'attr'  => [
                     'rows'        => 4,
-                    'placeholder' => 'Décrivez la catégorie (15 caractères minimum)...',
+                    'placeholder' => '⚠ Obligatoire — minimum 15 caractères',
                     'minlength'   => 15,
                 ],
             ])
             ->add('type', TextType::class, [
                 'label' => 'Type',
                 'attr'  => [
-                    'placeholder' => 'Ex: Plein air, Culturel...',
+                    'placeholder' => '⚠ Obligatoire — entre 3 et 50 caractères',
                     'minlength'   => 3,
                     'maxlength'   => 50,
                 ],
             ])
             ->add('saison', ChoiceType::class, [
                 'label'       => 'Saison',
-                'placeholder' => '-- Choisir une saison --',
+                'placeholder' => '⚠ Obligatoire — choisissez une saison',
                 'choices'     => [
                     'Printemps'      => 'printemps',
                     'Été'            => 'été',
@@ -52,7 +52,7 @@ class CategorieType extends AbstractType
             ])
             ->add('niveauintensite', ChoiceType::class, [
                 'label'       => 'Niveau d\'intensité',
-                'placeholder' => '-- Choisir un niveau --',
+                'placeholder' => '⚠ Obligatoire — choisissez un niveau',
                 'choices'     => [
                     'Faible'  => 'faible',
                     'Modéré'  => 'modéré',
@@ -63,7 +63,7 @@ class CategorieType extends AbstractType
             ->add('publiccible', TextType::class, [
                 'label' => 'Public cible',
                 'attr'  => [
-                    'placeholder' => 'Ex: Adultes, Familles, Enfants...',
+                    'placeholder' => '⚠ Obligatoire — entre 3 et 100 caractères',
                     'minlength'   => 3,
                     'maxlength'   => 100,
                 ],
