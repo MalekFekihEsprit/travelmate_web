@@ -385,11 +385,11 @@
             <p class="cshow-info-card__value">{{ categorie.saison }}</p>
         </div>
         <div class="cshow-info-card cshow-info-card--secondary">
-            <p class="cshow-info-card__label">⚡ Niveau d'intensité</p>
+            <p class="cshow-info-card__label">Niveau d'intensité</p>
             <p class="cshow-info-card__value">{{ categorie.niveauintensite }}</p>
         </div>
         <div class="cshow-info-card">
-            <p class="cshow-info-card__label">👥 Public cible</p>
+            <p class="cshow-info-card__label">Public cible</p>
             <p class="cshow-info-card__value">{{ categorie.publiccible }}</p>
         </div>
         <div class="cshow-info-card">
@@ -458,18 +458,18 @@
 
                     <div class="act-card__meta">
                         {% if activite.lieu is defined and activite.lieu %}
-                            <span class="act-card__tag">📍 {{ activite.lieu }}</span>
+                            <span class="act-card__tag"> {{ activite.lieu }}</span>
                         {% endif %}
                         {% if activite.duree is defined and activite.duree %}
                             <span class="act-card__tag">⏱ {{ activite.duree }}h</span>
                         {% endif %}
                         {% if activite.agemin is defined and activite.agemin %}
-                            <span class="act-card__tag">🎂 {{ activite.agemin }}+ ans</span>
+                            <span class="act-card__tag">{{ activite.agemin }}+ ans</span>
                         {% endif %}
                     </div>
 
                     <span class="act-card__cta">
-                        Voir le détail
+                        Voir les détails
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>

@@ -40,13 +40,13 @@
 {% block body %}
 
 {% for msg in app.flashes('success') %}
-    <div class="flash-success">✅ {{ msg }}</div>
+    <div class="flash-success"> {{ msg }}</div>
 {% endfor %}
 
 <div class="page-header">
     <div>
         <div class="page-header__title">
-            {{ evenement.id ? '✏️ Modifier l\'événement' : '➕ Nouvel événement' }}
+            {{ evenement.id ? 'Modifier l\'événement' : ' Nouvel événement' }}
         </div>
         <div class="page-header__sub">
             {{ evenement.id ? 'Modifiez « ' ~ evenement.titre ~ ' »' : 'Créez un nouvel événement collaboratif' }}
@@ -64,7 +64,7 @@
     {# Colonne principale #}
     <div>
         <div class="admin-card">
-            <div class="admin-card__header">📋 Informations de l'événement</div>
+            <div class="admin-card__header">Informations de l'événement</div>
             <div class="admin-card__body">
                 <div class="form-group">
                     <label>{{ form_label(form.titre) }} <span class="req">*</span></label>
@@ -104,7 +104,7 @@
     <div>
         {# Paramètres #}
         <div class="admin-card">
-            <div class="admin-card__header">⚙️ Paramètres</div>
+            <div class="admin-card__header">Paramètres</div>
             <div class="admin-card__body">
                 <div class="form-group">
                     <label>{{ form_label(form.nbPlaces) }} <span class="req">*</span></label>
@@ -122,7 +122,7 @@
 
         {# Image #}
         <div class="admin-card">
-            <div class="admin-card__header">🖼️ Image</div>
+            <div class="admin-card__header">Image</div>
             <div class="admin-card__body">
                 <div class="img-preview-wrap">
                     {% if evenement.imagePath %}
@@ -181,4 +181,4 @@
         });
     }
 </script>
-{% endblock %}
+{% endblock %}  

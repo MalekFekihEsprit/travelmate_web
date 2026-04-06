@@ -40,13 +40,13 @@
 {% block body %}
 
 {% for msg in app.flashes('success') %}
-    <div class="flash-success">✅ {{ msg }}</div>
+    <div class="flash-success">{{ msg }}</div>
 {% endfor %}
 
 <div class="page-header">
     <div>
         <div class="page-header__title">
-            {{ activite.id ? '✏️ Modifier l\'activité' : '➕ Nouvelle activité' }}
+            {{ activite.id ? ' Modifier l\'activité' : ' Nouvelle activité' }}
         </div>
         <div class="page-header__sub">
             {{ activite.id ? 'Modifiez « ' ~ activite.nom ~ ' »' : 'Créez une nouvelle activité' }}
@@ -64,7 +64,7 @@
     {# Colonne principale #}
     <div>
         <div class="admin-card">
-            <div class="admin-card__header">📋 Informations de l'activité</div>
+            <div class="admin-card__header"> Informations de l'activité</div>
             <div class="admin-card__body">
                 <div class="form-group">
                     <label>{{ form_label(form.nom) }} <span class="req">*</span></label>
@@ -117,7 +117,7 @@
     <div>
         {# Paramètres #}
         <div class="admin-card">
-            <div class="admin-card__header">⚙️ Paramètres</div>
+            <div class="admin-card__header">Paramètres</div>
             <div class="admin-card__body">
                 <div class="form-group">
                     <label>{{ form_label(form.statut) }} <span class="req">*</span></label>
@@ -134,7 +134,7 @@
 
         {# Image #}
         <div class="admin-card">
-            <div class="admin-card__header">🖼️ Image</div>
+            <div class="admin-card__header">Image</div>
             <div class="admin-card__body">
                 <div class="img-preview-wrap">
                     {% if activite.imagePath %}

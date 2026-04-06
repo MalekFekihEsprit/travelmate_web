@@ -18,7 +18,6 @@
     display: flex;
     align-items: flex-end;
 }
-
 .act-hero__bg {
     position: absolute;
     inset: 0;
@@ -29,13 +28,11 @@
     transition: transform 8s ease;
 }
 .act-hero:hover .act-hero__bg { transform: scale(1); }
-
 .act-hero__content {
     position: relative;
     padding: 2.5rem 3rem;
     max-width: 640px;
 }
-
 .act-hero__eyebrow {
     display: inline-block;
     font-size: 0.78rem;
@@ -45,7 +42,6 @@
     color: var(--color-accent);
     margin-bottom: 0.75rem;
 }
-
 .act-hero__title {
     font-family: 'Fraunces', serif;
     font-size: clamp(2rem, 4vw, 3rem);
@@ -55,7 +51,6 @@
     margin-bottom: 0.85rem;
     letter-spacing: -0.02em;
 }
-
 .act-hero__desc {
     font-size: 1rem;
     color: rgba(255,255,255,0.75);
@@ -63,76 +58,231 @@
     max-width: 480px;
     margin-bottom: 1.75rem;
 }
-
-.act-hero__actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
+.act-hero__actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 .btn-hero-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.85rem 1.5rem;
-    border-radius: 999px;
-    background: var(--color-primary);
-    color: #fff;
-    font: inherit;
-    font-size: 0.92rem;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.85rem 1.5rem; border-radius: 999px;
+    background: var(--color-primary); color: #fff;
+    font: inherit; font-size: 0.92rem; font-weight: 600;
+    border: none; cursor: pointer; text-decoration: none;
     transition: background var(--transition-fast), transform var(--transition-fast);
 }
 .btn-hero-primary:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
-
 .btn-hero-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.85rem 1.5rem;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.12);
-    color: #fff;
-    font: inherit;
-    font-size: 0.92rem;
-    font-weight: 500;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.85rem 1.5rem; border-radius: 999px;
+    background: rgba(255,255,255,0.12); color: #fff;
+    font: inherit; font-size: 0.92rem; font-weight: 500;
     border: 1px solid rgba(255,255,255,0.3);
-    cursor: pointer;
-    text-decoration: none;
+    cursor: pointer; text-decoration: none;
     backdrop-filter: blur(8px);
     transition: background var(--transition-fast), transform var(--transition-fast);
 }
 .btn-hero-ghost:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
 
-/* Stats dans le hero */
+/* Stats hero */
 .act-hero__stats {
-    position: absolute;
-    bottom: 2.5rem;
-    right: 3rem;
+    position: absolute; bottom: 2.5rem; right: 3rem;
+    display: flex; gap: 1.5rem;
+}
+.hero-stat { text-align: center; color: #fff; }
+.hero-stat__num { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 600; line-height: 1; }
+.hero-stat__label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.6); margin-top: 0.2rem; }
+
+/* ═══════════════════════════════════════════════════
+   DESTINATION PICKER — nouvelle feature
+═══════════════════════════════════════════════════ */
+.dest-strip {
     display: flex;
-    gap: 1.5rem;
+    align-items: stretch;
+    gap: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 4px 20px var(--color-shadow);
+    flex-wrap: wrap;
+    gap: 1rem;
 }
-.hero-stat {
-    text-align: center;
-    color: #fff;
+.dest-strip__label-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    padding-right: 1.5rem;
+    border-right: 1px solid var(--color-border);
+    min-width: 0;
 }
-.hero-stat__num {
-    font-family: 'Fraunces', serif;
-    font-size: 1.6rem;
-    font-weight: 600;
-    line-height: 1;
+@media (max-width: 700px) {
+    .dest-strip__label-col { border-right: none; padding-right: 0; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; width: 100%; }
 }
-.hero-stat__label {
-    font-size: 0.72rem;
+.dest-strip__eyebrow {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: rgba(255,255,255,0.6);
-    margin-top: 0.2rem;
+    color: var(--color-primary);
+    margin-bottom: 0.2rem;
 }
+.dest-strip__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+.dest-strip__input-col {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-left: 1.5rem;
+    min-width: 0;
+}
+@media (max-width: 700px) {
+    .dest-strip__input-col { padding-left: 0; }
+}
+
+.dest-input-wrap {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+}
+.dest-input-wrap__icon {
+    position: absolute;
+    left: 1rem; top: 50%; transform: translateY(-50%);
+    color: var(--color-primary);
+    pointer-events: none;
+}
+.dest-input {
+    width: 100%;
+    padding: 0.85rem 1rem 0.85rem 2.75rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font: inherit;
+    font-size: 0.97rem;
+    color: var(--color-text);
+    background: var(--color-surface);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dest-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(196,111,75,0.1);
+}
+.dest-input::placeholder { color: var(--color-text-muted); }
+
+/* Suggestions autocomplete */
+.dest-suggestions {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: 0; right: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 40px rgba(71,48,35,0.12);
+    z-index: 200;
+    overflow: hidden;
+    display: none;
+}
+.dest-suggestions.is-open { display: block; }
+.dest-suggestion {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--color-text);
+    transition: background var(--transition-fast);
+}
+.dest-suggestion:hover { background: var(--color-hover); }
+.dest-suggestion svg { color: var(--color-text-muted); flex-shrink: 0; }
+.dest-suggestion__main { font-weight: 500; }
+.dest-suggestion__sub { font-size: 0.78rem; color: var(--color-text-muted); }
+
+.dest-btn-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.85rem 1.4rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary);
+    color: #fff;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.dest-btn-search:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(196,111,75,0.25);
+}
+
+/* Chip destination active */
+.dest-active-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem 0.4rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(196,111,75,0.1);
+    border: 1px solid rgba(196,111,75,0.25);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    margin-left: 0.5rem;
+}
+.dest-active-chip__clear {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+}
+.dest-active-chip__clear:hover { opacity: 1; }
+
+/* Banner résultats destination */
+.dest-banner {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(196,111,75,0.06);
+    border: 1px solid rgba(196,111,75,0.18);
+    border-radius: var(--radius-lg);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+.dest-banner.is-visible { display: flex; }
+.dest-banner svg { color: var(--color-primary); flex-shrink: 0; }
+.dest-banner__text strong { color: var(--color-primary); }
+.dest-banner__clear {
+    margin-left: auto;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+    white-space: nowrap;
+}
+.dest-banner__clear:hover { color: var(--color-primary); border-color: rgba(196,111,75,0.3); }
 
 /* ═══════════════════════════════════════════════════
    BARRE FILTRES
@@ -146,98 +296,45 @@
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--color-border);
 }
+.filters-bar__left { flex: 1; display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center; }
 
-.filters-bar__left {
-    flex: 1;
-    display: flex;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.search-field {
-    position: relative;
-    min-width: 220px;
-    flex: 1;
-    max-width: 300px;
-}
+.search-field { position: relative; min-width: 220px; flex: 1; max-width: 300px; }
 .search-field__icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--color-text-muted);
-    pointer-events: none;
+    position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+    color: var(--color-text-muted); pointer-events: none;
 }
 .search-field__input {
-    width: 100%;
-    padding: 0.72rem 1rem 0.72rem 2.6rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-surface);
-    font: inherit;
-    font-size: 0.9rem;
-    color: var(--color-text);
-    outline: none;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    width: 100%; padding: 0.72rem 1rem 0.72rem 2.6rem;
+    border: 1px solid var(--color-border); border-radius: 999px;
+    background: var(--color-surface); font: inherit; font-size: 0.9rem; color: var(--color-text);
+    outline: none; transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-.search-field__input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(196,111,75,0.1);
-}
+.search-field__input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(196,111,75,0.1); }
 
 .filter-pill-select {
     padding: 0.72rem 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-surface);
-    font: inherit;
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-    outline: none;
-    cursor: pointer;
-    transition: border-color var(--transition-fast);
-    min-width: 160px;
+    border: 1px solid var(--color-border); border-radius: 999px;
+    background: var(--color-surface); font: inherit; font-size: 0.9rem; color: var(--color-text-muted);
+    outline: none; cursor: pointer;
+    transition: border-color var(--transition-fast); min-width: 160px;
 }
 .filter-pill-select:focus { border-color: var(--color-primary); }
 
 /* Chips catégories */
-.cat-chips {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.75rem;
-}
+.cat-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
 .cat-chip {
-    padding: 0.45rem 1rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    font: inherit;
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    white-space: nowrap;
+    padding: 0.45rem 1rem; border-radius: 999px;
+    border: 1px solid var(--color-border); background: var(--color-surface);
+    font: inherit; font-size: 0.85rem; color: var(--color-text-muted);
+    cursor: pointer; transition: all var(--transition-fast); white-space: nowrap;
 }
-.cat-chip:hover,
-.cat-chip.is-active {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #fff;
+.cat-chip:hover, .cat-chip.is-active {
+    background: var(--color-primary); border-color: var(--color-primary); color: #fff;
 }
 
-/* Compteur + vue toggle */
-.results-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-}
-.results-count {
-    font-size: 0.88rem;
-    color: var(--color-text-muted);
-}
+/* Compteur */
+.results-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+.results-count { font-size: 0.88rem; color: var(--color-text-muted); }
 .results-count strong { color: var(--color-text); font-weight: 600; }
 
 /* ═══════════════════════════════════════════════════
@@ -248,17 +345,10 @@
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
 }
-
-/* Carte */
 .act-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    color: inherit;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl); overflow: hidden;
+    display: flex; flex-direction: column; text-decoration: none; color: inherit;
     transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
 }
 .act-card:hover {
@@ -266,159 +356,73 @@
     box-shadow: 0 20px 48px rgba(71,48,35,0.11);
     border-color: rgba(196,111,75,0.25);
 }
-
-/* Image */
-.act-card__img-wrap {
-    position: relative;
-    height: 210px;
-    overflow: hidden;
-    background: var(--color-surface-soft);
-}
-.act-card__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
+.act-card__img-wrap { position: relative; height: 210px; overflow: hidden; background: var(--color-surface-soft); }
+.act-card__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
 .act-card:hover .act-card__img { transform: scale(1.06); }
 .act-card__img-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--color-surface-soft), var(--color-border));
     color: var(--color-text-muted);
-    font-size: 2.5rem;
 }
-
-/* Overlay gradient sur l'image */
 .act-card__img-overlay {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background: linear-gradient(to top, rgba(20,14,10,0.55) 0%, transparent 45%);
     pointer-events: none;
 }
-
-/* Badges */
-.act-card__badges {
-    position: absolute;
-    top: 0.85rem;
-    left: 0.85rem;
-    display: flex;
-    gap: 0.35rem;
-    flex-wrap: wrap;
-}
-.badge {
-    padding: 0.28rem 0.65rem;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    backdrop-filter: blur(8px);
-}
+.act-card__badges { position: absolute; top: 0.85rem; left: 0.85rem; display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.badge { padding: 0.28rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; backdrop-filter: blur(8px); }
 .badge--trending { background: rgba(196,111,75,0.9); color: #fff; }
 .badge--cat { background: rgba(255,253,249,0.92); color: var(--color-primary); border: 1px solid rgba(196,111,75,0.2); }
-.badge--active   { background: rgba(47,127,121,0.88);  color: #fff; }
-.badge--inactive { background: rgba(100,100,100,0.75); color: #fff; }
-.badge--attente  { background: rgba(180,140,40,0.85);  color: #fff; }
 
-/* Rating (en bas de l'image) */
 .act-card__rating {
-    position: absolute;
-    bottom: 0.75rem;
-    left: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    color: #fff;
-    font-size: 0.82rem;
-    font-weight: 600;
+    position: absolute; bottom: 0.75rem; left: 0.85rem;
+    display: flex; align-items: center; gap: 0.3rem;
+    color: #fff; font-size: 0.82rem; font-weight: 600;
 }
 .act-card__rating .star { color: #f59e0b; }
 
-/* Corps */
-.act-card__body {
-    padding: 1.1rem 1.25rem 1.25rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-.act-card__name {
-    font-family: 'Fraunces', serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--color-text);
-    line-height: 1.25;
-}
-.act-card__location {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.82rem;
-    color: var(--color-text-muted);
-}
-.act-card__tags {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    margin-top: 0.15rem;
-}
-.tag {
-    padding: 0.18rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 500;
-    border: 1px solid var(--color-border);
-    color: var(--color-text-muted);
-    background: var(--color-surface-soft);
-}
-.tag--facile   { border-color: rgba(47,127,121,0.3); color: var(--color-secondary); }
-.tag--moyen    { border-color: rgba(180,140,40,0.3);  color: #8a6b0a; }
-.tag--difficile{ border-color: rgba(196,111,75,0.3);  color: var(--color-primary); }
-.tag--expert   { border-color: rgba(160,50,50,0.3);   color: #8b1a1a; }
+.act-card__body { padding: 1.1rem 1.25rem 1.25rem; flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.act-card__name { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 600; color: var(--color-text); line-height: 1.25; }
+.act-card__location { display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: var(--color-text-muted); }
 
-/* Footer carte */
+/* Mise en évidence du terme de destination */
+.act-card__location mark {
+    background: rgba(196,111,75,0.15);
+    color: var(--color-primary);
+    border-radius: 3px;
+    padding: 0 2px;
+    font-weight: 600;
+}
+
+.act-card__tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.15rem; }
+.tag {
+    padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 500;
+    border: 1px solid var(--color-border); color: var(--color-text-muted); background: var(--color-surface-soft);
+}
+.tag--facile    { border-color: rgba(47,127,121,0.3);  color: var(--color-secondary); }
+.tag--moyen     { border-color: rgba(180,140,40,0.3);   color: #8a6b0a; }
+.tag--difficile { border-color: rgba(196,111,75,0.3);   color: var(--color-primary); }
+.tag--expert    { border-color: rgba(160,50,50,0.3);    color: #8b1a1a; }
+
 .act-card__footer {
-    margin-top: auto;
-    padding-top: 0.85rem;
-    border-top: 1px solid var(--color-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    margin-top: auto; padding-top: 0.85rem; border-top: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between;
 }
 .act-price-label { font-size: 0.72rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.act-price-value {
-    font-family: 'Fraunces', serif;
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--color-primary);
-}
+.act-price-value { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 600; color: var(--color-primary); }
 .act-price-unit { font-size: 0.78rem; font-weight: 400; color: var(--color-text-muted); font-family: 'Outfit', sans-serif; }
 .act-card__arrow {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: var(--color-surface-soft);
-    border: 1px solid var(--color-border);
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--color-surface-soft); border: 1px solid var(--color-border);
     display: flex; align-items: center; justify-content: center;
     color: var(--color-text-muted);
     transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
     flex-shrink: 0;
 }
-.act-card:hover .act-card__arrow {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #fff;
-}
+.act-card:hover .act-card__arrow { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
 
 /* Vide */
-.act-empty {
-    grid-column: 1/-1;
-    padding: 4rem 2rem;
-    text-align: center;
-    color: var(--color-text-muted);
-}
+.act-empty { grid-column: 1/-1; padding: 4rem 2rem; text-align: center; color: var(--color-text-muted); }
 .act-empty__title { font-size: 1.15rem; font-weight: 600; color: var(--color-text); margin-bottom: 0.4rem; margin-top: 0.75rem; }
 
 </style>
@@ -431,12 +435,9 @@
 ════════════════════════════════════════ #}
 <section class="act-hero">
     <div class="act-hero__bg"></div>
-
     <div class="act-hero__content">
         <span class="act-hero__eyebrow">Explorez & Découvrez</span>
-        <h1 class="act-hero__title">
-            Des activités pour chaque voyageur
-        </h1>
+        <h1 class="act-hero__title">Des activités pour chaque voyageur</h1>
         <p class="act-hero__desc">
             Randonnées, sorties nautiques, ateliers culturels —
             réservez des expériences uniques adaptées à votre rythme et vos envies.
@@ -446,12 +447,9 @@
                 Explorer les activités
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a href="{{ path('app_evenements') }}" class="btn-hero-ghost">
-                Voir les événements
-            </a>
+            <a href="{{ path('app_evenements') }}" class="btn-hero-ghost">Voir les événements</a>
         </div>
     </div>
-
     <div class="act-hero__stats">
         <div class="hero-stat">
             <div class="hero-stat__num">{{ activites|length }}</div>
@@ -469,7 +467,41 @@
 ════════════════════════════════════════ #}
 <div id="activites">
 
-    {# Chips catégories #}
+    {# ── Destination Picker ── #}
+    <div class="dest-strip">
+        <div class="dest-strip__label-col">
+            <div class="dest-strip__eyebrow">Destination</div>
+            <div class="dest-strip__title">Choisissez votre destination</div>
+        </div>
+        <div class="dest-strip__input-col">
+            <div class="dest-input-wrap">
+                <span class="dest-input-wrap__icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
+                </span>
+                <input
+                    type="text"
+                    class="dest-input"
+                    id="destInput"
+                    placeholder="Vous partez où ?"
+                    autocomplete="off"
+                >
+                <div class="dest-suggestions" id="destSuggestions"></div>
+            </div>
+            <button class="dest-btn-search" id="destSearchBtn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Rechercher
+            </button>
+        </div>
+    </div>
+
+    {# ── Banner résultat destination ── #}
+    <div class="dest-banner" id="destBanner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
+        <span class="dest-banner__text" id="destBannerText"></span>
+        <button class="dest-banner__clear" id="destBannerClear">Voir toutes les activités</button>
+    </div>
+
+    {# ── Chips catégories ── #}
     <div class="cat-chips">
         <button class="cat-chip is-active" data-cat="">Toutes</button>
         {% for cat in categories %}
@@ -477,7 +509,7 @@
         {% endfor %}
     </div>
 
-    {# Barre de filtres #}
+    {# ── Barre de filtres ── #}
     <div class="filters-bar">
         <div class="filters-bar__left">
             <div class="search-field">
@@ -486,15 +518,13 @@
                 </span>
                 <input type="search" class="search-field__input" id="searchInput" placeholder="Rechercher une activité…">
             </div>
-
             <select class="filter-pill-select" id="diffFilter">
                 <option value="">Toute difficulté</option>
-                <option value="Facile">Facile</option>
-                <option value="Moyen">Moyen</option>
-                <option value="Difficile">Difficile</option>
-                <option value="Expert">Expert</option>
+                <option value="facile">Facile</option>
+                <option value="intermediaire">Intermédiaire</option>
+                <option value="difficile">Difficile</option>
+                <option value="expert">Expert</option>
             </select>
-
             <select class="filter-pill-select" id="budgetFilter">
                 <option value="">Tout budget</option>
                 <option value="0-50">Moins de 50 TND</option>
@@ -504,7 +534,7 @@
         </div>
     </div>
 
-    {# Compteur #}
+    {# ── Compteur ── #}
     <div class="results-row">
         <p class="results-count">
             <strong id="countNum">{{ activites|length }}</strong>
@@ -512,7 +542,7 @@
         </p>
     </div>
 
-    {# Grille #}
+    {# ── Grille ── #}
     <div class="act-grid" id="actGrid">
         {% if activites is empty %}
             <div class="act-empty">
@@ -525,29 +555,25 @@
                 {% set moyenne = activite.moyenneAvis %}
                 {% set nbAvis  = activite.avis|length %}
                 {% set diff    = activite.niveaudifficulte|lower %}
-                {% set statut  = activite.statut|lower %}
 
                 <a href="{{ path('app_activite_show', {id: activite.id}) }}"
                    class="act-card"
                    data-nom="{{ activite.nom|lower }}"
                    data-cat="{{ activite.categorie ? activite.categorie.id : '' }}"
-                   data-diff="{{ activite.niveaudifficulte }}"
-                   data-budget="{{ activite.budget }}">
+                   data-diff="{{ activite.niveaudifficulte|lower }}"
+                   data-budget="{{ activite.budget }}"
+                   data-lieu="{{ activite.lieu|lower }}">
 
-                    {# Image #}
                     <div class="act-card__img-wrap">
                         {% if activite.imagePath %}
                             <img src="{{ asset('uploads/activites/' ~ activite.imagePath) }}"
-                                 alt="{{ activite.nom }}"
-                                 class="act-card__img"
+                                 alt="{{ activite.nom }}" class="act-card__img"
                                  onerror="this.style.display='none';this.parentElement.querySelector('.act-card__img-placeholder').style.display='flex'">
                         {% endif %}
                         <div class="act-card__img-placeholder" style="{{ activite.imagePath ? 'display:none' : '' }}">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                         <div class="act-card__img-overlay"></div>
-
-                        {# Badges #}
                         <div class="act-card__badges">
                             {% if nbAvis >= 3 and moyenne >= 4 %}
                                 <span class="badge badge--trending">Populaire</span>
@@ -556,41 +582,32 @@
                                 <span class="badge badge--cat">{{ activite.categorie.nom }}</span>
                             {% endif %}
                         </div>
-
-                        {# Rating #}
                         {% if nbAvis > 0 %}
                             <div class="act-card__rating">
-                                <span class="star">★</span>
+                                <span class="star">&#9733;</span>
                                 <span>{{ moyenne }}</span>
                                 <span style="opacity:.7">({{ nbAvis }})</span>
                             </div>
                         {% endif %}
                     </div>
 
-                    {# Corps #}
                     <div class="act-card__body">
                         <div class="act-card__name">{{ activite.nom }}</div>
-
                         {% if activite.lieu %}
-                            <div class="act-card__location">
+                            <div class="act-card__location" data-location="{{ activite.lieu|lower }}">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                                {{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}
+                                <span class="location-text">{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}</span>
                             </div>
                         {% endif %}
-
                         <div class="act-card__tags">
                             <span class="tag tag--{{ diff }}">{{ activite.niveaudifficulte }}</span>
                             <span class="tag">{{ activite.duree }}h</span>
                             <span class="tag">+{{ activite.agemin }} ans</span>
                         </div>
-
                         <div class="act-card__footer">
                             <div>
                                 <div class="act-price-label">À partir de</div>
-                                <div class="act-price-value">
-                                    {{ activite.budget }}
-                                    <span class="act-price-unit">TND</span>
-                                </div>
+                                <div class="act-price-value">{{ activite.budget }} <span class="act-price-unit">TND</span></div>
                             </div>
                             <div class="act-card__arrow">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -608,13 +625,137 @@
 {% block javascripts %}
 <script>
 (function() {
+
+    // ── Données lieux (pour l'autocomplete) ──────────────────────────────────
+    // Extraites dynamiquement depuis les cards
+    const allCards = Array.from(document.querySelectorAll('.act-card[data-lieu]'));
+    const allLieux = [...new Set(
+        allCards.map(c => c.dataset.lieu).filter(Boolean)
+    )];
+
+    // Gouvernorats tunisiens connus pour regrouper les résultats par région
+    const regionMap = {
+        'tunis': ['tunis', 'la marsa', 'sidi bou said', 'la goulette', 'carthage', 'ariana', 'manouba', 'ben arous', 'hammam lif', 'rades', 'bardo', 'ezzouhour'],
+        'hammamet': ['hammamet', 'nabeul', 'kelibia', 'korba', 'menzel temime'],
+        'sousse': ['sousse', 'monastir', 'port el kantaoui', 'chott meriem'],
+        'sfax': ['sfax', 'jebeniana', 'mahres'],
+        'djerba': ['djerba', 'houmt souk', 'midoun', 'aghir', 'ajim'],
+        'tozeur': ['tozeur', 'nefta', 'douz', 'kebili'],
+        'tabarka': ['tabarka', 'ain draham', 'jendouba'],
+        'bizerte': ['bizerte', 'menzel bourguiba', 'ras angela'],
+    };
+
+    // ── Autocomplete destination ─────────────────────────────────────────────
+    const destInput   = document.getElementById('destInput');
+    const suggestions = document.getElementById('destSuggestions');
+
+    function buildSuggestions(query) {
+        const q = query.toLowerCase().trim();
+        if (!q) { suggestions.classList.remove('is-open'); return; }
+
+        // Chercher dans les lieux des activités + dans les régions connues
+        const matches = new Set();
+        allLieux.forEach(lieu => { if (lieu.includes(q)) matches.add(lieu); });
+        Object.keys(regionMap).forEach(region => {
+            if (region.includes(q)) {
+                regionMap[region].forEach(sub => matches.add(sub));
+                matches.add(region);
+            }
+            regionMap[region].forEach(sub => { if (sub.includes(q)) matches.add(sub); });
+        });
+
+        const items = [...matches].slice(0, 6);
+        if (!items.length) { suggestions.classList.remove('is-open'); return; }
+
+        suggestions.innerHTML = items.map(lieu => `
+            <div class="dest-suggestion" data-lieu="${lieu}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
+                <div>
+                    <div class="dest-suggestion__main">${capitalize(lieu)}</div>
+                </div>
+            </div>
+        `).join('');
+
+        suggestions.querySelectorAll('.dest-suggestion').forEach(el => {
+            el.addEventListener('click', () => {
+                destInput.value = capitalize(el.dataset.lieu);
+                suggestions.classList.remove('is-open');
+                applyDestination(el.dataset.lieu);
+            });
+        });
+
+        suggestions.classList.add('is-open');
+    }
+
+    destInput.addEventListener('input', () => buildSuggestions(destInput.value));
+    destInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            suggestions.classList.remove('is-open');
+            applyDestination(destInput.value.toLowerCase().trim());
+        }
+    });
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.dest-input-wrap')) suggestions.classList.remove('is-open');
+    });
+
+    document.getElementById('destSearchBtn').addEventListener('click', () => {
+        suggestions.classList.remove('is-open');
+        applyDestination(destInput.value.toLowerCase().trim());
+    });
+
+    // ── Appliquer le filtre destination ─────────────────────────────────────
+    let activeDestination = '';
+
+    function applyDestination(query) {
+        activeDestination = query.trim();
+        filter();
+        updateDestBanner();
+    }
+
+    function updateDestBanner() {
+        const banner     = document.getElementById('destBanner');
+        const bannerText = document.getElementById('destBannerText');
+        if (activeDestination) {
+            const count = allCards.filter(c => matchDest(c)).length;
+            bannerText.innerHTML = `<strong>${count} activité${count > 1 ? 's' : ''}</strong> trouvée${count > 1 ? 's' : ''} à <strong>${capitalize(activeDestination)}</strong> et ses alentours`;
+            banner.classList.add('is-visible');
+        } else {
+            banner.classList.remove('is-visible');
+        }
+    }
+
+    document.getElementById('destBannerClear').addEventListener('click', () => {
+        activeDestination = '';
+        destInput.value   = '';
+        filter();
+        document.getElementById('destBanner').classList.remove('is-visible');
+    });
+
+    function matchDest(card) {
+        if (!activeDestination) return true;
+        const lieu = card.dataset.lieu || '';
+
+        // Match direct
+        if (lieu.includes(activeDestination)) return true;
+
+        // Match via région (ex: "tunis" → correspond à "sidi bou said")
+        for (const [region, subs] of Object.entries(regionMap)) {
+            if (region === activeDestination || activeDestination.includes(region) || region.includes(activeDestination)) {
+                if (subs.some(s => lieu.includes(s)) || lieu.includes(region)) return true;
+            }
+            if (subs.includes(activeDestination)) {
+                if (lieu.includes(activeDestination) || lieu.includes(region)) return true;
+            }
+        }
+        return false;
+    }
+
+    // ── Filtres standards ────────────────────────────────────────────────────
     const searchInput  = document.getElementById('searchInput');
     const diffFilter   = document.getElementById('diffFilter');
     const budgetFilter = document.getElementById('budgetFilter');
     const catChips     = document.querySelectorAll('.cat-chip');
-    const cards        = document.querySelectorAll('.act-card[data-nom]');
     const countEl      = document.getElementById('countNum');
-
     let activeCat = '';
 
     function filter() {
@@ -623,7 +764,7 @@
         const budget = budgetFilter.value;
         let visible  = 0;
 
-        cards.forEach(card => {
+        allCards.forEach(card => {
             const matchNom    = card.dataset.nom.includes(q);
             const matchCat    = !activeCat || card.dataset.cat === activeCat;
             const matchDiff   = !diff || card.dataset.diff.toLowerCase() === diff;
@@ -632,8 +773,9 @@
                 (budget === '0-50'   && b <= 50)  ||
                 (budget === '50-150' && b > 50 && b <= 150) ||
                 (budget === '150+'   && b > 150);
+            const matchLieu   = matchDest(card);
 
-            const show = matchNom && matchCat && matchDiff && matchBudget;
+            const show = matchNom && matchCat && matchDiff && matchBudget && matchLieu;
             card.style.display = show ? '' : 'none';
             if (show) visible++;
         });
@@ -641,12 +783,10 @@
         if (countEl) countEl.textContent = visible;
     }
 
-    // Events filtres
     searchInput.addEventListener('input', filter);
     diffFilter.addEventListener('change', filter);
     budgetFilter.addEventListener('change', filter);
 
-    // Chips catégories
     catChips.forEach(chip => {
         chip.addEventListener('click', () => {
             catChips.forEach(c => c.classList.remove('is-active'));
@@ -656,11 +796,17 @@
         });
     });
 
-    // Scroll doux vers la section
+    // ── Scroll doux ─────────────────────────────────────────────────────────
     document.querySelector('a[href="#activites"]')?.addEventListener('click', e => {
         e.preventDefault();
         document.getElementById('activites').scrollIntoView({ behavior: 'smooth' });
     });
+
+    // ── Helper ───────────────────────────────────────────────────────────────
+    function capitalize(str) {
+        return str.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
 })();
 </script>
 {% endblock %}

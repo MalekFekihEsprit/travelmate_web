@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Avis;
 use App\Repository\ActiviteRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +21,6 @@ class AvisController extends AbstractController
         int                    $id,
         Request                $request,
         ActiviteRepository     $activiteRepository,
-        UserRepository         $userRepository,
         EntityManagerInterface $entityManager
     ): Response {
         $activite = $activiteRepository->find($id);
@@ -31,21 +29,16 @@ class AvisController extends AbstractController
             throw $this->createNotFoundException('Activité introuvable.');
         }
 
-        $note        = (int) $request->request->get('note', 5);
-        $commentaire = trim($request->request->get('commentaire', ''));
-        $note        = max(1, min(5, $note));
-
-        // Temporaire : utilise user id=5 (minyar) jusqu'au branchement sécurité
-        // Remplace par $this->getUser() quand la sécurité du collègue est branchée
-        $user = $userRepository->find(5);
-        if (!$user) {
-            $user = $userRepository->findOneBy([]);
-        }
-
+        // Vérifie que l'utilisateur est connecté
+        $user = $this->getUser();
         if (!$user) {
             $this->addFlash('error', 'Vous devez être connecté pour laisser un avis.');
             return $this->redirectToRoute('app_activite_show', ['id' => $id]);
         }
+
+        $note        = (int) $request->request->get('note', 5);
+        $commentaire = trim($request->request->get('commentaire', ''));
+        $note        = max(1, min(5, $note));
 
         $avis = new Avis();
         $avis->setNote($note);
