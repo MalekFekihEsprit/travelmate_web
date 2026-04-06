@@ -1,0 +1,41 @@
+{{ form_start(form, {'attr': {'class': 'admin-form'}}) }}
+
+<div class="admin-form__grid">
+
+    <div class="admin-form__group">
+        {{ form_label(form.nom) }}
+        {{ form_widget(form.nom, {'attr': {'class': 'admin-input'}}) }}
+        {{ form_errors(form.nom) }}
+    </div>
+
+    <div class="admin-form__group">
+        {{ form_label(form.pays) }}
+        {{ form_widget(form.pays, {'attr': {'class': 'admin-input'}}) }}
+        {{ form_errors(form.pays) }}
+    </div>
+
+    <div class="admin-form__group admin-form__group--full">
+        {{ form_label(form.description) }}
+        {{ form_widget(form.description, {'attr': {'class': 'admin-input'}}) }}
+        {{ form_errors(form.description) }}
+    </div>
+
+    <div class="admin-form__group admin-form__group--full">
+        {{ form_label(form.image) }}
+        {{ form_widget(form.image, {'attr': {'class': 'admin-input'}}) }}
+        {{ form_errors(form.image) }}
+    </div>
+
+</div>
+
+<div class="admin-form__actions">
+    <button class="btn btn--primary">
+        {{ button_label|default('Enregistrer') }}
+    </button>
+
+    <a href="{{ path('app_admin_destinations') }}" class="btn btn--ghost">
+        Annuler
+    </a>
+</div>
+
+{{ form_end(form) }}

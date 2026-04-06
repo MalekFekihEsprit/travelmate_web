@@ -1,0 +1,192 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Destinations | TravelMate{% endblock %}
+
+{% block body %}
+<section class="destinations-page">
+    <div class="destinations-hero">
+        <div class="destinations-hero__content">
+            <span class="destinations-hero__eyebrow">DESTINATIONS</span>
+            <h1 class="destinations-hero__title">Explorez le monde en une seule galerie</h1>
+            <p class="destinations-hero__text">
+                Découvrez les plus belles destinations, triées sur le volet. Chaque destination offre des informations détaillées, des vidéos inspirantes et les meilleurs conseils de voyage.
+            </p>
+
+            <div class="destinations-hero__actions">
+                <a href="{{ path('app_destination_new') }}" class="btn btn--primary">Ajouter une destination</a>
+            </div>
+
+            <div class="destinations-hero__stats">
+                <div class="destinations-stat">
+                    <strong>{{ destinations|length }}</strong>
+                    <span>destinations</span>
+                </div>
+                <div class="destinations-stat">
+                    <strong>{{ unique_climates }}</strong>
+                    <span>climats</span>
+                </div>
+                <div class="destinations-stat">
+                    <strong>{{ unique_seasons }}</strong>
+                    <span>saisons</span>
+                </div>
+            </div>
+        </div>
+        <div class="destinations-hero__visual">
+            <img src="{{ asset('images/destination.jpg') }}" alt="Travel destination" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
+        </div>
+    </div>
+
+    {% set successFlashes = app.flashes('success') %}
+    {% set warningFlashes = app.flashes('warning') %}
+    {% set errorFlashes = app.flashes('error') %}
+
+    {% if successFlashes is not empty or warningFlashes is not empty or errorFlashes is not empty %}
+        <div class="destinations-toast-stack" aria-live="polite" aria-atomic="true">
+            {% for message in successFlashes %}
+                <div class="destinations-flash destinations-flash--success" data-destinations-toast>
+                    <strong class="destinations-flash__title">Opération réussie</strong>
+                    <div class="destinations-flash__message">{{ message }}</div>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                </div>
+            {% endfor %}
+
+            {% for message in warningFlashes %}
+                <div class="destinations-flash destinations-flash--warning" data-destinations-toast>
+                    <strong class="destinations-flash__title">Attention</strong>
+                    <div class="destinations-flash__message">{{ message }}</div>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                </div>
+            {% endfor %}
+
+            {% for message in errorFlashes %}
+                <div class="destinations-flash destinations-flash--error" data-destinations-toast>
+                    <strong class="destinations-flash__title">Action impossible</strong>
+                    <div class="destinations-flash__message">{{ message }}</div>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if destinations is not empty %}
+        <div class="destinations-grid" id="destinationsContainer">
+            {% for destination in destinations %}
+            <div class="destination-card" onclick="openDestinationModal({{ destination.idDestination }})">
+                <div class="destination-card__image-wrapper">
+                    {% if destination.imageDest is defined and destination.imageDest %}
+                        <img src="{{ destination.imageDest }}" alt="{{ destination.nomDestination }}" class="destination-card__image">
+                    {% else %}
+                        <div class="destination-card__image-placeholder">🌍</div>
+                    {% endif %}
+                </div>
+                
+                <div class="destination-card__content">
+                    <h3 class="destination-card__title">{{ destination.nomDestination }}</h3>
+                    <p class="destination-card__location">
+                        📍 {{ destination.paysDestination }}
+                        {% if destination.regionDestination %}
+                            <span class="destination-card__region">{{ destination.regionDestination }}</span>
+                        {% endif %}
+                    </p>
+                    
+                    {% if destination.descriptionDestination %}
+                        <p class="destination-card__description">
+                            {{ destination.descriptionDestination|slice(0, 90) }}{% if destination.descriptionDestination|length > 90 %}...{% endif %}
+                        </p>
+                    {% endif %}
+
+                    <div class="destination-card__meta">
+                        {% if destination.climatDestination %}
+                            <span class="destination-card__badge destination-card__badge--climate">
+                                <span class="badge-icon">🌡️</span>{{ destination.climatDestination }}
+                            </span>
+                        {% endif %}
+                        {% if destination.saisonDestination %}
+                            <span class="destination-card__badge destination-card__badge--season">
+                                <span class="badge-icon">📅</span>{{ destination.saisonDestination }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="destinations-empty">
+            <div class="destinations-empty__icon">🗺️</div>
+            <p>Aucune destination trouvée</p>
+            <a href="{{ path('app_destination_new') }}" class="btn btn--primary">Créer la première destination</a>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Modal pour afficher les détails -->
+<div id="destinationModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeDestinationModal()">&times;</span>
+        <div id="modalBody">
+            <!-- Le contenu sera chargé dynamiquement -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+function openDestinationModal(destinationId) {
+    const modal = document.getElementById('destinationModal');
+    const modalBody = document.getElementById('modalBody');
+    
+    fetch(`{{ path('app_destination_show', {'id_destination': '__ID__'}) }}`.replace('__ID__', destinationId))
+        .then(response => response.text())
+        .then(html => {
+            modalBody.innerHTML = html;
+            modal.classList.add('active');
+        })
+        .catch(error => console.error('Erreur:', error));
+}
+
+function closeDestinationModal() {
+    const modal = document.getElementById('destinationModal');
+    modal.classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('destinationModal');
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            closeDestinationModal();
+        }
+    }
+
+    // Gestion des toasts
+    var toasts = document.querySelectorAll('[data-destinations-toast]');
+
+    function hideToast(toast) {
+        if (!toast || toast.classList.contains('is-hiding')) {
+            return;
+        }
+
+        toast.classList.add('is-hiding');
+        window.setTimeout(function () {
+            toast.remove();
+        }, 220);
+    }
+
+    toasts.forEach(function (toast) {
+        var closeButton = toast.querySelector('[data-destinations-toast-close]');
+
+        if (closeButton) {
+            closeButton.addEventListener('click', function () {
+                hideToast(toast);
+            });
+        }
+
+        window.setTimeout(function () {
+            hideToast(toast);
+        }, 4200);
+    });
+});
+</script>
+{% endblock %}
+

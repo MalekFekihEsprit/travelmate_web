@@ -1,0 +1,25 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Modifier destination | Admin{% endblock %}
+
+{% block body %}
+<section class="admin-destinations-page">
+
+    <div class="admin-page-header">
+        <div>
+            <span class="admin-page-header__eyebrow">Administration</span>
+            <h1 class="admin-page-header__title">Modifier la destination</h1>
+            <p class="admin-page-header__desc">
+                Modifiez les informations de cette destination.
+            </p>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        {{ include('destination_admin/_form.html.twig', {
+            'button_label': 'Mettre à jour'
+        }) }}
+    </div>
+
+</section>
+{% endblock %}

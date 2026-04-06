@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier destination{% endblock %}
+
+{% block body %}
+<section class="tm-page">
+
+    <div class="tm-page-header">
+        <h1>Modifier la destination</h1>
+        <p>Mettez à jour les informations.</p>
+    </div>
+
+    <div class="tm-card">
+        {{ include('destination/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+    </div>
+
+</section>
+{% endblock %}
