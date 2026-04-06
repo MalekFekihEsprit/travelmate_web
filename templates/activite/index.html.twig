@@ -566,7 +566,7 @@
 
                     <div class="act-card__img-wrap">
                         {% if activite.imagePath %}
-                            <img src="{{ asset('uploads/activites/' ~ activite.imagePath) }}"
+                            <img src="{{ asset(activite.imagePath) }}"
                                  alt="{{ activite.nom }}" class="act-card__img"
                                  onerror="this.style.display='none';this.parentElement.querySelector('.act-card__img-placeholder').style.display='flex'">
                         {% endif %}
