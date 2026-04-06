@@ -195,9 +195,9 @@
                 <img src="{{ asset(evenement.imagePath|replace({'\\\\': '/'})) }}"
                      alt="{{ evenement.titre }}" class="ev-show-img"
                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div class="ev-show-img-placeholder" style="display:none">🎉</div>
+                <div class="ev-show-img-placeholder" style="display:none"></div>
             {% else %}
-                <div class="ev-show-img-placeholder">🎉</div>
+                <div class="ev-show-img-placeholder"></div>
             {% endif %}
 
             {# Date overlay #}
@@ -284,7 +284,7 @@
     {# ── Sidebar ── #}
     <aside>
         <div class="ev-sidebar-box">
-            <div class="ev-sidebar-box__title">📋 Détails de l'événement</div>
+            <div class="ev-sidebar-box__title">Détails de l'événement</div>
 
             <div class="ev-info-item">
                 <div class="ev-info-item__icon">

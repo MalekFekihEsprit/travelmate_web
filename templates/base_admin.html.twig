@@ -1044,16 +1044,22 @@
                     <span>Hébergements</span>
                 </a>
 
-                <a href="#" {# path('app_admin_categories') #}
-                   class="admin-nav__item {{ currentRoute starts with 'app_admin_categories' ? 'is-active' : '' }}">
+                <a href="{{ path('app_categorie_index') }}" 
+                   class="admin-nav__item {{ currentRoute starts with 'app_categorie_index' ? 'is-active' : '' }}">
                     
                     <span>Catégories</span>
                 </a>
 
-                <a href="#" {# path('app_admin_activites') #}
-                   class="admin-nav__item {{ currentRoute starts with 'app_admin_activites' ? 'is-active' : '' }}">
+                <a href="{{ path('app_activite_index') }}"
+                   class="admin-nav__item {{ currentRoute starts with 'app_activite_index' ? 'is-active' : '' }}">
                     
                     <span>Activités</span>
+                </a>
+
+                <a href="{{ path('app_evenement_index') }}"
+                   class="admin-nav__item {{ currentRoute starts with 'app_evenement_index' ? 'is-active' : '' }}">
+                    
+                    <span>Événements</span>
                 </a>
 
                 <a href="#" {# path('app_admin_budgets') #}

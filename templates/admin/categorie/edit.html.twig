@@ -86,7 +86,7 @@
                     <label>{{ form_label(form.nom) }} <span class="req">*</span></label>
                     {{ form_widget(form.nom, {'attr': {
                         'class': 'form-control' ~ (form.nom.vars.errors|length > 0 ? ' is-invalid' : ''),
-                        'placeholder': '⚠ Obligatoire — unique, entre 3 et 100 caractères'
+                        'placeholder': 'Obligatoire — unique, entre 3 et 100 caractères'
                     }}) }}
                     {% if form.nom.vars.errors|length > 0 %}
                         <div class="field-error">
@@ -101,7 +101,7 @@
                     {{ form_widget(form.description, {'attr': {
                         'class': 'form-control' ~ (form.description.vars.errors|length > 0 ? ' is-invalid' : ''),
                         'rows': 4,
-                        'placeholder': '⚠ Obligatoire — minimum 15 caractères'
+                        'placeholder': 'Obligatoire — minimum 15 caractères'
                     }}) }}
                     {% if form.description.vars.errors|length > 0 %}
                         <div class="field-error">
@@ -115,7 +115,7 @@
                     <label>{{ form_label(form.type) }} <span class="req">*</span></label>
                     {{ form_widget(form.type, {'attr': {
                         'class': 'form-control' ~ (form.type.vars.errors|length > 0 ? ' is-invalid' : ''),
-                        'placeholder': '⚠ Obligatoire — entre 3 et 50 caractères'
+                        'placeholder': 'Obligatoire — entre 3 et 50 caractères'
                     }}) }}
                     {% if form.type.vars.errors|length > 0 %}
                         <div class="field-error">
@@ -129,7 +129,7 @@
                     <label>{{ form_label(form.publiccible) }} <span class="req">*</span></label>
                     {{ form_widget(form.publiccible, {'attr': {
                         'class': 'form-control' ~ (form.publiccible.vars.errors|length > 0 ? ' is-invalid' : ''),
-                        'placeholder': '⚠ Obligatoire — entre 3 et 100 caractères (ex: Familles, Adultes…)'
+                        'placeholder': 'Obligatoire — entre 3 et 100 caractères (ex: Familles, Adultes…)'
                     }}) }}
                     {% if form.publiccible.vars.errors|length > 0 %}
                         <div class="field-error">

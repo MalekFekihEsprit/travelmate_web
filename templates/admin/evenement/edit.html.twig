@@ -91,7 +91,7 @@
                     <label>{{ form_label(form.titre) }} <span class="req">*</span></label>
                     {{ form_widget(form.titre, {'attr': {
                         'class': 'form-control' ~ (form.titre.vars.errors|length > 0 ? ' is-invalid' : ''),
-                        'placeholder': '⚠ Obligatoire — entre 5 et 255 caractères'
+                        'placeholder': 'Obligatoire — entre 5 et 255 caractères'
                     }}) }}
                     {% if form.titre.vars.errors|length > 0 %}
                         <div class="field-error">
@@ -120,7 +120,7 @@
                     <label>{{ form_label(form.lieu) }} <span class="req">*</span></label>
                     {{ form_widget(form.lieu, {'attr': {
                         'class': 'form-control' ~ (form.lieu.vars.errors|length > 0 ? ' is-invalid' : ''),
-                        'placeholder': '⚠ Obligatoire — entre 3 et 255 caractères (ex: Sidi Bou Said)'
+                        'placeholder': 'Obligatoire — entre 3 et 255 caractères (ex: Sidi Bou Said)'
                     }}) }}
                     {% if form.lieu.vars.errors|length > 0 %}
                         <div class="field-error">
@@ -171,7 +171,7 @@
                     <label>{{ form_label(form.nbPlaces) }} <span class="req">*</span></label>
                     {{ form_widget(form.nbPlaces, {'attr': {
                         'class': 'form-control' ~ (form.nbPlaces.vars.errors|length > 0 ? ' is-invalid' : ''),
-                        'placeholder': '⚠ Obligatoire — entre 1 et 10 000',
+                        'placeholder': 'Obligatoire — entre 1 et 10 000',
                         'min': '1', 'max': '10000'
                     }}) }}
                     {% if form.nbPlaces.vars.errors|length > 0 %}
@@ -209,7 +209,7 @@
                              class="img-preview" id="imgPreview" alt="Aperçu">
                     {% else %}
                         <div class="img-placeholder" id="imgPlaceholder">
-                            <div style="font-size:2.5rem;margin-bottom:.5rem">🎉</div>
+                            <div style="font-size:2.5rem;margin-bottom:.5rem"></div>
                             <div style="font-size:0.82rem">Aucune image</div>
                         </div>
                         <img class="img-preview" id="imgPreview" alt="Aperçu" style="display:none">
