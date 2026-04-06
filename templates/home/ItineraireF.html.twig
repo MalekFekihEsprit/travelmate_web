@@ -571,7 +571,7 @@
                             <!-- Afficher les jours si disponibles -->
                             {% if voyageNbJours is not null and voyageNbJours > 0 %}
                                 <div class="itineraire-card__days">
-                                    {% for day in range(1, voyageNbJours + 1) %}
+                                    {% for day in range(1, voyageNbJours) %}
                                         <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: day}) }}" class="day-badge {% if day == 1 %}active{% endif %}" style="text-decoration: none; cursor: pointer;">
                                             J{{ day }}
                                         </a>

@@ -232,7 +232,7 @@
                         <li><a href="{{ path('app_home') }}">Accueil</a></li>
                         <li><a href="#"{# path('app_destinations') #}>Destinations</a></li>
                         <li><a href="#"{# path('app_hebergements') #}>Hébergements</a></li>
-                        <li><a href="#"{# path('app_activites') #}>Activités</a></li>
+                        <li><a href="{{ path('app_activites') }}">Activités</a></li>
                     </ul>
                 </div>
 
@@ -241,7 +241,7 @@
                     <ul class="site-footer__links">
                         <li><a href="{{ path('app_voyages') }}">Voyages</a></li>
                         <li><a href="#"{# path('app_budgets') #}>Budgets</a></li>
-                        <li><a href="#"{# path('app_categories') #}>Catégories</a></li>
+                        <li><a href="{{ path('app_categories') }}">Catégories</a></li>
                         <li><a href="{{ path('app_profile') }}">Mon profil</a></li>
                     </ul>
                 </div>
@@ -263,11 +263,6 @@
                         <a href="#" class="social-link" aria-label="Twitter">
                             <span>X</span>
                         </a>
-                    </div>
-
-                    <div class="site-footer__apps">
-                        <a href="#" class="store-badge">App Store</a>
-                        <a href="#" class="store-badge">Google Play</a>
                     </div>
                 </div>
             </div>
