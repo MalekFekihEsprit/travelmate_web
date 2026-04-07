@@ -68,7 +68,7 @@
 
     <div class="destination-detail__actions">
         <a href="{{ path('app_destination_index') }}" class="btn-secondary">← Retour</a>
-        <a href="#" class="btn-primary">🏨 Voir hébergements</a>
+        <a href="{{ path('app_hebergement_index', {'destination': destination.idDestination}) }}" class="btn-primary">🏨 Voir hébergements</a>
     </div>
 </section>
 

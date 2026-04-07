@@ -26,6 +26,13 @@
                     <span>destinations</span>
                 </div>
             </div>
+
+                {% if selected_destination %}
+                    <div class="toolbar-count" style="margin-top: 1rem; display: inline-flex;">
+                        Filtre actif : {{ selected_destination.nomDestination }}
+                        {% if selected_destination.paysDestination %} - {{ selected_destination.paysDestination }}{% endif %}
+                    </div>
+                {% endif %}
         </div>
         <div class="destinations-hero__visual">
             <img src="{{ asset('images/destination.jpg') }}" alt="Accommodations" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
@@ -76,7 +83,7 @@
                     <circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="2"/>
                     <path d="M13 13L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
-                <input type="text" id="hbergSearch" placeholder="Rechercher un hébergement..." class="toolbar-search__input">
+                <input type="text" id="hbergSearch" placeholder="Rechercher un hébergement..." class="toolbar-search__input" value="{{ search }}">
             </div>
             
             <div class="toolbar-divider"></div>
@@ -93,7 +100,19 @@
                             {% endif %}
                         {% endfor %}
                         {% for type in typesMap|keys|sort %}
-                            <option value="{{ type }}">{{ type }}</option>
+                            <option value="{{ type }}" {{ selected_type == type ? 'selected' : '' }}>{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="destinationFilter" class="filter-label">Destination</label>
+                    <select id="destinationFilter" class="toolbar-filter__select">
+                        <option value="">Toutes les destinations</option>
+                        {% for destinationOption in destination_options %}
+                            <option value="{{ destinationOption.id }}" {{ selected_destination_id == destinationOption.id ? 'selected' : '' }}>
+                                {{ destinationOption.name }}{% if destinationOption.country %} - {{ destinationOption.country }}{% endif %}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -101,12 +120,12 @@
                 <div class="filter-group">
                     <label for="hebergSort" class="filter-label">Trier par</label>
                     <select id="hebergSort" class="toolbar-filter__select">
-                        <option value="default">Par défaut</option>
-                        <option value="name">📝 Nom (A-Z)</option>
-                        <option value="price-asc">💰 Prix (bas → élevé)</option>
-                        <option value="price-desc">💰 Prix (élevé → bas)</option>
-                        <option value="rating-desc">⭐ Note (élevée → basse)</option>
-                        <option value="rating-asc">⭐ Note (basse → élevée)</option>
+                        <option value="default" {{ selected_sort == 'default' ? 'selected' : '' }}>Par défaut</option>
+                        <option value="name" {{ selected_sort == 'name' ? 'selected' : '' }}>📝 Nom (A-Z)</option>
+                        <option value="price-asc" {{ selected_sort == 'price-asc' ? 'selected' : '' }}>💰 Prix (bas → élevé)</option>
+                        <option value="price-desc" {{ selected_sort == 'price-desc' ? 'selected' : '' }}>💰 Prix (élevé → bas)</option>
+                        <option value="rating-desc" {{ selected_sort == 'rating-desc' ? 'selected' : '' }}>⭐ Note (élevée → basse)</option>
+                        <option value="rating-asc" {{ selected_sort == 'rating-asc' ? 'selected' : '' }}>⭐ Note (basse → élevée)</option>
                     </select>
                 </div>
             </div>
@@ -121,7 +140,7 @@
 
     {% if hebergements is not empty %}
         <div class="destinations-grid" id="hebergementContainer">
-            {% for hebergement in hebergements %}<div class="destination-card" onclick="openHebergementModal({{ hebergement.idHebergement }})" data-type="{{ hebergement.typeHebergement ?? 'Sans type' }}" data-price="{{ hebergement.prixNuitHebergement ?? 0 }}" data-rating="{{ hebergement.noteHebergement ?? '' }}" data-name="{{ hebergement.nomHebergement }}"><div class="destination-card__image-wrapper"><div class="destination-card__image-placeholder">🏨</div></div><div class="destination-card__content">
+            {% for hebergement in hebergements %}<div class="destination-card" onclick="openHebergementModal({{ hebergement.idHebergement }})" data-type="{{ hebergement.typeHebergement ?? 'Sans type' }}" data-price="{{ hebergement.prixNuitHebergement ?? 0 }}" data-rating="{{ hebergement.noteHebergement ?? '' }}" data-name="{{ hebergement.nomHebergement }}" data-destination-id="{{ hebergement.destination ? hebergement.destination.idDestination : '' }}"><div class="destination-card__image-wrapper"><div class="destination-card__image-placeholder">🏨</div></div><div class="destination-card__content">
                     <h3 class="destination-card__title">{{ hebergement.nomHebergement }}</h3>
                     <p class="destination-card__location">
                         📍 {{ hebergement.adresseHebergement ?? 'Adresse non disponible' }}
@@ -229,12 +248,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Search, filter and sort functionality
     const searchInput = document.getElementById('hbergSearch');
     const typeFilter = document.getElementById('typeFilter');
+    const destinationFilter = document.getElementById('destinationFilter');
     const hebergSort = document.getElementById('hebergSort');
     const countDisplay = document.getElementById('hbergCount');
     
     function applyHebergementFiltersAndSort() {
         const searchTerm = (searchInput?.value || '').toLowerCase();
         const selectedType = typeFilter?.value || '';
+        const selectedDestinationId = destinationFilter?.value || '';
         const sortOption = hebergSort?.value || 'default';
         
         const container = document.getElementById('hebergementContainer');
@@ -258,6 +279,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Filter by type
             if (matches && selectedType) {
                 matches = card.getAttribute('data-type') === selectedType;
+            }
+
+            // Filter by destination
+            if (matches && selectedDestinationId) {
+                matches = card.getAttribute('data-destination-id') === selectedDestinationId;
             }
             
             if (matches) {
@@ -320,9 +346,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeFilter) {
         typeFilter.addEventListener('change', applyHebergementFiltersAndSort);
     }
+    if (destinationFilter) {
+        destinationFilter.addEventListener('change', applyHebergementFiltersAndSort);
+    }
     if (hebergSort) {
         hebergSort.addEventListener('change', applyHebergementFiltersAndSort);
     }
+
+    applyHebergementFiltersAndSort();
 });
 </script>
 {% endblock %}
