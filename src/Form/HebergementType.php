@@ -6,6 +6,7 @@ use App\Entity\Destination;
 use App\Entity\Hebergement;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -32,16 +33,24 @@ class HebergementType extends AbstractType
                     ]),
                 ],
             ])
-            ->add('type_hebergement', TextType::class, [
+            ->add('type_hebergement', ChoiceType::class, [
                 'required' => false,
+                'placeholder' => 'Choisir un type',
+                'choices' => [
+                    'Hotel' => 'Hotel',
+                    'Resort' => 'Resort',
+                    'Maison d\'hôtes' => 'Maison d\'hôtes',
+                    'Appartement' => 'Appartement',
+                    'Villa' => 'Villa',
+                    'Hostel' => 'Hostel',
+                    'Bungalow' => 'Bungalow',
+                    'Auberge' => 'Auberge',
+                ],
                 'constraints' => [
-                    new Assert\Length([
-                        'max' => 80,
-                        'maxMessage' => 'Le type ne doit pas depasser 80 caracteres',
-                    ]),
-                    new Assert\Regex([
-                        'pattern' => '/^[a-zA-ZÀ-ÿ\s-]*$/',
-                        'message' => 'Le type ne doit contenir que des lettres',
+                    new Assert\Choice([
+                        'choices' => ['Hotel', 'Resort', "Maison d'hôtes", 'Appartement', 'Villa', 'Hostel', 'Bungalow', 'Auberge'],
+                        'multiple' => false,
+                        'message' => 'Veuillez choisir un type d\'hebergement valide',
                     ]),
                 ],
             ])
