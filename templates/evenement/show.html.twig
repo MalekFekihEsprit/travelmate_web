@@ -1,0 +1,367 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ evenement.titre }} — TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .ev-show-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 2rem;
+            align-items: start;
+        }
+        @media (max-width: 1024px) { .ev-show-layout { grid-template-columns: 1fr; } }
+
+        .breadcrumb {
+            display:flex; align-items:center; gap:0.5rem;
+            font-size:0.85rem; color:var(--color-text-muted); margin-bottom:1.5rem;
+        }
+        .breadcrumb a { color:var(--color-primary); }
+        .breadcrumb a:hover { text-decoration: underline; }
+
+        /* Image */
+        .ev-show-img-wrap {
+            position:relative; height:340px;
+            border-radius: var(--radius-xl); overflow:hidden;
+            background: var(--color-surface-soft); margin-bottom:1.5rem;
+        }
+        .ev-show-img { width:100%;height:100%;object-fit:cover; }
+        .ev-show-img-placeholder {
+            width:100%;height:100%;
+            display:flex;align-items:center;justify-content:center;
+            font-size:5rem;color:var(--color-text-muted);
+        }
+
+        /* Date overlay */
+        .ev-show-date-overlay {
+            position:absolute; bottom:1rem; left:1rem;
+            background:rgba(255,253,249,0.95); border:1px solid var(--color-border);
+            border-radius:var(--radius-md); padding:0.75rem 1.25rem;
+            display:flex; align-items:center; gap:0.75rem;
+            backdrop-filter:blur(8px);
+        }
+        .ev-show-date-overlay__day {
+            font-family:'Fraunces',serif; font-size:2rem; font-weight:700;
+            color:var(--color-secondary); line-height:1;
+        }
+        .ev-show-date-overlay__right { display:flex; flex-direction:column; }
+        .ev-show-date-overlay__month { font-size:0.82rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.06em; }
+        .ev-show-date-overlay__year  { font-size:0.92rem; font-weight:600; color:var(--color-text); }
+
+        /* Header */
+        .ev-show-title {
+            font-family:'Fraunces',serif; font-size:2rem; font-weight:600;
+            color:var(--color-text); line-height:1.2; margin-bottom:1rem;
+        }
+        .ev-show-meta-row {
+            display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem;
+        }
+        .meta-item {
+            display:flex; align-items:center; gap:0.4rem;
+            font-size:0.88rem; color:var(--color-text-muted);
+        }
+        .meta-item strong { color:var(--color-text); }
+
+        /* Places progress */
+        .ev-show-progress {
+            background:var(--color-surface); border:1px solid var(--color-border);
+            border-radius:var(--radius-lg); padding:1.25rem; margin-bottom:1.5rem;
+        }
+        .ev-show-progress__header {
+            display:flex; justify-content:space-between; align-items:center;
+            margin-bottom:0.75rem;
+        }
+        .ev-show-progress__title { font-weight:600; color:var(--color-text); }
+        .ev-show-progress__count {
+            font-family:'Fraunces',serif; font-size:1.1rem; font-weight:600;
+            color:var(--color-secondary);
+        }
+        .ev-show-bar {
+            height:8px; border-radius:999px;
+            background:var(--color-surface-soft); overflow:hidden; margin-bottom:0.5rem;
+        }
+        .ev-show-bar__fill { height:100%; border-radius:999px; background:var(--color-secondary); }
+        .ev-show-progress__sub { font-size:0.82rem; color:var(--color-text-muted); }
+
+        /* Description */
+        .ev-show-desc {
+            background:var(--color-surface); border:1px solid var(--color-border);
+            border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.5rem;
+        }
+        .ev-show-desc__title { font-weight:600; margin-bottom:0.75rem; }
+        .ev-show-desc p { color:var(--color-text-muted); line-height:1.7; }
+
+        /* Participants */
+        .ev-participants {
+            background:var(--color-surface); border:1px solid var(--color-border);
+            border-radius:var(--radius-lg); padding:1.5rem;
+        }
+        .ev-participants__title { font-weight:600; margin-bottom:1rem; }
+        .participants-list { display:flex; flex-wrap:wrap; gap:0.65rem; }
+        .participant-avatar {
+            width:44px; height:44px; border-radius:50%;
+            background:linear-gradient(135deg, rgba(196,111,75,0.15), rgba(47,127,121,0.15));
+            display:flex; align-items:center; justify-content:center;
+            font-weight:700; color:var(--color-primary);
+            font-size:0.88rem;
+            border:2px solid var(--color-border);
+            title: attr(title);
+        }
+        .participants-empty { color:var(--color-text-muted); font-size:0.9rem; text-align:center; padding:1.5rem 0; }
+
+        /* Sidebar */
+        .ev-sidebar-box {
+            background:var(--color-surface); border:1px solid var(--color-border);
+            border-radius:var(--radius-xl); padding:1.5rem;
+            position:sticky; top:calc(var(--navbar-height) + 1rem);
+        }
+        .ev-sidebar-box__title {
+            font-family:'Fraunces',serif; font-size:1.2rem; font-weight:600;
+            color:var(--color-text); margin-bottom:1.25rem;
+        }
+        .ev-info-item {
+            display:flex; align-items:flex-start; gap:0.75rem;
+            padding:0.75rem 0; border-bottom:1px solid var(--color-border);
+        }
+        .ev-info-item:last-of-type { border-bottom:none; }
+        .ev-info-item__icon {
+            width:36px; height:36px; border-radius:10px;
+            background:var(--color-secondary-soft);
+            display:flex; align-items:center; justify-content:center;
+            color:var(--color-secondary); flex-shrink:0;
+        }
+        .ev-info-item__label { font-size:0.78rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; }
+        .ev-info-item__value { font-weight:600; color:var(--color-text); font-size:0.95rem; margin-top:0.1rem; }
+
+        /* Boutons sidebar */
+        .btn-join-big {
+            display:flex; align-items:center; justify-content:center; gap:0.5rem;
+            width:100%; padding:1rem;
+            border-radius:999px; border:none;
+            background:var(--color-secondary); color:#fff;
+            font:inherit; font-size:1rem; font-weight:600;
+            cursor:pointer;
+            transition:background var(--transition-fast), transform var(--transition-fast);
+            margin-top:1.25rem;
+            text-decoration:none;
+        }
+        .btn-join-big:hover { background:#256860; transform:translateY(-1px); }
+        .btn-join-big--disabled {
+            background:var(--color-surface-soft); color:var(--color-text-muted);
+            border:1px solid var(--color-border); cursor:not-allowed;
+        }
+        .btn-join-big--disabled:hover { transform:none; background:var(--color-surface-soft); }
+
+        .btn-group-link {
+            display:flex; align-items:center; justify-content:center; gap:0.5rem;
+            width:100%; padding:0.85rem;
+            border-radius:999px;
+            border:1px solid rgba(47,127,121,0.3);
+            background:var(--color-secondary-soft); color:var(--color-secondary);
+            font:inherit; font-size:0.92rem; font-weight:600;
+            cursor:pointer; text-decoration:none;
+            transition:background var(--transition-fast), transform var(--transition-fast);
+            margin-top:0.65rem;
+        }
+        .btn-group-link:hover { background:rgba(47,127,121,0.12); transform:translateY(-1px); }
+
+        /* Alert */
+        .ev-alert {
+            border-radius:var(--radius-md); padding:0.85rem 1rem;
+            font-size:0.87rem; margin-top:1rem;
+        }
+        .ev-alert--warning { background:rgba(200,160,50,0.1); border:1px solid rgba(200,160,50,0.3); color:#7a6010; }
+        .ev-alert--success { background:rgba(47,127,121,0.08); border:1px solid rgba(47,127,121,0.2); color:var(--color-secondary); }
+    </style>
+{% endblock %}
+
+{% block body %}
+{# Breadcrumb #}
+<nav class="breadcrumb">
+    <a href="{{ path('app_home') }}">Accueil</a>
+    <span>›</span>
+    <a href="{{ path('app_evenements') }}">Événements</a>
+    <span>›</span>
+    <span>{{ evenement.titre }}</span>
+</nav>
+
+<div class="ev-show-layout">
+    {# ── Colonne principale ── #}
+    <div>
+        {# Image #}
+        <div class="ev-show-img-wrap">
+            {% if evenement.imagePath %}
+                <img src="{{ asset(evenement.imagePath|replace({'\\\\': '/'})) }}"
+                     alt="{{ evenement.titre }}" class="ev-show-img"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="ev-show-img-placeholder" style="display:none"></div>
+            {% else %}
+                <div class="ev-show-img-placeholder"></div>
+            {% endif %}
+
+            {# Date overlay #}
+            <div class="ev-show-date-overlay">
+                <div class="ev-show-date-overlay__day">{{ evenement.date|date('d') }}</div>
+                <div class="ev-show-date-overlay__right">
+                    <span class="ev-show-date-overlay__month">{{ evenement.date|date('F')|upper }}</span>
+                    <span class="ev-show-date-overlay__year">{{ evenement.date|date('Y') }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# Titre & méta #}
+        <h1 class="ev-show-title">{{ evenement.titre }}</h1>
+
+        <div class="ev-show-meta-row">
+            <span class="meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
+                <strong>{{ evenement.lieu }}</strong>
+            </span>
+            <span class="meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                <strong>{{ evenement.heure|date('H\\hi') }}</strong>
+            </span>
+            <span class="meta-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <strong>{{ evenement.participations|length }}</strong> / {{ evenement.nbPlaces }} participants
+            </span>
+        </div>
+
+        {# Progress places #}
+        {% set nbPart = evenement.participations|length %}
+        {% set pct    = evenement.nbPlaces > 0 ? ((nbPart / evenement.nbPlaces) * 100)|round : 0 %}
+        <div class="ev-show-progress">
+            <div class="ev-show-progress__header">
+                <span class="ev-show-progress__title">
+                    {% if evenement.isComplet %}
+                        🔴 Événement complet
+                    {% elseif evenement.placesRestantes <= 5 %}
+                        ⚡ Dernières places disponibles !
+                    {% else %}
+                        Places disponibles
+                    {% endif %}
+                </span>
+                <span class="ev-show-progress__count">{{ evenement.placesRestantes }} restante{{ evenement.placesRestantes > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="ev-show-bar">
+                <div class="ev-show-bar__fill" style="width:{{ pct }}%;background:{{ evenement.isComplet ? '#8b1a1a' : (evenement.placesRestantes <= 5 ? '#9a7a10' : 'var(--color-secondary)') }}"></div>
+            </div>
+            <div class="ev-show-progress__sub">{{ nbPart }} personne{{ nbPart > 1 ? 's ont' : ' a' }} déjà rejoint cet événement</div>
+        </div>
+
+        {# Description #}
+        {% if evenement.description %}
+            <div class="ev-show-desc">
+                <div class="ev-show-desc__title">À propos de cet événement</div>
+                <p>{{ evenement.description }}</p>
+            </div>
+        {% endif %}
+
+        {# Participants #}
+        <div class="ev-participants">
+            <div class="ev-participants__title">👥 Participants ({{ evenement.participations|length }})</div>
+            {% if evenement.participations is empty %}
+                <div class="participants-empty">
+                    Soyez le premier à rejoindre cet événement !
+                </div>
+            {% else %}
+                <div class="participants-list">
+                    {% for participation in evenement.participations %}
+                        <div class="participant-avatar"
+                             title="{{ participation.user.prenom }} {{ participation.user.nom }}">
+                            {{ participation.user.prenom|slice(0,1)|upper }}{{ participation.user.nom|slice(0,1)|upper }}
+                        </div>
+                    {% endfor %}
+                </div>
+                <p style="font-size:0.82rem;color:var(--color-text-muted);margin-top:0.85rem">
+                    {{ evenement.participations|length }} voyageur{{ evenement.participations|length > 1 ? 's participent' : ' participe' }} à cet événement
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── Sidebar ── #}
+    <aside>
+        <div class="ev-sidebar-box">
+            <div class="ev-sidebar-box__title">Détails de l'événement</div>
+
+            <div class="ev-info-item">
+                <div class="ev-info-item__icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                </div>
+                <div>
+                    <div class="ev-info-item__label">Date</div>
+                    <div class="ev-info-item__value">{{ evenement.date|date('l d F Y') }}</div>
+                </div>
+            </div>
+
+            <div class="ev-info-item">
+                <div class="ev-info-item__icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                </div>
+                <div>
+                    <div class="ev-info-item__label">Heure</div>
+                    <div class="ev-info-item__value">{{ evenement.heure|date('H:i') }}</div>
+                </div>
+            </div>
+
+            <div class="ev-info-item">
+                <div class="ev-info-item__icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
+                </div>
+                <div>
+                    <div class="ev-info-item__label">Lieu</div>
+                    <div class="ev-info-item__value">{{ evenement.lieu }}</div>
+                </div>
+            </div>
+
+            <div class="ev-info-item">
+                <div class="ev-info-item__icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div>
+                    <div class="ev-info-item__label">Places</div>
+                    <div class="ev-info-item__value">{{ evenement.nbPlaces }} au total</div>
+                </div>
+            </div>
+
+            {# Alertes #}
+            {% if evenement.isComplet %}
+                <div class="ev-alert ev-alert--warning">
+                    ⚠️ Cet événement est complet. Revenez pour les prochains !
+                </div>
+            {% elseif evenement.placesRestantes <= 5 %}
+                <div class="ev-alert ev-alert--warning">
+                    ⚡ Plus que {{ evenement.placesRestantes }} place{{ evenement.placesRestantes > 1 ? 's' : '' }} disponible{{ evenement.placesRestantes > 1 ? 's' : '' }} !
+                </div>
+            {% else %}
+                <div class="ev-alert ev-alert--success">
+                    ✓ Des places sont disponibles pour cet événement.
+                </div>
+            {% endif %}
+
+            {# Bouton rejoindre #}
+            {% if not evenement.isComplet %}
+                <a href="{{ path('app_participation_join', {id: evenement.id}) }}"
+                   class="btn-join-big">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M20 8v6M23 11h-6M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Rejoindre le groupe
+                </a>
+            {% else %}
+                <div class="btn-join-big btn-join-big--disabled">
+                    Événement complet
+                </div>
+            {% endif %}
+
+            {# Lien groupe si disponible #}
+            {% if evenement.lienGroupe %}
+                <a href="{{ evenement.lienGroupe }}" target="_blank" rel="noopener" class="btn-group-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Rejoindre le groupe de discussion
+                </a>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

@@ -8,10 +8,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
 use App\Repository\UserRepository;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'user')]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -380,17 +382,8 @@ class User
         return $this;
     }
 
-    #[ORM\ManyToMany(targetEntity: Voyage::class, inversedBy: 'users')]
-    #[ORM\JoinTable(
-        name: 'participation',
-        joinColumns: [
-            new ORM\JoinColumn(name: 'id', referencedColumnName: 'id')
-        ],
-        inverseJoinColumns: [
-            new ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage')
-        ]
-    )]
-    private Collection $voyages;
+    #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $participations;
 
     public function __construct()
     {
@@ -399,7 +392,36 @@ class User
         $this->destinations = new ArrayCollection();
         $this->hebergements = new ArrayCollection();
         $this->paiements = new ArrayCollection();
-        $this->voyages = new ArrayCollection();
+        $this->participations = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection<int, Participation>
+     */
+    public function getParticipations(): Collection
+    {
+        if (!$this->participations instanceof Collection) {
+            $this->participations = new ArrayCollection();
+        }
+
+        return $this->participations;
+    }
+
+    public function addParticipation(Participation $participation): self
+    {
+        if (!$this->getParticipations()->contains($participation)) {
+            $this->getParticipations()->add($participation);
+            $participation->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeParticipation(Participation $participation): self
+    {
+        $this->getParticipations()->removeElement($participation);
+
+        return $this;
     }
 
     /**
@@ -407,23 +429,44 @@ class User
      */
     public function getVoyages(): Collection
     {
-        if (!$this->voyages instanceof Collection) {
-            $this->voyages = new ArrayCollection();
-        }
-        return $this->voyages;
+        return new ArrayCollection(array_values(array_filter(
+            array_map(
+                static fn (Participation $participation): ?Voyage => $participation->getVoyage(),
+                $this->getParticipations()->toArray()
+            )
+        )));
     }
 
-    public function addVoyage(Voyage $voyage): self
+    public function addVoyage(Voyage $voyage, string $roleParticipation = Participation::DEFAULT_ROLE): self
     {
-        if (!$this->getVoyages()->contains($voyage)) {
-            $this->getVoyages()->add($voyage);
+        foreach ($this->getParticipations() as $participation) {
+            if ($participation->getVoyage() === $voyage) {
+                $participation->setRoleParticipation($roleParticipation);
+
+                return $this;
+            }
         }
+
+        $participation = (new Participation())
+            ->setUser($this)
+            ->setVoyage($voyage)
+            ->setRoleParticipation($roleParticipation);
+
+        $this->addParticipation($participation);
+        $voyage->addParticipation($participation);
+
         return $this;
     }
 
     public function removeVoyage(Voyage $voyage): self
     {
-        $this->getVoyages()->removeElement($voyage);
+        foreach ($this->getParticipations()->toArray() as $participation) {
+            if ($participation->getVoyage() === $voyage) {
+                $this->getParticipations()->removeElement($participation);
+                $voyage->getParticipations()->removeElement($participation);
+            }
+        }
+
         return $this;
     }
 
@@ -547,4 +590,48 @@ class User
         return $this;
     }
 
+    public function getPassword(): ?string
+    {
+        return $this->mot_de_passe;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        // Often email is used, but you can choose id or username
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        $role = $this->role ?: 'USER';
+
+        return match ($role) {
+            'ADMIN' => ['ROLE_ADMIN'],
+            default => ['ROLE_USER'],
+        };
+    }
+    public function eraseCredentials(): void
+    {
+    }
+
+    public function getProfileImage(): string
+    {
+        if ($this->photo_file_name) {
+            return '/uploads/profiles/'.$this->photo_file_name;
+        }
+
+        if ($this->photo_url) {
+            return $this->photo_url;
+        }
+
+        $email = trim(mb_strtolower((string) $this->email));
+        $hash = md5($email);
+
+        return 'https://www.gravatar.com/avatar/'.$hash.'?d=identicon&s=300';
+    }
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $last_login = null;
+    public function getLastLogin(): ?\DateTimeInterface { return $this->last_login; }
+    public function setLastLogin(?\DateTimeInterface $last_login): self { $this->last_login = $last_login; return $this; }
 }

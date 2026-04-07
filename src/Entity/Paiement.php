@@ -30,7 +30,7 @@ class Paiement
     }
 
     #[ORM\ManyToOne(targetEntity: Voyage::class, inversedBy: 'paiements')]
-    #[ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage')]
+    #[ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage', onDelete: 'CASCADE')]
     private ?Voyage $voyage = null;
 
     public function getVoyage(): ?Voyage

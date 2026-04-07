@@ -13,7 +13,6 @@
 
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('styles/base.css') }}">
-        
     {% endblock %}
 </head>
 <body>
@@ -25,13 +24,14 @@
     {% set currentRoute = app.request.attributes.get('_route') %}
     {% set availableRoutes = ['app_home', 'app_destination_index', 'app_destination_show', 'app_hebergement_index', 'app_hebergement_show'] %}
     {% set navItems = [
-        { label: 'Accueil',        route: 'app_home' },
-        { label: 'Destinations',   route: 'app_destination_index' },
-        { label: 'Hébergements',   route: 'app_hebergement_index' },
-        { label: 'Catégories',     route: 'app_categories' },
-        { label: 'Activités',      route: 'app_activites' },
-        { label: 'Voyages',        route: 'app_voyages' },
-        { label: 'Budgets',        route: 'app_budgets' }
+        { label: 'Accueil',        route: 'app_home',    href: path('app_home') },
+        { label: 'Destinations',   route: 'app_destination_index',          href: path('app_destination_index') },
+        { label: 'Hébergements',   route: 'app_hebergement_index',          href: path('app_hebergement_index') },
+        { label: 'Catégories',     route: 'app_categories',          href: path('app_categories') },
+        { label: 'Activités',      route: 'app_activites',          href: path('app_activites') },
+        { label: 'Événements',     route: 'app_evenements',         href: path('app_evenements') },
+        { label: 'Voyages',        route: 'app_voyages',            href: path('app_voyages') },
+        { label: 'Budgets',        route: null,          href: null }
     ] %}
 
     <header class="app-navbar">
@@ -54,21 +54,17 @@
             <div class="nav-wrap">
                 <nav class="main-nav" aria-label="Navigation principale">
                     {% for item in navItems %}
-                        {% if item.route in availableRoutes %}
+                        {% if item.href %}
                             <a
-                                href="{{ path(item.route) }}"
-                                class="main-nav__link {{ currentRoute == item.route or (item.route == 'app_destination_index' and currentRoute starts with 'app_destination') ? 'is-active' : '' }}"
+                                href="{{ item.href }}"
+                                class="main-nav__link {{ currentRoute == item.route ? 'is-active' : '' }}"
                             >
                                 {{ item.label }}
                             </a>
                         {% else %}
-                            <a
-                                href="{{ path('app_home') }}"
-                                class="main-nav__link"
-                                title="Page en construction"
-                            >
+                            <span class="main-nav__link is-disabled" aria-disabled="true">
                                 {{ item.label }}
-                            </a>
+                            </span>
                         {% endif %}
                     {% endfor %}
                 </nav>
@@ -87,17 +83,31 @@
                 {# Profil #}
                 <div class="profile-menu">
                     <button class="profile-menu__trigger" type="button" aria-label="Ouvrir le menu profil">
-                        <img
-                            class="profile-menu__avatar"
-                            src="{{ asset('images/profile-default.png') }}"
-                            alt="Photo de profil"
-                        >
+                        {% if app.user  %}
+                            <img src="{{ app.user.profileImage }}" alt="Photo de profil" class="profile-menu__avatar">
+                        {% else %}
+                            <img
+                                class="profile-menu__avatar"
+                                src="{{ asset('images/profile-default.png') }}"
+                                alt="Photo de profil"
+                            >
+                        {% endif %}
 
                         <span class="profile-menu__meta">
                             <span class="profile-menu__name">
-                                {{ app.user ? app.user.userIdentifier : 'Mon profil' }}
+                                {{ app.user ? app.user.prenom ~ ' ' ~ app.user.nom : 'Mon profil' }}
                             </span>
-                            <span class="profile-menu__role">Voyageur</span>
+                            <span class="profile-menu__role">
+                                {% if app.user  %}
+                                    {% if app.user.role == 'USER' %}
+                                        Utilisateur
+                                    {% elseif app.user.role == 'ADMIN' %}
+                                        Administrateur
+                                    {% endif %}
+                                {% else %}
+                                    Visiteur
+                                {% endif %}
+                            </span>
                         </span>
 
                         <span class="profile-menu__chevron" aria-hidden="true">
@@ -117,7 +127,7 @@
                             </div>
                         </div>
 
-                        <a href="#" {# path('app_profile') #} class="profile-dropdown__link">
+                        <a href="{{ path('app_profile') }}" class="profile-dropdown__link">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="currentColor" stroke-width="1.7"/>
                                 <path d="M4 21C4 17.6863 7.58172 15 12 15C16.4183 15 20 17.6863 20 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
@@ -134,7 +144,7 @@
                         </a>
 
                         <div class="profile-dropdown__footer">
-                            <a href="#" {# path('app_logout') #} class="profile-dropdown__logout">
+                            <a href="{{ path('app_logout') }}" class="profile-dropdown__logout">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M15 17L20 12L15 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M20 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -168,7 +178,7 @@
                             </p>
 
                             <div class="home-hero__actions">
-                                <a href="#"{# path('app_voyages') #} class="btn btn--primary">
+                                <a href="{{ path('app_voyages') }}" class="btn btn--primary">
                                     Créer mon voyage
                                 </a>
                                 <a href="#"{# path('app_destinations') #} class="btn btn--ghost">
@@ -223,17 +233,17 @@
                         <li><a href="{{ path('app_home') }}">Accueil</a></li>
                         <li><a href="#"{# path('app_destinations') #}>Destinations</a></li>
                         <li><a href="#"{# path('app_hebergements') #}>Hébergements</a></li>
-                        <li><a href="#"{# path('app_activites') #}>Activités</a></li>
+                        <li><a href="{{ path('app_activites') }}">Activités</a></li>
                     </ul>
                 </div>
 
                 <div class="site-footer__column">
                     <h3 class="site-footer__heading">Organisation</h3>
                     <ul class="site-footer__links">
-                        <li><a href="#"{# path('app_voyages') #}>Voyages</a></li>
+                        <li><a href="{{ path('app_voyages') }}">Voyages</a></li>
                         <li><a href="#"{# path('app_budgets') #}>Budgets</a></li>
-                        <li><a href="#"{# path('app_categories') #}>Catégories</a></li>
-                        <li><a href="#"{# path('app_profile') #}>Mon profil</a></li>
+                        <li><a href="{{ path('app_categories') }}">Catégories</a></li>
+                        <li><a href="{{ path('app_profile') }}">Mon profil</a></li>
                     </ul>
                 </div>
 
@@ -254,11 +264,6 @@
                         <a href="#" class="social-link" aria-label="Twitter">
                             <span>X</span>
                         </a>
-                    </div>
-
-                    <div class="site-footer__apps">
-                        <a href="#" class="store-badge">App Store</a>
-                        <a href="#" class="store-badge">Google Play</a>
                     </div>
                 </div>
             </div>

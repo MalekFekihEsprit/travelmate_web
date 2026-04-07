@@ -1,0 +1,375 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Gestion des étapes | Administration TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .etape-b-page {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .etape-b-flash {
+            padding: 0.9rem 1.1rem;
+            border-radius: var(--radius-md, 14px);
+            font-size: 0.92rem;
+        }
+
+        .etape-b-flash--success {
+            background: var(--admin-success-soft, #e5f2ed);
+            border: 1px solid rgba(60, 139, 114, 0.25);
+            color: var(--admin-success, #3c8b72);
+        }
+
+        .etape-b-flash--error {
+            background: var(--admin-danger-soft, #f8e7e7);
+            border: 1px solid rgba(191, 91, 91, 0.2);
+            color: var(--admin-danger, #bf5b5b);
+        }
+
+        .etape-b-selector {
+            margin-bottom: 1.5rem;
+        }
+
+        .etape-b-selector__label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--admin-text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .etape-b-selector select {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.75rem 1rem;
+            border-radius: 14px;
+            border: 1px solid var(--admin-border);
+            background: var(--admin-surface);
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .etape-b-card {
+            border-radius: 26px;
+            border: 1px solid var(--admin-border);
+            background: rgba(255, 253, 249, 0.96);
+            box-shadow: var(--admin-shadow-soft);
+            overflow: hidden;
+        }
+
+        .etape-b-card__head {
+            padding: 1.1rem 1.35rem;
+            border-bottom: 1px solid var(--admin-border);
+            font-family: 'Fraunces', serif;
+            font-size: 1.15rem;
+            color: var(--admin-text);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .etape-b-card__title {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .etape-b-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(47, 127, 121, 0.12);
+            color: var(--admin-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .etape-b-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.1rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+        }
+
+        .etape-b-btn--primary {
+            background: var(--admin-primary);
+            color: white;
+        }
+
+        .etape-b-btn--primary:hover {
+            background: var(--admin-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .etape-b-btn--secondary {
+            background: var(--admin-secondary-soft);
+            color: var(--admin-secondary);
+            border-color: rgba(47, 127, 121, 0.2);
+        }
+
+        .etape-b-btn--secondary:hover {
+            background: rgba(47, 127, 121, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .etape-b-jour {
+            margin-bottom: 2rem;
+        }
+
+        .etape-b-jour__header {
+            padding: 0.8rem 1.35rem;
+            background: linear-gradient(135deg, rgba(244, 235, 223, 0.6), rgba(244, 235, 223, 0.3));
+            border-bottom: 1px solid var(--admin-border);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--admin-secondary);
+        }
+
+        .etape-b-table-wrap {
+            overflow-x: auto;
+        }
+
+        .etape-b-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .etape-b-table th,
+        .etape-b-table td {
+            padding: 0.85rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .etape-b-table th {
+            background: rgba(244, 235, 223, 0.4);
+            font-weight: 700;
+            color: var(--admin-text-muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .etape-b-table tbody tr:hover {
+            background: rgba(196, 111, 75, 0.05);
+        }
+
+        .etape-b-heure {
+            font-family: monospace;
+            font-weight: 600;
+            color: var(--admin-primary);
+        }
+
+        .etape-b-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .etape-b-btn-icon {
+            padding: 0.4rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+            background: transparent;
+        }
+
+        .etape-b-btn-icon--edit {
+            color: var(--admin-secondary);
+            border-color: rgba(47, 127, 121, 0.3);
+        }
+
+        .etape-b-btn-icon--edit:hover {
+            background: rgba(47, 127, 121, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .etape-b-btn-icon--delete {
+            color: var(--admin-danger);
+            border-color: rgba(191, 91, 91, 0.3);
+        }
+
+        .etape-b-btn-icon--delete:hover {
+            background: rgba(191, 91, 91, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .etape-b-delete-form {
+            margin: 0;
+            display: inline;
+        }
+
+        .etape-b-empty {
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            color: var(--admin-text-muted);
+        }
+
+        .etape-b-muted {
+            color: var(--admin-text-muted);
+            font-style: italic;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="etape-b-page">
+        {% for message in app.flashes('success') %}
+            <div class="etape-b-flash etape-b-flash--success" role="status">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="etape-b-flash etape-b-flash--error" role="alert">{{ message }}</div>
+        {% endfor %}
+
+        <div class="etape-b-card">
+            <div class="etape-b-card__head">
+                <div class="etape-b-card__title">
+                    <span>Gestion des étapes</span>
+                    {% if itineraire_selectionne %}
+                        <span class="etape-b-badge">{{ itineraire_selectionne.nom_itineraire }}</span>
+                    {% endif %}
+                </div>
+                {% if itineraire_selectionne %}
+                    <a href="{{ path('app_admin_etapes_create', { itineraireId: itineraire_selectionne.id_itineraire }) }}" class="etape-b-btn etape-b-btn--primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-linecap="round"/>
+                        </svg>
+                        Nouvelle étape
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="etape-b-selector" style="padding: 1.25rem 1.35rem; border-bottom: 1px solid var(--admin-border);">
+                <label for="itineraire-select" class="etape-b-selector__label">Sélectionner un itinéraire</label>
+                <select id="itineraire-select" onchange="window.location.href='{{ path('app_admin_etapes_index') }}?itineraireId=' + this.value">
+                    <option value="">-- Choisir un itinéraire --</option>
+                    {% for itineraire in itineraires %}
+                        <option value="{{ itineraire.id_itineraire }}" {% if itineraire_selectionne and itineraire_selectionne.id_itineraire == itineraire.id_itineraire %}selected{% endif %}>
+                            {{ itineraire.nom_itineraire }}
+                            {% if itineraire.voyage %}
+                                ({{ itineraire.voyage.titre_voyage }})
+                            {% else %}
+                                (Sans voyage)
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        {% if itineraire_selectionne %}
+            {% set blocs_etapes = [{itineraire: itineraire_selectionne, etapes_par_jour: etapes_par_jour}] %}
+        {% else %}
+            {% set blocs_etapes = tous_les_blocs %}
+        {% endif %}
+
+        {% for bloc in blocs_etapes %}
+            {% if not itineraire_selectionne %}
+                <div class="etape-b-card" style="margin-bottom: 0.5rem;">
+                    <div class="etape-b-card__head">
+                        <div class="etape-b-card__title">
+                            <span>{{ bloc.itineraire.nom_itineraire }}</span>
+                            {% if bloc.itineraire.voyage %}
+                                <span class="etape-b-badge">{{ bloc.itineraire.voyage.titre_voyage }}</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ path('app_admin_etapes_create', { itineraireId: bloc.itineraire.id_itineraire }) }}" class="etape-b-btn etape-b-btn--primary">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-linecap="round"/>
+                            </svg>
+                            Nouvelle étape
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if bloc.etapes_par_jour|length > 0 %}
+                {% for jour, etapes in bloc.etapes_par_jour %}
+                    <div class="etape-b-card etape-b-jour">
+                        <div class="etape-b-jour__header">
+                            Jour {{ jour }}
+                            <span style="margin-left: 0.75rem; font-size: 0.8rem; font-weight: normal;">
+                                ({{ etapes|length }} étape{{ etapes|length > 1 ? 's' : '' }})
+                            </span>
+                        </div>
+                        <div class="etape-b-table-wrap">
+                            <table class="etape-b-table">
+                                <thead>
+                                    <tr>
+                                        <th>Heure</th>
+                                        <th>Description</th>
+                                        <th>Activité associée</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for etape in etapes %}
+                                        <tr>
+                                            <td class="etape-b-heure">
+                                                {{ etape.heure ? etape.heure|date('H:i') : '—' }}
+                                            </td>
+                                            <td>
+                                                {{ etape.description_etape|length > 80 ? etape.description_etape|slice(0, 80) ~ '...' : etape.description_etape }}
+                                            </td>
+                                            <td>
+                                                {% if etape.activite %}
+                                                    {{ etape.activite.nom }}
+                                                {% else %}
+                                                    <span class="etape-b-muted">Aucune</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="etape-b-actions">
+                                                    <a href="{{ path('app_admin_etapes_edit', { id: etape.id_etape }) }}" class="etape-b-btn-icon etape-b-btn-icon--edit">
+                                                        Modifier
+                                                    </a>
+                                                    <form method="post" action="{{ path('app_admin_etapes_delete', { id: etape.id_etape }) }}" class="etape-b-delete-form" onsubmit="return confirm('Supprimer cette étape ? Cette action est définitive.');">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_etape_' ~ etape.id_etape) }}">
+                                                        <button type="submit" class="etape-b-btn-icon etape-b-btn-icon--delete">Supprimer</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% elseif itineraire_selectionne %}
+                <div class="etape-b-card">
+                    <p class="etape-b-empty">
+                        Aucune étape pour cet itinéraire.
+                        <br>
+                        <a href="{{ path('app_admin_etapes_create', { itineraireId: itineraire_selectionne.id_itineraire }) }}" style="color: var(--admin-primary); font-weight: 600;">Créer la première étape</a>
+                    </p>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        {% if not itineraire_selectionne and blocs_etapes|length == 0 %}
+            <div class="etape-b-card">
+                <p class="etape-b-empty">
+                    Aucune étape en base pour le moment. Choisissez un itinéraire ci-dessus pour filtrer ou en ajouter une.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

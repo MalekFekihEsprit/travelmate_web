@@ -58,7 +58,7 @@ class Itineraire
     }
 
     #[ORM\ManyToOne(targetEntity: Voyage::class, inversedBy: 'itineraires')]
-    #[ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage')]
+    #[ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage', onDelete: 'CASCADE')]
     private ?Voyage $voyage = null;
 
     public function getVoyage(): ?Voyage
@@ -72,7 +72,7 @@ class Itineraire
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Etape::class, mappedBy: 'itineraire')]
+    #[ORM\OneToMany(targetEntity: Etape::class, mappedBy: 'itineraire', cascade: ['remove'], orphanRemoval: true)]
     private Collection $etapes;
 
     public function __construct()

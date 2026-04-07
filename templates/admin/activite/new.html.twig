@@ -1,0 +1,290 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Nouvelle Activité — Admin TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+        .page-header__title { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 600; color: var(--admin-text); }
+        .page-header__sub { font-size: 0.88rem; color: var(--admin-text-muted); margin-top: 0.2rem; }
+
+        .form-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
+        @media (max-width: 900px) { .form-layout { grid-template-columns: 1fr; } }
+
+        .admin-card { background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 1.25rem; }
+        .admin-card__header { padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--admin-border); font-weight: 600; font-size: 0.95rem; color: var(--admin-text); }
+        .admin-card__body { padding: 1.5rem; }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.45rem; }
+        .req { color: var(--admin-danger); margin-left: 2px; }
+
+        .form-control { width: 100%; padding: 0.82rem 1rem; border: 1px solid var(--admin-border); border-radius: var(--radius-md); background: var(--admin-bg-soft); font: inherit; font-size: 0.92rem; color: var(--admin-text); outline: none; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+        .form-control:focus { border-color: var(--admin-secondary); box-shadow: 0 0 0 3px rgba(47,127,121,0.1); background: var(--admin-surface); }
+        .form-control.is-invalid { border-color: #e74c3c !important; background: #fff5f5; box-shadow: 0 0 0 3px rgba(231,76,60,0.12); }
+        textarea.form-control { resize: vertical; min-height: 120px; }
+
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .form-grid-2 { grid-template-columns: 1fr; } }
+
+        .field-error {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            padding: 0.55rem 0.85rem;
+            background: #fef2f2;
+            border: 1.5px solid #fca5a5;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            color: #b91c1c;
+            font-weight: 600;
+            animation: shake 0.3s ease;
+        }
+        .field-error .err-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+        .field-error ul { list-style: none; margin: 0; padding: 0; }
+        .field-error ul li + li { margin-top: 0.2rem; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .flash-success { background: var(--admin-success-soft); border: 1px solid rgba(60,139,114,0.25); color: var(--admin-success); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; font-size: 0.9rem; }
+
+        .img-preview-wrap { width: 100%; aspect-ratio: 16/9; border: 2px dashed var(--admin-border); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; background: var(--admin-bg); margin-bottom: 1rem; overflow: hidden; }
+        .img-preview { width: 100%; height: 100%; object-fit: cover; }
+        .img-placeholder { text-align: center; color: var(--admin-text-muted); }
+        .field-hint { font-size: 0.78rem; color: var(--admin-text-muted); margin-top: 0.3rem; }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+{% for msg in app.flashes('success') %}
+    <div class="flash-success">{{ msg }}</div>
+{% endfor %}
+
+<div class="page-header">
+    <div>
+        <div class="page-header__title">Nouvelle activité</div>
+        <div class="page-header__sub">Créez une nouvelle activité</div>
+    </div>
+    <a href="{{ path('app_activite_index') }}" class="btn btn--ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Retour à la liste
+    </a>
+</div>
+
+{{ form_start(form, {'attr': {'novalidate': 'novalidate', 'enctype': 'multipart/form-data'}}) }}
+
+<div class="form-layout">
+    {# ── Colonne principale ── #}
+    <div>
+        <div class="admin-card">
+            <div class="admin-card__header">Informations de l'activité</div>
+            <div class="admin-card__body">
+
+                <div class="form-group">
+                    <label>{{ form_label(form.nom) }} <span class="req">*</span></label>
+                    {{ form_widget(form.nom, {'attr': {
+                        'class': 'form-control' ~ (form.nom.vars.errors|length > 0 ? ' is-invalid' : ''),
+                        'placeholder': 'Obligatoire — entre 3 et 20 caractères (ex: Randonnée en montagne)'
+                    }}) }}
+                    {% if form.nom.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.nom.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form_label(form.description) }} <span class="req">*</span></label>
+                    {{ form_widget(form.description, {'attr': {
+                        'class': 'form-control' ~ (form.description.vars.errors|length > 0 ? ' is-invalid' : ''),
+                        'rows': 4,
+                        'placeholder': 'Obligatoire — minimum 15 caractères, décrivez l\'activité'
+                    }}) }}
+                    {% if form.description.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.description.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form_label(form.lieu) }}</label>
+                    {{ form_widget(form.lieu, {'attr': {
+                        'class': 'form-control' ~ (form.lieu.vars.errors|length > 0 ? ' is-invalid' : ''),
+                        'placeholder': 'Optionnel — max 150 caractères (ex: Tunis, Ubud...)'
+                    }}) }}
+                    {% if form.lieu.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.lieu.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>{{ form_label(form.budget) }} <span class="req">*</span></label>
+                        {{ form_widget(form.budget, {'attr': {
+                            'class': 'form-control' ~ (form.budget.vars.errors|length > 0 ? ' is-invalid' : ''),
+                            'placeholder': 'Ce champ est obligatoire'
+                        }}) }}
+                        {% if form.budget.vars.errors|length > 0 %}
+                            <div class="field-error">
+                                <span class="err-icon">✖</span>
+                                <ul>{% for error in form.budget.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label>{{ form_label(form.duree) }} <span class="req">*</span></label>
+                        {{ form_widget(form.duree, {'attr': {
+                            'class': 'form-control' ~ (form.duree.vars.errors|length > 0 ? ' is-invalid' : ''),
+                            'placeholder': 'Obligatoire — entre 1 et 48 heures'
+                        }}) }}
+                        {% if form.duree.vars.errors|length > 0 %}
+                            <div class="field-error">
+                                <span class="err-icon">✖</span>
+                                <ul>{% for error in form.duree.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>{{ form_label(form.agemin) }} <span class="req">*</span></label>
+                        {{ form_widget(form.agemin, {'attr': {
+                            'class': 'form-control' ~ (form.agemin.vars.errors|length > 0 ? ' is-invalid' : ''),
+                            'placeholder': 'Obligatoire — entre 0 et 100 ans'
+                        }}) }}
+                        {% if form.agemin.vars.errors|length > 0 %}
+                            <div class="field-error">
+                                <span class="err-icon">✖</span>
+                                <ul>{% for error in form.agemin.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label>{{ form_label(form.niveaudifficulte) }} <span class="req">*</span></label>
+                        {{ form_widget(form.niveaudifficulte, {'attr': {
+                            'class': 'form-control' ~ (form.niveaudifficulte.vars.errors|length > 0 ? ' is-invalid' : '')
+                        }}) }}
+                        {% if form.niveaudifficulte.vars.errors|length > 0 %}
+                            <div class="field-error">
+                                <span class="err-icon">✖</span>
+                                <ul>{% for error in form.niveaudifficulte.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {# ── Colonne latérale ── #}
+    <div>
+        <div class="admin-card">
+            <div class="admin-card__header">Paramètres</div>
+            <div class="admin-card__body">
+
+                <div class="form-group">
+                    <label>{{ form_label(form.statut) }} <span class="req">*</span></label>
+                    {{ form_widget(form.statut, {'attr': {
+                        'class': 'form-control' ~ (form.statut.vars.errors|length > 0 ? ' is-invalid' : '')
+                    }}) }}
+                    {% if form.statut.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.statut.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form_label(form.categorie) }} <span class="req">*</span></label>
+                    {{ form_widget(form.categorie, {'attr': {
+                        'class': 'form-control' ~ (form.categorie.vars.errors|length > 0 ? ' is-invalid' : '')
+                    }}) }}
+                    {% if form.categorie.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.categorie.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card__header">Image</div>
+            <div class="admin-card__body">
+                <div class="img-preview-wrap">
+                    <div class="img-placeholder" id="imgPlaceholder">
+                        <div style="font-size:2.5rem;margin-bottom:.5rem">🏔️</div>
+                        <div style="font-size:0.82rem">Aucune image</div>
+                    </div>
+                    <img class="img-preview" id="imgPreview" alt="Aperçu" style="display:none">
+                </div>
+                <div class="form-group">
+                    <label>{{ form_label(form.imageFile) }}</label>
+                    {{ form_widget(form.imageFile, {'attr': {'class': 'form-control', 'accept': 'image/*', 'id': 'imageFile'}}) }}
+                    {% if form.imageFile.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.imageFile.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                    <div class="field-hint">JPG, PNG ou WEBP — max 5 Mo</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card__body">
+                <div class="btn-group">
+                    <button type="submit" class="btn btn--primary" style="flex:1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.8"/><polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="1.8"/></svg>
+                        Créer l'activité
+                    </button>
+                    <a href="{{ path('app_activite_index') }}" class="btn btn--ghost">Annuler</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ form_end(form) }}
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    const fileInput = document.getElementById('imageFile');
+    const imgPreview = document.getElementById('imgPreview');
+    const imgPlaceholder = document.getElementById('imgPlaceholder');
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    imgPreview.src = e.target.result;
+                    imgPreview.style.display = 'block';
+                    if (imgPlaceholder) imgPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+</script>
+{% endblock %}
