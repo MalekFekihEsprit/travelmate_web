@@ -21,18 +21,32 @@ class DestinationAdminController extends AbstractController
 
         if ($search) {
             $destinations = $repo->createQueryBuilder('d')
-                ->where('d.nom LIKE :q OR d.pays LIKE :q')
+                ->where('d.nom_destination LIKE :q OR d.pays_destination LIKE :q')
                 ->setParameter('q', '%' . $search . '%')
-                ->orderBy('d.id', 'DESC')
+                ->orderBy('d.id_destination', 'DESC')
                 ->getQuery()
                 ->getResult();
         } else {
-            $destinations = $repo->findBy([], ['id' => 'DESC']);
+            $destinations = $repo->findBy([], ['id_destination' => 'DESC']);
         }
 
         return $this->render('destination_admin/index.html.twig', [
             'destinations' => $destinations,
             'search' => $search
+        ]);
+    }
+
+    #[Route('/{id}', name: 'app_admin_destinations_show', methods: ['GET'], requirements: ['id' => '\\d+'])]
+    public function show(Request $request, Destination $destination): Response
+    {
+        if ($request->query->getBoolean('inline')) {
+            return $this->render('destination_admin/_show_content.html.twig', [
+                'destination' => $destination,
+            ]);
+        }
+
+        return $this->render('destination_admin/show.html.twig', [
+            'destination' => $destination,
         ]);
     }
 
@@ -57,7 +71,7 @@ class DestinationAdminController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_admin_destinations_edit', methods: ['GET','POST'])]
+    #[Route('/{id}/edit', name: 'app_admin_destinations_edit', methods: ['GET','POST'], requirements: ['id' => '\\d+'])]
     public function edit(Request $request, Destination $destination, EntityManagerInterface $em): Response
     {
         $form = $this->createForm(DestinationType::class, $destination);
@@ -77,14 +91,48 @@ class DestinationAdminController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_admin_destinations_delete', methods: ['POST'])]
+    #[Route('/{id}', name: 'app_admin_destinations_delete', methods: ['POST'], requirements: ['id' => '\\d+'])]
     public function delete(Request $request, Destination $destination, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete_destination_'.$destination->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete_destination_'.$destination->getIdDestination(), $request->request->get('_token'))) {
             $em->remove($destination);
             $em->flush();
 
             $this->addFlash('success', 'Destination supprimée 🗑️');
+        }
+
+        return $this->redirectToRoute('app_admin_destinations');
+    }
+
+    #[Route('/bulk-delete', name: 'app_admin_destinations_bulk_delete', methods: ['POST'])]
+    public function bulkDelete(Request $request, DestinationRepository $repo, EntityManagerInterface $em): Response
+    {
+        if (!$this->isCsrfTokenValid('bulk_delete_destinations', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('app_admin_destinations');
+        }
+
+        $ids = array_filter(array_map('intval', (array) $request->request->all('ids')));
+
+        if (empty($ids)) {
+            $this->addFlash('error', 'Veuillez sélectionner au moins une destination.');
+            return $this->redirectToRoute('app_admin_destinations');
+        }
+
+        $deletedCount = 0;
+        foreach ($ids as $id) {
+            $destination = $repo->find($id);
+            if ($destination) {
+                $em->remove($destination);
+                ++$deletedCount;
+            }
+        }
+
+        if ($deletedCount > 0) {
+            $em->flush();
+            $this->addFlash('success', sprintf('%d destination(s) supprimée(s) avec succès 🗑️', $deletedCount));
+        } else {
+            $this->addFlash('error', 'Aucune destination valide à supprimer.');
         }
 
         return $this->redirectToRoute('app_admin_destinations');

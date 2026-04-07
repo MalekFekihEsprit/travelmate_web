@@ -20,9 +20,10 @@ final class DestinationController extends AbstractController
     {
         $destinations = $destinationRepository->findAll();
         
-        // Count unique climates and seasons
+        // Count unique climates, seasons, and regions
         $climates = [];
         $seasons = [];
+        $regions = [];
         foreach ($destinations as $destination) {
             if ($destination->getClimat_destination()) {
                 $climates[] = $destination->getClimat_destination();
@@ -30,15 +31,20 @@ final class DestinationController extends AbstractController
             if ($destination->getSaison_destination()) {
                 $seasons[] = $destination->getSaison_destination();
             }
+            if ($destination->getRegion_destination()) {
+                $regions[] = $destination->getRegion_destination();
+            }
         }
         
         $uniqueClimates = count(array_unique($climates));
         $uniqueSeasons = count(array_unique($seasons));
+        $uniqueRegions = count(array_unique($regions));
         
         return $this->render('destination/index.html.twig', [
             'destinations' => $destinations,
             'unique_climates' => $uniqueClimates,
             'unique_seasons' => $uniqueSeasons,
+            'unique_regions' => $uniqueRegions,
         ]);
     }
 

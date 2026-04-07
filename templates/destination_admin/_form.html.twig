@@ -1,4 +1,9 @@
-{{ form_start(form, {'attr': {'class': 'admin-form'}}) }}
+{{ form_start(form, {
+    'attr': {
+        'class': 'admin-form',
+        'onsubmit': confirm_message is defined and confirm_message ? 'return confirm("' ~ confirm_message|e('js') ~ '");' : null
+    }
+}) }}
 
 <div class="admin-form__grid">
 

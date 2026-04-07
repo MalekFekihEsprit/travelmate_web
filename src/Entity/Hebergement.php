@@ -57,7 +57,7 @@ class Hebergement
         return $this;
     }
 
-    #[ORM\Column(type: 'float', nullable: true)]
+    #[ORM\Column(name: 'prixNuit_hebergement', type: 'float', nullable: true)]
     private ?float $prixNuit_hebergement = null;
 
     public function getPrixNuit_hebergement(): ?float

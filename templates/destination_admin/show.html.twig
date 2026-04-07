@@ -1,0 +1,106 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}{{ destination.nomDestination }} | Administration{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-destination-show {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .destination-overview {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .destination-overview__flag {
+            width: 88px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid rgba(196,111,75,.18);
+            background: #f5f5f5;
+        }
+
+        .destination-overview__title {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+
+        .destination-overview__sub {
+            margin: .3rem 0 0;
+            color: var(--admin-text-muted);
+            font-size: .92rem;
+        }
+
+        .destination-grid {
+            display: grid;
+            gap: .9rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .destination-item {
+            padding: .9rem 1rem;
+            border-radius: 12px;
+            background: rgba(196,111,75,0.06);
+            border: 1px solid rgba(196,111,75,0.16);
+        }
+
+        .destination-item__label {
+            display: block;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--admin-text-muted);
+            margin-bottom: .25rem;
+        }
+
+        .destination-item__value {
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+
+        .destination-description {
+            margin-top: .5rem;
+            line-height: 1.65;
+            color: var(--admin-text);
+            white-space: pre-wrap;
+        }
+
+        .destination-actions {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .btn-delete {
+            background: rgba(191,91,91,0.12);
+            color: #aa4f4f;
+        }
+
+        .btn-delete:hover {
+            background: rgba(191,91,91,0.18);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<section class="admin-destination-show">
+    <div class="admin-page-header">
+        <div>
+            <span class="admin-page-header__eyebrow">Administration</span>
+            <h1 class="admin-page-header__title">Détail destination</h1>
+            <p class="admin-page-header__desc">Consultez les informations puis choisissez une action.</p>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        {{ include('destination_admin/_show_content.html.twig') }}
+    </div>
+</section>
+{% endblock %}

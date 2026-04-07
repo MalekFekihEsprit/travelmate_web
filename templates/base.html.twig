@@ -23,11 +23,11 @@
        Adapte les routes Symfony selon ton projet
     ------------------------------------------ #}
     {% set currentRoute = app.request.attributes.get('_route') %}
-    {% set availableRoutes = ['app_home', 'app_destination_index', 'app_destination_show', 'app_destination_new', 'app_destination_edit', 'app_destination_delete'] %}
+    {% set availableRoutes = ['app_home', 'app_destination_index', 'app_destination_show', 'app_hebergement_index', 'app_hebergement_show'] %}
     {% set navItems = [
         { label: 'Accueil',        route: 'app_home' },
         { label: 'Destinations',   route: 'app_destination_index' },
-        { label: 'Hébergements',   route: 'app_hebergements' },
+        { label: 'Hébergements',   route: 'app_hebergement_index' },
         { label: 'Catégories',     route: 'app_categories' },
         { label: 'Activités',      route: 'app_activites' },
         { label: 'Voyages',        route: 'app_voyages' },

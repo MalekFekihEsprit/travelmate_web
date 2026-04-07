@@ -1,0 +1,64 @@
+<div class="destination-overview">
+    <img src="{{ destination.flagDestination ?? asset('images/default-destination.jpg') }}" alt="{{ destination.nomDestination }}" class="destination-overview__flag">
+    <div>
+        <h2 class="destination-overview__title">{{ destination.nomDestination }}</h2>
+        <p class="destination-overview__sub">{{ destination.paysDestination }}{% if destination.regionDestination %} - {{ destination.regionDestination }}{% endif %}</p>
+    </div>
+</div>
+
+<div class="destination-grid">
+    <div class="destination-item destination-item--country">
+        <span class="destination-item__label">Pays</span>
+        <span class="destination-item__value">{{ destination.paysDestination ?: '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--region">
+        <span class="destination-item__label">Région</span>
+        <span class="destination-item__value">{{ destination.regionDestination ?: '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--climate">
+        <span class="destination-item__label">Climat</span>
+        <span class="destination-item__value">{{ destination.climatDestination ?: '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--season">
+        <span class="destination-item__label">Saison recommandée</span>
+        <span class="destination-item__value">{{ destination.saisonDestination ?: '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--score">
+        <span class="destination-item__label">Score</span>
+        <span class="destination-item__value">{{ destination.scoreDestination is not null ? destination.scoreDestination ~ '/5' : '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--currency">
+        <span class="destination-item__label">Devise</span>
+        <span class="destination-item__value">{{ destination.currencyDestination ?: '—' }}</span>
+    </div>
+</div>
+
+{% if destination.descriptionDestination %}
+    <div class="destination-description">
+        {{ destination.descriptionDestination }}
+    </div>
+{% endif %}
+
+{% if destination.videoUrl and destination.videoUrl|trim %}
+    <div class="destination-video">
+        {% if 'youtube.com' in destination.videoUrl or 'youtu.be' in destination.videoUrl %}
+            {% set videoId = destination.videoUrl|replace({'https://www.youtube.com/watch?v=': '', 'https://youtu.be/': '', 'https://youtube.com/watch?v=': '', 'http://www.youtube.com/watch?v=': '', 'http://youtu.be/': ''}) %}
+            {% if videoId and videoId|length > 0 %}
+                <div class="destination-video__frame">
+                    <iframe width="100%" height="420" src="https://www.youtube.com/embed/{{ videoId }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            {% endif %}
+        {% else %}
+            <a href="{{ destination.videoUrl }}" target="_blank" rel="noopener noreferrer">Voir la vidéo</a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<div class="destination-actions">
+    <a href="{{ path('app_admin_destinations') }}" class="btn btn--ghost">Retour</a>
+    <a href="{{ path('app_admin_destinations_edit', {id: destination.idDestination}) }}" class="btn btn--primary" onclick="return confirm('Confirmer la modification de cette destination ?');">Modifier</a>
+    <form method="post" action="{{ path('app_admin_destinations_delete', {id: destination.idDestination}) }}" onsubmit="return confirm('Confirmer la suppression de cette destination ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete_destination_' ~ destination.idDestination) }}">
+        <button class="btn btn-delete" type="submit">Supprimer</button>
+    </form>
+</div>
