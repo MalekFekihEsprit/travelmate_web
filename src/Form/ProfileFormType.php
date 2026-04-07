@@ -23,6 +23,7 @@ class ProfileFormType extends AbstractType
         $builder
             ->add('nom', TextType::class, [
                 'label' => 'Nom',
+                'empty_data' => '',
                 'constraints' => [
                     new NotBlank(message: 'Le nom est obligatoire.'),
                     new Length(max: 255),
@@ -30,6 +31,7 @@ class ProfileFormType extends AbstractType
             ])
             ->add('prenom', TextType::class, [
                 'label' => 'Prénom',
+                'empty_data' => '',
                 'constraints' => [
                     new NotBlank(message: 'Le prénom est obligatoire.'),
                     new Length(max: 255),
