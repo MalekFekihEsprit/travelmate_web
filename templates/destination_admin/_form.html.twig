@@ -173,6 +173,31 @@
         color: #c46f4b;
         background: rgba(196, 111, 75, 0.05);
     }
+
+    .admin-form .form-group-error {
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-form ul.form-error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .admin-form ul.form-error-list li {
+        font-size: 0.8rem;
+        color: #e63946;
+        margin-top: 0.3rem;
+    }
+
+    .admin-form .has-error .admin-input {
+        border-color: #e63946;
+        background: rgba(230, 57, 70, 0.03);
+    }
+
+    .admin-form .has-error .admin-input:focus {
+        box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.15);
+    }
 </style>
 
 {{ form_start(form, {

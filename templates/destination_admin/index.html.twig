@@ -61,11 +61,54 @@
             font-size: .84rem;
         }
 
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(196,111,75,0.12);
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04);
+        }
+
+        .stat-card__label {
+            display: block;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--admin-text-muted);
+            margin-bottom: .35rem;
+        }
+
+        .stat-card__value {
+            display: block;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--admin-text);
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* FILTER */
         .filters-form {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: .75rem;
-            flex-wrap: wrap;
+            align-items: end;
         }
 
         .filters-form__group {
@@ -73,11 +116,33 @@
             gap: .4rem;
         }
 
-        .filters-form input {
+        .filters-form label {
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--admin-text-muted);
+        }
+
+        .filters-form input,
+        .filters-form select {
             min-height: 46px;
             padding: .8rem 1rem;
             border-radius: 14px;
             border: 1px solid var(--admin-border);
+            background: #fff;
+            width: 100%;
+            font: inherit;
+        }
+
+        .filters-form__actions {
+            display: flex;
+            gap: .6rem;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        .filters-form__actions .btn {
+            white-space: nowrap;
         }
 
         .bulk-delete-form {
@@ -490,6 +555,25 @@
         </div>
     </div>
 
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-card__label">Total</span>
+            <span class="stat-card__value">{{ stats.total }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card__label">Pays</span>
+            <span class="stat-card__value">{{ stats.countries }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card__label">Régions</span>
+            <span class="stat-card__value">{{ stats.regions }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card__label">Score moyen</span>
+            <span class="stat-card__value">{{ stats.averageScore is not null ? stats.averageScore ~ '/5' : '—' }}</span>
+        </div>
+    </div>
+
     <!-- FLASH -->
     <div class="flash-stack">
         {% for message in app.flashes('success') %}
@@ -527,12 +611,59 @@
                 </div>
             </div>
 
-            <form method="get" class="filters-form">
+            <form method="get" class="filters-form" action="{{ path('app_admin_destinations') }}">
                 <div class="filters-form__group">
-                    <input type="text" name="q" value="{{ search }}" placeholder="Recherche...">
+                    <label for="destSearch">Recherche</label>
+                    <input type="text" id="destSearch" name="q" value="{{ search }}" placeholder="Nom, pays, région...">
                 </div>
 
-                <button class="btn btn--ghost">Filtrer</button>
+                <div class="filters-form__group">
+                    <label for="destCountry">Pays</label>
+                    <select id="destCountry" name="country">
+                        <option value="">Tous les pays</option>
+                        {% for country in countries %}
+                            <option value="{{ country }}" {{ countryFilter == country ? 'selected' : '' }}>{{ country }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filters-form__group">
+                    <label for="destRegion">Région</label>
+                    <select id="destRegion" name="region">
+                        <option value="">Toutes les régions</option>
+                        {% for region in regions %}
+                            <option value="{{ region }}" {{ regionFilter == region ? 'selected' : '' }}>{{ region }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filters-form__group">
+                    <label for="destClimate">Climat</label>
+                    <select id="destClimate" name="climate">
+                        <option value="">Tous les climats</option>
+                        {% for climate in climates %}
+                            <option value="{{ climate }}" {{ climateFilter == climate ? 'selected' : '' }}>{{ climate }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filters-form__group">
+                    <label for="destSort">Tri</label>
+                    <select id="destSort" name="sort">
+                        <option value="recent" {{ sort == 'recent' ? 'selected' : '' }}>Plus récent</option>
+                        <option value="name_asc" {{ sort == 'name_asc' ? 'selected' : '' }}>Nom A-Z</option>
+                        <option value="name_desc" {{ sort == 'name_desc' ? 'selected' : '' }}>Nom Z-A</option>
+                        <option value="country_asc" {{ sort == 'country_asc' ? 'selected' : '' }}>Pays A-Z</option>
+                        <option value="country_desc" {{ sort == 'country_desc' ? 'selected' : '' }}>Pays Z-A</option>
+                        <option value="score_asc" {{ sort == 'score_asc' ? 'selected' : '' }}>Score croissant</option>
+                        <option value="score_desc" {{ sort == 'score_desc' ? 'selected' : '' }}>Score décroissant</option>
+                    </select>
+                </div>
+
+                <div class="filters-form__actions">
+                    <button class="btn btn--ghost" type="submit">Appliquer</button>
+                    <a href="{{ path('app_admin_destinations') }}" class="btn btn--ghost">Réinitialiser</a>
+                </div>
             </form>
         </div>
 

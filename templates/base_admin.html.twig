@@ -1080,13 +1080,13 @@
                     <span>Voyages</span>
                 </a>
 
-                <a href="#" {# path('app_admin_destinations') #}
+                <a href="{{ path('app_admin_destinations') }}"
                    class="admin-nav__item {{ currentRoute starts with 'app_admin_destinations' ? 'is-active' : '' }}">
                     
                     <span>Destinations</span>
                 </a>
 
-                <a href="#" {# path('app_admin_hebergements') #}
+                <a href="{{ path('app_admin_hebergements') }}"
                    class="admin-nav__item {{ currentRoute starts with 'app_admin_hebergements' ? 'is-active' : '' }}">
                     
                     <span>Hébergements</span>

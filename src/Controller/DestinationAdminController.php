@@ -17,22 +17,101 @@ class DestinationAdminController extends AbstractController
     #[Route('/', name: 'app_admin_destinations', methods: ['GET'])]
     public function index(Request $request, DestinationRepository $repo): Response
     {
-        $search = $request->query->get('q');
+        $search = trim((string) $request->query->get('q', ''));
+        $countryFilter = trim((string) $request->query->get('country', ''));
+        $regionFilter = trim((string) $request->query->get('region', ''));
+        $climateFilter = trim((string) $request->query->get('climate', ''));
+        $sort = (string) $request->query->get('sort', 'recent');
 
-        if ($search) {
-            $destinations = $repo->createQueryBuilder('d')
-                ->where('d.nom_destination LIKE :q OR d.pays_destination LIKE :q')
-                ->setParameter('q', '%' . $search . '%')
-                ->orderBy('d.id_destination', 'DESC')
-                ->getQuery()
-                ->getResult();
-        } else {
-            $destinations = $repo->findBy([], ['id_destination' => 'DESC']);
+        $allDestinations = $repo->findBy([], ['id_destination' => 'DESC']);
+
+        $destinations = array_values(array_filter($allDestinations, static function (Destination $destination) use ($search, $countryFilter, $regionFilter, $climateFilter): bool {
+            if ($search !== '') {
+                $haystack = mb_strtolower(sprintf('%s %s %s %s',
+                    $destination->getNomDestination() ?? '',
+                    $destination->getPaysDestination() ?? '',
+                    $destination->getRegionDestination() ?? '',
+                    $destination->getClimatDestination() ?? ''
+                ));
+
+                if (mb_strpos($haystack, mb_strtolower($search)) === false) {
+                    return false;
+                }
+            }
+
+            if ($countryFilter !== '' && mb_strtolower((string) $destination->getPaysDestination()) !== mb_strtolower($countryFilter)) {
+                return false;
+            }
+
+            if ($regionFilter !== '' && mb_strtolower((string) $destination->getRegionDestination()) !== mb_strtolower($regionFilter)) {
+                return false;
+            }
+
+            if ($climateFilter !== '' && mb_strtolower((string) $destination->getClimatDestination()) !== mb_strtolower($climateFilter)) {
+                return false;
+            }
+
+            return true;
+        }));
+
+        usort($destinations, static function (Destination $left, Destination $right) use ($sort): int {
+            return match ($sort) {
+                'name_asc' => strcmp(mb_strtolower($left->getNomDestination() ?? ''), mb_strtolower($right->getNomDestination() ?? '')),
+                'name_desc' => strcmp(mb_strtolower($right->getNomDestination() ?? ''), mb_strtolower($left->getNomDestination() ?? '')),
+                'country_asc' => strcmp(mb_strtolower($left->getPaysDestination() ?? ''), mb_strtolower($right->getPaysDestination() ?? '')),
+                'country_desc' => strcmp(mb_strtolower($right->getPaysDestination() ?? ''), mb_strtolower($left->getPaysDestination() ?? '')),
+                'score_asc' => (float) ($left->getScoreDestination() ?? 0) <=> (float) ($right->getScoreDestination() ?? 0),
+                'score_desc' => (float) ($right->getScoreDestination() ?? 0) <=> (float) ($left->getScoreDestination() ?? 0),
+                default => ($right->getIdDestination() ?? 0) <=> ($left->getIdDestination() ?? 0),
+            };
+        });
+
+        $countries = [];
+        $regions = [];
+        $climates = [];
+        $scoreValues = [];
+
+        foreach ($allDestinations as $destination) {
+            if ($destination->getPaysDestination()) {
+                $countries[] = $destination->getPaysDestination();
+            }
+            if ($destination->getRegionDestination()) {
+                $regions[] = $destination->getRegionDestination();
+            }
+            if ($destination->getClimatDestination()) {
+                $climates[] = $destination->getClimatDestination();
+            }
+            if ($destination->getScoreDestination() !== null) {
+                $scoreValues[] = (float) $destination->getScoreDestination();
+            }
         }
+
+        $countries = array_values(array_unique($countries));
+        sort($countries);
+        $regions = array_values(array_unique($regions));
+        sort($regions);
+        $climates = array_values(array_unique($climates));
+        sort($climates);
+
+        $averageScore = $scoreValues !== [] ? round(array_sum($scoreValues) / count($scoreValues), 1) : null;
 
         return $this->render('destination_admin/index.html.twig', [
             'destinations' => $destinations,
             'search' => $search
+            , 'countryFilter' => $countryFilter
+            , 'regionFilter' => $regionFilter
+            , 'climateFilter' => $climateFilter
+            , 'sort' => $sort
+            , 'countries' => $countries
+            , 'regions' => $regions
+            , 'climates' => $climates
+            , 'stats' => [
+                'total' => count($allDestinations),
+                'countries' => count($countries),
+                'regions' => count($regions),
+                'climates' => count($climates),
+                'averageScore' => $averageScore,
+            ]
         ]);
     }
 

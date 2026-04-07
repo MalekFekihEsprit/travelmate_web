@@ -1,0 +1,749 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Hebergements | Admin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-destinations-page {
+            display: grid;
+            gap: 1.5rem;
+            animation: fadeIn .35s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .flash-message {
+            padding: .95rem 1rem;
+            border-radius: 16px;
+            font-size: .95rem;
+        }
+
+        .flash-message--success {
+            background: rgba(47,127,121,0.1);
+            color: #245f5a;
+        }
+
+        .flash-message--error {
+            background: rgba(191,91,91,0.1);
+            color: #9e4747;
+        }
+
+        .toolbar__top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .toolbar__count {
+            padding: .55rem .9rem;
+            border-radius: 999px;
+            background: rgba(196,111,75,0.1);
+            color: var(--admin-primary);
+            font-weight: 700;
+            font-size: .84rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(196,111,75,0.12);
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04);
+        }
+
+        .stat-card__label {
+            display: block;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--admin-text-muted);
+            margin-bottom: .35rem;
+        }
+
+        .stat-card__value {
+            display: block;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--admin-text);
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .filters-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: .75rem;
+            align-items: end;
+            margin-top: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .filters-form__group {
+            display: grid;
+            gap: .4rem;
+        }
+
+        .filters-form label {
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--admin-text-muted);
+        }
+
+        .filters-form input,
+        .filters-form select {
+            min-height: 46px;
+            padding: .8rem 1rem;
+            border-radius: 14px;
+            border: 1px solid var(--admin-border);
+            background: #fff;
+            width: 100%;
+            font: inherit;
+        }
+
+        .filters-form__actions {
+            display: flex;
+            gap: .6rem;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        .filters-form__actions .btn {
+            white-space: nowrap;
+        }
+
+            .details-panel {
+                display: none;
+                position: fixed;
+                top: 6.5rem;
+                left: 50%;
+                transform: translateX(-50%);
+                width: min(1040px, calc(100vw - 2rem));
+                max-height: calc(100vh - 8.5rem);
+                overflow: auto;
+                z-index: 2200;
+                margin: 0 auto;
+                padding: 1.15rem;
+                border-radius: 22px;
+                border: 1px solid rgba(196,111,75,0.15);
+                background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,248,243,0.96));
+                box-shadow: 0 12px 30px rgba(17, 24, 39, 0.08);
+            }
+
+            .details-panel.is-visible {
+                display: grid;
+                gap: 1rem;
+            }
+
+            .details-panel__close {
+                position: sticky;
+                top: 0;
+                margin-left: auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                border: 1px solid rgba(196,111,75,0.16);
+                background: rgba(255,255,255,0.92);
+                color: var(--admin-text-muted);
+                cursor: pointer;
+                box-shadow: 0 8px 18px rgba(17, 24, 39, 0.08);
+            }
+
+            .details-panel__close:hover {
+                color: var(--admin-primary);
+            }
+
+            .details-backdrop {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 2100;
+                background: rgba(24, 18, 14, 0.28);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+            }
+
+            .admin-destinations-page.is-details-open .details-backdrop {
+                display: block;
+            }
+
+            .admin-destinations-page.is-details-open .admin-page-header,
+            .admin-destinations-page.is-details-open .admin-card {
+                filter: blur(5px);
+                pointer-events: none;
+                user-select: none;
+            }
+
+            .admin-destinations-page.is-details-open .details-panel {
+                pointer-events: auto;
+            }
+
+            .details-panel__placeholder {
+                color: var(--admin-text-muted);
+                font-weight: 500;
+            }
+
+            .details-panel__loading {
+                color: var(--admin-primary);
+                font-weight: 600;
+            }
+
+            .details-panel .destination-grid {
+                display: grid;
+                gap: .75rem;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                align-items: stretch;
+            }
+
+            .details-panel .destination-item {
+                min-height: 92px;
+                padding: .8rem .9rem .75rem;
+                border-radius: 14px;
+                background: rgba(255,255,255,0.9);
+                border: 1px solid rgba(196,111,75,0.12);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+            }
+
+            .details-panel .destination-item:hover {
+                background: rgba(255,255,255,1);
+                border-color: rgba(196,111,75,0.2);
+            }
+
+            .details-panel .destination-item__label {
+                display: inline-flex;
+                align-items: center;
+                gap: .28rem;
+                font-size: .66rem;
+                text-transform: uppercase;
+                letter-spacing: .1em;
+                color: var(--admin-text-muted);
+                margin-bottom: .35rem;
+            }
+
+            .details-panel .destination-item__value {
+                display: block;
+                font-weight: 600;
+                color: var(--admin-text);
+                font-size: .96rem;
+                line-height: 1.3;
+                word-break: break-word;
+            }
+
+            .details-panel .destination-item--type .destination-item__label::before { content: '🏷️'; }
+            .details-panel .destination-item--price .destination-item__label::before { content: '💶'; }
+            .details-panel .destination-item--score .destination-item__label::before { content: '⭐'; }
+            .details-panel .destination-item--lat .destination-item__label::before { content: '🧭'; }
+            .details-panel .destination-item--lng .destination-item__label::before { content: '📍'; }
+            .details-panel .destination-item--destination .destination-item__label::before { content: '🌍'; }
+
+            .details-panel .destination-description {
+                margin-top: .5rem;
+                line-height: 1.65;
+                color: var(--admin-text);
+                white-space: pre-wrap;
+            }
+
+            .details-panel .destination-actions {
+                display: flex;
+                gap: .75rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .details-panel .btn-delete {
+                background: rgba(191,91,91,0.12);
+                color: #aa4f4f;
+            }
+
+            .details-panel .btn-delete:hover {
+                background: rgba(191,91,91,0.18);
+            }
+
+            @media (max-width: 1100px) {
+                .details-panel .destination-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 720px) {
+                .details-panel .destination-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .hebergement-row {
+                cursor: pointer;
+                transition: background-color .2s ease;
+            }
+
+            .hebergement-row:hover {
+                background: rgba(196,111,75,0.08);
+            }
+
+            .hebergement-cell__trigger {
+                border: 0;
+                padding: 0;
+                background: transparent;
+                font: inherit;
+                color: inherit;
+                text-align: left;
+                cursor: pointer;
+                width: 100%;
+            }
+
+            .hebergement-cell__trigger:hover {
+                color: var(--admin-primary);
+            }
+
+            .delete-mode-button {
+                background: rgba(196,111,75,0.1);
+                color: var(--admin-primary);
+            }
+
+            .delete-mode-button:hover {
+                background: rgba(196,111,75,0.18);
+            }
+
+            .cancel-delete-button,
+            .confirm-delete-button {
+                display: none;
+            }
+
+            .admin-destinations-page.is-delete-mode .cancel-delete-button,
+            .admin-destinations-page.is-delete-mode .confirm-delete-button {
+                display: inline-flex;
+            }
+
+            .select-cell,
+            .hebergement-checkbox,
+            #selectAllHebergements {
+                display: none;
+            }
+
+            .select-cell {
+                width: 38px;
+            }
+
+            .hebergement-checkbox,
+            #selectAllHebergements {
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+                accent-color: var(--admin-primary);
+            }
+
+            .admin-destinations-page.is-delete-mode .select-cell {
+                display: table-cell;
+            }
+
+            .admin-destinations-page.is-delete-mode .hebergement-checkbox,
+            .admin-destinations-page.is-delete-mode #selectAllHebergements {
+                display: inline-block;
+            }
+
+            .hebergement-row.is-selected {
+                background: rgba(196,111,75,0.12);
+            }
+
+    </style>
+{% endblock %}
+
+{% block body %}
+<section class="admin-destinations-page">
+    <div class="admin-page-header">
+        <div>
+            <span class="admin-page-header__eyebrow">Administration</span>
+            <h1 class="admin-page-header__title">Hebergements</h1>
+            <p class="admin-page-header__desc">Gerez vos hebergements depuis cette interface.</p>
+        </div>
+        <div>
+            <a href="{{ path('app_admin_hebergement_new') }}" class="btn btn--primary">Ajouter</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-card__label">Total</span>
+            <span class="stat-card__value">{{ stats.total }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card__label">Types</span>
+            <span class="stat-card__value">{{ stats.types }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card__label">Destinations</span>
+            <span class="stat-card__value">{{ stats.destinations }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card__label">Prix moyen</span>
+            <span class="stat-card__value">{{ stats.averagePrice is not null ? stats.averagePrice : '—' }}</span>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        {% set successFlashes = app.flashes('success') %}
+        {% set errorFlashes = app.flashes('error') %}
+
+        {% if successFlashes is not empty or errorFlashes is not empty %}
+            <div class="flash-stack" aria-live="polite">
+                {% for message in successFlashes %}
+                    <div class="flash-message flash-message--success">{{ message }}</div>
+                {% endfor %}
+
+                {% for message in errorFlashes %}
+                    <div class="flash-message flash-message--error">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="toolbar__top">
+            <span class="toolbar__count">{{ hebergements|length }} hebergement{{ hebergements|length > 1 ? 's' : '' }}</span>
+            <div class="toolbar-actions">
+                <button type="button" id="toggleDeleteModeButton" class="btn delete-mode-button">
+                    Supprimer
+                </button>
+                <button type="button" id="cancelDeleteModeButton" class="btn btn--ghost cancel-delete-button">
+                    Annuler
+                </button>
+                <button type="submit" form="bulkDeleteForm" id="bulkDeleteButton" class="btn btn-delete confirm-delete-button" disabled>
+                    Supprimer selection
+                </button>
+            </div>
+        </div>
+
+        <form method="get" class="filters-form" action="{{ path('app_admin_hebergements') }}">
+            <div class="filters-form__group">
+                <label for="hebergementSearch">Recherche</label>
+                <input type="text" id="hebergementSearch" name="q" value="{{ search }}" placeholder="Nom, type, adresse...">
+            </div>
+
+            <div class="filters-form__group">
+                <label for="hebergementType">Type</label>
+                <select id="hebergementType" name="type">
+                    <option value="">Tous les types</option>
+                    {% for type in types %}
+                        <option value="{{ type }}" {{ typeFilter == type ? 'selected' : '' }}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filters-form__group">
+                <label for="hebergementDestination">Destination</label>
+                <select id="hebergementDestination" name="destination">
+                    <option value="">Toutes les destinations</option>
+                    {% for destinationName in destinationsList %}
+                        <option value="{{ destinationName }}" {{ destinationFilter == destinationName ? 'selected' : '' }}>{{ destinationName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filters-form__group">
+                <label for="hebergementSort">Tri</label>
+                <select id="hebergementSort" name="sort">
+                    <option value="recent" {{ sort == 'recent' ? 'selected' : '' }}>Plus récent</option>
+                    <option value="name_asc" {{ sort == 'name_asc' ? 'selected' : '' }}>Nom A-Z</option>
+                    <option value="name_desc" {{ sort == 'name_desc' ? 'selected' : '' }}>Nom Z-A</option>
+                    <option value="price_asc" {{ sort == 'price_asc' ? 'selected' : '' }}>Prix croissant</option>
+                    <option value="price_desc" {{ sort == 'price_desc' ? 'selected' : '' }}>Prix décroissant</option>
+                    <option value="note_desc" {{ sort == 'note_desc' ? 'selected' : '' }}>Note décroissante</option>
+                </select>
+            </div>
+
+            <div class="filters-form__actions">
+                <button class="btn btn--ghost" type="submit">Appliquer</button>
+                <a href="{{ path('app_admin_hebergements') }}" class="btn btn--ghost">Réinitialiser</a>
+            </div>
+        </form>
+
+        <form id="bulkDeleteForm" method="post" action="{{ path('app_admin_hebergements_bulk_delete') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('bulk_delete_hebergements') }}">
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th class="select-cell">
+                        <input type="checkbox" id="selectAllHebergements" aria-label="Tout selectionner">
+                    </th>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Prix / nuit</th>
+                    <th>Destination</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hebergement in hebergements %}
+                        <tr class="hebergement-row" onclick="window.handleHebergementRowClick(event, '{{ path('app_admin_hebergement_show', {id: hebergement.idHebergement})|e('js') }}')">
+                        <td class="select-cell">
+                            <input type="checkbox" class="hebergement-checkbox" name="ids[]" value="{{ hebergement.idHebergement }}" aria-label="Selectionner {{ hebergement.nomHebergement }}">
+                        </td>
+                        <td>{{ hebergement.idHebergement }}</td>
+                            <td>
+                                <button type="button" class="hebergement-cell__trigger" onclick="event.stopPropagation(); window.loadHebergementDetails('{{ path('app_admin_hebergement_show', {id: hebergement.idHebergement})|e('js') }}')">
+                                    {{ hebergement.nomHebergement }}
+                                </button>
+                            </td>
+                        <td>{{ hebergement.typeHebergement ?: '-' }}</td>
+                        <td>{{ hebergement.prixNuitHebergement ?: '-' }}</td>
+                        <td>{{ hebergement.destination ? hebergement.destination.nomDestination : '-' }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                            <td colspan="6" style="text-align: center;">Aucun hebergement trouve.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </form>
+    </div>
+</section>
+
+    <div id="detailsBackdrop" class="details-backdrop" aria-hidden="true"></div>
+
+    <section id="hebergementDetailsPanel" class="details-panel" aria-live="polite" aria-atomic="true">
+        <div class="details-panel__placeholder">Cliquez sur un hebergement pour afficher ses details ici.</div>
+    </section>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const page = document.querySelector('.admin-destinations-page');
+        const detailsPanel = document.getElementById('hebergementDetailsPanel');
+        const detailsBackdrop = document.getElementById('detailsBackdrop');
+        const toggleDeleteModeButton = document.getElementById('toggleDeleteModeButton');
+        const cancelDeleteModeButton = document.getElementById('cancelDeleteModeButton');
+        const bulkDeleteButton = document.getElementById('bulkDeleteButton');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+        const selectAll = document.getElementById('selectAllHebergements');
+        const checkboxes = Array.from(document.querySelectorAll('.hebergement-checkbox'));
+
+        function openDetailsOverlay() {
+            if (!page) {
+                return;
+            }
+            page.classList.add('is-details-open');
+            if (detailsBackdrop) {
+                detailsBackdrop.style.display = 'block';
+            }
+        }
+
+        function closeDetailsOverlay() {
+            if (page) {
+                page.classList.remove('is-details-open');
+            }
+            if (detailsBackdrop) {
+                detailsBackdrop.style.display = 'none';
+            }
+            if (detailsPanel) {
+                detailsPanel.classList.remove('is-visible');
+                detailsPanel.innerHTML = '<div class="details-panel__placeholder">Cliquez sur un hebergement pour afficher ses details ici.</div>';
+            }
+        }
+
+        function setDetailsContent(html) {
+            if (!detailsPanel) {
+                return;
+            }
+
+            detailsPanel.innerHTML =
+                '<button type="button" class="details-panel__close" onclick="window.closeHebergementDetails()" aria-label="Fermer les details">×</button>' +
+                html;
+            detailsPanel.classList.add('is-visible');
+            openDetailsOverlay();
+        }
+
+        window.closeHebergementDetails = closeDetailsOverlay;
+
+        function isDeleteMode() {
+            return !!page && page.classList.contains('is-delete-mode');
+        }
+
+        function syncBulkDeleteState() {
+            if (!bulkDeleteButton) {
+                return;
+            }
+
+            const selectedCount = checkboxes.filter((cb) => cb.checked).length;
+            bulkDeleteButton.disabled = selectedCount === 0;
+
+            checkboxes.forEach((checkbox) => {
+                const row = checkbox.closest('.hebergement-row');
+                if (row) {
+                    row.classList.toggle('is-selected', checkbox.checked);
+                }
+            });
+        }
+
+        function setDeleteMode(active) {
+            if (!page) {
+                return;
+            }
+
+            page.classList.toggle('is-delete-mode', active);
+
+            if (!active) {
+                checkboxes.forEach((checkbox) => {
+                    checkbox.checked = false;
+                });
+
+                if (selectAll) {
+                    selectAll.checked = false;
+                }
+
+                syncBulkDeleteState();
+            }
+
+            if (toggleDeleteModeButton) {
+                toggleDeleteModeButton.style.display = active ? 'none' : 'inline-flex';
+            }
+            if (cancelDeleteModeButton) {
+                cancelDeleteModeButton.style.display = active ? 'inline-flex' : 'none';
+            }
+            if (bulkDeleteButton) {
+                bulkDeleteButton.style.display = active ? 'inline-flex' : 'none';
+            }
+        }
+
+        window.handleHebergementRowClick = function (event, targetUrl) {
+            const row = event.currentTarget;
+            const checkbox = row ? row.querySelector('.hebergement-checkbox') : null;
+            const interactiveTarget = event.target.closest('input, button, a, form, label');
+
+            if (isDeleteMode()) {
+                if (interactiveTarget && interactiveTarget !== checkbox) {
+                    return;
+                }
+
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                return;
+            }
+
+            if (interactiveTarget) {
+                return;
+            }
+            window.loadHebergementDetails(targetUrl);
+        };
+
+        window.loadHebergementDetails = function (url) {
+            if (!detailsPanel || !url) {
+                return;
+            }
+
+            detailsPanel.innerHTML = '<div class="details-panel__loading">Chargement des details...</div>';
+            detailsPanel.classList.add('is-visible');
+            openDetailsOverlay();
+
+            fetch(url + '?inline=1', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then((response) => response.text())
+                .then((html) => {
+                    setDetailsContent(html);
+                })
+                .catch(() => {
+                    detailsPanel.innerHTML = '<div class="flash-message flash-message--error">Impossible de charger les details.</div>';
+                });
+        };
+
+        if (detailsBackdrop) {
+            detailsBackdrop.addEventListener('click', function () {
+                closeDetailsOverlay();
+            });
+        }
+
+        if (toggleDeleteModeButton) {
+            toggleDeleteModeButton.addEventListener('click', function () {
+                closeDetailsOverlay();
+                setDeleteMode(true);
+            });
+        }
+
+        if (cancelDeleteModeButton) {
+            cancelDeleteModeButton.addEventListener('click', function () {
+                setDeleteMode(false);
+            });
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                checkboxes.forEach((checkbox) => {
+                    checkbox.checked = selectAll.checked;
+                });
+                syncBulkDeleteState();
+            });
+        }
+
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener('click', function (event) {
+                event.stopPropagation();
+                syncBulkDeleteState();
+            });
+
+            checkbox.addEventListener('change', function () {
+                if (selectAll) {
+                    selectAll.checked = checkboxes.length > 0 && checkboxes.every((cb) => cb.checked);
+                }
+                syncBulkDeleteState();
+            });
+        });
+
+        if (bulkDeleteForm) {
+            bulkDeleteForm.addEventListener('submit', function (event) {
+                const selectedCount = checkboxes.filter((cb) => cb.checked).length;
+                if (selectedCount === 0) {
+                    event.preventDefault();
+                    return;
+                }
+
+                const confirmed = window.confirm('Confirmer la suppression de ' + selectedCount + ' hebergement(s) ?');
+                if (!confirmed) {
+                    event.preventDefault();
+                }
+            });
+        }
+
+        setDeleteMode(false);
+        syncBulkDeleteState();
+    });
+    </script>
+{% endblock %}
