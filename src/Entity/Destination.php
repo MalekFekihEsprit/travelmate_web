@@ -141,8 +141,8 @@ class Destination
         return $this;
     }
 
-    #[ORM\Column(type: 'float', nullable: true)]
-    private ?float $score_destination = null;
+    #[ORM\Column(type: 'float', options: ['default' => 0])]
+    private ?float $score_destination = 0.0;
 
     public function getScore_destination(): ?float
     {
@@ -257,10 +257,14 @@ class Destination
     #[ORM\OneToMany(targetEntity: Voyage::class, mappedBy: 'destination')]
     private Collection $voyages;
 
+    #[ORM\OneToMany(targetEntity: NoteDestination::class, mappedBy: 'destination', orphanRemoval: true)]
+    private Collection $notesDestination;
+
     public function __construct()
     {
         $this->hebergements = new ArrayCollection();
         $this->voyages = new ArrayCollection();
+        $this->notesDestination = new ArrayCollection();
     }
 
     /**
@@ -285,6 +289,39 @@ class Destination
     public function removeVoyage(Voyage $voyage): self
     {
         $this->getVoyages()->removeElement($voyage);
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, NoteDestination>
+     */
+    public function getNotesDestination(): Collection
+    {
+        if (!$this->notesDestination instanceof Collection) {
+            $this->notesDestination = new ArrayCollection();
+        }
+
+        return $this->notesDestination;
+    }
+
+    public function addNoteDestination(NoteDestination $noteDestination): self
+    {
+        if (!$this->getNotesDestination()->contains($noteDestination)) {
+            $this->getNotesDestination()->add($noteDestination);
+            $noteDestination->setDestination($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNoteDestination(NoteDestination $noteDestination): self
+    {
+        if ($this->getNotesDestination()->removeElement($noteDestination)) {
+            if ($noteDestination->getDestination() === $this) {
+                $noteDestination->setDestination(null);
+            }
+        }
+
         return $this;
     }
 

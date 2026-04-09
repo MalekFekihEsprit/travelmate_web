@@ -385,6 +385,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $participations;
 
+    #[ORM\OneToMany(targetEntity: NoteDestination::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $notesDestination;
+
     public function __construct()
     {
         $this->budgets = new ArrayCollection();
@@ -393,6 +396,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->hebergements = new ArrayCollection();
         $this->paiements = new ArrayCollection();
         $this->participations = new ArrayCollection();
+        $this->notesDestination = new ArrayCollection();
     }
 
     /**
@@ -464,6 +468,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             if ($participation->getVoyage() === $voyage) {
                 $this->getParticipations()->removeElement($participation);
                 $voyage->getParticipations()->removeElement($participation);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, NoteDestination>
+     */
+    public function getNotesDestination(): Collection
+    {
+        if (!$this->notesDestination instanceof Collection) {
+            $this->notesDestination = new ArrayCollection();
+        }
+
+        return $this->notesDestination;
+    }
+
+    public function addNoteDestination(NoteDestination $noteDestination): self
+    {
+        if (!$this->getNotesDestination()->contains($noteDestination)) {
+            $this->getNotesDestination()->add($noteDestination);
+            $noteDestination->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNoteDestination(NoteDestination $noteDestination): self
+    {
+        if ($this->getNotesDestination()->removeElement($noteDestination)) {
+            if ($noteDestination->getUser() === $this) {
+                $noteDestination->setUser(null);
             }
         }
 

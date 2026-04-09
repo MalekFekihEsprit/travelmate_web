@@ -263,28 +263,6 @@
         </div>
     </div>
 
-    {# Score #}
-    <div class="admin-form__group">
-        {{ form_label(form.score_destination, 'Note (1-5)') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.score_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'type': 'number',
-                    'min': '1',
-                    'max': '5',
-                    'placeholder': 'ex: 5',
-                    'data-validate': 'required|number|min:1|max:5',
-                    'data-error-required': 'La note est requise',
-                    'data-error-number': 'La note doit être un nombre',
-                    'data-error-min': 'La note doit être entre 1 et 5',
-                    'data-error-max': 'La note doit être entre 1 et 5'
-                }
-            }) }}
-            <div class="field-error" data-error-for="score_destination"></div>
-        </div>
-    </div>
-
     {# Description #}
     <div class="admin-form__group admin-form__group--full">
         {{ form_label(form.description_destination, 'Description') }}
@@ -329,40 +307,6 @@
                 }
             }) }}
             <div class="field-error" data-error-for="saison_destination"></div>
-        </div>
-    </div>
-
-    {# Devise #}
-    <div class="admin-form__group">
-        {{ form_label(form.currency_destination, 'Devise') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.currency_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: EUR',
-                    'data-validate': 'required|maxLength:10',
-                    'data-error-required': 'La devise est requise',
-                    'data-error-maxLength': 'La devise ne doit pas dépasser 10 caractères'
-                }
-            }) }}
-            <div class="field-error" data-error-for="currency_destination"></div>
-        </div>
-    </div>
-
-    {# Langues #}
-    <div class="admin-form__group admin-form__group--full">
-        {{ form_label(form.languages_destination, 'Langues parlées') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.languages_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: Français, Anglais',
-                    'data-validate': 'required|minLength:2',
-                    'data-error-required': 'Les langues sont requises',
-                    'data-error-minLength': 'Veuillez entrer au moins 2 caractères'
-                }
-            }) }}
-            <div class="field-error" data-error-for="languages_destination"></div>
         </div>
     </div>
 

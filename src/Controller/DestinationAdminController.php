@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Destination;
 use App\Form\DestinationType;
 use App\Repository\DestinationRepository;
+use App\Service\RestCountriesService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -130,13 +131,23 @@ class DestinationAdminController extends AbstractController
     }
 
     #[Route('/new', name: 'app_admin_destinations_new', methods: ['GET','POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, RestCountriesService $restCountriesService): Response
     {
         $destination = new Destination();
+        $destination->setScore_destination(0.0);
         $form = $this->createForm(DestinationType::class, $destination);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Fetch country data from RESTcountries API
+            $countryData = $restCountriesService->getCountryData($destination->getPays_destination());
+            if ($countryData) {
+                $destination->setCurrency_destination($countryData['currency']);
+                $destination->setLanguages_destination($countryData['languages']);
+                $destination->setFlag_destination($countryData['flag']);
+            }
+
+            $destination->setScore_destination(0.0);
             $em->persist($destination);
             $em->flush();
 
@@ -151,12 +162,24 @@ class DestinationAdminController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_admin_destinations_edit', methods: ['GET','POST'], requirements: ['id' => '\\d+'])]
-    public function edit(Request $request, Destination $destination, EntityManagerInterface $em): Response
+    public function edit(Request $request, Destination $destination, EntityManagerInterface $em, RestCountriesService $restCountriesService): Response
     {
+        $originalCountry = $destination->getPays_destination();
+        
         $form = $this->createForm(DestinationType::class, $destination);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // If country changed, fetch new country data
+            if ($originalCountry !== $destination->getPays_destination()) {
+                $countryData = $restCountriesService->getCountryData($destination->getPays_destination());
+                if ($countryData) {
+                    $destination->setCurrency_destination($countryData['currency']);
+                    $destination->setLanguages_destination($countryData['languages']);
+                    $destination->setFlag_destination($countryData['flag']);
+                }
+            }
+            
             $em->flush();
 
             $this->addFlash('success', 'Destination modifiée avec succès ✏️');

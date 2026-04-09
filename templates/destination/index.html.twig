@@ -151,7 +151,7 @@
 
     {% if destinations is not empty %}
         <div class="destinations-grid" id="destinationsContainer">
-            {% for destination in destinations %}<div class="destination-card" onclick="openDestinationModal({{ destination.idDestination }})" data-region="{{ destination.regionDestination ?? 'Sans région' }}" data-season="{{ destination.saisonDestination ?? 'Sans saison' }}" data-climate="{{ destination.climatDestination ?? 'Sans climat' }}" data-rating="{{ destination.scoreDestination ?? '' }}" data-name="{{ destination.nomDestination }}"><div class="destination-card__image-wrapper">{% if destination.imageDest is defined and destination.imageDest %}<img src="{{ destination.imageDest }}" alt="{{ destination.nomDestination }}" class="destination-card__image">{% else %}<div class="destination-card__image-placeholder">🌍</div>{% endif %}</div><div class="destination-card__content">
+            {% for destination in destinations %}<div class="destination-card" onclick="openDestinationModal({{ destination.idDestination }})" data-region="{{ destination.regionDestination ?? 'Sans région' }}" data-season="{{ destination.saisonDestination ?? 'Sans saison' }}" data-climate="{{ destination.climatDestination ?? 'Sans climat' }}" data-rating="{{ average_scores[destination.idDestination]|default(destination.scoreDestination ?? '') }}" data-name="{{ destination.nomDestination }}"><div class="destination-card__image-wrapper">{% if destination.imageDest is defined and destination.imageDest %}<img src="{{ destination.imageDest }}" alt="{{ destination.nomDestination }}" class="destination-card__image">{% else %}<div class="destination-card__image-placeholder">🌍</div>{% endif %}</div><div class="destination-card__content">
                     <h3 class="destination-card__title">{{ destination.nomDestination }}</h3>
                     <p class="destination-card__location">
                         📍 {{ destination.paysDestination }}
@@ -167,9 +167,10 @@
                     {% endif %}
 
                     <div class="destination-card__meta">
-                        {% if destination.scoreDestination is not null %}
+                        {% set averageScore = average_scores[destination.idDestination]|default(destination.scoreDestination) %}
+                        {% if averageScore is not null %}
                             <span class="destination-card__badge destination-card__badge--season">
-                                <span class="badge-icon">⭐</span>{{ destination.scoreDestination }}/5
+                                <span class="badge-icon">⭐</span>{{ averageScore|number_format(2, '.', '') }}/5
                             </span>
                         {% endif %}
                         {% if destination.climatDestination %}
