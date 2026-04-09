@@ -125,6 +125,12 @@
             color: var(--color-text);
         }
 
+        .itineraires-toolbar__hint {
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+            margin-top: -0.35rem;
+        }
+
         .filter-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -208,6 +214,15 @@
         .itineraires-list {
             display: grid;
             gap: 1rem;
+        }
+
+        .itineraires-results {
+            transition: opacity var(--transition-fast);
+        }
+
+        .itineraires-results.is-loading {
+            opacity: 0.55;
+            pointer-events: none;
         }
 
         .itineraire-card {
@@ -533,7 +548,7 @@
 
         <section class="itineraires-toolbar" aria-label="Recherche et tri des itinéraires">
             <h2 class="itineraires-toolbar__title">Filtrer les itinéraires</h2>
-            <form method="get" action="{{ path('app_itineraires_index') }}" class="filter-row">
+            <form method="get" action="{{ path('app_itineraires_index') }}" class="filter-row" data-itineraires-filter-form>
                 <input type="hidden" name="voyageId" value="{{ voyageId }}">
                 <div class="filter-group">
                     <label for="itineraire-q">Recherche</label>
@@ -546,80 +561,77 @@
                         <option value="nom_desc" {% if sort == 'nom_desc' %}selected{% endif %}>Z → A</option>
                     </select>
                 </div>
-                <div class="filter-actions">
-                    <button type="submit" class="btn-filter-apply">Appliquer</button>
-                    <a href="{{ path('app_itineraires_index', {voyageId: voyageId}) }}" class="btn-reset">Réinitialiser</a>
-                </div>
             </form>
         </section>
 
-        {% if itineraires|length > 0 %}
-            <div class="itineraires-list">
-                {% for itineraire in itineraires %}
-                    <article class="itineraire-card" data-card-link="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: 1}) }}" tabindex="0" role="link" aria-label="Ouvrir les étapes de {{ itineraire.nom_itineraire }}">
-
-                        <div class="itineraire-card__body">
-                            <div class="itineraire-card__header">
-                                <div class="itineraire-card__title-row">
-                                    <h3 class="itineraire-card__title">{{ itineraire.nom_itineraire }}</h3>
-                                    <span class="itineraire-card__hint">Timeline jour par jour</span>
-                                </div>
-                                {% if itineraire.voyage and itineraire.voyage.destination %}
-                                    <div class="itineraire-card__location">
-                                        📍 {{ itineraire.voyage.destination.nom_destination }}
+        <div class="itineraires-results" data-itineraires-results aria-live="polite">
+            {% if itineraires|length > 0 %}
+                <div class="itineraires-list">
+                    {% for itineraire in itineraires %}
+                        <article class="itineraire-card" data-card-link="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: 1}) }}" tabindex="0" role="link" aria-label="Ouvrir les étapes de {{ itineraire.nom_itineraire }}">
+                            <div class="itineraire-card__body">
+                                <div class="itineraire-card__header">
+                                    <div class="itineraire-card__title-row">
+                                        <h3 class="itineraire-card__title">{{ itineraire.nom_itineraire }}</h3>
+                                        <span class="itineraire-card__hint">Timeline jour par jour</span>
                                     </div>
-                                {% endif %}
-                            </div>
-
-                            <p class="itineraire-card__description">
-                                {{ itineraire.description_itineraire }}
-                            </p>
-
-                            <div class="itineraire-card__footer">
-                                <div class="itineraire-card__meta">
-                                    <span class="itineraire-chip">
-                                        <strong>{{ itineraire.etapes|length }}</strong>
-                                        étapes planifiées
-                                    </span>
-                                    {% if voyageNbJours %}
-                                        <span class="itineraire-chip">
-                                            <strong>{{ voyageNbJours }}</strong>
-                                            jours dans le voyage
-                                        </span>
+                                    {% if itineraire.voyage and itineraire.voyage.destination %}
+                                        <div class="itineraire-card__location">
+                                            📍 {{ itineraire.voyage.destination.nom_destination }}
+                                        </div>
                                     {% endif %}
-                                    <span class="itineraire-chip itineraire-chip--accent">
-                                        Cliquer pour ouvrir les étapes
-                                    </span>
                                 </div>
 
-                                <span class="itineraire-card__open">
-                                    Ouvrir
-                                    <span aria-hidden="true">→</span>
-                                </span>
-                            </div>
-                        </div>
+                                <p class="itineraire-card__description">
+                                    {{ itineraire.description_itineraire }}
+                                </p>
 
-                        <div class="itineraire-card__actions">
-                            <a href="{{ path('app_itineraires_edit', {id: itineraire.id_itineraire}) }}" class="action-btn" title="Éditer" data-card-link-ignore>✏️</a>
-                            <form method="POST" action="{{ path('app_itineraires_delete', {id: itineraire.id_itineraire}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet itinéraire ?');" data-card-link-ignore>
-                                <button type="submit" class="action-btn danger" title="Supprimer" data-card-link-ignore>🗑️</button>
-                            </form>
-                        </div>
-                    </article>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="itineraires-empty">
-                <div class="itineraires-empty__icon">🗺️</div>
-                <h3 class="itineraires-empty__title">Aucun itinéraire trouvé</h3>
-                <p class="itineraires-empty__text">
-                    Commencez à créer vos itinéraires pour planifier vos aventures.
-                </p>
-                <a href="{{ path('app_itineraires_create', {voyageId: voyageId}) }}" class="btn btn--primary">
-                    + Créer un itinéraire
-                </a>
-            </div>
-        {% endif %}
+                                <div class="itineraire-card__footer">
+                                    <div class="itineraire-card__meta">
+                                        <span class="itineraire-chip">
+                                            <strong>{{ itineraire.etapes|length }}</strong>
+                                            étapes planifiées
+                                        </span>
+                                        {% if voyageNbJours %}
+                                            <span class="itineraire-chip">
+                                                <strong>{{ voyageNbJours }}</strong>
+                                                jours dans le voyage
+                                            </span>
+                                        {% endif %}
+                                        <span class="itineraire-chip itineraire-chip--accent">
+                                            Cliquer pour ouvrir les étapes
+                                        </span>
+                                    </div>
+
+                                    <span class="itineraire-card__open">
+                                        Ouvrir
+                                        <span aria-hidden="true">→</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="itineraire-card__actions">
+                                <a href="{{ path('app_itineraires_edit', {id: itineraire.id_itineraire}) }}" class="action-btn" title="Éditer" data-card-link-ignore>✏️</a>
+                                <form method="POST" action="{{ path('app_itineraires_delete', {id: itineraire.id_itineraire}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet itinéraire ?');" data-card-link-ignore>
+                                    <button type="submit" class="action-btn danger" title="Supprimer" data-card-link-ignore>🗑️</button>
+                                </form>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="itineraires-empty">
+                    <div class="itineraires-empty__icon">🗺️</div>
+                    <h3 class="itineraires-empty__title">Aucun itinéraire trouvé</h3>
+                    <p class="itineraires-empty__text">
+                        Commencez à créer vos itinéraires pour planifier vos aventures.
+                    </p>
+                    <a href="{{ path('app_itineraires_create', {voyageId: voyageId}) }}" class="btn btn--primary">
+                        + Créer un itinéraire
+                    </a>
+                </div>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}
 
@@ -627,37 +639,170 @@
     {{ parent() }}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var cards = Array.prototype.slice.call(document.querySelectorAll('[data-card-link]'));
+            var bindCardNavigation = function (root) {
+                var cards = Array.prototype.slice.call(root.querySelectorAll('[data-card-link]'));
 
-            cards.forEach(function (card) {
-                var navigate = function () {
-                    var href = card.getAttribute('data-card-link');
-                    if (href) {
-                        window.location.href = href;
-                    }
-                };
-
-                card.addEventListener('click', function (event) {
-                    if (event.target.closest('[data-card-link-ignore]')) {
+                cards.forEach(function (card) {
+                    if (card.dataset.cardLinkBound === 'true') {
                         return;
                     }
 
-                    navigate();
+                    card.dataset.cardLinkBound = 'true';
+
+                    var navigate = function () {
+                        var href = card.getAttribute('data-card-link');
+                        if (href) {
+                            window.location.href = href;
+                        }
+                    };
+
+                    card.addEventListener('click', function (event) {
+                        if (event.target.closest('[data-card-link-ignore]')) {
+                            return;
+                        }
+
+                        navigate();
+                    });
+
+                    card.addEventListener('keydown', function (event) {
+                        if (event.key !== 'Enter' && event.key !== ' ') {
+                            return;
+                        }
+
+                        if (event.target.closest('[data-card-link-ignore]')) {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        navigate();
+                    });
+                });
+            };
+
+            bindCardNavigation(document);
+
+            var form = document.querySelector('[data-itineraires-filter-form]');
+            var resultsContainer = document.querySelector('[data-itineraires-results]');
+            if (!form || !resultsContainer) {
+                return;
+            }
+
+            var searchInput = form.querySelector('[name="q"]');
+            var sortSelect = form.querySelector('[name="sort"]');
+            var resetLink = form.querySelector('[data-itineraires-reset]');
+            var debounceTimer = null;
+            var currentController = null;
+            var activeRequestId = 0;
+
+            var buildUrl = function () {
+                var url = new URL(form.getAttribute('action') || window.location.pathname, window.location.href);
+                var formData = new FormData(form);
+
+                formData.forEach(function (value, key) {
+                    var normalizedValue = typeof value === 'string' ? value.trim() : value;
+                    if (normalizedValue === '' || normalizedValue === null) {
+                        return;
+                    }
+
+                    url.searchParams.set(key, normalizedValue);
                 });
 
-                card.addEventListener('keydown', function (event) {
-                    if (event.key !== 'Enter' && event.key !== ' ') {
-                        return;
-                    }
+                if (!url.searchParams.has('sort') && sortSelect && sortSelect.value) {
+                    url.searchParams.set('sort', sortSelect.value);
+                }
 
-                    if (event.target.closest('[data-card-link-ignore]')) {
-                        return;
-                    }
+                return url;
+            };
 
-                    event.preventDefault();
-                    navigate();
-                });
+            var fetchResults = function () {
+                var url = buildUrl();
+
+                activeRequestId += 1;
+                var requestId = activeRequestId;
+
+                if (currentController) {
+                    currentController.abort();
+                }
+
+                currentController = new AbortController();
+                resultsContainer.classList.add('is-loading');
+
+                fetch(url.toString(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    signal: currentController.signal
+                })
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+
+                        return response.text();
+                    })
+                    .then(function (html) {
+                        var parsedDocument = new DOMParser().parseFromString(html, 'text/html');
+                        var newResults = parsedDocument.querySelector('[data-itineraires-results]');
+
+                        if (!newResults) {
+                            throw new Error('Conteneur de résultats introuvable.');
+                        }
+
+                        resultsContainer.innerHTML = newResults.innerHTML;
+                        bindCardNavigation(resultsContainer);
+                        window.history.replaceState({}, '', url.pathname + url.search);
+                    })
+                    .catch(function (error) {
+                        if (error.name === 'AbortError') {
+                            return;
+                        }
+
+                        console.error(error);
+                    })
+                    .finally(function () {
+                        if (requestId === activeRequestId) {
+                            resultsContainer.classList.remove('is-loading');
+                        }
+                    });
+            };
+
+            var scheduleFetch = function () {
+                window.clearTimeout(debounceTimer);
+                debounceTimer = window.setTimeout(fetchResults, 250);
+            };
+
+            if (searchInput) {
+                searchInput.addEventListener('input', scheduleFetch);
+            }
+
+            if (sortSelect) {
+                sortSelect.addEventListener('change', fetchResults);
+            }
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                fetchResults();
             });
+
+            if (resetLink) {
+                resetLink.addEventListener('click', function (event) {
+                    event.preventDefault();
+
+                    if (searchInput) {
+                        searchInput.value = '';
+                    }
+
+                    if (sortSelect) {
+                        sortSelect.value = 'nom_asc';
+                    }
+
+                    fetchResults();
+
+                    if (searchInput) {
+                        searchInput.focus();
+                    }
+                });
+            }
         });
     </script>
 {% endblock %}
