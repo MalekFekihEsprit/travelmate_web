@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Export PDF - {{ itineraire.nom_itineraire }}</title>
+    <style>
+        @page {
+            margin: 22mm 15mm 18mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            color: #2d241c;
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 11px;
+            line-height: 1.45;
+            background: #fcf8f3;
+        }
+
+        .document {
+            width: 100%;
+        }
+
+        .hero {
+            padding: 22px 24px;
+            background: #f3ede5;
+            border: 1px solid #ddcdbd;
+            border-radius: 18px;
+            margin-bottom: 18px;
+        }
+
+        .hero__eyebrow {
+            color: #2f7f79;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .hero__title {
+            margin: 0;
+            color: #241a14;
+            font-size: 28px;
+            line-height: 1.12;
+        }
+
+        .hero__subtitle {
+            margin: 8px 0 0;
+            color: #6a5647;
+            font-size: 12px;
+        }
+
+        .stats {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 10px 0;
+            margin: 16px -10px 0;
+        }
+
+        .stats td {
+            width: 33.33%;
+            padding: 14px 15px;
+            background: #fffdfa;
+            border: 1px solid #e7dcd0;
+            border-radius: 14px;
+            vertical-align: top;
+        }
+
+        .stats strong {
+            display: block;
+            color: #241a14;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .stats span {
+            color: #6a5647;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .filters {
+            margin-top: 16px;
+        }
+
+        .filter-chip {
+            display: inline-block;
+            margin: 0 8px 8px 0;
+            padding: 7px 11px;
+            color: #5f4d40;
+            background: #fffdfa;
+            border: 1px solid #e7dcd0;
+            border-radius: 999px;
+            font-size: 10px;
+        }
+
+        .filter-chip strong {
+            color: #241a14;
+        }
+
+        .day-section {
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #ffffff;
+            border: 1px solid #e7dcd0;
+            border-radius: 16px;
+            page-break-inside: avoid;
+        }
+
+        .day-section--active {
+            border-color: #2f7f79;
+            box-shadow: inset 0 0 0 2px #d8ece9;
+        }
+
+        .day-header {
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #efe4d8;
+        }
+
+        .day-badge {
+            display: inline-block;
+            margin-bottom: 8px;
+            padding: 5px 9px;
+            color: #ffffff;
+            background: #2f7f79;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .day-title {
+            margin: 0;
+            color: #241a14;
+            font-size: 18px;
+        }
+
+        .day-meta {
+            margin: 6px 0 0;
+            color: #6a5647;
+            font-size: 11px;
+        }
+
+        .step-card {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #fcfaf7;
+            border: 1px solid #efe4d8;
+            border-radius: 14px;
+            page-break-inside: avoid;
+        }
+
+        .step-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .step-table td {
+            vertical-align: top;
+        }
+
+        .step-time {
+            width: 74px;
+            padding-right: 12px;
+        }
+
+        .time-pill {
+            display: inline-block;
+            min-width: 58px;
+            padding: 8px 10px;
+            color: #2f7f79;
+            background: #eaf4f2;
+            border: 1px solid #cfe4e1;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .step-title {
+            margin: 0 0 8px;
+            color: #241a14;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .step-meta {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 8px 8px;
+            margin: 0 -8px 10px;
+        }
+
+        .step-meta td {
+            width: 50%;
+            padding: 9px 10px;
+            background: #ffffff;
+            border: 1px solid #efe4d8;
+            border-radius: 12px;
+        }
+
+        .meta-label {
+            display: block;
+            margin-bottom: 3px;
+            color: #8a7462;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .meta-value {
+            color: #241a14;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .activity-description {
+            margin: 0;
+            padding: 10px 12px;
+            color: #5f4d40;
+            background: #fffdfa;
+            border-left: 4px solid #c46f4b;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .empty {
+            padding: 14px;
+            color: #6a5647;
+            background: #fffdfa;
+            border: 1px dashed #d9c7b7;
+            border-radius: 14px;
+        }
+
+        .footer {
+            margin-top: 10px;
+            color: #8a7462;
+            font-size: 9px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <section class="hero">
+            <div class="hero__eyebrow">TravelMate | Export PDF</div>
+            <h1 class="hero__title">{{ itineraire.nom_itineraire }}</h1>
+            <p class="hero__subtitle">
+                {% if itineraire.voyage and itineraire.voyage.destination %}
+                    {{ itineraire.voyage.destination.nom_destination }} |
+                {% endif %}
+                Jour actif : {{ jour }}{% if activeTimelineDay %} | {{ activeTimelineDay.full_label }}{% endif %}
+            </p>
+
+            <table class="stats">
+                <tr>
+                    <td>
+                        <strong>{{ totalDays }}</strong>
+                        <span>Jours du voyage</span>
+                    </td>
+                    <td>
+                        <strong>{{ matchingDays }}</strong>
+                        <span>Jours contenant des étapes visibles</span>
+                    </td>
+                    <td>
+                        <strong>{{ totalEtapes }}</strong>
+                        <span>Étapes exportées</span>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="filters">
+                <span class="filter-chip"><strong>Généré le :</strong> {{ generatedAt|date('d/m/Y à H:i') }}</span>
+            </div>
+        </section>
+
+        {% if visibleTimelineDays is empty %}
+            <div class="empty">
+                Aucune étape ne correspond aux filtres actuels. Modifie la recherche ou le tri puis relance l'export.
+            </div>
+        {% else %}
+            {% for timelineDay in visibleTimelineDays %}
+                <section class="day-section {% if timelineDay.number == jour %}day-section--active{% endif %}">
+                    <div class="day-header">
+                        <span class="day-badge">Jour {{ timelineDay.number }}</span>
+                        <h2 class="day-title">{{ timelineDay.full_label }}</h2>
+                        <p class="day-meta">
+                            {{ timelineDay.count }} étape{% if timelineDay.count > 1 %}s{% endif %}
+                            {% if timelineDay.number == jour %}| Jour actuellement ouvert{% endif %}
+                        </p>
+                    </div>
+
+                    {% if timelineDay.etapes is empty %}
+                        <div class="empty">Aucune étape visible pour ce jour avec les filtres actuels.</div>
+                    {% else %}
+                        {% for etape in timelineDay.etapes %}
+                            <article class="step-card">
+                                <table class="step-table">
+                                    <tr>
+                                        <td class="step-time">
+                                            <span class="time-pill">{{ etape.heure ? etape.heure|date('H:i') : '--:--' }}</span>
+                                        </td>
+                                        <td>
+                                            <h3 class="step-title">{{ etape.description_etape }}</h3>
+
+                                            <table class="step-meta">
+                                                <tr>
+                                                    <td>
+                                                        <span class="meta-label">Activité</span>
+                                                        <span class="meta-value">{{ etape.activite ? etape.activite.nom : 'Aucune activité liée' }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="meta-label">Lieu</span>
+                                                        <span class="meta-value">{{ etape.activite and etape.activite.lieu ? etape.activite.lieu : 'Non renseigné' }}</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <span class="meta-label">Durée</span>
+                                                        <span class="meta-value">{{ etape.activite and etape.activite.duree ? etape.activite.duree ~ ' min' : 'Non renseignée' }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="meta-label">Budget</span>
+                                                        <span class="meta-value">{{ etape.activite and etape.activite.budget is not null ? etape.activite.budget|number_format(0, ',', ' ') ~ ' TND' : 'Non renseigné' }}</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <span class="meta-label">Difficulté</span>
+                                                        <span class="meta-value">{{ etape.activite and etape.activite.niveaudifficulte ? etape.activite.niveaudifficulte : 'Non renseignée' }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="meta-label">Statut</span>
+                                                        <span class="meta-value">{{ etape.activite and etape.activite.statut ? etape.activite.statut : 'Non renseigné' }}</span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <span class="meta-label">Âge minimum</span>
+                                                        <span class="meta-value">{{ etape.activite and etape.activite.agemin is not null ? etape.activite.agemin ~ ' ans' : 'Non renseigné' }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="meta-label">Catégorie</span>
+                                                        <span class="meta-value">{{ etape.activite and etape.activite.categorie ? etape.activite.categorie.nom : 'Non renseignée' }}</span>
+                                                    </td>
+                                                </tr>
+                                            </table>
+
+                                            {% if etape.activite and etape.activite.description %}
+                                                <p class="activity-description">{{ etape.activite.description }}</p>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </article>
+                        {% endfor %}
+                    {% endif %}
+                </section>
+            {% endfor %}
+        {% endif %}
+
+        <div class="footer">
+            Document généré depuis la page Étapes de TravelMate.
+        </div>
+    </div>
+</body>
+</html>

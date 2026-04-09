@@ -6,8 +6,11 @@ use App\Entity\Etape;
 use App\Entity\Itineraire;
 use App\Repository\EtapeRepository;
 use App\Repository\ItineraireRepository;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -92,26 +95,42 @@ class EtapeFController extends AbstractController
         return $months[(int) $date->format('n') - 1];
     }
 
-    #[Route('/jour/{itineraireId}/{jour}', name: 'jour', methods: ['GET'])]
-    public function afficherJour(
-        int $itineraireId,
-        int $jour,
-        Request $request,
-        ItineraireRepository $itineraireRepository,
-        EtapeRepository $etapeRepository
-    ): Response {
-        $itineraire = $itineraireRepository->find($itineraireId);
-        
-        if (!$itineraire) {
-            throw $this->createNotFoundException('Itinéraire non trouvé');
+    private static function getSortLabel(string $sort): string
+    {
+        return match ($sort) {
+            'heure_desc' => 'Heure decroissante',
+            'alpha_asc' => 'Description A a Z',
+            'alpha_desc' => 'Description Z a A',
+            default => 'Heure croissante',
+        };
+    }
+
+    private static function buildPdfFileName(Itineraire $itineraire, int $jour): string
+    {
+        $rawName = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', (string) $itineraire->getNom_itineraire()) ?: 'itineraire';
+        $safeName = preg_replace('/[^A-Za-z0-9]+/', '-', $rawName) ?? 'itineraire';
+        $safeName = strtolower(trim($safeName, '-'));
+
+        if ($safeName === '') {
+            $safeName = 'itineraire';
         }
 
+        return sprintf('%s-jour-%d.pdf', $safeName, $jour);
+    }
+
+    private function buildJourViewData(
+        Itineraire $itineraire,
+        int $jour,
+        Request $request,
+        EtapeRepository $etapeRepository
+    ): array {
         $totalDays = self::getTotalDays($itineraire);
         if ($jour < 1 || $jour > $totalDays) {
             throw $this->createNotFoundException('Jour invalide');
         }
 
-        $search = mb_strtolower(trim((string) $request->query->get('q', '')));
+        $searchValue = trim((string) $request->query->get('q', ''));
+        $search = mb_strtolower($searchValue);
         $sort = self::normalizeSort((string) $request->query->get('sort', 'heure_asc'));
 
         $allEtapes = $etapeRepository->findBy([
@@ -138,6 +157,7 @@ class EtapeFController extends AbstractController
         }
 
         $plannedDays = 0;
+        $matchingDays = 0;
         $timelineDays = [];
         $voyage = $itineraire->getVoyage();
         $baseDate = $voyage && $voyage->getDate_debut()
@@ -148,6 +168,7 @@ class EtapeFController extends AbstractController
             $dayEtapes = $etapesByDay[$dayNumber] ?? [];
             if ($dayEtapes !== []) {
                 ++$plannedDays;
+                ++$matchingDays;
             }
 
             $date = $baseDate?->modify(sprintf('+%d days', $dayNumber - 1));
@@ -179,19 +200,87 @@ class EtapeFController extends AbstractController
             }
         }
 
-        $etapes = $etapesByDay[$jour] ?? [];
+        $visibleTimelineDays = array_values(array_filter(
+            $timelineDays,
+            static function (array $timelineDay) use ($jour): bool {
+                return $timelineDay['count'] > 0 || $timelineDay['number'] === $jour;
+            }
+        ));
 
-        return $this->render('home/EtapeF.html.twig', [
+        return [
             'itineraire' => $itineraire,
             'jour' => $jour,
-            'etapes' => $etapes,
+            'etapes' => $etapesByDay[$jour] ?? [],
             'timelineDays' => $timelineDays,
+            'visibleTimelineDays' => $visibleTimelineDays,
             'activeTimelineDay' => $activeTimelineDay,
             'plannedDays' => $plannedDays,
+            'matchingDays' => $matchingDays,
             'totalDays' => $totalDays,
             'totalEtapes' => count($allEtapes),
-            'search_q' => trim((string) $request->query->get('q', '')),
+            'search_q' => $searchValue,
             'sort' => $sort,
+            'sort_label' => self::getSortLabel($sort),
+        ];
+    }
+
+    #[Route('/jour/{itineraireId}/{jour}', name: 'jour', methods: ['GET'])]
+    public function afficherJour(
+        int $itineraireId,
+        int $jour,
+        Request $request,
+        ItineraireRepository $itineraireRepository,
+        EtapeRepository $etapeRepository
+    ): Response {
+        $itineraire = $itineraireRepository->find($itineraireId);
+        
+        if (!$itineraire) {
+            throw $this->createNotFoundException('Itinéraire non trouvé');
+        }
+
+        return $this->render('home/EtapeF.html.twig', $this->buildJourViewData(
+            $itineraire,
+            $jour,
+            $request,
+            $etapeRepository
+        ));
+    }
+
+    #[Route('/jour/{itineraireId}/{jour}/export-pdf', name: 'export_pdf', methods: ['GET'])]
+    public function exportPdf(
+        int $itineraireId,
+        int $jour,
+        Request $request,
+        ItineraireRepository $itineraireRepository,
+        EtapeRepository $etapeRepository
+    ): Response {
+        $itineraire = $itineraireRepository->find($itineraireId);
+
+        if (!$itineraire) {
+            throw $this->createNotFoundException('Itinéraire non trouvé');
+        }
+
+        $viewData = $this->buildJourViewData($itineraire, $jour, $request, $etapeRepository);
+
+        $options = new Options();
+        $options->setDefaultFont('DejaVu Sans');
+        $options->setIsHtml5ParserEnabled(true);
+        $options->setIsRemoteEnabled(false);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($this->renderView('home/EtapeF_export_pdf.html.twig', array_merge(
+            $viewData,
+            ['generatedAt' => new \DateTimeImmutable()]
+        )), 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return new Response($dompdf->output(), Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => HeaderUtils::makeDisposition(
+                HeaderUtils::DISPOSITION_ATTACHMENT,
+                self::buildPdfFileName($itineraire, $jour)
+            ),
         ]);
     }
 

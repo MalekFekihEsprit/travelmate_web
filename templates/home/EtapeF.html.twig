@@ -141,6 +141,36 @@
             width: 100%;
         }
 
+        .etapes-export-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 0.2rem;
+            padding: 1rem 1.15rem;
+            color: #fff;
+            background: linear-gradient(135deg, #1f6d67, #2f7f79);
+            border: 1px solid rgba(31, 109, 103, 0.38);
+            box-shadow: 0 16px 28px rgba(31, 109, 103, 0.2);
+        }
+
+        .etapes-export-btn:hover,
+        .etapes-export-btn:focus-visible {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 34px rgba(31, 109, 103, 0.24);
+        }
+
+        .etapes-export-btn span {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .etapes-export-btn small {
+            color: rgba(255, 255, 255, 0.84);
+            font-size: 0.8rem;
+        }
+
         .etapes-board {
             padding: 1.5rem;
             background: rgba(255, 253, 249, 0.95);
@@ -634,6 +664,10 @@
             </div>
 
             <div class="etapes-hero__actions">
+                <a href="{{ path('app_etapes_export_pdf', {itineraireId: itineraire.id_itineraire, jour: jour, q: search_q ?: null, sort: sort ?: null}) }}" class="btn etapes-export-btn" target="_blank" rel="noopener">
+                    <span>Exporter en PDF</span>
+                    <small>Toutes les étapes visibles avec leurs détails</small>
+                </a>
                 <a href="{{ itineraire.voyage ? path('app_itineraires_index', {voyageId: itineraire.voyage.id_voyage}) : path('app_voyages') }}" class="btn btn--secondary">
                     ← Retour aux itinéraires
                 </a>
