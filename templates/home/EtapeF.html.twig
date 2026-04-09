@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Jour {{ jour }} - {{ itineraire.nom_itineraire }} | TravelMate{% endblock %}
+{% block title %}{{ activeTimelineDay ? activeTimelineDay.full_label : 'Jour ' ~ jour }} - {{ itineraire.nom_itineraire }} | TravelMate{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -10,200 +10,9 @@
             gap: 1.75rem;
         }
 
-        .etapes-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.5rem;
-            background: rgba(255, 253, 249, 0.94);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
-        }
-
-        .etapes-header__left {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .etapes-header__back {
-            display: inline-block;
-            padding: 0.75rem 1.25rem;
-            background: var(--color-secondary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-            font-size: 0.95rem;
-        }
-
-        .etapes-header__back:hover {
-            background: var(--color-secondary-dark);
-            transform: translateY(-2px);
-        }
-
-        .etapes-header__day-number {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--color-primary);
-            color: white;
-            border-radius: var(--radius-lg);
-            font-family: 'Fraunces', serif;
-            font-size: 1.75rem;
-            font-weight: 700;
-        }
-
-        .etapes-header__info {
-            display: grid;
-            gap: 0.25rem;
-        }
-
-        .etapes-header__title {
-            font-family: 'Fraunces', serif;
-            font-size: 1.75rem;
-            color: var(--color-text);
-            margin: 0;
-        }
-
-        .etapes-header__subtitle {
-            color: var(--color-text-muted);
-            font-size: 0.95rem;
-            margin: 0;
-        }
-
-        .etapes-header__actions {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .btn-action {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.25rem;
-            border: none;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            font-size: 0.9rem;
-            text-decoration: none;
-        }
-
-        .btn-action.primary {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .btn-action.primary:hover {
-            background: var(--color-primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(196, 111, 75, 0.25);
-        }
-
-        .etapes-list {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .etape-card {
-            padding: 1.5rem;
-            background: rgba(255, 253, 249, 0.94);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
-            transition: all var(--transition-base);
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 1.5rem;
-            align-items: start;
-        }
-
-        .etape-card:hover {
-            border-color: rgba(196, 111, 75, 0.3);
-            box-shadow: 0 12px 24px rgba(71, 48, 35, 0.08);
-            transform: translateY(-2px);
-        }
-
-        .etape-card__content {
-            display: grid;
-            gap: 0.75rem;
-        }
-
-        .etape-card__time {
-            font-family: 'Fraunces', serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--color-primary);
-        }
-
-        .etape-card__description {
-            color: var(--color-text-muted);
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .etape-card__actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            border-radius: var(--radius-md);
-            background: rgba(196, 111, 75, 0.1);
-            color: var(--color-primary);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            font-size: 1.1rem;
-        }
-
-        .action-btn:hover {
-            background: rgba(196, 111, 75, 0.2);
-            transform: scale(1.05);
-        }
-
-        .etapes-empty {
-            text-align: center;
-            padding: 3rem 2rem;
-            background: rgba(255, 253, 249, 0.94);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-        }
-
-        .etapes-empty__icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .etapes-empty__title {
-            font-family: 'Fraunces', serif;
-            font-size: 1.35rem;
-            color: var(--color-text);
-            margin-bottom: 0.5rem;
-        }
-
-        .etapes-empty__text {
-            color: var(--color-text-muted);
-            margin-bottom: 1.5rem;
-        }
-
         .alert {
             padding: 1rem 1.25rem;
             border-radius: var(--radius-md);
-            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -221,113 +30,489 @@
             color: #e74c3c;
         }
 
-        .etapes-toolbar {
-            padding: 1.25rem 1.35rem;
-            background: rgba(255, 253, 249, 0.94);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
-        }
-
-        .etapes-toolbar__title {
-            font-family: 'Fraunces', serif;
-            font-size: 1.15rem;
-            color: var(--color-text);
-            margin: 0 0 1rem;
-        }
-
-        .etapes-filter-row {
+        .etapes-hero {
+            position: relative;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            align-items: end;
+            grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+            gap: 1.5rem;
+            padding: 2rem;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(47, 127, 121, 0.2), transparent 28%),
+                linear-gradient(135deg, rgba(255, 253, 249, 0.98), rgba(239, 246, 244, 0.92));
+            border: 1px solid rgba(231, 220, 205, 0.68);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 36px rgba(71, 48, 35, 0.06);
         }
 
-        .etapes-filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.45rem;
+        .etapes-hero__content {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 0.95rem;
+            max-width: 780px;
         }
 
-        .etapes-filter-group label {
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--color-text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .etapes-filter-group input,
-        .etapes-filter-group select {
-            padding: 0.65rem 0.85rem;
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            background: var(--color-surface);
-            color: var(--color-text);
-            font-size: 0.95rem;
-        }
-
-        .etapes-filter-group input:focus,
-        .etapes-filter-group select:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(196, 111, 75, 0.1);
-        }
-
-        .etapes-filter-actions {
-            display: flex;
+        .etapes-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
             gap: 0.5rem;
+            color: var(--color-secondary);
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .etapes-hero__title {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.15rem, 3vw, 3.35rem);
+            line-height: 1.04;
+            color: var(--color-text);
+        }
+
+        .etapes-hero__subtitle {
+            color: var(--color-text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            max-width: 60ch;
+        }
+
+        .etapes-hero__meta {
+            display: flex;
+            gap: 0.7rem;
             flex-wrap: wrap;
         }
 
-        .btn-etape-filter {
-            padding: 0.65rem 1.2rem;
-            background: var(--color-primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-etape-reset {
-            padding: 0.65rem 1rem;
-            background: transparent;
-            color: var(--color-text-muted);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            text-decoration: none;
-            font-weight: 500;
+        .etapes-hero__pill {
             display: inline-flex;
             align-items: center;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid rgba(231, 220, 205, 0.9);
+            color: var(--color-text-muted);
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+
+        .etapes-hero__pill--accent {
+            background: rgba(196, 111, 75, 0.12);
+            border-color: rgba(196, 111, 75, 0.18);
+            color: var(--color-primary-dark);
+        }
+
+        .etapes-hero__stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 160px));
+            gap: 0.8rem;
+            margin-top: 0.35rem;
+        }
+
+        .etapes-stat {
+            padding: 0.9rem;
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(231, 220, 205, 0.95);
+        }
+
+        .etapes-stat strong {
+            display: block;
+            font-family: 'Fraunces', serif;
+            font-size: 1.55rem;
+            color: var(--color-text);
+        }
+
+        .etapes-stat span {
+            color: var(--color-text-muted);
+            font-size: 0.82rem;
+        }
+
+        .etapes-hero__actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .etapes-hero__actions .btn {
+            width: 100%;
+        }
+
+        .etapes-board {
+            padding: 1.5rem;
+            background: rgba(255, 253, 249, 0.95);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 14px 28px rgba(71, 48, 35, 0.05);
+        }
+
+        .etapes-board__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.35rem;
+        }
+
+        .etapes-board__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.55rem;
+            color: var(--color-text);
+            margin-bottom: 0.35rem;
+        }
+
+        .etapes-board__text {
+            color: var(--color-text-muted);
+            max-width: 64ch;
+            line-height: 1.6;
+        }
+
+        .etapes-board__legend {
+            display: flex;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .etapes-legend {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(243, 234, 223, 0.72);
+            color: var(--color-text-muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .etapes-legend__dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(47, 127, 121, 0.4);
+        }
+
+        .etapes-legend__dot.is-active {
+            background: var(--color-primary);
+        }
+
+        .etapes-timeline {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .timeline-row {
+            display: grid;
+            grid-template-columns: 112px minmax(0, 1fr);
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        .timeline-row__rail {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.7rem;
+            min-height: 92px;
+            padding-bottom: 0.6rem;
+        }
+
+        .timeline-row:not(:last-child) .timeline-row__rail::after {
+            content: '';
+            position: absolute;
+            top: 74px;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            background: linear-gradient(180deg, rgba(47, 127, 121, 0.55), rgba(47, 127, 121, 0.16));
+        }
+
+        .timeline-marker {
+            position: relative;
+            z-index: 1;
+            width: 74px;
+            height: 74px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.12rem;
+            border-radius: 50%;
+            background: rgba(47, 127, 121, 0.08);
+            border: 2px solid rgba(47, 127, 121, 0.34);
+            color: var(--color-secondary);
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
+        }
+
+        .timeline-row.is-selected .timeline-marker,
+        .timeline-marker:hover,
+        .timeline-marker:focus-visible {
+            background: var(--color-primary);
+            border-color: rgba(196, 111, 75, 0.78);
+            color: white;
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 18px 34px rgba(196, 111, 75, 0.22);
+            outline: none;
+        }
+
+        .timeline-marker__day {
+            font-family: 'Fraunces', serif;
+            font-size: 1.7rem;
+            line-height: 1;
+        }
+
+        .timeline-marker__month {
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .timeline-row__label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .timeline-row.is-selected .timeline-row__label {
+            color: var(--color-primary-dark);
+        }
+
+        .timeline-content {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            pointer-events: none;
+            transform: translateY(-8px);
+            transition: max-height 280ms ease, opacity 180ms ease, transform 180ms ease, padding 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+            padding: 0 1.35rem;
+            border: 1px solid transparent;
+            border-radius: var(--radius-xl);
+            background: linear-gradient(180deg, rgba(255, 253, 249, 0.98), rgba(247, 242, 234, 0.94));
+        }
+
+        .timeline-row.is-selected .timeline-content {
+            opacity: 1;
+            max-height: 5000px;
+            pointer-events: auto;
+            transform: none;
+            padding: 1.25rem 1.35rem;
+            border-color: rgba(231, 220, 205, 0.95);
+            box-shadow: 0 18px 34px rgba(71, 48, 35, 0.06);
+        }
+
+        .timeline-content__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-content__eyebrow {
+            color: var(--color-secondary);
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+
+        .timeline-content__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.45rem;
+            color: var(--color-text);
+            margin-bottom: 0.2rem;
+        }
+
+        .timeline-content__meta {
+            color: var(--color-text-muted);
+            font-size: 0.92rem;
+        }
+
+        .timeline-content__actions {
+            display: flex;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+
+        .timeline-steps {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .timeline-step {
+            display: grid;
+            grid-template-columns: 96px minmax(0, 1fr) auto;
+            gap: 1rem;
+            align-items: start;
+            padding-top: 1rem;
+            border-top: 1px dashed rgba(196, 111, 75, 0.18);
+        }
+
+        .timeline-step:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .timeline-step__time {
+            width: fit-content;
+            min-width: 86px;
+            padding: 0.6rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(47, 127, 121, 0.12);
+            color: var(--color-secondary);
+            font-family: 'Fraunces', serif;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .timeline-step__body {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .timeline-step__description {
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .timeline-step__activity {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            width: fit-content;
+            padding: 0.42rem 0.78rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.12);
+            color: var(--color-primary);
+            font-weight: 600;
+            font-size: 0.82rem;
+        }
+
+        .timeline-step__actions {
+            display: flex;
+            gap: 0.45rem;
+            align-items: flex-start;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 1.05rem;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-muted);
+        }
+
+        .action-btn:hover {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .action-btn.danger:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .timeline-empty {
+            display: grid;
+            gap: 0.9rem;
+            padding-top: 0.2rem;
+        }
+
+        .timeline-empty__card {
+            padding: 1.15rem 1.2rem;
+            border-radius: var(--radius-lg);
+            border: 1px dashed rgba(47, 127, 121, 0.32);
+            background: rgba(47, 127, 121, 0.05);
+        }
+
+        .timeline-empty__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.15rem;
+            color: var(--color-text);
+            margin-bottom: 0.35rem;
+        }
+
+        .timeline-empty__text {
+            color: var(--color-text-muted);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1024px) {
+            .etapes-hero {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 768px) {
-            .etapes-header {
-                flex-direction: column;
-                gap: 1.5rem;
-                align-items: flex-start;
+            .etapes-page {
+                gap: 1.35rem;
             }
 
-            .etapes-header__left {
-                width: 100%;
+            .etapes-hero {
+                padding: 1.35rem;
             }
 
-            .etapes-header__actions {
-                width: 100%;
-                flex-wrap: wrap;
+            .etapes-hero__title {
+                font-size: 1.9rem;
             }
 
-            .btn-action {
-                flex: 1;
-                min-width: 120px;
-            }
-
-            .etape-card {
+            .etapes-hero__stats {
                 grid-template-columns: 1fr;
             }
 
-            .etape-card__actions {
+            .etapes-board {
+                padding: 1.1rem;
+            }
+
+            .timeline-row {
+                grid-template-columns: 82px minmax(0, 1fr);
+                gap: 0.9rem;
+            }
+
+            .timeline-marker {
+                width: 62px;
+                height: 62px;
+            }
+
+            .timeline-marker__day {
+                font-size: 1.38rem;
+            }
+
+            .timeline-row:not(:last-child) .timeline-row__rail::after {
+                top: 62px;
+            }
+
+            .timeline-row.is-selected .timeline-content {
+                padding: 1rem;
+            }
+
+            .timeline-step {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline-step__actions {
                 justify-content: flex-start;
             }
         }
@@ -336,7 +521,6 @@
 
 {% block body %}
     <div class="etapes-page">
-        <!-- Messages Flash -->
         {% for message in app.flashes('success') %}
             <div class="alert alert-success">
                 <span>✓</span>
@@ -351,92 +535,187 @@
             </div>
         {% endfor %}
 
-        <!-- Header avec navigation -->
-        <div class="etapes-header">
-            <div class="etapes-header__left">
-                <a href="{{ path('app_itineraires_index', {voyageId: itineraire.voyage.id_voyage}) }}" class="etapes-header__back">
-                    ← Afficher la carte
-                </a>
-                
-                <div class="etapes-header__day-number">{{ jour }}</div>
-                
-                <div class="etapes-header__info">
-                    <h1 class="etapes-header__title">Jour {{ jour }}</h1>
-                    <p class="etapes-header__subtitle">{{ itineraire.nom_itineraire }}</p>
+        <section class="etapes-hero">
+            <div class="etapes-hero__content">
+                <div class="etapes-hero__eyebrow">
+                    📌 Page étapes
+                </div>
+
+                <h1 class="etapes-hero__title">{{ itineraire.nom_itineraire }}</h1>
+
+                <p class="etapes-hero__subtitle">
+                    {% if itineraire.voyage and itineraire.voyage.destination %}
+                        {{ itineraire.voyage.destination.nom_destination }} ·
+                    {% endif %}
+                    {{ activeTimelineDay ? activeTimelineDay.full_label : 'Jour ' ~ jour }}
+                </p>
+
+                <div class="etapes-hero__meta">
+                    <span class="etapes-hero__pill">Jour actif : {{ jour }}</span>
+                    <span class="etapes-hero__pill">
+                        {{ activeTimelineDay ? activeTimelineDay.count : 0 }} étape{% if activeTimelineDay and activeTimelineDay.count > 1 %}s{% endif %}
+                    </span>
+                    <span class="etapes-hero__pill etapes-hero__pill--accent">Survole un cercle pour voir son contenu</span>
+                </div>
+
+                <div class="etapes-hero__stats">
+                    <div class="etapes-stat">
+                        <strong>{{ totalDays }}</strong>
+                        <span>Jours du voyage</span>
+                    </div>
+                    <div class="etapes-stat">
+                        <strong>{{ plannedDays }}</strong>
+                        <span>Jours planifiés</span>
+                    </div>
+                    <div class="etapes-stat">
+                        <strong>{{ totalEtapes }}</strong>
+                        <span>Étapes au total</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="etapes-header__actions">
-                <a href="{{ path('app_etapes_create', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="btn-action primary">
-                    + Ajouter une étape
+            <div class="etapes-hero__actions">
+                <a href="{{ itineraire.voyage ? path('app_itineraires_index', {voyageId: itineraire.voyage.id_voyage}) : path('app_voyages') }}" class="btn btn--secondary">
+                    ← Retour aux itinéraires
                 </a>
             </div>
-        </div>
-
-        <section class="etapes-toolbar" aria-label="Recherche et tri des étapes">
-            <h2 class="etapes-toolbar__title">Recherche et tri</h2>
-            <form method="get" action="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="etapes-filter-row">
-                <div class="etapes-filter-group">
-                    <label for="etape-q">Recherche</label>
-                    <input type="search" id="etape-q" name="q" value="{{ search_q }}" placeholder="Description ou activité…" autocomplete="off">
-                </div>
-                <div class="etapes-filter-group">
-                    <label for="etape-sort">Tri</label>
-                    <select id="etape-sort" name="sort">
-                        <option value="heure_asc" {% if sort == 'heure_asc' %}selected{% endif %}>Heure ↑ croissant</option>
-                        <option value="heure_desc" {% if sort == 'heure_desc' %}selected{% endif %}>Heure ↓ décroissant</option>
-                        <option value="alpha_asc" {% if sort == 'alpha_asc' %}selected{% endif %}>Description A → Z</option>
-                        <option value="alpha_desc" {% if sort == 'alpha_desc' %}selected{% endif %}>Description Z → A</option>
-                    </select>
-                </div>
-                <div class="etapes-filter-actions">
-                    <button type="submit" class="btn-etape-filter">Appliquer</button>
-                    <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="btn-etape-reset">Réinitialiser</a>
-                </div>
-            </form>
         </section>
 
-        <!-- Liste des étapes -->
-        {% if etapes|length > 0 %}
-            <div class="etapes-list">
-                {% for etape in etapes %}
-                    <div class="etape-card">
-                        <div class="etape-card__content">
-                            {% if etape.heure %}
-                                <div class="etape-card__time">
-                                    ⏰ {{ etape.heure|date('H:i') }}
-                                </div>
-                            {% endif %}
-                            <p class="etape-card__description">
-                                {{ etape.description_etape }}
-                            </p>
-                            {% if etape.activite %}
-                                <div style="color: var(--color-primary); font-weight: 500; font-size: 0.9rem;">
-                                    🎯 {{ etape.activite.nom }}
-                                </div>
-                            {% endif %}
+        <section class="etapes-board">
+            <div class="etapes-board__header">
+                <div>
+                    <h2 class="etapes-board__title">Timeline du voyage</h2>
+                    <p class="etapes-board__text">
+                        Clique sur un cercle pour garder ce jour actif. Le survol montre immédiatement les étapes du jour correspondant.
+                    </p>
+                </div>
+
+                <div class="etapes-board__legend">
+                    <span class="etapes-legend">
+                        <span class="etapes-legend__dot is-active"></span>
+                        Jour actif
+                    </span>
+                    <span class="etapes-legend">
+                        <span class="etapes-legend__dot"></span>
+                        Jour disponible
+                    </span>
+                </div>
+            </div>
+
+            <div class="etapes-timeline" data-timeline data-active-day="{{ jour }}">
+                {% for timelineDay in timelineDays %}
+                    <article class="timeline-row {% if timelineDay.number == jour %}is-selected{% endif %}" data-timeline-row data-day="{{ timelineDay.number }}">
+                        <div class="timeline-row__rail">
+                            <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: timelineDay.number}) }}" class="timeline-marker" data-timeline-marker {% if timelineDay.number == jour %}aria-current="page"{% endif %}>
+                                <span class="timeline-marker__day">{{ timelineDay.calendar_day }}</span>
+                                <span class="timeline-marker__month">{{ timelineDay.month_label }}</span>
+                            </a>
+                            <span class="timeline-row__label">Jour {{ timelineDay.number }}</span>
                         </div>
 
-                        <div class="etape-card__actions">
-                            <a href="{{ path('app_etapes_edit', {id: etape.id_etape}) }}" class="action-btn" title="Éditer">✏️</a>
-                            <form method="POST" action="{{ path('app_etapes_delete', {id: etape.id_etape}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette étape?');">
-                                <button type="submit" class="action-btn" title="Supprimer" style="background: rgba(231, 76, 60, 0.1); color: #e74c3c;">🗑️</button>
-                            </form>
+                        <div class="timeline-content">
+                            <div class="timeline-content__header">
+                                <div>
+                                    <p class="timeline-content__eyebrow">{{ timelineDay.weekday_short }} · Jour {{ timelineDay.number }}</p>
+                                    <h3 class="timeline-content__title">{{ timelineDay.full_label }}</h3>
+                                    <p class="timeline-content__meta">
+                                        {{ timelineDay.count }} étape{% if timelineDay.count > 1 %}s{% endif %} planifiée{% if timelineDay.count > 1 %}s{% endif %}
+                                    </p>
+                                </div>
+
+                                <div class="timeline-content__actions">
+                                    <a href="{{ path('app_etapes_create', {itineraireId: itineraire.id_itineraire, jour: timelineDay.number}) }}" class="btn btn--secondary">
+                                        + Ajouter une étape
+                                    </a>
+                                </div>
+                            </div>
+
+                            {% if timelineDay.etapes|length > 0 %}
+                                <div class="timeline-steps">
+                                    {% for etape in timelineDay.etapes %}
+                                        <article class="timeline-step">
+                                            <div class="timeline-step__time">
+                                                {{ etape.heure ? etape.heure|date('H:i') : '--:--' }}
+                                            </div>
+
+                                            <div class="timeline-step__body">
+                                                <p class="timeline-step__description">
+                                                    {{ etape.description_etape }}
+                                                </p>
+                                                {% if etape.activite %}
+                                                    <span class="timeline-step__activity">🎯 {{ etape.activite.nom }}</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="timeline-step__actions">
+                                                <a href="{{ path('app_etapes_edit', {id: etape.id_etape}) }}" class="action-btn" title="Éditer">✏️</a>
+                                                <form method="POST" action="{{ path('app_etapes_delete', {id: etape.id_etape}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette étape ?');">
+                                                    <button type="submit" class="action-btn danger" title="Supprimer">🗑️</button>
+                                                </form>
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="timeline-empty">
+                                    <div class="timeline-empty__card">
+                                        <h4 class="timeline-empty__title">Aucune étape prévue</h4>
+                                        <p class="timeline-empty__text">
+                                            Ce jour est encore vide. Ajoute une étape pour remplir la timeline.
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
-                    </div>
+                    </article>
                 {% endfor %}
             </div>
-        {% else %}
-            <div class="etapes-empty">
-                <div class="etapes-empty__icon">📋</div>
-                <h3 class="etapes-empty__title">Aucune étape pour ce jour</h3>
-                <p class="etapes-empty__text">
-                    Planifiez vos activités pour le jour {{ jour }}!
-                </p>
-                <a href="{{ path('app_etapes_create', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="btn btn--primary">
-                    + Ajouter une étape
-                </a>
-            </div>
-        {% endif %}
+        </section>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var timeline = document.querySelector('[data-timeline]');
+            if (!timeline) {
+                return;
+            }
+
+            var rows = Array.prototype.slice.call(timeline.querySelectorAll('[data-timeline-row]'));
+            var persistedDay = timeline.dataset.activeDay || '';
+
+            var selectDay = function (day) {
+                rows.forEach(function (row) {
+                    row.classList.toggle('is-selected', row.dataset.day === day);
+                });
+            };
+
+            selectDay(persistedDay);
+
+            rows.forEach(function (row) {
+                var marker = row.querySelector('[data-timeline-marker]');
+                if (marker) {
+                    marker.addEventListener('mouseenter', function () {
+                        selectDay(row.dataset.day);
+                    });
+                }
+
+                row.addEventListener('focusin', function () {
+                    selectDay(row.dataset.day);
+                });
+            });
+
+            timeline.addEventListener('mouseleave', function () {
+                selectDay(persistedDay);
+            });
+
+            timeline.addEventListener('focusout', function (event) {
+                if (!event.relatedTarget || !timeline.contains(event.relatedTarget)) {
+                    selectDay(persistedDay);
+                }
+            });
+        });
+    </script>
 {% endblock %}

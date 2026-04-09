@@ -170,20 +170,6 @@ class Activite
         return $this;
     }
 
-    #[ORM\Column(type: 'date', nullable: true)]
-    private ?\DateTimeInterface $date_prevue = null;
-
-    public function getDate_prevue(): ?\DateTimeInterface
-    {
-        return $this->date_prevue;
-    }
-
-    public function setDate_prevue(?\DateTimeInterface $date_prevue): self
-    {
-        $this->date_prevue = $date_prevue;
-        return $this;
-    }
-
     #[ORM\OneToMany(targetEntity: Etape::class, mappedBy: 'activite')]
     private Collection $etapes;
 
@@ -263,18 +249,6 @@ class Activite
     public function setImagePath(?string $image_path): static
     {
         $this->image_path = $image_path;
-
-        return $this;
-    }
-
-    public function getDatePrevue(): ?\DateTime
-    {
-        return $this->date_prevue;
-    }
-
-    public function setDatePrevue(?\DateTime $date_prevue): static
-    {
-        $this->date_prevue = $date_prevue;
 
         return $this;
     }

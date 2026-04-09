@@ -28,9 +28,6 @@ class ItineraireFController extends AbstractController
         return $voyage->getDate_fin()->diff($voyage->getDate_debut())->days + 1;
     }
 
-    /**
-     * Libellé du type « Généré le vendredi 5 avril 2026 » sans dépendre de l'extension PHP intl.
-     */
     private static function formatGeneratedLabelFr(\DateTimeInterface $at): string
     {
         $jours = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];

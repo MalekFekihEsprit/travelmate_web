@@ -15,6 +15,83 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/etapes', name: 'app_etapes_')]
 class EtapeFController extends AbstractController
 {
+    private static function getTotalDays(Itineraire $itineraire): int
+    {
+        $voyage = $itineraire->getVoyage();
+        if ($voyage && $voyage->getDate_debut() && $voyage->getDate_fin()) {
+            return max(1, $voyage->getDate_fin()->diff($voyage->getDate_debut())->days + 1);
+        }
+
+        $maxDay = 1;
+        foreach ($itineraire->getEtapes() as $etape) {
+            $maxDay = max($maxDay, (int) $etape->getNumero_jour());
+        }
+
+        return $maxDay;
+    }
+
+    private static function normalizeSort(string $sort): string
+    {
+        return in_array($sort, ['heure_asc', 'heure_desc', 'alpha_asc', 'alpha_desc'], true)
+            ? $sort
+            : 'heure_asc';
+    }
+
+    private static function compareEtapes(Etape $a, Etape $b, string $sort): int
+    {
+        $compareByTime = static function (Etape $left, Etape $right, bool $descending): int {
+            $leftTime = $left->getHeure()?->format('H:i') ?? ($descending ? '' : '99:99');
+            $rightTime = $right->getHeure()?->format('H:i') ?? ($descending ? '' : '99:99');
+            $comparison = strcmp($leftTime, $rightTime);
+
+            return $descending ? -$comparison : $comparison;
+        };
+
+        $compareAlphabetically = static function (Etape $left, Etape $right, bool $descending): int {
+            $comparison = strcasecmp(
+                mb_strtolower((string) $left->getDescription_etape()),
+                mb_strtolower((string) $right->getDescription_etape())
+            );
+
+            return $descending ? -$comparison : $comparison;
+        };
+
+        return match ($sort) {
+            'heure_desc' => $compareByTime($a, $b, true),
+            'alpha_asc' => $compareAlphabetically($a, $b, false),
+            'alpha_desc' => $compareAlphabetically($a, $b, true),
+            default => $compareByTime($a, $b, false),
+        };
+    }
+
+    private static function getWeekdayShortFr(\DateTimeInterface $date): string
+    {
+        $days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+        return $days[(int) $date->format('w')];
+    }
+
+    private static function getWeekdayLongFr(\DateTimeInterface $date): string
+    {
+        $days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+        return $days[(int) $date->format('w')];
+    }
+
+    private static function getMonthShortFr(\DateTimeInterface $date): string
+    {
+        $months = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        return $months[(int) $date->format('n') - 1];
+    }
+
+    private static function getMonthLongFr(\DateTimeInterface $date): string
+    {
+        $months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre'];
+
+        return $months[(int) $date->format('n') - 1];
+    }
+
     #[Route('/jour/{itineraireId}/{jour}', name: 'jour', methods: ['GET'])]
     public function afficherJour(
         int $itineraireId,
@@ -29,28 +106,20 @@ class EtapeFController extends AbstractController
             throw $this->createNotFoundException('Itinéraire non trouvé');
         }
 
-        // Vérifier que le jour est valide
-        if ($itineraire->getVoyage()) {
-            $voyage = $itineraire->getVoyage();
-            if ($voyage->getDate_debut() && $voyage->getDate_fin()) {
-                $diff = $voyage->getDate_fin()->diff($voyage->getDate_debut());
-                $totalDays = $diff->days + 1;
-                
-                if ($jour < 1 || $jour > $totalDays) {
-                    throw $this->createNotFoundException('Jour invalide');
-                }
-            }
+        $totalDays = self::getTotalDays($itineraire);
+        if ($jour < 1 || $jour > $totalDays) {
+            throw $this->createNotFoundException('Jour invalide');
         }
 
-        // Récupérer les étapes du jour
-        $etapes = $etapeRepository->findBy([
+        $search = mb_strtolower(trim((string) $request->query->get('q', '')));
+        $sort = self::normalizeSort((string) $request->query->get('sort', 'heure_asc'));
+
+        $allEtapes = $etapeRepository->findBy([
             'itineraire' => $itineraire,
-            'numero_jour' => $jour
         ]);
 
-        $search = mb_strtolower(trim((string) $request->query->get('q', '')));
         if ($search !== '') {
-            $etapes = array_values(array_filter($etapes, static function (Etape $e) use ($search): bool {
+            $allEtapes = array_values(array_filter($allEtapes, static function (Etape $e) use ($search): bool {
                 $desc = mb_strtolower((string) $e->getDescription_etape());
                 $act = $e->getActivite() ? mb_strtolower((string) $e->getActivite()->getNom()) : '';
 
@@ -58,40 +127,69 @@ class EtapeFController extends AbstractController
             }));
         }
 
-        $sort = (string) $request->query->get('sort', 'heure_asc');
-        if (!in_array($sort, ['heure_asc', 'heure_desc', 'alpha_asc', 'alpha_desc'], true)) {
-            $sort = 'heure_asc';
+        usort($allEtapes, static function (Etape $a, Etape $b) use ($sort): int {
+            return self::compareEtapes($a, $b, $sort);
+        });
+
+        $etapesByDay = [];
+        foreach ($allEtapes as $etape) {
+            $dayNumber = (int) $etape->getNumero_jour();
+            $etapesByDay[$dayNumber][] = $etape;
         }
 
-        $cmpHeure = static function (Etape $a, Etape $b, bool $desc): int {
-            $ta = $a->getHeure()?->getTimestamp() ?? ($desc ? PHP_INT_MIN : PHP_INT_MAX);
-            $tb = $b->getHeure()?->getTimestamp() ?? ($desc ? PHP_INT_MIN : PHP_INT_MAX);
-            $c = $ta <=> $tb;
+        $plannedDays = 0;
+        $timelineDays = [];
+        $voyage = $itineraire->getVoyage();
+        $baseDate = $voyage && $voyage->getDate_debut()
+            ? \DateTimeImmutable::createFromInterface($voyage->getDate_debut())->setTime(0, 0)
+            : null;
 
-            return $desc ? -$c : $c;
-        };
+        for ($dayNumber = 1; $dayNumber <= $totalDays; ++$dayNumber) {
+            $dayEtapes = $etapesByDay[$dayNumber] ?? [];
+            if ($dayEtapes !== []) {
+                ++$plannedDays;
+            }
 
-        $cmpAlpha = static function (Etape $a, Etape $b, bool $desc): int {
-            $sa = mb_strtolower((string) $a->getDescription_etape());
-            $sb = mb_strtolower((string) $b->getDescription_etape());
-            $c = strcasecmp($sa, $sb);
+            $date = $baseDate?->modify(sprintf('+%d days', $dayNumber - 1));
 
-            return $desc ? -$c : $c;
-        };
+            $timelineDays[] = [
+                'number' => $dayNumber,
+                'calendar_day' => $date ? $date->format('j') : (string) $dayNumber,
+                'month_label' => $date ? self::getMonthShortFr($date) : 'Jour',
+                'weekday_short' => $date ? self::getWeekdayShortFr($date) : sprintf('J%d', $dayNumber),
+                'full_label' => $date
+                    ? sprintf(
+                        '%s %s %s',
+                        ucfirst(self::getWeekdayLongFr($date)),
+                        $date->format('j'),
+                        self::getMonthLongFr($date)
+                    )
+                    : sprintf('Jour %d', $dayNumber),
+                'etapes' => $dayEtapes,
+                'count' => count($dayEtapes),
+                'has_content' => $dayEtapes !== [],
+            ];
+        }
 
-        usort($etapes, function (Etape $a, Etape $b) use ($sort, $cmpHeure, $cmpAlpha): int {
-            return match ($sort) {
-                'heure_desc' => $cmpHeure($a, $b, true),
-                'alpha_asc' => $cmpAlpha($a, $b, false),
-                'alpha_desc' => $cmpAlpha($a, $b, true),
-                default => $cmpHeure($a, $b, false),
-            };
-        });
+        $activeTimelineDay = null;
+        foreach ($timelineDays as $timelineDay) {
+            if ($timelineDay['number'] === $jour) {
+                $activeTimelineDay = $timelineDay;
+                break;
+            }
+        }
+
+        $etapes = $etapesByDay[$jour] ?? [];
 
         return $this->render('home/EtapeF.html.twig', [
             'itineraire' => $itineraire,
             'jour' => $jour,
             'etapes' => $etapes,
+            'timelineDays' => $timelineDays,
+            'activeTimelineDay' => $activeTimelineDay,
+            'plannedDays' => $plannedDays,
+            'totalDays' => $totalDays,
+            'totalEtapes' => count($allEtapes),
             'search_q' => trim((string) $request->query->get('q', '')),
             'sort' => $sort,
         ]);
