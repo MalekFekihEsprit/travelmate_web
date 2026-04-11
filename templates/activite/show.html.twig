@@ -926,8 +926,12 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                 </span>
             </div>
 
-            {% if activite.latitude is not null and activite.longitude is not null %}
-                <div class="tm-geo-map js-tm-geo-map" data-lat="{{ activite.latitude }}" data-lng="{{ activite.longitude }}" data-label="{{ (activite.lieu ?: 'Localisation')|e('html_attr') }}">
+            {% if activite.lieu %}
+                <div class="tm-geo-map js-tm-geo-map" 
+                     data-lat="{{ activite.latitude ?: '' }}" 
+                     data-lng="{{ activite.longitude ?: '' }}" 
+                     data-address="{{ activite.lieu|e('html_attr') }}"
+                     data-label="{{ activite.lieu|e('html_attr') }}">
                     <button type="button" class="tm-geo-map-btn js-tm-geo-map-toggle" aria-expanded="false" data-label-show="Voir sur la carte" data-label-hide="Masquer la carte">Voir sur la carte</button>
                     <div class="js-tm-geo-map-panel tm-geo-map-panel" hidden>
                         <div class="js-tm-geo-map-canvas tm-geo-map-canvas" role="application" aria-label="Carte du lieu"></div>
@@ -1269,6 +1273,7 @@ document.addEventListener('keydown', function (e) {
 {% block javascripts %}
 {{ parent() }}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{{ asset('js/geocoding-service.js') }}"></script>
 <script src="{{ asset('js/public-geo-map-toggle.js') }}"></script>
 <script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
 <script>
