@@ -74,6 +74,20 @@ class Activite
     public function getLieu(): ?string { return $this->lieu; }
     public function setLieu(?string $lieu): self { $this->lieu = $lieu; return $this; }
 
+    /** Latitude WGS84 (optionnel) — pour filtre « alentours » précis sur la carte front-office. */
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $latitude = null;
+
+    /** Longitude WGS84 (optionnel). */
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $longitude = null;
+
+    public function getLatitude(): ?float { return $this->latitude; }
+    public function setLatitude(?float $latitude): self { $this->latitude = $latitude; return $this; }
+
+    public function getLongitude(): ?float { return $this->longitude; }
+    public function setLongitude(?float $longitude): self { $this->longitude = $longitude; return $this; }
+
     #[ORM\Column(type: 'integer', nullable: false)]
     #[Assert\NotNull(message: 'L\'âge minimum est obligatoire.')]
     #[Assert\PositiveOrZero(message: 'L\'âge minimum ne peut pas être négatif.')]

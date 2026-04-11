@@ -177,13 +177,14 @@
 {% endblock %}
 
 {% block body %}
+{% include '_travelmate_mymemory_translate.html.twig' %}
 {# Breadcrumb #}
 <nav class="breadcrumb">
-    <a href="{{ path('app_home') }}">Accueil</a>
+    <a href="{{ path('app_home') }}" data-translate="true">Accueil</a>
     <span>›</span>
-    <a href="{{ path('app_evenements') }}">Événements</a>
+    <a href="{{ path('app_evenements') }}" data-translate="true">Événements</a>
     <span>›</span>
-    <span>{{ evenement.titre }}</span>
+    <span data-translate="true" data-original="{{ evenement.titre|e('html_attr') }}">{{ evenement.titre }}</span>
 </nav>
 
 <div class="ev-show-layout">
@@ -204,19 +205,19 @@
             <div class="ev-show-date-overlay">
                 <div class="ev-show-date-overlay__day">{{ evenement.date|date('d') }}</div>
                 <div class="ev-show-date-overlay__right">
-                    <span class="ev-show-date-overlay__month">{{ evenement.date|date('F')|upper }}</span>
+                    <span class="ev-show-date-overlay__month" data-translate="true" data-original="{{ evenement.date|date('F')|upper|e('html_attr') }}">{{ evenement.date|date('F')|upper }}</span>
                     <span class="ev-show-date-overlay__year">{{ evenement.date|date('Y') }}</span>
                 </div>
             </div>
         </div>
 
         {# Titre & méta #}
-        <h1 class="ev-show-title">{{ evenement.titre }}</h1>
+        <h1 class="ev-show-title" data-translate="true" data-original="{{ evenement.titre|e('html_attr') }}">{{ evenement.titre }}</h1>
 
         <div class="ev-show-meta-row">
             <span class="meta-item">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
-                <strong>{{ evenement.lieu }}</strong>
+                <strong data-translate="true" data-original="{{ evenement.lieu|e('html_attr') }}">{{ evenement.lieu }}</strong>
             </span>
             <span class="meta-item">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -224,16 +225,17 @@
             </span>
             <span class="meta-item">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <strong>{{ evenement.participations|length }}</strong> / {{ evenement.nbPlaces }} participants
+                <span data-translate="true" data-original="{{ (evenement.participations|length ~ ' / ' ~ evenement.nbPlaces ~ ' participants')|e('html_attr') }}"><strong>{{ evenement.participations|length }}</strong> / {{ evenement.nbPlaces }} participants</span>
             </span>
         </div>
 
         {# Progress places #}
         {% set nbPart = evenement.participations|length %}
         {% set pct    = evenement.nbPlaces > 0 ? ((nbPart / evenement.nbPlaces) * 100)|round : 0 %}
+        {% set evProgressTitle = evenement.isComplet ? '🔴 Événement complet' : (evenement.placesRestantes <= 5 ? '⚡ Dernières places disponibles !' : 'Places disponibles') %}
         <div class="ev-show-progress">
             <div class="ev-show-progress__header">
-                <span class="ev-show-progress__title">
+                <span class="ev-show-progress__title" data-translate="true" data-original="{{ evProgressTitle|e('html_attr') }}">
                     {% if evenement.isComplet %}
                         🔴 Événement complet
                     {% elseif evenement.placesRestantes <= 5 %}
@@ -242,27 +244,27 @@
                         Places disponibles
                     {% endif %}
                 </span>
-                <span class="ev-show-progress__count">{{ evenement.placesRestantes }} restante{{ evenement.placesRestantes > 1 ? 's' : '' }}</span>
+                <span class="ev-show-progress__count" data-translate="true" data-original="{{ (evenement.placesRestantes ~ ' restante' ~ (evenement.placesRestantes > 1 ? 's' : ''))|e('html_attr') }}">{{ evenement.placesRestantes }} restante{{ evenement.placesRestantes > 1 ? 's' : '' }}</span>
             </div>
             <div class="ev-show-bar">
                 <div class="ev-show-bar__fill" style="width:{{ pct }}%;background:{{ evenement.isComplet ? '#8b1a1a' : (evenement.placesRestantes <= 5 ? '#9a7a10' : 'var(--color-secondary)') }}"></div>
             </div>
-            <div class="ev-show-progress__sub">{{ nbPart }} personne{{ nbPart > 1 ? 's ont' : ' a' }} déjà rejoint cet événement</div>
+            <div class="ev-show-progress__sub" data-translate="true" data-original="{{ (nbPart ~ ' personne' ~ (nbPart > 1 ? 's ont' : ' a') ~ ' déjà rejoint cet événement')|e('html_attr') }}">{{ nbPart }} personne{{ nbPart > 1 ? 's ont' : ' a' }} déjà rejoint cet événement</div>
         </div>
 
         {# Description #}
         {% if evenement.description %}
             <div class="ev-show-desc">
-                <div class="ev-show-desc__title">À propos de cet événement</div>
-                <p>{{ evenement.description }}</p>
+                <div class="ev-show-desc__title" data-translate="true">À propos de cet événement</div>
+                <p data-translate="true" data-original="{{ evenement.description|e('html_attr') }}">{{ evenement.description }}</p>
             </div>
         {% endif %}
 
         {# Participants #}
         <div class="ev-participants">
-            <div class="ev-participants__title">👥 Participants ({{ evenement.participations|length }})</div>
+            <div class="ev-participants__title" data-translate="true" data-original="{{ ('👥 Participants (' ~ evenement.participations|length ~ ')')|e('html_attr') }}">👥 Participants ({{ evenement.participations|length }})</div>
             {% if evenement.participations is empty %}
-                <div class="participants-empty">
+                <div class="participants-empty" data-translate="true">
                     Soyez le premier à rejoindre cet événement !
                 </div>
             {% else %}
@@ -274,7 +276,7 @@
                         </div>
                     {% endfor %}
                 </div>
-                <p style="font-size:0.82rem;color:var(--color-text-muted);margin-top:0.85rem">
+                <p style="font-size:0.82rem;color:var(--color-text-muted);margin-top:0.85rem" data-translate="true" data-original="{{ (evenement.participations|length ~ ' voyageur' ~ (evenement.participations|length > 1 ? 's participent' : ' participe') ~ ' à cet événement')|e('html_attr') }}">
                     {{ evenement.participations|length }} voyageur{{ evenement.participations|length > 1 ? 's participent' : ' participe' }} à cet événement
                 </p>
             {% endif %}
@@ -284,15 +286,15 @@
     {# ── Sidebar ── #}
     <aside>
         <div class="ev-sidebar-box">
-            <div class="ev-sidebar-box__title">📋 Détails de l'événement</div>
+            <div class="ev-sidebar-box__title" data-translate="true">📋 Détails de l'événement</div>
 
             <div class="ev-info-item">
                 <div class="ev-info-item__icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                 </div>
                 <div>
-                    <div class="ev-info-item__label">Date</div>
-                    <div class="ev-info-item__value">{{ evenement.date|date('l d F Y') }}</div>
+                    <div class="ev-info-item__label" data-translate="true">Date</div>
+                    <div class="ev-info-item__value" data-translate="true" data-original="{{ evenement.date|date('l d F Y')|e('html_attr') }}">{{ evenement.date|date('l d F Y') }}</div>
                 </div>
             </div>
 
@@ -301,7 +303,7 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                 </div>
                 <div>
-                    <div class="ev-info-item__label">Heure</div>
+                    <div class="ev-info-item__label" data-translate="true">Heure</div>
                     <div class="ev-info-item__value">{{ evenement.heure|date('H:i') }}</div>
                 </div>
             </div>
@@ -311,8 +313,8 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
                 </div>
                 <div>
-                    <div class="ev-info-item__label">Lieu</div>
-                    <div class="ev-info-item__value">{{ evenement.lieu }}</div>
+                    <div class="ev-info-item__label" data-translate="true">Lieu</div>
+                    <div class="ev-info-item__value" data-translate="true" data-original="{{ evenement.lieu|e('html_attr') }}">{{ evenement.lieu }}</div>
                 </div>
             </div>
 
@@ -321,22 +323,22 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
                 <div>
-                    <div class="ev-info-item__label">Places</div>
-                    <div class="ev-info-item__value">{{ evenement.nbPlaces }} au total</div>
+                    <div class="ev-info-item__label" data-translate="true">Places</div>
+                    <div class="ev-info-item__value" data-translate="true" data-original="{{ (evenement.nbPlaces ~ ' au total')|e('html_attr') }}">{{ evenement.nbPlaces }} au total</div>
                 </div>
             </div>
 
             {# Alertes #}
             {% if evenement.isComplet %}
-                <div class="ev-alert ev-alert--warning">
+                <div class="ev-alert ev-alert--warning" data-translate="true">
                     ⚠️ Cet événement est complet. Revenez pour les prochains !
                 </div>
             {% elseif evenement.placesRestantes <= 5 %}
-                <div class="ev-alert ev-alert--warning">
+                <div class="ev-alert ev-alert--warning" data-translate="true" data-original="{{ ('⚡ Plus que ' ~ evenement.placesRestantes ~ ' place' ~ (evenement.placesRestantes > 1 ? 's' : '') ~ ' disponible' ~ (evenement.placesRestantes > 1 ? 's' : '') ~ ' !')|e('html_attr') }}">
                     ⚡ Plus que {{ evenement.placesRestantes }} place{{ evenement.placesRestantes > 1 ? 's' : '' }} disponible{{ evenement.placesRestantes > 1 ? 's' : '' }} !
                 </div>
             {% else %}
-                <div class="ev-alert ev-alert--success">
+                <div class="ev-alert ev-alert--success" data-translate="true">
                     ✓ Des places sont disponibles pour cet événement.
                 </div>
             {% endif %}
@@ -346,10 +348,10 @@
                 <a href="{{ path('app_participation_join', {id: evenement.id}) }}"
                    class="btn-join-big">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M20 8v6M23 11h-6M9 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Rejoindre le groupe
+                    <span data-translate="true">Rejoindre le groupe</span>
                 </a>
             {% else %}
-                <div class="btn-join-big btn-join-big--disabled">
+                <div class="btn-join-big btn-join-big--disabled" data-translate="true">
                     Événement complet
                 </div>
             {% endif %}
@@ -358,10 +360,29 @@
             {% if evenement.lienGroupe %}
                 <a href="{{ evenement.lienGroupe }}" target="_blank" rel="noopener" class="btn-group-link">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Rejoindre le groupe de discussion
+                    <span data-translate="true">Rejoindre le groupe de discussion</span>
                 </a>
             {% endif %}
         </div>
     </aside>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
+<script>
+(function () {
+    function bootTranslate() {
+        if (window.TravelMateTranslate) {
+            TravelMateTranslate.init({ sourceLang: 'fr' });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootTranslate);
+    } else {
+        bootTranslate();
+    }
+})();
+</script>
 {% endblock %}

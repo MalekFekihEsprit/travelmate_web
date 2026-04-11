@@ -188,6 +188,8 @@
 
 {% block body %}
 
+{% include '_travelmate_mymemory_translate.html.twig' %}
+
 {#
     Option A — Image mapping automatique par mots-clés dans le nom.
     Remplacez les URLs Unsplash par vos propres images si besoin.
@@ -234,9 +236,9 @@
 {% endmacro %}
 
 <section class="cat-hero">
-    <span class="cat-hero__eyebrow">Explorer & Découvrir</span>
-    <h1 class="cat-hero__title">Catégories d'activités</h1>
-    <p class="cat-hero__desc">
+    <span class="cat-hero__eyebrow" data-translate="true">Explorer & Découvrir</span>
+    <h1 class="cat-hero__title" data-translate="true">Catégories d'activités</h1>
+    <p class="cat-hero__desc" data-translate="true">
         Trouvez l'activité qui vous ressemble — randonnée, culture, aventure ou détente,
         il y en a pour tous les voyageurs.
     </p>
@@ -245,8 +247,8 @@
 {% if categories is empty %}
     <div class="cat-empty">
         <div class="cat-empty__icon">🗂️</div>
-        <p class="cat-empty__title">Aucune catégorie disponible pour le moment.</p>
-        <p>Revenez bientôt, de nouvelles catégories sont en cours d'ajout.</p>
+        <p class="cat-empty__title" data-translate="true">Aucune catégorie disponible pour le moment.</p>
+        <p data-translate="true">Revenez bientôt, de nouvelles catégories sont en cours d'ajout.</p>
     </div>
 {% else %}
     <div class="cat-grid">
@@ -268,25 +270,25 @@
                         loading="lazy"
                     >
                     <div class="cat-card__overlay"></div>
-                    <span class="cat-card__badge">{{ categorie.type }}</span>
-                    <span class="cat-card__saison">🗓 {{ categorie.saison }}</span>
+                    <span class="cat-card__badge" data-translate="true" data-original="{{ categorie.type|e('html_attr') }}">{{ categorie.type }}</span>
+                    <span class="cat-card__saison" data-translate="true" data-original="{{ ('🗓 ' ~ categorie.saison)|e('html_attr') }}">🗓 {{ categorie.saison }}</span>
                 </div>
 
                 <div class="cat-card__body">
-                    <h2 class="cat-card__name">{{ categorie.nom }}</h2>
-                    <p class="cat-card__desc">{{ categorie.description }}</p>
+                    <h2 class="cat-card__name" data-translate="true" data-original="{{ categorie.nom|e('html_attr') }}">{{ categorie.nom }}</h2>
+                    <p class="cat-card__desc" data-translate="true" data-original="{{ categorie.description|e('html_attr') }}">{{ categorie.description }}</p>
 
                     <div class="cat-card__meta">
-                        <span class="cat-card__tag cat-card__tag--intensity">
+                        <span class="cat-card__tag cat-card__tag--intensity" data-translate="true" data-original="{{ categorie.niveauintensite|e('html_attr') }}">
                              {{ categorie.niveauintensite }}
                         </span>
-                        <span class="cat-card__tag cat-card__tag--public">
+                        <span class="cat-card__tag cat-card__tag--public" data-translate="true" data-original="{{ ('👥 ' ~ categorie.publiccible)|e('html_attr') }}">
                             👥 {{ categorie.publiccible }}
                         </span>
                     </div>
 
                     <span class="cat-card__cta">
-                        Voir les activités
+                        <span data-translate="true">Voir les activités</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -297,4 +299,23 @@
     </div>
 {% endif %}
 
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
+<script>
+(function () {
+    function bootTranslate() {
+        if (window.TravelMateTranslate) {
+            TravelMateTranslate.init({ sourceLang: 'fr' });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootTranslate);
+    } else {
+        bootTranslate();
+    }
+})();
+</script>
 {% endblock %}

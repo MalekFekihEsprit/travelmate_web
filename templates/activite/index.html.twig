@@ -90,7 +90,7 @@
 .hero-stat__label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.6); margin-top: 0.2rem; }
 
 /* ═══════════════════════════════════════════════════
-   DESTINATION PICKER — nouvelle feature
+   DESTINATION PICKER
 ═══════════════════════════════════════════════════ */
 .dest-strip {
     display: flex;
@@ -126,7 +126,6 @@
     margin-bottom: 0.2rem;
 }
 .dest-strip__title {
-    font-family: 'Fraunces', serif;
     font-size: 1rem;
     font-weight: 600;
     color: var(--color-text);
@@ -385,41 +384,41 @@
 .act-card__name { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 600; color: var(--color-text); line-height: 1.25; }
 .act-card__location { display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: var(--color-text-muted); }
 
-/* Mise en évidence du terme de destination */
 .act-card__location mark {
     background: rgba(196,111,75,0.15);
     color: var(--color-primary);
     border-radius: 3px;
     padding: 0 2px;
-    font-weight: 600;
 }
 
-.act-card__tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.15rem; }
+.act-card__tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 .tag {
-    padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 500;
-    border: 1px solid var(--color-border); color: var(--color-text-muted); background: var(--color-surface-soft);
+    padding: 0.22rem 0.65rem; border-radius: 999px;
+    border: 1px solid var(--color-border);
+    font-size: 0.72rem; font-weight: 500; color: var(--color-text-muted);
+    background: var(--color-surface-soft);
 }
-.tag--facile    { border-color: rgba(47,127,121,0.3);  color: var(--color-secondary); }
-.tag--moyen     { border-color: rgba(180,140,40,0.3);   color: #8a6b0a; }
-.tag--difficile { border-color: rgba(196,111,75,0.3);   color: var(--color-primary); }
-.tag--expert    { border-color: rgba(160,50,50,0.3);    color: #8b1a1a; }
+.tag--facile       { border-color: rgba(47,127,121,0.3); color: var(--color-secondary); background: rgba(47,127,121,0.06); }
+.tag--intermediaire { border-color: rgba(180,140,40,0.3); color: #7a5e08; background: rgba(180,140,40,0.07); }
+.tag--difficile    { border-color: rgba(196,111,75,0.3); color: var(--color-primary-dark); background: rgba(196,111,75,0.07); }
+.tag--expert       { border-color: rgba(160,50,50,0.3); color: #8b1a1a; background: rgba(160,50,50,0.07); }
 
 .act-card__footer {
-    margin-top: auto; padding-top: 0.85rem; border-top: 1px solid var(--color-border);
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: flex-end; justify-content: space-between; margin-top: auto; padding-top: 0.5rem;
 }
-.act-price-label { font-size: 0.72rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.act-price-value { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 600; color: var(--color-primary); }
-.act-price-unit { font-size: 0.78rem; font-weight: 400; color: var(--color-text-muted); font-family: 'Outfit', sans-serif; }
+.act-price-label { font-size: 0.7rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.1rem; }
+.act-price-value { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 600; color: var(--color-primary); }
+.act-price-unit  { font-family: 'Outfit', sans-serif; font-size: 0.78rem; font-weight: 400; color: var(--color-text-muted); }
 .act-card__arrow {
-    width: 34px; height: 34px; border-radius: 50%;
+    width: 36px; height: 36px; border-radius: 50%;
     background: var(--color-surface-soft); border: 1px solid var(--color-border);
     display: flex; align-items: center; justify-content: center;
-    color: var(--color-text-muted);
-    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-    flex-shrink: 0;
+    color: var(--color-primary);
+    transition: background var(--transition-fast), transform var(--transition-fast);
 }
-.act-card:hover .act-card__arrow { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.act-card:hover .act-card__arrow {
+    background: var(--color-primary); color: #fff; transform: translateX(3px);
+}
 
 /* Vide */
 .act-empty { grid-column: 1/-1; padding: 4rem 2rem; text-align: center; color: var(--color-text-muted); }
@@ -430,34 +429,36 @@
 
 {% block body %}
 
+{% include '_travelmate_mymemory_translate.html.twig' %}
+
 {# ════════════════════════════════════════
    HERO
 ════════════════════════════════════════ #}
 <section class="act-hero">
     <div class="act-hero__bg"></div>
     <div class="act-hero__content">
-        <span class="act-hero__eyebrow">Explorez & Découvrez</span>
-        <h1 class="act-hero__title">Des activités pour chaque voyageur</h1>
-        <p class="act-hero__desc">
+        <span class="act-hero__eyebrow" data-translate="true">Explorez & Découvrez</span>
+        <h1 class="act-hero__title" data-translate="true">Des activités pour chaque voyageur</h1>
+        <p class="act-hero__desc" data-translate="true">
             Randonnées, sorties nautiques, ateliers culturels —
             réservez des expériences uniques adaptées à votre rythme et vos envies.
         </p>
         <div class="act-hero__actions">
             <a href="#activites" class="btn-hero-primary">
-                Explorer les activités
+                <span data-translate="true">Explorer les activités</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a href="{{ path('app_evenements') }}" class="btn-hero-ghost">Voir les événements</a>
+            <a href="{{ path('app_evenements') }}" class="btn-hero-ghost" data-translate="true">Voir les événements</a>
         </div>
     </div>
     <div class="act-hero__stats">
         <div class="hero-stat">
             <div class="hero-stat__num">{{ activites|length }}</div>
-            <div class="hero-stat__label">Activités</div>
+            <div class="hero-stat__label" data-translate="true">Activités</div>
         </div>
         <div class="hero-stat">
             <div class="hero-stat__num">{{ categories|length }}</div>
-            <div class="hero-stat__label">Catégories</div>
+            <div class="hero-stat__label" data-translate="true">Catégories</div>
         </div>
     </div>
 </section>
@@ -470,8 +471,8 @@
     {# ── Destination Picker ── #}
     <div class="dest-strip">
         <div class="dest-strip__label-col">
-            <div class="dest-strip__eyebrow">Destination</div>
-            <div class="dest-strip__title">Choisissez votre destination</div>
+            <div class="dest-strip__eyebrow" data-translate="true">Destination</div>
+            <div class="dest-strip__title" data-translate="true">Choisissez votre destination</div>
         </div>
         <div class="dest-strip__input-col">
             <div class="dest-input-wrap">
@@ -484,12 +485,13 @@
                     id="destInput"
                     placeholder="Vous partez où ?"
                     autocomplete="off"
+                    data-translate="true"
                 >
                 <div class="dest-suggestions" id="destSuggestions"></div>
             </div>
             <button class="dest-btn-search" id="destSearchBtn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                Rechercher
+                <span data-translate="true">Rechercher</span>
             </button>
         </div>
     </div>
@@ -498,14 +500,15 @@
     <div class="dest-banner" id="destBanner">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
         <span class="dest-banner__text" id="destBannerText"></span>
-        <button class="dest-banner__clear" id="destBannerClear">Voir toutes les activités</button>
+        <button class="dest-banner__clear" id="destBannerClear" data-translate="true">Voir toutes les activités</button>
     </div>
 
     {# ── Chips catégories ── #}
     <div class="cat-chips">
-        <button class="cat-chip is-active" data-cat="">Toutes</button>
+        <button class="cat-chip is-active" data-cat="" data-translate="true">Toutes</button>
         {% for cat in categories %}
-            <button class="cat-chip" data-cat="{{ cat.id }}">{{ cat.nom }}</button>
+            {# Les noms de catégories venant de la BD sont marqués pour traduction #}
+            <button class="cat-chip" data-cat="{{ cat.id }}" data-translate="true" data-original="{{ cat.nom }}">{{ cat.nom }}</button>
         {% endfor %}
     </div>
 
@@ -516,20 +519,20 @@
                 <span class="search-field__icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 </span>
-                <input type="search" class="search-field__input" id="searchInput" placeholder="Rechercher une activité…">
+                <input type="search" class="search-field__input" id="searchInput" placeholder="Rechercher une activité…" data-translate="true">
             </div>
             <select class="filter-pill-select" id="diffFilter">
-                <option value="">Toute difficulté</option>
-                <option value="facile">Facile</option>
-                <option value="intermediaire">Intermédiaire</option>
-                <option value="difficile">Difficile</option>
-                <option value="expert">Expert</option>
+                <option value="" data-translate="true">Toute difficulté</option>
+                <option value="facile" data-translate="true">Facile</option>
+                <option value="intermediaire" data-translate="true">Intermédiaire</option>
+                <option value="difficile" data-translate="true">Difficile</option>
+                <option value="expert" data-translate="true">Expert</option>
             </select>
             <select class="filter-pill-select" id="budgetFilter">
-                <option value="">Tout budget</option>
-                <option value="0-50">Moins de 50 TND</option>
-                <option value="50-150">50 – 150 TND</option>
-                <option value="150+">Plus de 150 TND</option>
+                <option value="" data-translate="true">Tout budget</option>
+                <option value="0-50" data-translate="true">Moins de 50 TND</option>
+                <option value="50-150" data-translate="true">50 – 150 TND</option>
+                <option value="150+" data-translate="true">Plus de 150 TND</option>
             </select>
         </div>
     </div>
@@ -538,7 +541,7 @@
     <div class="results-row">
         <p class="results-count">
             <strong id="countNum">{{ activites|length }}</strong>
-            activité{% if activites|length != 1 %}s{% endif %} disponible{% if activites|length != 1 %}s{% endif %}
+            <span data-translate="true">activité{% if activites|length != 1 %}s{% endif %} disponible{% if activites|length != 1 %}s{% endif %}</span>
         </p>
     </div>
 
@@ -547,8 +550,8 @@
         {% if activites is empty %}
             <div class="act-empty">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin:0 auto;color:var(--color-border)"><path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                <div class="act-empty__title">Aucune activité disponible</div>
-                <p>Revenez bientôt, de nouvelles expériences arrivent.</p>
+                <div class="act-empty__title" data-translate="true">Aucune activité disponible</div>
+                <p data-translate="true">Revenez bientôt, de nouvelles expériences arrivent.</p>
             </div>
         {% else %}
             {% for activite in activites %}
@@ -566,7 +569,7 @@
 
                     <div class="act-card__img-wrap">
                         {% if activite.imagePath %}
-                            <img src="{{ asset('uploads/activites/' ~ activite.imagePath) }}"
+                            <img src="{{ asset(activite.imagePath) }}"
                                  alt="{{ activite.nom }}" class="act-card__img"
                                  onerror="this.style.display='none';this.parentElement.querySelector('.act-card__img-placeholder').style.display='flex'">
                         {% endif %}
@@ -576,10 +579,11 @@
                         <div class="act-card__img-overlay"></div>
                         <div class="act-card__badges">
                             {% if nbAvis >= 3 and moyenne >= 4 %}
-                                <span class="badge badge--trending">Populaire</span>
+                                <span class="badge badge--trending" data-translate="true">Populaire</span>
                             {% endif %}
                             {% if activite.categorie %}
-                                <span class="badge badge--cat">{{ activite.categorie.nom }}</span>
+                                {# Catégorie BD : marquée pour traduction #}
+                                <span class="badge badge--cat" data-translate="true" data-original="{{ activite.categorie.nom }}">{{ activite.categorie.nom }}</span>
                             {% endif %}
                         </div>
                         {% if nbAvis > 0 %}
@@ -592,21 +596,24 @@
                     </div>
 
                     <div class="act-card__body">
-                        <div class="act-card__name">{{ activite.nom }}</div>
+                        {# Nom de l'activité venant de la BD : marqué pour traduction #}
+                        <div class="act-card__name" data-translate="true" data-original="{{ activite.nom }}">{{ activite.nom }}</div>
                         {% if activite.lieu %}
                             <div class="act-card__location" data-location="{{ activite.lieu|lower }}">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                                <span class="location-text">{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}</span>
+                                {# Lieu BD : marqué pour traduction #}
+                                <span class="location-text" data-translate="true" data-original="{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}">{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}</span>
                             </div>
                         {% endif %}
                         <div class="act-card__tags">
-                            <span class="tag tag--{{ diff }}">{{ activite.niveaudifficulte }}</span>
+                            {# Niveau de difficulté BD : marqué pour traduction #}
+                            <span class="tag tag--{{ diff }}" data-translate="true" data-original="{{ activite.niveaudifficulte }}">{{ activite.niveaudifficulte }}</span>
                             <span class="tag">{{ activite.duree }}h</span>
-                            <span class="tag">+{{ activite.agemin }} ans</span>
+                            <span class="tag">+{{ activite.agemin }} <span data-translate="true">ans</span></span>
                         </div>
                         <div class="act-card__footer">
                             <div>
-                                <div class="act-price-label">À partir de</div>
+                                <div class="act-price-label" data-translate="true">À partir de</div>
                                 <div class="act-price-value">{{ activite.budget }} <span class="act-price-unit">TND</span></div>
                             </div>
                             <div class="act-card__arrow">
@@ -623,17 +630,31 @@
 {% endblock %}
 
 {% block javascripts %}
+{{ parent() }}
+<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
+<script>
+(function () {
+    function bootTranslate() {
+        if (window.TravelMateTranslate) {
+            TravelMateTranslate.init({ sourceLang: 'fr' });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootTranslate);
+    } else {
+        bootTranslate();
+    }
+})();
+</script>
 <script>
 (function() {
 
-    // ── Données lieux (pour l'autocomplete) ──────────────────────────────────
-    // Extraites dynamiquement depuis les cards
+    // ═══════════════════════════════════════════════════════════════════
+    //  AUTOCOMPLETE DESTINATION
+    // ═══════════════════════════════════════════════════════════════════
     const allCards = Array.from(document.querySelectorAll('.act-card[data-lieu]'));
-    const allLieux = [...new Set(
-        allCards.map(c => c.dataset.lieu).filter(Boolean)
-    )];
+    const allLieux = [...new Set(allCards.map(c => c.dataset.lieu).filter(Boolean))];
 
-    // Gouvernorats tunisiens connus pour regrouper les résultats par région
     const regionMap = {
         'tunis': ['tunis', 'la marsa', 'sidi bou said', 'la goulette', 'carthage', 'ariana', 'manouba', 'ben arous', 'hammam lif', 'rades', 'bardo', 'ezzouhour'],
         'hammamet': ['hammamet', 'nabeul', 'kelibia', 'korba', 'menzel temime'],
@@ -645,7 +666,6 @@
         'bizerte': ['bizerte', 'menzel bourguiba', 'ras angela'],
     };
 
-    // ── Autocomplete destination ─────────────────────────────────────────────
     const destInput   = document.getElementById('destInput');
     const suggestions = document.getElementById('destSuggestions');
 
@@ -653,7 +673,6 @@
         const q = query.toLowerCase().trim();
         if (!q) { suggestions.classList.remove('is-open'); return; }
 
-        // Chercher dans les lieux des activités + dans les régions connues
         const matches = new Set();
         allLieux.forEach(lieu => { if (lieu.includes(q)) matches.add(lieu); });
         Object.keys(regionMap).forEach(region => {
@@ -703,7 +722,7 @@
         applyDestination(destInput.value.toLowerCase().trim());
     });
 
-    // ── Appliquer le filtre destination ─────────────────────────────────────
+    // ── Filtre destination ───────────────────────────────────────────
     let activeDestination = '';
 
     function applyDestination(query) {
@@ -734,11 +753,7 @@
     function matchDest(card) {
         if (!activeDestination) return true;
         const lieu = card.dataset.lieu || '';
-
-        // Match direct
         if (lieu.includes(activeDestination)) return true;
-
-        // Match via région (ex: "tunis" → correspond à "sidi bou said")
         for (const [region, subs] of Object.entries(regionMap)) {
             if (region === activeDestination || activeDestination.includes(region) || region.includes(activeDestination)) {
                 if (subs.some(s => lieu.includes(s)) || lieu.includes(region)) return true;
@@ -750,7 +765,7 @@
         return false;
     }
 
-    // ── Filtres standards ────────────────────────────────────────────────────
+    // ── Filtres standards ────────────────────────────────────────────
     const searchInput  = document.getElementById('searchInput');
     const diffFilter   = document.getElementById('diffFilter');
     const budgetFilter = document.getElementById('budgetFilter');
@@ -796,13 +811,13 @@
         });
     });
 
-    // ── Scroll doux ─────────────────────────────────────────────────────────
+    // ── Scroll doux ──────────────────────────────────────────────────
     document.querySelector('a[href="#activites"]')?.addEventListener('click', e => {
         e.preventDefault();
         document.getElementById('activites').scrollIntoView({ behavior: 'smooth' });
     });
 
-    // ── Helper ───────────────────────────────────────────────────────────────
+    // ── Helper ───────────────────────────────────────────────────────
     function capitalize(str) {
         return str.replace(/\b\w/g, c => c.toUpperCase());
     }
