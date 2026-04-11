@@ -7,6 +7,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TimeType;
@@ -59,6 +60,29 @@ class EvenementType extends AbstractType
                     'placeholder' => '⚠ Obligatoire — entre 3 et 255 caractères',
                     'minlength'   => 3,
                     'maxlength'   => 255,
+                ],
+            ])
+            ->add('latitude', NumberType::class, [
+                'label'      => 'Latitude (carte)',
+                'required'   => false,
+                'scale'      => 7,
+                'html5'      => true,
+                'empty_data' => null,
+                'attr'       => [
+                    'placeholder' => 'Optionnel — position exacte sur la carte',
+                    'step'        => 'any',
+                ],
+                'help'       => 'Coordonnées GPS (WGS84). Permet d\'afficher la carte sur la fiche événement.',
+            ])
+            ->add('longitude', NumberType::class, [
+                'label'      => 'Longitude (carte)',
+                'required'   => false,
+                'scale'      => 7,
+                'html5'      => true,
+                'empty_data' => null,
+                'attr'       => [
+                    'placeholder' => 'Ex. 10.1815',
+                    'step'        => 'any',
                 ],
             ])
             ->add('nbPlaces', IntegerType::class, [

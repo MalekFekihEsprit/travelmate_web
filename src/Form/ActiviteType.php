@@ -68,6 +68,7 @@ class ActiviteType extends AbstractType
                 'required'    => false,
                 'scale'       => 7,
                 'html5'       => true,
+                'empty_data'  => null,
                 'attr'        => [
                     'placeholder' => 'Ex. 36.8065 — optionnel, filtre par distance',
                     'step'        => 'any',
@@ -79,6 +80,7 @@ class ActiviteType extends AbstractType
                 'required'    => false,
                 'scale'       => 7,
                 'html5'       => true,
+                'empty_data'  => null,
                 'attr'        => [
                     'placeholder' => 'Ex. 10.1815',
                     'step'        => 'any',

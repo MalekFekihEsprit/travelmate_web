@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
 {{ parent() }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <style>
 
 /* ═══════════════════════════════════════════════════
@@ -202,27 +203,74 @@
 .dest-suggestion__main { font-weight: 500; }
 .dest-suggestion__sub { font-size: 0.78rem; color: var(--color-text-muted); }
 
-.dest-btn-search {
+.dest-map-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.85rem 1.4rem;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
     border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: #fff;
-    font: inherit;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border: none;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-surface-soft);
+    font-size: 1.25rem;
     cursor: pointer;
-    white-space: nowrap;
     flex-shrink: 0;
-    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
 }
-.dest-btn-search:hover {
-    background: var(--color-primary-dark);
+.dest-map-toggle:hover {
+    border-color: var(--color-primary);
+    background: rgba(196,111,75,0.08);
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(196,111,75,0.25);
+}
+
+/* Panneau carte (Leaflet + OSM — gratuit) */
+.dest-map-panel {
+    display: none;
+    margin-top: -0.5rem;
+    margin-bottom: 1.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background: var(--color-surface);
+    box-shadow: 0 8px 28px rgba(71,48,35,0.08);
+}
+.dest-map-panel.is-open { display: block; }
+.dest-map-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface-soft);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+}
+.dest-map-panel__head strong { color: var(--color-text); font-weight: 600; }
+.dest-map-panel__close {
+    border: none;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+}
+.dest-map-panel__close:hover { background: rgba(196,111,75,0.1); }
+.dest-map-panel__map {
+    height: min(52vh, 380px);
+    width: 100%;
+    background: var(--color-surface-soft);
+}
+.dest-map-panel__hint {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    padding: 0.5rem 1rem 0.65rem;
+    margin: 0;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
 }
 
 /* Chip destination active */
@@ -489,11 +537,18 @@
                 >
                 <div class="dest-suggestions" id="destSuggestions"></div>
             </div>
-            <button class="dest-btn-search" id="destSearchBtn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <span data-translate="true">Rechercher</span>
-            </button>
+            <button type="button" class="dest-map-toggle" id="destMapToggle" title="Ouvrir ou fermer la carte" aria-expanded="false" aria-controls="destMapPanel">🗺️</button>
         </div>
+    </div>
+
+    {# Carte interactive : clic = destination + filtre dynamique (OpenStreetMap + Nominatim) #}
+    <div id="destMapPanel" class="dest-map-panel" aria-hidden="true" role="region" aria-label="Carte destination">
+        <div class="dest-map-panel__head">
+            <span><strong>Carte</strong> — cliquez sur un point pour filtrer les activités à proximité</span>
+            <button type="button" class="dest-map-panel__close" id="destMapClose">Fermer</button>
+        </div>
+        <div id="destMapContainer" class="dest-map-panel__map"></div>
+        <p class="dest-map-panel__hint">Fonds de carte © OpenStreetMap · Adresse via Nominatim (usage raisonnable). Optionnel : renseignez <code>TRAVELMATE_NOMINATIM_EMAIL</code> dans la page pour la politique d’utilisation.</p>
     </div>
 
     {# ── Banner résultat destination ── #}
@@ -565,7 +620,9 @@
                    data-cat="{{ activite.categorie ? activite.categorie.id : '' }}"
                    data-diff="{{ activite.niveaudifficulte|lower }}"
                    data-budget="{{ activite.budget }}"
-                   data-lieu="{{ activite.lieu|lower }}">
+                   data-lieu="{{ activite.lieu|default('')|lower }}"
+                   data-lat="{{ activite.latitude is not null ? activite.latitude : '' }}"
+                   data-lng="{{ activite.longitude is not null ? activite.longitude : '' }}">
 
                     <div class="act-card__img-wrap">
                         {% if activite.imagePath %}
@@ -646,182 +703,8 @@
     }
 })();
 </script>
-<script>
-(function() {
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  AUTOCOMPLETE DESTINATION
-    // ═══════════════════════════════════════════════════════════════════
-    const allCards = Array.from(document.querySelectorAll('.act-card[data-lieu]'));
-    const allLieux = [...new Set(allCards.map(c => c.dataset.lieu).filter(Boolean))];
-
-    const regionMap = {
-        'tunis': ['tunis', 'la marsa', 'sidi bou said', 'la goulette', 'carthage', 'ariana', 'manouba', 'ben arous', 'hammam lif', 'rades', 'bardo', 'ezzouhour'],
-        'hammamet': ['hammamet', 'nabeul', 'kelibia', 'korba', 'menzel temime'],
-        'sousse': ['sousse', 'monastir', 'port el kantaoui', 'chott meriem'],
-        'sfax': ['sfax', 'jebeniana', 'mahres'],
-        'djerba': ['djerba', 'houmt souk', 'midoun', 'aghir', 'ajim'],
-        'tozeur': ['tozeur', 'nefta', 'douz', 'kebili'],
-        'tabarka': ['tabarka', 'ain draham', 'jendouba'],
-        'bizerte': ['bizerte', 'menzel bourguiba', 'ras angela'],
-    };
-
-    const destInput   = document.getElementById('destInput');
-    const suggestions = document.getElementById('destSuggestions');
-
-    function buildSuggestions(query) {
-        const q = query.toLowerCase().trim();
-        if (!q) { suggestions.classList.remove('is-open'); return; }
-
-        const matches = new Set();
-        allLieux.forEach(lieu => { if (lieu.includes(q)) matches.add(lieu); });
-        Object.keys(regionMap).forEach(region => {
-            if (region.includes(q)) {
-                regionMap[region].forEach(sub => matches.add(sub));
-                matches.add(region);
-            }
-            regionMap[region].forEach(sub => { if (sub.includes(q)) matches.add(sub); });
-        });
-
-        const items = [...matches].slice(0, 6);
-        if (!items.length) { suggestions.classList.remove('is-open'); return; }
-
-        suggestions.innerHTML = items.map(lieu => `
-            <div class="dest-suggestion" data-lieu="${lieu}">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
-                <div>
-                    <div class="dest-suggestion__main">${capitalize(lieu)}</div>
-                </div>
-            </div>
-        `).join('');
-
-        suggestions.querySelectorAll('.dest-suggestion').forEach(el => {
-            el.addEventListener('click', () => {
-                destInput.value = capitalize(el.dataset.lieu);
-                suggestions.classList.remove('is-open');
-                applyDestination(el.dataset.lieu);
-            });
-        });
-
-        suggestions.classList.add('is-open');
-    }
-
-    destInput.addEventListener('input', () => buildSuggestions(destInput.value));
-    destInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-            suggestions.classList.remove('is-open');
-            applyDestination(destInput.value.toLowerCase().trim());
-        }
-    });
-    document.addEventListener('click', e => {
-        if (!e.target.closest('.dest-input-wrap')) suggestions.classList.remove('is-open');
-    });
-
-    document.getElementById('destSearchBtn').addEventListener('click', () => {
-        suggestions.classList.remove('is-open');
-        applyDestination(destInput.value.toLowerCase().trim());
-    });
-
-    // ── Filtre destination ───────────────────────────────────────────
-    let activeDestination = '';
-
-    function applyDestination(query) {
-        activeDestination = query.trim();
-        filter();
-        updateDestBanner();
-    }
-
-    function updateDestBanner() {
-        const banner     = document.getElementById('destBanner');
-        const bannerText = document.getElementById('destBannerText');
-        if (activeDestination) {
-            const count = allCards.filter(c => matchDest(c)).length;
-            bannerText.innerHTML = `<strong>${count} activité${count > 1 ? 's' : ''}</strong> trouvée${count > 1 ? 's' : ''} à <strong>${capitalize(activeDestination)}</strong> et ses alentours`;
-            banner.classList.add('is-visible');
-        } else {
-            banner.classList.remove('is-visible');
-        }
-    }
-
-    document.getElementById('destBannerClear').addEventListener('click', () => {
-        activeDestination = '';
-        destInput.value   = '';
-        filter();
-        document.getElementById('destBanner').classList.remove('is-visible');
-    });
-
-    function matchDest(card) {
-        if (!activeDestination) return true;
-        const lieu = card.dataset.lieu || '';
-        if (lieu.includes(activeDestination)) return true;
-        for (const [region, subs] of Object.entries(regionMap)) {
-            if (region === activeDestination || activeDestination.includes(region) || region.includes(activeDestination)) {
-                if (subs.some(s => lieu.includes(s)) || lieu.includes(region)) return true;
-            }
-            if (subs.includes(activeDestination)) {
-                if (lieu.includes(activeDestination) || lieu.includes(region)) return true;
-            }
-        }
-        return false;
-    }
-
-    // ── Filtres standards ────────────────────────────────────────────
-    const searchInput  = document.getElementById('searchInput');
-    const diffFilter   = document.getElementById('diffFilter');
-    const budgetFilter = document.getElementById('budgetFilter');
-    const catChips     = document.querySelectorAll('.cat-chip');
-    const countEl      = document.getElementById('countNum');
-    let activeCat = '';
-
-    function filter() {
-        const q      = searchInput.value.toLowerCase().trim();
-        const diff   = diffFilter.value.toLowerCase();
-        const budget = budgetFilter.value;
-        let visible  = 0;
-
-        allCards.forEach(card => {
-            const matchNom    = card.dataset.nom.includes(q);
-            const matchCat    = !activeCat || card.dataset.cat === activeCat;
-            const matchDiff   = !diff || card.dataset.diff.toLowerCase() === diff;
-            const b           = parseInt(card.dataset.budget) || 0;
-            const matchBudget = !budget ||
-                (budget === '0-50'   && b <= 50)  ||
-                (budget === '50-150' && b > 50 && b <= 150) ||
-                (budget === '150+'   && b > 150);
-            const matchLieu   = matchDest(card);
-
-            const show = matchNom && matchCat && matchDiff && matchBudget && matchLieu;
-            card.style.display = show ? '' : 'none';
-            if (show) visible++;
-        });
-
-        if (countEl) countEl.textContent = visible;
-    }
-
-    searchInput.addEventListener('input', filter);
-    diffFilter.addEventListener('change', filter);
-    budgetFilter.addEventListener('change', filter);
-
-    catChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            catChips.forEach(c => c.classList.remove('is-active'));
-            chip.classList.add('is-active');
-            activeCat = chip.dataset.cat;
-            filter();
-        });
-    });
-
-    // ── Scroll doux ──────────────────────────────────────────────────
-    document.querySelector('a[href="#activites"]')?.addEventListener('click', e => {
-        e.preventDefault();
-        document.getElementById('activites').scrollIntoView({ behavior: 'smooth' });
-    });
-
-    // ── Helper ───────────────────────────────────────────────────────
-    function capitalize(str) {
-        return str.replace(/\b\w/g, c => c.toUpperCase());
-    }
-
-})();
-</script>
+{# E-mail optionnel pour Nominatim (politique d’usage) — remplissez le vôtre en prod #}
+<script>window.TRAVELMATE_NOMINATIM_EMAIL = '';</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{{ asset('js/activite-list-filters.js') }}"></script>
 {% endblock %}

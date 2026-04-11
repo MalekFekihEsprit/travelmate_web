@@ -73,6 +73,20 @@ class Evenement
     public function getLieu(): ?string { return $this->lieu; }
     public function setLieu(string $lieu): self { $this->lieu = $lieu; return $this; }
 
+    #[ORM\Column(name: 'latitude', type: 'float', nullable: true)]
+    private ?float $latitude = null;
+
+    #[ORM\Column(name: 'longitude', type: 'float', nullable: true)]
+    private ?float $longitude = null;
+
+    public function getLatitude(): ?float { return $this->latitude; }
+
+    public function setLatitude(?float $latitude): self { $this->latitude = $latitude; return $this; }
+
+    public function getLongitude(): ?float { return $this->longitude; }
+
+    public function setLongitude(?float $longitude): self { $this->longitude = $longitude; return $this; }
+
     #[ORM\Column(name: 'nb_places', type: 'integer', nullable: false)]
     #[Assert\NotNull(message: 'Le nombre de places est obligatoire.')]
     #[Assert\Positive(message: 'Le nombre de places doit être supérieur à 0.')]

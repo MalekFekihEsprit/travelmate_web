@@ -16,11 +16,12 @@ final class Version20260411120000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE activites ADD latitude DOUBLE PRECISION DEFAULT NULL, ADD longitude DOUBLE PRECISION DEFAULT NULL');
+        $this->addSql('ALTER TABLE activites ADD latitude DOUBLE DEFAULT NULL, ADD longitude DOUBLE DEFAULT NULL');
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE activites DROP latitude, DROP longitude');
+        $this->addSql('ALTER TABLE activites DROP COLUMN latitude');
+        $this->addSql('ALTER TABLE activites DROP COLUMN longitude');
     }
 }

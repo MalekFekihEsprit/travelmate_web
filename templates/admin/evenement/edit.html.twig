@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <style>
         .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
         .page-header__title { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 600; color: var(--admin-text); }
@@ -130,6 +131,15 @@
                     {% endif %}
                 </div>
 
+                {% include 'admin/_admin_location_map_picker.html.twig' with {
+                    lat_field: form.latitude,
+                    lng_field: form.longitude,
+                    lieu_input_id: form.lieu.vars.id,
+                    default_lat: evenement.latitude,
+                    default_lng: evenement.longitude,
+                    nominatim_email: ''
+                } %}
+
                 <div class="form-grid-2">
                     <div class="form-group">
                         <label>{{ form_label(form.date) }} <span class="req">*</span></label>
@@ -247,6 +257,9 @@
 {% endblock %}
 
 {% block javascripts %}
+{{ parent() }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{{ asset('js/admin-location-map-picker.js') }}"></script>
 <script>
     const fileInput = document.getElementById('imageFile');
     const imgPreview = document.getElementById('imgPreview');

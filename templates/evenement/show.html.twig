@@ -4,7 +4,25 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <style>
+        .tm-geo-map { margin-top: 0.85rem; }
+        .tm-geo-map-btn {
+            appearance: none;
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.4rem 0.85rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: border-color var(--transition-fast), background var(--transition-fast);
+        }
+        .tm-geo-map-btn:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
+        .tm-geo-map-panel { margin-top: 0.65rem; }
+        .tm-geo-map-canvas { height: 240px; border-radius: var(--radius-lg); border: 1px solid var(--color-border); overflow: hidden; }
+
         .ev-show-layout {
             display: grid;
             grid-template-columns: 1fr 340px;
@@ -229,6 +247,15 @@
             </span>
         </div>
 
+        {% if evenement.latitude is not null and evenement.longitude is not null %}
+            <div class="tm-geo-map js-tm-geo-map" data-lat="{{ evenement.latitude }}" data-lng="{{ evenement.longitude }}" data-label="{{ evenement.lieu|e('html_attr') }}">
+                <button type="button" class="tm-geo-map-btn js-tm-geo-map-toggle" aria-expanded="false" data-label-show="Voir sur la carte" data-label-hide="Masquer la carte">Voir sur la carte</button>
+                <div class="js-tm-geo-map-panel tm-geo-map-panel" hidden>
+                    <div class="js-tm-geo-map-canvas tm-geo-map-canvas" role="application" aria-label="Carte du lieu"></div>
+                </div>
+            </div>
+        {% endif %}
+
         {# Progress places #}
         {% set nbPart = evenement.participations|length %}
         {% set pct    = evenement.nbPlaces > 0 ? ((nbPart / evenement.nbPlaces) * 100)|round : 0 %}
@@ -370,6 +397,8 @@
 
 {% block javascripts %}
 {{ parent() }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{{ asset('js/public-geo-map-toggle.js') }}"></script>
 <script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
 <script>
 (function () {
