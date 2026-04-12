@@ -233,4 +233,40 @@ class Activite
         $this->getVoyages()->removeElement($voyage);
         return $this;
     }
+
+    // ── Réservations ────────────────────────────────────────────────────────────
+
+    #[ORM\OneToMany(mappedBy: 'activite', targetEntity: Reservation::class)]
+    private Collection $reservations;
+
+    /** @return Collection<int, Reservation> */
+    public function getReservations(): Collection
+    {
+        if (!$this->reservations instanceof Collection) $this->reservations = new ArrayCollection();
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): self
+    {
+        if (!$this->getReservations()->contains($reservation)) {
+            $this->getReservations()->add($reservation);
+            $reservation->setActivite($this);
+        }
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): self
+    {
+        if ($this->getReservations()->removeElement($reservation)) {
+            if ($reservation->getActivite() === $this) {
+                $reservation->setActivite(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getReservationCount(): int
+    {
+        return $this->getReservations()->count();
+    }
 }

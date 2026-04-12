@@ -1177,9 +1177,10 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                     <span class="resa-total-amount" id="resaTotal">{{ activite.budget }} TND</span>
                 </div>
 
-                <button type="button" class="btn-resa" onclick="alert('Fonctionnalité de réservation à venir !')">
-                    <span data-translate="true">Confirmer la réservation</span>
-                </button>
+                <a href="{{ path('app_reservation_new', {id: activite.id}) }}" class="btn-resa">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-translate="true">Réservez maintenant</span>
+                </a>
                 <button type="button" class="btn-help">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7"/><path d="M9 9a3 3 0 115.196 2.066C13.612 11.66 12 12.5 12 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="17" r="0.6" fill="currentColor"/></svg>
                     <span data-translate="true">Besoin d'aide ?</span>
