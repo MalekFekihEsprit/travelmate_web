@@ -2,9 +2,13 @@
 
 namespace App\Controller;
 
+use App\Form\VoyageType;
+use App\Repository\ActiviteRepository;
 use App\Entity\Destination;
 use App\Entity\Voyage;
+use App\Repository\BudgetRepository;
 use App\Repository\DestinationRepository;
+use App\Repository\ParticipationRepository;
 use App\Repository\VoyageRepository;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -24,6 +28,7 @@ final class VoyagesBackController extends AbstractController
 	#[Route('/admin/voyages', name: 'app_admin_voyages', methods: ['GET'])]
 	public function index(
 		Request $request,
+		BudgetRepository $budgetRepository,
 		VoyageRepository $voyageRepository,
 		DestinationRepository $destinationRepository
 	): Response {
@@ -41,18 +46,89 @@ final class VoyagesBackController extends AbstractController
 			destinations: $destinationRepository->findBy([], ['nom_destination' => 'ASC']),
 			voyageForm: $editingVoyage instanceof Voyage ? $editingVoyage : new Voyage(),
 			editingVoyage: $editingVoyage instanceof Voyage ? $editingVoyage : null,
-			formErrors: []
+			formErrors: [],
+			budgetRepository: $budgetRepository
 		);
+	}
+
+	#[Route('/admin/voyages/ajouter', name: 'app_admin_voyages_new', methods: ['GET', 'POST'])]
+	public function new(
+		Request $request,
+		EntityManagerInterface $entityManager,
+		DestinationRepository $destinationRepository,
+		ActiviteRepository $activiteRepository
+	): Response {
+		$voyage = new Voyage();
+		$voyage->setStatut('Planifie');
+
+		$formScope = 'admin_voyage_form_new';
+		$form = $this->createForm(VoyageType::class, $voyage);
+		$form->handleRequest($request);
+
+		$formNonce = $request->isMethod('POST')
+			? (string) $request->request->get('_voyage_form_nonce', '')
+			: $this->createFormNonce($request, $formScope);
+
+		if ($form->isSubmitted() && $form->isValid()) {
+			if (!$this->consumeFormNonce($request, $formScope, $formNonce)) {
+				$this->addFlash('warning', 'Cette soumission a deja ete traitee.');
+
+				return $this->redirectToRoute('app_admin_voyages');
+			}
+
+			$entityManager->persist($voyage);
+			$entityManager->flush();
+
+			$this->addFlash('success', 'Le voyage a ete ajoute avec succes.');
+
+			return $this->redirectToRoute('app_admin_voyages');
+		}
+
+		return $this->render('admin/voyage_form.html.twig', [
+			'form' => $form->createView(),
+			'form_nonce' => $formNonce !== '' ? $formNonce : $this->createFormNonce($request, $formScope),
+			'has_destinations' => $destinationRepository->count([]) > 0,
+			'has_activites' => $activiteRepository->count([]) > 0,
+			'page_title' => 'Ajouter un voyage',
+			'page_text' => 'Remplissez le formulaire existant pour ajouter un nouveau voyage depuis l administration.',
+			'submit_label' => 'Ajouter le voyage',
+		]);
+	}
+
+	#[Route('/admin/voyages/{id_voyage}', name: 'app_admin_voyages_show', requirements: ['id_voyage' => '\\d+'], methods: ['GET'])]
+	public function show(
+		Request $request,
+		BudgetRepository $budgetRepository,
+		ParticipationRepository $participationRepository,
+		#[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] ?Voyage $voyage = null
+	): Response {
+		if (!$voyage instanceof Voyage) {
+			$this->addFlash('warning', 'Ce voyage est introuvable ou a deja ete supprime.');
+
+			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
+		}
+
+		$voyageId = $voyage->getIdVoyage() ?? 0;
+		$budgetSummary = $budgetRepository->findVoyageBudgetSummaries([$voyage])[$voyageId] ?? null;
+
+		return $this->render('admin/voyage_show.html.twig', [
+			'voyage' => $voyage,
+			'participants' => $participationRepository->findByVoyageOrdered($voyage),
+			'budget_summary' => $budgetSummary,
+			'budget_total_label' => $this->formatBudgetSummary($budgetSummary),
+		]);
 	}
 
 	#[Route('/admin/voyages/export/pdf', name: 'app_admin_voyages_export_pdf', methods: ['GET'])]
 	public function exportPdf(
 		Request $request,
+		BudgetRepository $budgetRepository,
 		VoyageRepository $voyageRepository,
 		Environment $twig
 	): Response {
 		$search = trim((string) $request->query->get('search', ''));
 		$voyages = $this->findBackOfficeVoyages($voyageRepository, $search);
+		$budgetSummaries = $budgetRepository->findVoyageBudgetSummaries($voyages);
 
 		$options = new Options();
 		$options->set('defaultFont', 'DejaVu Sans');
@@ -60,6 +136,7 @@ final class VoyagesBackController extends AbstractController
 
 		$dompdf = new Dompdf($options);
 		$dompdf->loadHtml($twig->render('admin/voyages_export_pdf.html.twig', [
+			'budget_summaries' => $budgetSummaries,
 			'voyages' => $voyages,
 			'search' => $search,
 			'generated_at' => new \DateTimeImmutable(),
@@ -82,12 +159,14 @@ final class VoyagesBackController extends AbstractController
 	#[Route('/admin/voyages/export/excel', name: 'app_admin_voyages_export_excel', methods: ['GET'])]
 	public function exportExcel(
 		Request $request,
+		BudgetRepository $budgetRepository,
 		VoyageRepository $voyageRepository
 	): StreamedResponse {
 		$search = trim((string) $request->query->get('search', ''));
 		$voyages = $this->findBackOfficeVoyages($voyageRepository, $search);
+		$budgetSummaries = $budgetRepository->findVoyageBudgetSummaries($voyages);
 
-		$response = new StreamedResponse(function () use ($voyages): void {
+		$response = new StreamedResponse(function () use ($budgetSummaries, $voyages): void {
 			$handle = fopen('php://output', 'wb');
 
 			if ($handle === false) {
@@ -95,9 +174,10 @@ final class VoyagesBackController extends AbstractController
 			}
 
 			fwrite($handle, "\xEF\xBB\xBF");
-			fputcsv($handle, ['ID', 'Titre', 'Date debut', 'Date fin', 'Statut', 'ID destination', 'Destination', 'Pays'], ';');
+			fputcsv($handle, ['ID', 'Titre', 'Date debut', 'Date fin', 'Statut', 'Montant total', 'ID destination', 'Destination', 'Pays'], ';');
 			foreach ($voyages as $voyage) {
-				fputcsv($handle, $this->buildVoyageExportRow($voyage), ';');
+				$budgetSummary = $budgetSummaries[$voyage->getIdVoyage() ?? 0] ?? null;
+				fputcsv($handle, $this->buildVoyageExportRow($voyage, $budgetSummary), ';');
 			}
 			fclose($handle);
 		});
@@ -112,6 +192,7 @@ final class VoyagesBackController extends AbstractController
 	public function create(
 		Request $request,
 		EntityManagerInterface $entityManager,
+		BudgetRepository $budgetRepository,
 		DestinationRepository $destinationRepository,
 		VoyageRepository $voyageRepository,
 		ValidatorInterface $validator
@@ -142,7 +223,8 @@ final class VoyagesBackController extends AbstractController
 				destinations: $destinationRepository->findBy([], ['nom_destination' => 'ASC']),
 				voyageForm: $voyage,
 				editingVoyage: null,
-				formErrors: $formErrors
+				formErrors: $formErrors,
+				budgetRepository: $budgetRepository
 			);
 		}
 
@@ -155,13 +237,12 @@ final class VoyagesBackController extends AbstractController
 		return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
 	}
 
-	#[Route('/admin/voyages/{id_voyage}/modifier', name: 'app_admin_voyages_update', requirements: ['id_voyage' => '\\d+'], methods: ['POST'])]
+	#[Route('/admin/voyages/{id_voyage}/modifier', name: 'app_admin_voyages_update', requirements: ['id_voyage' => '\\d+'], methods: ['GET', 'POST'])]
 	public function update(
 		Request $request,
 		EntityManagerInterface $entityManager,
 		DestinationRepository $destinationRepository,
-		VoyageRepository $voyageRepository,
-		ValidatorInterface $validator,
+		ActiviteRepository $activiteRepository,
 		#[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] ?Voyage $voyage = null
 	): Response {
 		if (!$voyage instanceof Voyage) {
@@ -170,41 +251,36 @@ final class VoyagesBackController extends AbstractController
 			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
 		}
 
-		if (!$this->isCsrfTokenValid('admin_voyage_update_'.$voyage->getIdVoyage(), (string) $request->request->get('_token'))) {
-			$this->addFlash('error', 'La requete de modification est invalide.');
+		$formScope = 'admin_voyage_form_edit_'.$voyage->getIdVoyage();
+		$form = $this->createForm(VoyageType::class, $voyage);
+		$form->handleRequest($request);
 
-			return $this->redirectToRoute('app_admin_voyages', array_merge($this->buildRedirectQuery($request), ['edit' => $voyage->getIdVoyage()]));
-		}
+		$formNonce = $request->isMethod('POST')
+			? (string) $request->request->get('_voyage_form_nonce', '')
+			: $this->createFormNonce($request, $formScope);
 
-		if (!$this->consumeFormNonce($request, 'admin_voyage_update_'.$voyage->getIdVoyage(), (string) $request->request->get('_submission_nonce', ''))) {
-			if ($this->wasActionHandledRecently($request, 'admin_voyage_update_'.$voyage->getIdVoyage())) {
-				return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
+		if ($form->isSubmitted() && $form->isValid()) {
+			if (!$this->consumeFormNonce($request, $formScope, $formNonce)) {
+				$this->addFlash('warning', 'Cette soumission a deja ete traitee.');
+
+				return $this->redirectToRoute('app_admin_voyages');
 			}
 
-			$this->addFlash('warning', 'Cette modification a deja ete traitee.');
+			$entityManager->flush();
+			$this->addFlash('success', 'Le voyage a ete modifie avec succes.');
 
-			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
+			return $this->redirectToRoute('app_admin_voyages');
 		}
 
-		$formErrors = $this->hydrateVoyageFromRequest($request, $voyage, $destinationRepository, $validator);
-
-		if ($formErrors !== []) {
-			return $this->renderAdminVoyagesPage(
-				request: $request,
-				voyages: $this->findBackOfficeVoyages($voyageRepository, $this->extractRedirectSearch($request)),
-				destinations: $destinationRepository->findBy([], ['nom_destination' => 'ASC']),
-				voyageForm: $voyage,
-				editingVoyage: $voyage,
-				formErrors: $formErrors
-			);
-		}
-
-		$entityManager->flush();
-		$this->markActionHandled($request, 'admin_voyage_update_'.$voyage->getIdVoyage());
-
-		$this->addFlash('success', 'Le voyage a ete modifie avec succes.');
-
-		return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
+		return $this->render('admin/voyage_form.html.twig', [
+			'form' => $form->createView(),
+			'form_nonce' => $formNonce !== '' ? $formNonce : $this->createFormNonce($request, $formScope),
+			'has_destinations' => $destinationRepository->count([]) > 0,
+			'has_activites' => $activiteRepository->count([]) > 0,
+			'page_title' => 'Modifier le voyage',
+			'page_text' => 'Mettez a jour le voyage selectionne depuis une page dediee qui reutilise le formulaire VoyageType.',
+			'submit_label' => 'Mettre a jour le voyage',
+		]);
 	}
 
 	#[Route('/admin/voyages/{id_voyage}/supprimer', name: 'app_admin_voyages_delete', requirements: ['id_voyage' => '\\d+'], methods: ['POST'])]
@@ -372,7 +448,7 @@ final class VoyagesBackController extends AbstractController
 	/**
 	 * @return list<string>
 	 */
-	private function buildVoyageExportRow(Voyage $voyage): array
+	private function buildVoyageExportRow(Voyage $voyage, ?array $budgetSummary = null): array
 	{
 		$destination = $voyage->getDestination();
 
@@ -382,10 +458,33 @@ final class VoyagesBackController extends AbstractController
 			$voyage->getDateDebut()?->format('Y-m-d') ?? '-',
 			$voyage->getDateFin()?->format('Y-m-d') ?? '-',
 			(string) ($voyage->getStatut() ?? ''),
+			$this->formatBudgetSummary($budgetSummary),
 			(string) ($destination?->getIdDestination() ?? ''),
 			(string) ($destination?->getNomDestination() ?? ''),
 			(string) ($destination?->getPaysDestination() ?? ''),
 		];
+	}
+
+	/**
+	 * @param array{totalAmount: float, currency: string|null, currencyCount: int}|null $budgetSummary
+	 */
+	private function formatBudgetSummary(?array $budgetSummary): string
+	{
+		if ($budgetSummary === null) {
+			return '-';
+		}
+
+		$formattedAmount = number_format((float) $budgetSummary['totalAmount'], 2, ',', ' ');
+
+		if (($budgetSummary['currencyCount'] ?? 0) > 1) {
+			return $formattedAmount.' multi-devise';
+		}
+
+		$currency = $budgetSummary['currency'] ?? null;
+
+		return is_string($currency) && $currency !== ''
+			? $formattedAmount.' '.$currency
+			: $formattedAmount;
 	}
 
 	/**
@@ -399,7 +498,8 @@ final class VoyagesBackController extends AbstractController
 		array $destinations,
 		Voyage $voyageForm,
 		?Voyage $editingVoyage,
-		array $formErrors
+		array $formErrors,
+		BudgetRepository $budgetRepository
 	): Response {
 		$formScope = $editingVoyage instanceof Voyage
 			? 'admin_voyage_update_'.$editingVoyage->getIdVoyage()
@@ -418,6 +518,7 @@ final class VoyagesBackController extends AbstractController
 
 		return $this->render('admin/voyages_back.html.twig', [
 			'voyages' => $voyages,
+			'budget_summaries' => $budgetRepository->findVoyageBudgetSummaries($voyages),
 			'destinations' => $destinations,
 			'voyage_form' => $voyageForm,
 			'editing_voyage' => $editingVoyage,

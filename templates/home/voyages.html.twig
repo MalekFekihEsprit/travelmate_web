@@ -375,6 +375,17 @@
             border-color: rgba(214, 169, 91, 0.34);
         }
 
+        .voyage-action--view {
+            background: rgba(109, 138, 150, 0.12);
+            color: #38545f;
+            border-color: rgba(109, 138, 150, 0.24);
+        }
+
+        .voyage-action--view:hover {
+            background: rgba(109, 138, 150, 0.2);
+            border-color: rgba(109, 138, 150, 0.34);
+        }
+
         .voyage-action--delete {
             background: rgba(196, 111, 75, 0.08);
             color: var(--color-primary-dark);
@@ -565,15 +576,31 @@
         </div>
 
         <div class="voyages-toolbar">
-            <form method="get" action="{{ path('app_voyages') }}" class="voyages-filter-form">
+            <form
+                method="get"
+                action="{{ path('app_voyages') }}"
+                class="voyages-filter-form"
+                data-controller="voyage-filters"
+                data-voyage-filters-delay-value="400"
+                data-action="submit->voyage-filters#clearPendingSubmit"
+            >
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-search">Recherche</label>
-                    <input id="voyage-search" type="search" name="search" value="{{ filters.search }}" class="voyages-filter-input" placeholder="Titre, destination ou pays">
+                    <input
+                        id="voyage-search"
+                        type="search"
+                        name="search"
+                        value="{{ filters.search }}"
+                        class="voyages-filter-input"
+                        placeholder="Titre, destination ou pays"
+                        data-voyage-filters-target="search"
+                        data-action="input->voyage-filters#queueSubmit search->voyage-filters#submitNow"
+                    >
                 </div>
 
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-statut">Statut</label>
-                    <select id="voyage-statut" name="statut" class="voyages-filter-input">
+                    <select id="voyage-statut" name="statut" class="voyages-filter-input" data-action="change->voyage-filters#submitNow">
                         <option value="">Tous les statuts</option>
                         {% for status in status_options %}
                             <option value="{{ status }}" {{ filters.statut == status ? 'selected' : '' }}>{{ status }}</option>
@@ -583,7 +610,7 @@
 
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-destination">Destination</label>
-                    <select id="voyage-destination" name="destination" class="voyages-filter-input">
+                    <select id="voyage-destination" name="destination" class="voyages-filter-input" data-action="change->voyage-filters#submitNow">
                         <option value="">Toutes les destinations</option>
                         {% for destination in destinations %}
                             <option value="{{ destination.idDestination }}" {{ filters.destination == destination.idDestination ? 'selected' : '' }}>
@@ -595,7 +622,7 @@
 
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-sort">Tri</label>
-                    <select id="voyage-sort" name="sort" class="voyages-filter-input">
+                    <select id="voyage-sort" name="sort" class="voyages-filter-input" data-action="change->voyage-filters#submitNow">
                         {% for sortKey, sortLabel in sort_options %}
                             <option value="{{ sortKey }}" {{ filters.sort == sortKey ? 'selected' : '' }}>{{ sortLabel }}</option>
                         {% endfor %}
@@ -603,7 +630,6 @@
                 </div>
 
                 <div class="voyages-filter-actions">
-                    <button type="submit" class="btn btn--primary">Appliquer</button>
                     {% if has_active_filters %}
                         <a href="{{ path('app_voyages') }}" class="btn btn--ghost">Reinitialiser</a>
                     {% endif %}
@@ -704,6 +730,14 @@
                             </div>
 
                             <div class="voyage-card__actions">
+                                <a href="{{ path('app_voyages_show', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--view" aria-label="Consulter les informations du voyage {{ voyage.titreVoyage }}" title="Consulter">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M2.5 12C4.6 7.8 8.1 5.5 12 5.5C15.9 5.5 19.4 7.8 21.5 12C19.4 16.2 15.9 18.5 12 18.5C8.1 18.5 4.6 16.2 2.5 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                        <path d="M12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z" stroke="currentColor" stroke-width="1.8"/>
+                                    </svg>
+                                    <span class="sr-only">Consulter</span>
+                                </a>
+
                                 <a href="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--participants" aria-label="Gerer les participants du voyage {{ voyage.titreVoyage }}" title="Participants">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M16 21V19.5C16 18.1193 14.8807 17 13.5 17H7.5C6.11929 17 5 18.1193 5 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>

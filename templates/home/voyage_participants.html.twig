@@ -529,6 +529,9 @@
                                 <form id="participant-role-form-{{ participation.user.id }}" method="post" action="{{ path('app_voyages_participants_update', {'id_voyage': voyage.idVoyage, 'userId': participation.user.id}) }}" class="participants-role-form">
                                     <input type="hidden" name="_token" value="{{ csrf_token('update_participant_' ~ voyage.idVoyage ~ '_' ~ participation.user.id) }}">
                                     <select name="role_participation" class="participants-select" aria-label="Role de {{ participation.user.prenom }} {{ participation.user.nom }}">
+                                        {% if participation.roleParticipation not in role_options %}
+                                            <option value="{{ participation.roleParticipation }}" selected>{{ participation.roleParticipation }} (actuel)</option>
+                                        {% endif %}
                                         {% for role in role_options %}
                                             <option value="{{ role }}" {{ role == participation.roleParticipation ? 'selected' : '' }}>{{ role }}</option>
                                         {% endfor %}

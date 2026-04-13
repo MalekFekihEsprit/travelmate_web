@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Entity\Voyage;
 use App\Form\VoyageType;
 use App\Repository\ActiviteRepository;
+use App\Repository\BudgetRepository;
 use App\Repository\DestinationRepository;
 use App\Repository\ParticipationRepository;
 use App\Repository\UserRepository;
@@ -63,6 +64,26 @@ class VoyagesFrontController extends AbstractController
             'results_count' => count($voyages),
             'all_voyages_count' => $allVoyagesCount,
             'has_active_filters' => $filters['search'] !== '' || $filters['statut'] !== '' || $filters['destination'] !== null || $filters['sort'] !== 'date_asc',
+        ]);
+    }
+
+    #[Route('/voyages/{id_voyage}', name: 'app_voyages_show', requirements: ['id_voyage' => '\\d+'], methods: ['GET'])]
+    public function show(
+        BudgetRepository $budgetRepository,
+        ParticipationRepository $participationRepository,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage
+    ): Response {
+        $galleryPaths = $this->getVoyageGalleryPaths();
+        $voyageId = $voyage->getIdVoyage() ?? 0;
+        $voyageImages = $this->buildVoyageImageMap([$voyage], $galleryPaths);
+        $budgetSummary = $budgetRepository->findVoyageBudgetSummaries([$voyage])[$voyageId] ?? null;
+
+        return $this->render('home/voyage_show.html.twig', [
+            'voyage' => $voyage,
+            'voyage_image' => $voyageImages[$voyageId] ?? ($galleryPaths[0] ?? null),
+            'participants' => $participationRepository->findByVoyageOrdered($voyage),
+            'budget_summary' => $budgetSummary,
+            'budget_total_label' => $this->formatBudgetSummary($budgetSummary),
         ]);
     }
 
@@ -223,7 +244,7 @@ class VoyagesFrontController extends AbstractController
 
             if ($lastEmail === '') {
                 $this->addFlash('error', 'Veuillez saisir un email valide.');
-            } elseif (!in_array($lastRole, Participation::getAvailableRoles(), true)) {
+            } elseif (!Participation::isSelectableRole($lastRole)) {
                 $this->addFlash('error', 'Le role selectionne est invalide.');
             } else {
                 $user = $userRepository->createQueryBuilder('user')
@@ -264,9 +285,9 @@ class VoyagesFrontController extends AbstractController
         return $this->render('home/voyage_participants.html.twig', [
             'voyage' => $voyage,
             'participants' => $participationRepository->findByVoyageOrdered($voyage),
-            'role_options' => Participation::getAvailableRoles(),
+            'role_options' => Participation::getSelectableRoles(),
             'last_email' => $lastEmail,
-            'last_role' => in_array($lastRole, Participation::getAvailableRoles(), true) ? $lastRole : Participation::DEFAULT_ROLE,
+            'last_role' => Participation::isSelectableRole($lastRole) ? $lastRole : Participation::DEFAULT_ROLE,
         ]);
     }
 
@@ -286,12 +307,6 @@ class VoyagesFrontController extends AbstractController
 
         $role = trim((string) $request->request->get('role_participation', Participation::DEFAULT_ROLE));
 
-        if (!in_array($role, Participation::getAvailableRoles(), true)) {
-            $this->addFlash('error', 'Le role selectionne est invalide.');
-
-            return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
-        }
-
         $participation = $participationRepository->findOneBy([
             'user' => $user,
             'voyage' => $voyage,
@@ -299,6 +314,12 @@ class VoyagesFrontController extends AbstractController
 
         if (!$participation instanceof Participation) {
             $this->addFlash('error', 'Ce participant n\'est pas associe a ce voyage.');
+
+            return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
+        }
+
+        if (!Participation::isSelectableRole($role) && $role !== $participation->getRoleParticipation()) {
+            $this->addFlash('error', 'Le role selectionne est invalide.');
 
             return $this->redirectToRoute('app_voyages_participants', ['id_voyage' => $voyage->getIdVoyage()]);
         }
@@ -402,6 +423,28 @@ class VoyagesFrontController extends AbstractController
         }
 
         return $imageMap;
+    }
+
+    /**
+     * @param array{totalAmount: float, currency: string|null, currencyCount: int}|null $budgetSummary
+     */
+    private function formatBudgetSummary(?array $budgetSummary): string
+    {
+        if ($budgetSummary === null) {
+            return '-';
+        }
+
+        $formattedAmount = number_format((float) $budgetSummary['totalAmount'], 2, ',', ' ');
+
+        if (($budgetSummary['currencyCount'] ?? 0) > 1) {
+            return $formattedAmount.' multi-devise';
+        }
+
+        $currency = $budgetSummary['currency'] ?? null;
+
+        return is_string($currency) && $currency !== ''
+            ? $formattedAmount.' '.$currency
+            : $formattedAmount;
     }
 
     private function createFormNonce(Request $request, string $scope): string
