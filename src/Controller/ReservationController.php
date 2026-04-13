@@ -285,31 +285,67 @@ L'équipe TravelMate
 
     private function sendSMSConfirmation(Reservation $reservation): void
     {
-        // Utiliser l'API Twilio (essai gratuit disponible)
-        $accountSid = $_ENV['TWILIO_ACCOUNT_SID'] ?? '';
-        $authToken = $_ENV['TWILIO_AUTH_TOKEN'] ?? '';
-        $twilioNumber = $_ENV['TWILIO_PHONE_NUMBER'] ?? '';
+        // Utiliser l'API SMS-API (alternative gratuite à Twilio)
+        $apiKey = $_ENV['SMS_API_KEY'] ?? '';
         
-        if (empty($accountSid) || empty($authToken)) {
-            // Fallback : logger pour le développement
-            error_log("SMS à envoyer à {$reservation->getTelephone()}: Code {$reservation->getCodeConfirmation()}");
+        if (empty($apiKey)) {
+            // Fallback : logger pour le développement et afficher le code
+            $this->logger->info('SMS à envoyer', [
+                'to' => $reservation->getTelephone(),
+                'code' => $reservation->getCodeConfirmation(),
+                'activite' => $reservation->getActivite()->getNom()
+            ]);
+            
+            // Afficher le code à l'utilisateur pour le développement
+            $this->addFlash('info', "Code SMS (développement): {$reservation->getCodeConfirmation()}");
             return;
         }
-
-        $message = "
-            TravelMate: Réservation confirmée pour {$reservation->getActivite()->getNom()}.
-            Code de confirmation: {$reservation->getCodeConfirmation()}
-            Date: {$reservation->getDateReservation()->format('d/m/Y')}
-        ";
-
-        // En production, intégrer l'API Twilio réelle
-        // $client = new Client($accountSid, $authToken);
-        // $client->messages->create(
-        //     $reservation->getTelephone(),
-        //     [
-        //         'from' => $twilioNumber,
-        //         'body' => $message
-        //     ]
-        // );
+        
+        // Utiliser SMS-API.com (gratuit pour quelques SMS)
+        $message = "TravelMate: Réservation confirmée pour {$reservation->getActivite()->getNom()}. Code: {$reservation->getCodeConfirmation()}. Date: {$reservation->getDateReservation()->format('d/m/Y')}";
+        
+        try {
+            $url = 'https://api.sms-api.com/mt/send/sms';
+            $data = [
+                'api_key' => $apiKey,
+                'to' => $reservation->getTelephone(),
+                'from' => 'TravelMate',
+                'message' => $message
+            ];
+            
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json'
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode === 200 || $httpCode === 201) {
+                $this->addFlash('success', 'SMS envoyé avec succès');
+                $this->logger->info('SMS envoyé avec succès', [
+                    'to' => $reservation->getTelephone(),
+                    'code' => $reservation->getCodeConfirmation()
+                ]);
+            } else {
+                $this->addFlash('warning', 'Erreur lors de l\'envoi du SMS');
+                $this->logger->error('Erreur SMS-API', [
+                    'http_code' => $httpCode,
+                    'response' => $response,
+                    'to' => $reservation->getTelephone()
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de l\'envoi du SMS: ' . $e->getMessage());
+            $this->logger->error('Exception SMS', [
+                'error' => $e->getMessage(),
+                'to' => $reservation->getTelephone()
+            ]);
+        }
     }
 }

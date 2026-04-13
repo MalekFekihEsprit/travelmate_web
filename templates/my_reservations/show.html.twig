@@ -1,0 +1,380 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réservation #{{ reservation.id }} - TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .reservation-detail-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        
+        .reservation-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .reservation-title {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 0.5rem;
+        }
+        
+        .reservation-subtitle {
+            color: var(--color-text-muted);
+            font-size: 1rem;
+        }
+        
+        .reservation-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: 0 4px 16px rgba(71,48,35,0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .activity-info {
+            background: linear-gradient(135deg, var(--color-primary-soft), var(--color-secondary-soft));
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(196,111,75,0.2);
+        }
+        
+        .activity-name {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .reservation-status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+        
+        .status-confirmed {
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+        }
+        
+        .status-pending {
+            background: rgba(251, 146, 60, 0.1);
+            color: #ea580c;
+        }
+        
+        .status-cancelled {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .detail-section {
+            background: var(--color-surface-soft);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            border: 1px solid var(--color-border);
+        }
+        
+        .section-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--color-primary);
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            font-size: 0.9rem;
+            color: var(--color-text);
+            font-weight: 600;
+            text-align: right;
+        }
+        
+        .qr-section {
+            text-align: center;
+            background: var(--color-surface-soft);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            border: 1px solid var(--color-border);
+            margin-bottom: 2rem;
+        }
+        
+        .qr-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 1rem;
+        }
+        
+        .qr-code {
+            max-width: 200px;
+            height: auto;
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            background: white;
+        }
+        
+        .code-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            letter-spacing: 0.2em;
+            background: var(--color-surface);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            margin: 1rem 0;
+            border: 1px solid var(--color-border);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: var(--color-surface);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--color-hover);
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .amount-highlight {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+        
+        @media (max-width: 768px) {
+            .reservation-detail-container {
+                padding: 1rem;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-action {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="reservation-detail-container">
+    <div class="reservation-header">
+        <h1 class="reservation-title">Réservation #{{ reservation.id }}</h1>
+        <p class="reservation-subtitle">Créée le {{ reservation.dateReservation|date('d/m/Y à H:i') }}</p>
+    </div>
+
+    <div class="activity-info">
+        <div class="activity-name">{{ reservation.activite.nom }}</div>
+        <div class="reservation-status status-{{ reservation.statutPaiement }}">
+            {{ reservation.statutPaiement|replace({'confirme': 'Confirmée', 'en_attente': 'En attente', 'annulee': 'Annulée'}) }}
+        </div>
+    </div>
+
+    <div class="details-grid">
+        <div class="detail-section">
+            <h3 class="section-title">Informations personnelles</h3>
+            <div class="detail-item">
+                <span class="detail-label">Nom complet</span>
+                <span class="detail-value">{{ reservation.nomComplet }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Email</span>
+                <span class="detail-value">{{ reservation.email }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Téléphone</span>
+                <span class="detail-value">{{ reservation.telephone }}</span>
+            </div>
+            {% if reservation.commentaire %}
+            <div class="detail-item">
+                <span class="detail-label">Commentaire</span>
+                <span class="detail-value">{{ reservation.commentaire }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="detail-section">
+            <h3 class="section-title">Détails de la réservation</h3>
+            <div class="detail-item">
+                <span class="detail-label">Date de réservation</span>
+                <span class="detail-value">{{ reservation.dateReservation|date('d/m/Y H:i') }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Méthode de confirmation</span>
+                <span class="detail-value">
+                    {% if reservation.methodeConfirmation == 'email' %}
+                        Email (QR Code)
+                    {% else %}
+                        SMS (Code à 5 chiffres)
+                    {% endif %}
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Montant total</span>
+                <span class="detail-value amount-highlight">{{ reservation.montantTotal }} DT</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Acompte versé</span>
+                <span class="detail-value">{{ reservation.acompte }} DT</span>
+            </div>
+            {% if reservation.datePaiement %}
+            <div class="detail-item">
+                <span class="detail-label">Date de paiement</span>
+                <span class="detail-value">{{ reservation.datePaiement|date('d/m/Y H:i') }}</span>
+            </div>
+            {% endif %}
+            {% if reservation.dateConfirmation %}
+            <div class="detail-item">
+                <span class="detail-label">Date de confirmation</span>
+                <span class="detail-value">{{ reservation.dateConfirmation|date('d/m/Y H:i') }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if reservation.methodeConfirmation == 'email' %}
+        <div class="qr-section">
+            <h3 class="qr-title">QR Code de confirmation</h3>
+            <p>Présentez ce QR code le jour de l'activité pour confirmer votre réservation</p>
+            {% if reservation.qrCodePath %}
+                <img src="{{ asset(reservation.qrCodePath) }}" alt="QR Code de réservation" class="qr-code">
+            {% else %}
+                <a href="{{ path('app_qr_display', {id: reservation.id}) }}" target="_blank" class="btn-action btn-primary" style="margin-top: 1rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Générer le QR Code
+                </a>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="qr-section">
+            <h3 class="qr-title">Code de confirmation SMS</h3>
+            <p>Utilisez ce code à 5 chiffres pour confirmer votre réservation le jour de l'activité</p>
+            {% if reservation.codeConfirmation %}
+                <div class="code-display">{{ reservation.codeConfirmation }}</div>
+                <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+                    Gardez ce code précieusement !
+                </p>
+            {% else %}
+                <p style="color: var(--color-text-muted);">Le code sera généré lors de l'envoi de la confirmation</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="action-buttons">
+        <a href="{{ path('app_my_reservations') }}" class="btn-action btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Retour à mes réservations
+        </a>
+        
+        {% if reservation.methodeConfirmation == 'email' %}
+            <a href="{{ path('app_qr_display', {id: reservation.id}) }}" target="_blank" class="btn-action btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Voir le QR Code
+            </a>
+        {% endif %}
+        
+        {% if reservation.statutPaiement == 'confirme' %}
+            <form method="post" action="{{ path('app_my_reservation_cancel', {id: reservation.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')">
+                <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ reservation.id) }}">
+                <button type="submit" class="btn-action btn-danger">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Annuler la réservation
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
