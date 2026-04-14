@@ -33,6 +33,12 @@ class UserAdminController extends AbstractController
 
         $users = $userRepository->searchForAdmin($search, $role ?: null);
 
+        if ($request->isXmlHttpRequest()) {
+            return $this->render('user_admin/_users_results.html.twig', [
+                'users' => $users,
+            ]);
+        }
+
         return $this->render('user_admin/index.html.twig', [
             'users' => $users,
             'search' => $search,
