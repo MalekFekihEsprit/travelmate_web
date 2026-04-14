@@ -171,6 +171,10 @@
             font-size: 0.875rem;
             margin-top: 0.25rem;
         }
+        
+        .weather-container {
+            margin-bottom: 2rem;
+        }
     </style>
 {% endblock %}
 
@@ -181,12 +185,18 @@
         <p class="reservation-subtitle">{{ activite.nom }}</p>
     </div>
 
-    <div class="activity-info">
-        <h3>{{ activite.nom }}</h3>
-        <p>{{ activite.description|slice(0, 150) }}...</p>
-    </div>
-
-    <div class="pricing-summary">
+    <div class="reservation-form-container">
+        <div class="form-header">
+            <h1 class="form-title">Réserver cette activité</h1>
+            <p class="form-subtitle">Remplissez les informations ci-dessous pour finaliser votre réservation</p>
+        </div>
+        
+        <!-- Prévisions météo -->
+        <div id="weather-forecast" class="weather-container">
+            <!-- Les prévisions météo seront chargées ici -->
+        </div>
+        
+        <div class="pricing-summary">
         <div class="pricing-row">
             <span>Montant total</span>
             <span>{{ montantTotal }} DT</span>
@@ -240,9 +250,9 @@
                     {{ form_widget(choice) }}
                     <label class="form-check-label" for="{{ choice.vars.id }}">
                         {% if choice.vars.value == 'email' %}
-                             Par email (recevrez un QR code)
+                            Par email (recevrez un QR code)
                         {% else %}
-                             Par SMS (recevrez un code à 5 chiffres)
+                            Par WhatsApp (recevrez un code à 5 chiffres)
                         {% endif %}
                     </label>
                 </div>
@@ -257,4 +267,63 @@
 
     {{ form_end(form) }}
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/weather-forecast.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.querySelector('input[type="date"]');
+            const weatherContainer = document.getElementById('weather-forecast');
+            
+            if (dateInput && weatherContainer) {
+                // Initialiser avec la date du jour
+                const today = new Date().toISOString().split('T')[0];
+                loadWeatherForecast(today);
+                
+                // Charger les prévisions au changement de date
+                dateInput.addEventListener('change', function(e) {
+                    const selectedDate = e.target.value;
+                    if (selectedDate) {
+                        loadWeatherForecast(selectedDate);
+                    }
+                });
+                
+                // Charger les prévisions au chargement de la page si une date est pré-remplie
+                const initialDate = dateInput.value;
+                if (initialDate) {
+                    loadWeatherForecast(initialDate);
+                }
+            }
+            
+            async function loadWeatherForecast(date) {
+                try {
+                    // Afficher le chargement
+                    weatherContainer.innerHTML = `
+                        <div class="weather-loading">
+                            <div class="weather-spinner"></div>
+                            <p>Chargement des prévisions météo...</p>
+                        </div>
+                    `;
+                    
+                    // Récupérer les prévisions météo
+                    const weatherData = await window.TravelMateWeather.getForecast(date, 'Tunis');
+                    
+                    // Afficher les prévisions
+                    window.TravelMateWeather.displayForecast(weatherData, 'weather-forecast');
+                    
+                } catch (error) {
+                    console.error('Erreur lors du chargement des prévisions météo:', error);
+                    weatherContainer.innerHTML = `
+                        <div class="weather-error">
+                            <span class="weather-icon">⚠️</span>
+                            <p>Impossible de charger les prévisions météo</p>
+                            <button onclick="this.parentElement.innerHTML = ''" class="weather-close-btn">✕</button>
+                        </div>
+                    `;
+                }
+            }
+        });
+    </script>
 {% endblock %}

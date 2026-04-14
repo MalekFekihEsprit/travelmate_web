@@ -227,14 +227,14 @@
             {% if reservation.methodeConfirmation == 'email' %}
                 📧
             {% else %}
-                📱
+                
             {% endif %}
         </div>
         <h3 class="method-title">
             {% if reservation.methodeConfirmation == 'email' %}
                 Confirmation par Email
             {% else %}
-                Confirmation par SMS
+                Confirmation par WhatsApp
             {% endif %}
         </h3>
         <div class="method-desc">
@@ -256,7 +256,7 @@
                         </p>
                     </div>
             {% else %}
-                <p>Vous recevrez un SMS contenant :</p>
+                <p>Vous recevrez un message WhatsApp contenant :</p>
                 <ul>
                     <li>Un résumé de votre réservation</li>
                     <li>Un code de confirmation à 5 chiffres</li>
@@ -283,7 +283,7 @@
     <div class="next-steps">
         <h4>Prochaines étapes</h4>
         <ul>
-            <li>Recevez votre confirmation par {{ reservation.methodeConfirmation == 'email' ? 'email' : 'SMS' }}</li>
+            <li>Recevez votre confirmation par {{ reservation.methodeConfirmation == 'email' ? 'email' : 'WhatsApp' }}</li>
             <li>Présentez votre {{ reservation.methodeConfirmation == 'email' ? 'QR code' : 'code de confirmation' }} le jour de l'activité</li>
             <li>Profitez de votre aventure avec TravelMate !</li>
         </ul>

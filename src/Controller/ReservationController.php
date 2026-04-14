@@ -14,6 +14,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Psr\Log\LoggerInterface;
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
 
 #[Route('/reservation')]
 class ReservationController extends AbstractController
@@ -76,32 +78,55 @@ class ReservationController extends AbstractController
 
         return $this->render('reservation/payment.html.twig', [
             'reservation' => $reservation,
-            'paypalClientId' => $_ENV['PAYPAL_CLIENT_ID'] ?? 'test'
+            'stripePublishableKey' => $_ENV['STRIPE_PUBLISHABLE_KEY'] ?? 'pk_test_placeholder'
         ]);
     }
 
-    #[Route('/payment/process/{id}', name: 'app_reservation_payment_process', methods: ['POST'])]
-    public function processPayment(Request $request, Reservation $reservation): JsonResponse
+    #[Route('/payment/create-checkout-session/{id}', name: 'app_reservation_create_checkout_session', methods: ['POST'])]
+    public function createCheckoutSession(Reservation $reservation): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        
-        // Simuler le traitement PayPal (en production, intégrer l'API PayPal réelle)
-        if (isset($data['paymentId']) && isset($data['status']) && $data['status'] === 'completed') {
-            $reservation->setStatutPaiement('confirme');
-            $reservation->setDatePaiement(new \DateTime());
-            $reservation->setTransactionId($data['paymentId']);
-            
-            $this->entityManager->flush();
+        try {
+            // Configurer Stripe avec la clé secrète
+            Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
 
-            // Le QR code sera généré à la demande dans QRCodeController
+            // Créer une session de paiement Stripe Checkout
+            $checkoutSession = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'eur', // ou 'tnd' si supporté
+                        'product_data' => [
+                            'name' => 'Acompte - ' . $reservation->getActivite()->getNom(),
+                            'description' => 'Réservation #' . $reservation->getId(),
+                        ],
+                        'unit_amount' => (int)($reservation->getAcompte() * 100), // Stripe utilise les centimes
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => $this->urlGenerator->generate('app_reservation_payment_success', ['id' => $reservation->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                'cancel_url' => $this->urlGenerator->generate('app_reservation_payment_cancel', ['id' => $reservation->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+                'metadata' => [
+                    'reservation_id' => $reservation->getId(),
+                ],
+            ]);
 
             return new JsonResponse([
                 'success' => true,
-                'redirect' => $this->urlGenerator->generate('app_reservation_confirmation', ['id' => $reservation->getId()])
+                'sessionId' => $checkoutSession->id
             ]);
-        }
 
-        return new JsonResponse(['success' => false], 400);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur Stripe Checkout Session', [
+                'error' => $e->getMessage(),
+                'reservation_id' => $reservation->getId()
+            ]);
+
+            return new JsonResponse([
+                'success' => false,
+                'error' => 'Impossible de créer la session de paiement'
+            ], 500);
+        }
     }
 
     #[Route('/confirmation/{id}', name: 'app_reservation_confirmation', methods: ['GET', 'POST'])]
@@ -127,6 +152,70 @@ class ReservationController extends AbstractController
         ]);
     }
 
+    
+    #[Route('/payment/success/{id}', name: 'app_reservation_payment_success', methods: ['GET'])]
+    public function paymentSuccess(Reservation $reservation): Response
+    {
+        // Marquer le paiement comme confirmé
+        $reservation->setStatutPaiement('confirme');
+        $reservation->setDatePaiement(new \DateTime());
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Paiement effectué avec succès !');
+        
+        return $this->redirectToRoute('app_reservation_confirmation', ['id' => $reservation->getId()]);
+    }
+
+    #[Route('/payment/cancel/{id}', name: 'app_reservation_payment_cancel', methods: ['GET'])]
+    public function paymentCancel(Reservation $reservation): Response
+    {
+        $this->addFlash('error', 'Le paiement a été annulé. Vous pouvez réessayer.');
+        
+        return $this->redirectToRoute('app_reservation_payment', ['id' => $reservation->getId()]);
+    }
+
+    #[Route('/webhook/stripe', name: 'app_stripe_webhook', methods: ['POST'])]
+    public function stripeWebhook(Request $request): Response
+    {
+        try {
+            $payload = $request->getContent();
+            $sigHeader = $request->headers->get('stripe-signature');
+            
+            Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
+            
+            $event = \Stripe\Webhook::constructEvent(
+                $payload, $sigHeader, $_ENV['STRIPE_WEBHOOK_SECRET']
+            );
+
+            switch ($event->type) {
+                case 'checkout.session.completed':
+                    $session = $event->data->object;
+                    $reservationId = $session->metadata->reservation_id;
+                    
+                    $reservation = $this->entityManager->find(Reservation::class, $reservationId);
+                    if ($reservation) {
+                        $reservation->setStatutPaiement('confirme');
+                        $reservation->setDatePaiement(new \DateTime());
+                        $reservation->setTransactionId($session->payment_intent);
+                        $this->entityManager->flush();
+                        
+                        $this->logger->info('Paiement Stripe confirmé', [
+                            'reservation_id' => $reservationId,
+                            'session_id' => $session->id
+                        ]);
+                    }
+                    break;
+            }
+
+            return new Response('Webhook traité', 200);
+
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur webhook Stripe', [
+                'error' => $e->getMessage()
+            ]);
+            return new Response('Erreur webhook', 400);
+        }
+    }
     
     private function sendEmailConfirmation(Reservation $reservation): void
     {
@@ -283,34 +372,62 @@ L'équipe TravelMate
         ";
     }
 
-    private function sendSMSConfirmation(Reservation $reservation): void
+    private function sendWhatsAppConfirmation(Reservation $reservation): void
     {
-        // Utiliser l'API SMS-API (alternative gratuite à Twilio)
-        $apiKey = $_ENV['SMS_API_KEY'] ?? '';
+        // Utiliser l'API WhatsApp Business (gratuite pour commencer)
+        $accessToken = $_ENV['WHATSAPP_ACCESS_TOKEN'] ?? '';
+        $phoneNumberId = $_ENV['WHATSAPP_PHONE_NUMBER_ID'] ?? '';
+        $version = $_ENV['WHATSAPP_API_VERSION'] ?? 'v18.0';
         
-        if (empty($apiKey)) {
+        if (empty($accessToken) || empty($phoneNumberId)) {
             // Fallback : logger pour le développement et afficher le code
-            $this->logger->info('SMS à envoyer', [
+            $this->logger->info('WhatsApp à envoyer', [
                 'to' => $reservation->getTelephone(),
                 'code' => $reservation->getCodeConfirmation(),
                 'activite' => $reservation->getActivite()->getNom()
             ]);
             
             // Afficher le code à l'utilisateur pour le développement
-            $this->addFlash('info', "Code SMS (développement): {$reservation->getCodeConfirmation()}");
+            $this->addFlash('info', "Code WhatsApp (développement): {$reservation->getCodeConfirmation()}");
             return;
         }
         
-        // Utiliser SMS-API.com (gratuit pour quelques SMS)
-        $message = "TravelMate: Réservation confirmée pour {$reservation->getActivite()->getNom()}. Code: {$reservation->getCodeConfirmation()}. Date: {$reservation->getDateReservation()->format('d/m/Y')}";
+        // Préparer le message WhatsApp avec formatage
+        $message = $this->createWhatsAppMessage($reservation);
         
         try {
-            $url = 'https://api.sms-api.com/mt/send/sms';
+            // Utiliser WhatsApp Business API
+            $url = "https://graph.facebook.com/{$version}/{$phoneNumberId}/messages";
+            
             $data = [
-                'api_key' => $apiKey,
-                'to' => $reservation->getTelephone(),
-                'from' => 'TravelMate',
-                'message' => $message
+                'messaging_product' => 'whatsapp',
+                'to' => $this->formatPhoneNumberForWhatsApp($reservation->getTelephone()),
+                'type' => 'template',
+                'template' => [
+                    'name' => 'travelmate_confirmation',
+                    'language' => [
+                        'code' => 'fr'
+                    ],
+                    'components' => [
+                        [
+                            'type' => 'body',
+                            'parameters' => [
+                                [
+                                    'type' => 'text',
+                                    'text' => $reservation->getActivite()->getNom()
+                                ],
+                                [
+                                    'type' => 'text',
+                                    'text' => $reservation->getCodeConfirmation()
+                                ],
+                                [
+                                    'type' => 'text',
+                                    'text' => $reservation->getDateReservation()->format('d/m/Y H:i')
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
             ];
             
             $ch = curl_init($url);
@@ -318,22 +435,24 @@ L'équipe TravelMate
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json'
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $accessToken
             ]);
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
             
-            if ($httpCode === 200 || $httpCode === 201) {
-                $this->addFlash('success', 'SMS envoyé avec succès');
-                $this->logger->info('SMS envoyé avec succès', [
+            if ($httpCode === 200) {
+                $this->addFlash('success', 'Message WhatsApp envoyé avec succès');
+                $this->logger->info('WhatsApp envoyé avec succès', [
                     'to' => $reservation->getTelephone(),
-                    'code' => $reservation->getCodeConfirmation()
+                    'code' => $reservation->getCodeConfirmation(),
+                    'response' => $response
                 ]);
             } else {
-                $this->addFlash('warning', 'Erreur lors de l\'envoi du SMS');
-                $this->logger->error('Erreur SMS-API', [
+                $this->addFlash('warning', 'Erreur lors de l\'envoi du message WhatsApp');
+                $this->logger->error('Erreur WhatsApp API', [
                     'http_code' => $httpCode,
                     'response' => $response,
                     'to' => $reservation->getTelephone()
@@ -341,11 +460,45 @@ L'équipe TravelMate
             }
             
         } catch (\Exception $e) {
-            $this->addFlash('error', 'Erreur lors de l\'envoi du SMS: ' . $e->getMessage());
-            $this->logger->error('Exception SMS', [
+            $this->addFlash('error', 'Erreur lors de l\'envoi du message WhatsApp: ' . $e->getMessage());
+            $this->logger->error('Exception WhatsApp', [
                 'error' => $e->getMessage(),
                 'to' => $reservation->getTelephone()
             ]);
         }
+    }
+    
+    private function createWhatsAppMessage(Reservation $reservation): string
+    {
+        return "🎉 *TravelMate - Confirmation de Réservation* 🎉
+
+📋 *Détails de la réservation :*
+• Activité : {$reservation->getActivite()->getNom()}
+• Code de confirmation : *{$reservation->getCodeConfirmation()}*
+• Date : {$reservation->getDateReservation()->format('d/m/Y à H:i')}
+
+🔐 *Conservez précieusement ce code de 5 chiffres !*
+
+📞 Pour toute question, contactez notre support.
+
+*Bon voyage avec TravelMate !* ✈️";
+    }
+    
+    private function formatPhoneNumberForWhatsApp(string $phone): string
+    {
+        // Formater le numéro pour WhatsApp (format international)
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Si le numéro commence par 0, remplacer par +216 pour la Tunisie
+        if (strlen($phone) === 8 && str_starts_with($phone, '0')) {
+            return '216' . substr($phone, 1);
+        }
+        
+        // Si le numéro n'a pas de préfixe international, ajouter +216
+        if (strlen($phone) === 8) {
+            return '216' . $phone;
+        }
+        
+        return $phone;
     }
 }

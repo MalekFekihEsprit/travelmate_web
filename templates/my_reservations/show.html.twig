@@ -298,7 +298,7 @@
                     {% if reservation.methodeConfirmation == 'email' %}
                         Email (QR Code)
                     {% else %}
-                        SMS (Code à 5 chiffres)
+                        WhatsApp (Code à 5 chiffres)
                     {% endif %}
                 </span>
             </div>
@@ -340,7 +340,7 @@
         </div>
     {% else %}
         <div class="qr-section">
-            <h3 class="qr-title">Code de confirmation SMS</h3>
+            <h3 class="qr-title">Code de confirmation WhatsApp</h3>
             <p>Utilisez ce code à 5 chiffres pour confirmer votre réservation le jour de l'activité</p>
             {% if reservation.codeConfirmation %}
                 <div class="code-display">{{ reservation.codeConfirmation }}</div>
