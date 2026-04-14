@@ -122,9 +122,20 @@ final class DestinationController extends AbstractController
     #[Route('/{id_destination}', name: 'app_destination_show', methods: ['GET'])]
     public function show(Destination $destination, NoteDestinationRepository $noteDestinationRepository): Response
     {
+        $userNote = null;
+        $user = $this->getUser();
+
+        if ($user instanceof User) {
+            $note = $noteDestinationRepository->findOneByDestinationAndUser($destination, $user);
+            if ($note instanceof NoteDestination) {
+                $userNote = $note->getNote();
+            }
+        }
+
         return $this->render('destination/show.html.twig', [
             'destination' => $destination,
             'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
+            'user_note' => $userNote,
         ]);
     }
 
@@ -135,20 +146,47 @@ final class DestinationController extends AbstractController
         NoteDestinationRepository $noteDestinationRepository,
         EntityManagerInterface $entityManager
     ): Response {
+        $isAjax = $request->isXmlHttpRequest();
+
         if (!$this->isCsrfTokenValid('rate_destination_'.$destination->getId_destination(), (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token de sécurité invalide.');
+            if ($isAjax) {
+                return $this->render('destination/show.html.twig', [
+                    'destination' => $destination,
+                    'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
+                    'user_note' => null,
+                ]);
+            }
+
             return $this->redirectToRoute('app_destination_show', ['id_destination' => $destination->getId_destination()]);
         }
 
         $user = $this->getUser();
         if (!$user instanceof User) {
             $this->addFlash('error', 'Vous devez être connecté pour noter une destination.');
+            if ($isAjax) {
+                return $this->render('destination/show.html.twig', [
+                    'destination' => $destination,
+                    'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
+                    'user_note' => null,
+                ]);
+            }
+
             return $this->redirectToRoute('app_login');
         }
 
         $noteValue = (float) $request->request->get('note', 0);
         if ($noteValue < 0 || $noteValue > 5) {
             $this->addFlash('error', 'La note doit être comprise entre 0 et 5.');
+            if ($isAjax) {
+                $note = $noteDestinationRepository->findOneByDestinationAndUser($destination, $user);
+                return $this->render('destination/show.html.twig', [
+                    'destination' => $destination,
+                    'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
+                    'user_note' => $note instanceof NoteDestination ? $note->getNote() : null,
+                ]);
+            }
+
             return $this->redirectToRoute('app_destination_show', ['id_destination' => $destination->getId_destination()]);
         }
 
@@ -167,6 +205,15 @@ final class DestinationController extends AbstractController
         $entityManager->flush();
 
         $this->addFlash('success', 'Votre note a été enregistrée.');
+
+        if ($isAjax) {
+            return $this->render('destination/show.html.twig', [
+                'destination' => $destination,
+                'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
+                'user_note' => $note->getNote(),
+            ]);
+        }
+
         return $this->redirectToRoute('app_destination_show', ['id_destination' => $destination->getId_destination()]);
     }
 

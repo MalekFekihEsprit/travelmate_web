@@ -691,7 +691,7 @@
 
         <div class="toolbar">
             <div class="toolbar__top">
-                <span class="toolbar__count">
+                <span class="toolbar__count" id="destAdminCount">
                     {{ destinations|length }} destination{{ destinations|length > 1 ? 's' : '' }}
                 </span>
                 <div class="toolbar-actions">
@@ -707,7 +707,7 @@
                 </div>
             </div>
 
-            <form method="get" class="filters-form" action="{{ path('app_admin_destinations') }}">
+            <form method="get" class="filters-form" id="adminFiltersForm" action="{{ path('app_admin_destinations') }}">
                 <div class="filters-form__group">
                     <label for="destSearch">Recherche</label>
                     <input type="text" id="destSearch" name="q" value="{{ search }}" placeholder="Nom, pays, région...">
@@ -782,7 +782,10 @@
 
                 <tbody>
                     {% for destination in destinations %}
-                        <tr class="destination-row" onclick="window.handleDestinationRowClick(event, '{{ path('app_admin_destinations_show', {id: destination.idDestination})|e('js') }}', this)">
+                        <tr
+                            class="destination-row"
+                            onclick="window.handleDestinationRowClick(event, '{{ path('app_admin_destinations_show', {id: destination.idDestination})|e('js') }}', this)"
+                        >
                             <td class="select-cell">
                                 <input
                                     type="checkbox"
@@ -820,6 +823,10 @@
                 </tbody>
                 </table>
             </form>
+
+            <div id="liveSearchEmptyState" class="empty-state" style="display: none;">
+                Aucune destination trouvée.
+            </div>
         {% else %}
             <div class="empty-state">
                 Aucune destination trouvée.
@@ -832,6 +839,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const page = document.querySelector('.admin-destinations-page');
+    const searchInput = document.getElementById('destSearch');
+    const countDisplay = document.getElementById('destAdminCount');
+    const tableRows = Array.from(document.querySelectorAll('.destination-row'));
+    const liveSearchEmptyState = document.getElementById('liveSearchEmptyState');
     const toggleDeleteModeButton = document.getElementById('toggleDeleteModeButton');
     const cancelDeleteModeButton = document.getElementById('cancelDeleteModeButton');
     const selectAll = document.getElementById('selectAllDestinations');
@@ -935,6 +946,50 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
+    function updateCountDisplay(visibleCount) {
+        if (!countDisplay) {
+            return;
+        }
+
+        countDisplay.textContent = visibleCount + ' destination' + (visibleCount > 1 ? 's' : '');
+    }
+
+    function applyLiveSearchFilter() {
+        if (!tableRows.length) {
+            return;
+        }
+
+        const term = (searchInput?.value || '').trim().toLowerCase();
+        let visibleCount = 0;
+
+        tableRows.forEach((row) => {
+            const content = (row.textContent || '').toLowerCase();
+            const matches = term === '' || content.includes(term);
+
+            row.style.display = matches ? '' : 'none';
+
+            if (!matches) {
+                const checkbox = row.querySelector('.destination-checkbox');
+                if (checkbox && checkbox.checked) {
+                    checkbox.checked = false;
+                }
+            } else {
+                visibleCount += 1;
+            }
+        });
+
+        if (liveSearchEmptyState) {
+            liveSearchEmptyState.style.display = visibleCount === 0 ? '' : 'none';
+        }
+
+        if (selectAll) {
+            selectAll.checked = false;
+        }
+
+        updateCountDisplay(visibleCount);
+        syncBulkDeleteState();
+    }
+
     function setDetailsContent(html) {
         if (!detailsPanel) {
             return;
@@ -1025,8 +1080,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    if (searchInput) {
+        searchInput.addEventListener('input', applyLiveSearchFilter);
+    }
+
     setDeleteMode(false);
     syncBulkDeleteState();
+    applyLiveSearchFilter();
 });
 </script>
 {% endblock %}

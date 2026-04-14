@@ -207,9 +207,12 @@
 
 {% block javascripts %}
 <script>
+let currentDestinationModalId = null;
+
 function openDestinationModal(destinationId) {
     const modal = document.getElementById('destinationModal');
     const modalBody = document.getElementById('modalBody');
+    currentDestinationModalId = destinationId;
     
     fetch(`{{ path('app_destination_show', {'id_destination': '__ID__'}) }}`.replace('__ID__', destinationId))
         .then(response => response.text())
@@ -223,14 +226,52 @@ function openDestinationModal(destinationId) {
 function closeDestinationModal() {
     const modal = document.getElementById('destinationModal');
     modal.classList.remove('active');
+    currentDestinationModalId = null;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('destinationModal');
+    const modalBody = document.getElementById('modalBody');
     window.onclick = function(event) {
         if (event.target === modal) {
             closeDestinationModal();
         }
+    }
+
+    if (modalBody) {
+        modalBody.addEventListener('submit', function (event) {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            if (!form.classList.contains('destination-rating-form')) {
+                return;
+            }
+
+            // Keep rating submission inside modal so the user stays on destination index page.
+            event.preventDefault();
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(function (response) {
+                    return response.text();
+                })
+                .then(function (html) {
+                    modalBody.innerHTML = html;
+                    if (modal) {
+                        modal.classList.add('active');
+                    }
+                })
+                .catch(function () {
+                    console.error('Erreur lors de la soumission de la note.');
+                });
+        });
     }
 
     // Gestion des toasts

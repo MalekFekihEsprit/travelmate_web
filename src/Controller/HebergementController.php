@@ -78,8 +78,8 @@ class HebergementController extends AbstractController
         $destinations = [];
         
         foreach ($hebergements as $hebergement) {
-            if ($hebergement->getType_hebergement()) {
-                $types[$hebergement->getType_hebergement()] = true;
+            if ($hebergement->getTypeHebergement()) {
+                $types[$hebergement->getTypeHebergement()] = true;
             }
             if ($hebergement->getDestination() && $hebergement->getDestination()->getNomDestination()) {
                 $destinations[$hebergement->getDestination()->getNomDestination()] = true;

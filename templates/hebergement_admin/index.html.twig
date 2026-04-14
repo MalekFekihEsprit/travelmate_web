@@ -537,7 +537,7 @@
         {% endif %}
 
         <div class="toolbar__top">
-            <span class="toolbar__count">{{ hebergements|length }} hebergement{{ hebergements|length > 1 ? 's' : '' }}</span>
+            <span class="toolbar__count" id="hebergementAdminCount">{{ hebergements|length }} hebergement{{ hebergements|length > 1 ? 's' : '' }}</span>
             <div class="toolbar-actions">
                 <button type="button" id="toggleDeleteModeButton" class="btn delete-mode-button">
                     Supprimer
@@ -551,7 +551,7 @@
             </div>
         </div>
 
-        <form method="get" class="filters-form" action="{{ path('app_admin_hebergements') }}">
+        <form method="get" class="filters-form" id="adminHebergementFiltersForm" action="{{ path('app_admin_hebergements') }}">
             <div class="filters-form__group">
                 <label for="hebergementSearch">Recherche</label>
                 <input type="text" id="hebergementSearch" name="q" value="{{ search }}" placeholder="Nom, type, adresse...">
@@ -635,6 +635,10 @@
             </tbody>
         </table>
         </form>
+
+        <div id="liveHebergementSearchEmptyState" style="display: none; text-align: center; margin-top: 1rem;">
+            Aucun hebergement trouve.
+        </div>
     </div>
 </section>
 
@@ -647,6 +651,10 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const page = document.querySelector('.admin-destinations-page');
+        const searchInput = document.getElementById('hebergementSearch');
+        const countDisplay = document.getElementById('hebergementAdminCount');
+        const tableRows = Array.from(document.querySelectorAll('.hebergement-row'));
+        const liveSearchEmptyState = document.getElementById('liveHebergementSearchEmptyState');
         const detailsPanel = document.getElementById('hebergementDetailsPanel');
         const detailsBackdrop = document.getElementById('detailsBackdrop');
         const toggleDeleteModeButton = document.getElementById('toggleDeleteModeButton');
@@ -741,6 +749,50 @@
             if (bulkDeleteButton) {
                 bulkDeleteButton.style.display = active ? 'inline-flex' : 'none';
             }
+        }
+
+        function updateCountDisplay(visibleCount) {
+            if (!countDisplay) {
+                return;
+            }
+
+            countDisplay.textContent = visibleCount + ' hebergement' + (visibleCount > 1 ? 's' : '');
+        }
+
+        function applyLiveSearchFilter() {
+            if (!tableRows.length) {
+                return;
+            }
+
+            const term = (searchInput?.value || '').trim().toLowerCase();
+            let visibleCount = 0;
+
+            tableRows.forEach((row) => {
+                const content = (row.textContent || '').toLowerCase();
+                const matches = term === '' || content.includes(term);
+
+                row.style.display = matches ? '' : 'none';
+
+                if (!matches) {
+                    const checkbox = row.querySelector('.hebergement-checkbox');
+                    if (checkbox && checkbox.checked) {
+                        checkbox.checked = false;
+                    }
+                } else {
+                    visibleCount += 1;
+                }
+            });
+
+            if (liveSearchEmptyState) {
+                liveSearchEmptyState.style.display = visibleCount === 0 ? '' : 'none';
+            }
+
+            if (selectAll) {
+                selectAll.checked = false;
+            }
+
+            updateCountDisplay(visibleCount);
+            syncBulkDeleteState();
         }
 
         window.handleHebergementRowClick = function (event, targetUrl) {
@@ -846,8 +898,13 @@
             });
         }
 
+        if (searchInput) {
+            searchInput.addEventListener('input', applyLiveSearchFilter);
+        }
+
         setDeleteMode(false);
         syncBulkDeleteState();
+        applyLiveSearchFilter();
     });
     </script>
 {% endblock %}

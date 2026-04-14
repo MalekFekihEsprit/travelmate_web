@@ -2,134 +2,148 @@
 
 namespace App\Entity;
 
+use App\Repository\HebergementRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
-use App\Repository\HebergementRepository;
-
+#[Vich\Uploadable]
 #[ORM\Entity(repositoryClass: HebergementRepository::class)]
 #[ORM\Table(name: 'hebergement')]
 class Hebergement
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
-    private ?int $id_hebergement = null;
+    #[ORM\Column(name: 'id_hebergement', type: Types::INTEGER)]
+    private ?int $idHebergement = null;
 
-    public function getId_hebergement(): ?int
-    {
-        return $this->id_hebergement;
-    }
+    #[ORM\Column(name: 'nom_hebergement', type: Types::STRING, nullable: false)]
+    private ?string $nomHebergement = null;
 
-    public function setId_hebergement(int $id_hebergement): self
-    {
-        $this->id_hebergement = $id_hebergement;
-        return $this;
-    }
+    #[ORM\Column(name: 'type_hebergement', type: Types::STRING, nullable: true)]
+    private ?string $typeHebergement = null;
 
-    #[ORM\Column(type: 'string', nullable: false)]
-    private ?string $nom_hebergement = null;
+    #[ORM\Column(name: 'prix_nuit_hebergement', type: Types::FLOAT, nullable: true)]
+    private ?float $prixNuitHebergement = null;
 
-    public function getNom_hebergement(): ?string
-    {
-        return $this->nom_hebergement;
-    }
+    #[ORM\Column(name: 'adresse_hebergement', type: Types::STRING, nullable: true)]
+    private ?string $adresseHebergement = null;
 
-    public function setNom_hebergement(string $nom_hebergement): self
-    {
-        $this->nom_hebergement = $nom_hebergement;
-        return $this;
-    }
+    #[ORM\Column(name: 'note_hebergement', type: Types::FLOAT, nullable: true)]
+    private ?float $noteHebergement = null;
 
-    #[ORM\Column(type: 'string', nullable: true)]
-    private ?string $type_hebergement = null;
+    #[ORM\Column(name: 'latitude_hebergement', type: Types::FLOAT, nullable: true)]
+    private ?float $latitudeHebergement = null;
 
-    public function getType_hebergement(): ?string
-    {
-        return $this->type_hebergement;
-    }
-
-    public function setType_hebergement(?string $type_hebergement): self
-    {
-        $this->type_hebergement = $type_hebergement;
-        return $this;
-    }
-
-    #[ORM\Column(name: 'prix_nuit_hebergement', type: 'float', nullable: true)]
-    private ?float $prixNuit_hebergement = null;
-
-    public function getPrixNuit_hebergement(): ?float
-    {
-        return $this->prixNuit_hebergement;
-    }
-
-    public function setPrixNuit_hebergement(?float $prixNuit_hebergement): self
-    {
-        $this->prixNuit_hebergement = $prixNuit_hebergement;
-        return $this;
-    }
-
-    #[ORM\Column(type: 'string', nullable: true)]
-    private ?string $adresse_hebergement = null;
-
-    public function getAdresse_hebergement(): ?string
-    {
-        return $this->adresse_hebergement;
-    }
-
-    public function setAdresse_hebergement(?string $adresse_hebergement): self
-    {
-        $this->adresse_hebergement = $adresse_hebergement;
-        return $this;
-    }
-
-    #[ORM\Column(type: 'float', nullable: true)]
-    private ?float $note_hebergement = null;
-
-    public function getNote_hebergement(): ?float
-    {
-        return $this->note_hebergement;
-    }
-
-    public function setNote_hebergement(?float $note_hebergement): self
-    {
-        $this->note_hebergement = $note_hebergement;
-        return $this;
-    }
-
-    #[ORM\Column(type: 'float', nullable: true)]
-    private ?float $latitude_hebergement = null;
-
-    public function getLatitude_hebergement(): ?float
-    {
-        return $this->latitude_hebergement;
-    }
-
-    public function setLatitude_hebergement(?float $latitude_hebergement): self
-    {
-        $this->latitude_hebergement = $latitude_hebergement;
-        return $this;
-    }
-
-    #[ORM\Column(type: 'float', nullable: true)]
-    private ?float $longitude_hebergement = null;
-
-    public function getLongitude_hebergement(): ?float
-    {
-        return $this->longitude_hebergement;
-    }
-
-    public function setLongitude_hebergement(?float $longitude_hebergement): self
-    {
-        $this->longitude_hebergement = $longitude_hebergement;
-        return $this;
-    }
+    #[ORM\Column(name: 'longitude_hebergement', type: Types::FLOAT, nullable: true)]
+    private ?float $longitudeHebergement = null;
 
     #[ORM\ManyToOne(targetEntity: Destination::class, inversedBy: 'hebergements')]
     #[ORM\JoinColumn(name: 'destination_hebergement', referencedColumnName: 'id_destination')]
     private ?Destination $destination = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'hebergements')]
+    #[ORM\JoinColumn(name: 'added_by', referencedColumnName: 'id')]
+    private ?User $user = null;
+
+    #[ORM\Column(name: 'image_name', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $imageName = null;
+
+    #[Vich\UploadableField(mapping: 'hebergement_images', fileNameProperty: 'imageName')]
+    private ?File $imageFile = null;
+
+    #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
+
+    public function getIdHebergement(): ?int
+    {
+        return $this->idHebergement;
+    }
+
+    public function getNomHebergement(): ?string
+    {
+        return $this->nomHebergement;
+    }
+
+    public function setNomHebergement(string $nomHebergement): self
+    {
+        $this->nomHebergement = $nomHebergement;
+
+        return $this;
+    }
+
+    public function getTypeHebergement(): ?string
+    {
+        return $this->typeHebergement;
+    }
+
+    public function setTypeHebergement(?string $typeHebergement): self
+    {
+        $this->typeHebergement = $typeHebergement;
+
+        return $this;
+    }
+
+    public function getPrixNuitHebergement(): ?float
+    {
+        return $this->prixNuitHebergement;
+    }
+
+    public function setPrixNuitHebergement(?float $prixNuitHebergement): self
+    {
+        $this->prixNuitHebergement = $prixNuitHebergement;
+
+        return $this;
+    }
+
+    public function getAdresseHebergement(): ?string
+    {
+        return $this->adresseHebergement;
+    }
+
+    public function setAdresseHebergement(?string $adresseHebergement): self
+    {
+        $this->adresseHebergement = $adresseHebergement;
+
+        return $this;
+    }
+
+    public function getNoteHebergement(): ?float
+    {
+        return $this->noteHebergement;
+    }
+
+    public function setNoteHebergement(?float $noteHebergement): self
+    {
+        $this->noteHebergement = $noteHebergement;
+
+        return $this;
+    }
+
+    public function getLatitudeHebergement(): ?float
+    {
+        return $this->latitudeHebergement;
+    }
+
+    public function setLatitudeHebergement(?float $latitudeHebergement): self
+    {
+        $this->latitudeHebergement = $latitudeHebergement;
+
+        return $this;
+    }
+
+    public function getLongitudeHebergement(): ?float
+    {
+        return $this->longitudeHebergement;
+    }
+
+    public function setLongitudeHebergement(?float $longitudeHebergement): self
+    {
+        $this->longitudeHebergement = $longitudeHebergement;
+
+        return $this;
+    }
 
     public function getDestination(): ?Destination
     {
@@ -139,12 +153,9 @@ class Hebergement
     public function setDestination(?Destination $destination): self
     {
         $this->destination = $destination;
+
         return $this;
     }
-
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'hebergements')]
-    #[ORM\JoinColumn(name: 'added_by', referencedColumnName: 'id')]
-    private ?User $user = null;
 
     public function getUser(): ?User
     {
@@ -154,96 +165,47 @@ class Hebergement
     public function setUser(?User $user): self
     {
         $this->user = $user;
-        return $this;
-    }
-
-    public function getIdHebergement(): ?int
-    {
-        return $this->id_hebergement;
-    }
-
-    public function getNomHebergement(): ?string
-    {
-        return $this->nom_hebergement;
-    }
-
-    public function setNomHebergement(string $nom_hebergement): static
-    {
-        $this->nom_hebergement = $nom_hebergement;
 
         return $this;
     }
 
-    public function getTypeHebergement(): ?string
+    public function getImageName(): ?string
     {
-        return $this->type_hebergement;
+        return $this->imageName;
     }
 
-    public function setTypeHebergement(?string $type_hebergement): static
+    public function setImageName(?string $imageName): self
     {
-        $this->type_hebergement = $type_hebergement;
+        $this->imageName = $imageName;
 
         return $this;
     }
 
-    public function getPrixNuitHebergement(): ?string
+    public function getImageFile(): ?File
     {
-        return $this->prixNuit_hebergement;
+        return $this->imageFile;
     }
 
-    public function setPrixNuitHebergement(?string $prixNuit_hebergement): static
+    public function setImageFile(?File $imageFile): self
     {
-        $this->prixNuit_hebergement = $prixNuit_hebergement;
+        $this->imageFile = $imageFile;
+
+        if ($imageFile !== null) {
+            $this->updatedAt = new \DateTimeImmutable();
+        }
 
         return $this;
     }
 
-    public function getAdresseHebergement(): ?string
+    public function getUpdatedAt(): ?\DateTimeImmutable
     {
-        return $this->adresse_hebergement;
+        return $this->updatedAt;
     }
 
-    public function setAdresseHebergement(?string $adresse_hebergement): static
+    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
     {
-        $this->adresse_hebergement = $adresse_hebergement;
+        $this->updatedAt = $updatedAt;
 
         return $this;
     }
-
-    public function getNoteHebergement(): ?string
-    {
-        return $this->note_hebergement;
-    }
-
-    public function setNoteHebergement(?string $note_hebergement): static
-    {
-        $this->note_hebergement = $note_hebergement;
-
-        return $this;
-    }
-
-    public function getLatitudeHebergement(): ?string
-    {
-        return $this->latitude_hebergement;
-    }
-
-    public function setLatitudeHebergement(?string $latitude_hebergement): static
-    {
-        $this->latitude_hebergement = $latitude_hebergement;
-
-        return $this;
-    }
-
-    public function getLongitudeHebergement(): ?string
-    {
-        return $this->longitude_hebergement;
-    }
-
-    public function setLongitudeHebergement(?string $longitude_hebergement): static
-    {
-        $this->longitude_hebergement = $longitude_hebergement;
-
-        return $this;
-    }
-
 }

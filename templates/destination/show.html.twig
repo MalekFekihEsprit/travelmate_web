@@ -61,13 +61,23 @@
         {% if app.user %}
             <div class="destination-detail__description">
                 <h3>Noter cette destination</h3>
-                <form method="post" action="{{ path('app_destination_rate', {'id_destination': destination.idDestination}) }}" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
-                    <div>
-                        <label for="note"><strong>Votre note (0 a 5)</strong></label>
-                        <input id="note" name="note" type="number" min="0" max="5" step="0.5" required class="admin-input" style="margin-top: .35rem; min-width: 180px;">
-                    </div>
+                {% set currentUserNote = user_note|default(null) %}
+                {% set initialRating = currentUserNote is not null ? currentUserNote|round(0, 'common') : 0 %}
+                <form method="post" action="{{ path('app_destination_rate', {'id_destination': destination.idDestination}) }}" class="destination-rating-form">
+                    <fieldset class="destination-rating__stars" aria-label="Votre note">
+                        {% for star in 5..1 %}
+                            <input
+                                type="radio"
+                                id="destination-rating-{{ star }}"
+                                name="note"
+                                value="{{ star }}"
+                                {% if star == initialRating %}checked{% endif %}
+                                onchange="if (this.form.requestSubmit) { this.form.requestSubmit(); } else { this.form.submit(); }"
+                            >
+                            <label for="destination-rating-{{ star }}" aria-label="{{ star }} étoile{{ star > 1 ? 's' : '' }}">★</label>
+                        {% endfor %}
+                    </fieldset>
                     <input type="hidden" name="_token" value="{{ csrf_token('rate_destination_' ~ destination.idDestination) }}">
-                    <button type="submit" class="btn-primary" style="padding: .8rem 1.2rem; border: none; border-radius: 8px;">Enregistrer ma note</button>
                 </form>
             </div>
         {% else %}
@@ -235,6 +245,52 @@
     font-size: 0.95rem;
 }
 
+.destination-rating-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.destination-rating__stars {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 0.25rem;
+    align-items: center;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.destination-rating__stars input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.destination-rating__stars label {
+    border: 0;
+    background: transparent;
+    font-size: 2rem;
+    line-height: 1;
+    color: #d6d9de;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.12s ease, color 0.18s ease;
+}
+
+.destination-rating__stars label:hover,
+.destination-rating__stars label:hover ~ label,
+.destination-rating__stars input:checked ~ label {
+    color: #f1b70b;
+}
+
+.destination-rating__stars label:hover,
+.destination-rating__stars label:focus-visible {
+    transform: translateY(-1px) scale(1.03);
+    outline: none;
+}
+
 .destination-detail__video-wrapper {
     margin-bottom: 2.5rem;
 }
@@ -383,6 +439,10 @@
     .destination-detail__actions button {
         padding: 0.9rem 1.5rem;
         font-size: 0.85rem;
+    }
+
+    .destination-rating__stars label {
+        font-size: 1.75rem;
     }
 }
 </style>

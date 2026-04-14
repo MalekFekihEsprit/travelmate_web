@@ -133,10 +133,61 @@
             <div class="toolbar-divider"></div>
             
             <div class="toolbar-info">
-                <span class="toolbar-count"><strong id="hbergCount">{{ hebergements|length }}</strong> résultat{{ hebergements|length > 1 ? 's' : '' }}</span>
+                <button type="button" id="suggestHebergementButton" class="btn btn--primary toolbar-suggest-btn" disabled>
+                    <span class="toolbar-suggest-btn__icon">✨</span>
+                    <span>Suggérer des hebergement</span>
+                </button>
             </div>
         </div>
     </div>
+
+    <style>
+        .toolbar-suggest-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 0;
+            border-radius: 999px;
+            padding: 0.72rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            background: linear-gradient(135deg, #c46f4b 0%, #a85a3a 100%);
+            color: #fff;
+            box-shadow: 0 10px 24px rgba(196, 111, 75, 0.28);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        .toolbar-suggest-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(196, 111, 75, 0.34);
+        }
+
+        .toolbar-suggest-btn:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 8px 18px rgba(196, 111, 75, 0.28);
+        }
+
+        .toolbar-suggest-btn:focus-visible {
+            outline: 3px solid rgba(196, 111, 75, 0.3);
+            outline-offset: 2px;
+        }
+
+        .toolbar-suggest-btn__icon {
+            font-size: 0.95rem;
+            line-height: 1;
+            opacity: 0.95;
+        }
+
+        #suggestHebergementButton:disabled {
+            background: linear-gradient(135deg, #d9dbe1 0%, #c9cdd6 100%);
+            color: #6c727a;
+            box-shadow: none;
+            cursor: not-allowed;
+            pointer-events: none;
+            opacity: 0.95;
+        }
+    </style>
 
     {% if hebergements is not empty %}
         <div class="destinations-grid" id="hebergementContainer">
@@ -250,7 +301,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const typeFilter = document.getElementById('typeFilter');
     const destinationFilter = document.getElementById('destinationFilter');
     const hebergSort = document.getElementById('hebergSort');
-    const countDisplay = document.getElementById('hbergCount');
+    const suggestButton = document.getElementById('suggestHebergementButton');
+
+    function updateSuggestButtonState() {
+        if (!suggestButton) {
+            return;
+        }
+
+        const selectedValue = (destinationFilter?.value || '').trim().toLowerCase();
+        const selectedIndex = destinationFilter ? destinationFilter.selectedIndex : 0;
+        const selectedOptionText = destinationFilter && destinationFilter.options[selectedIndex]
+            ? destinationFilter.options[selectedIndex].textContent.trim().toLowerCase()
+            : '';
+
+        const isAllDestinations = selectedValue === ''
+            || selectedValue === '0'
+            || selectedValue === 'all'
+            || selectedOptionText.includes('toutes les destinations');
+
+        suggestButton.disabled = isAllDestinations;
+        suggestButton.setAttribute('aria-disabled', isAllDestinations ? 'true' : 'false');
+    }
     
     function applyHebergementFiltersAndSort() {
         const searchTerm = (searchInput?.value || '').toLowerCase();
@@ -334,10 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
             container.appendChild(card);
         });
         
-        // Update count
-        if (countDisplay) {
-            countDisplay.textContent = visibleCards.length;
-        }
+        updateSuggestButtonState();
     }
     
     if (searchInput) {
@@ -347,12 +415,16 @@ document.addEventListener('DOMContentLoaded', function() {
         typeFilter.addEventListener('change', applyHebergementFiltersAndSort);
     }
     if (destinationFilter) {
-        destinationFilter.addEventListener('change', applyHebergementFiltersAndSort);
+        destinationFilter.addEventListener('change', function () {
+            applyHebergementFiltersAndSort();
+            updateSuggestButtonState();
+        });
     }
     if (hebergSort) {
         hebergSort.addEventListener('change', applyHebergementFiltersAndSort);
     }
 
+    updateSuggestButtonState();
     applyHebergementFiltersAndSort();
 });
 </script>
