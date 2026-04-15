@@ -10,6 +10,7 @@ use App\Repository\BudgetRepository;
 use App\Repository\DestinationRepository;
 use App\Repository\ParticipationRepository;
 use App\Repository\VoyageRepository;
+use App\Service\VoyageQrCodeFactory;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
@@ -100,6 +101,7 @@ final class VoyagesBackController extends AbstractController
 		Request $request,
 		BudgetRepository $budgetRepository,
 		ParticipationRepository $participationRepository,
+		VoyageQrCodeFactory $voyageQrCodeFactory,
 		#[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] ?Voyage $voyage = null
 	): Response {
 		if (!$voyage instanceof Voyage) {
@@ -110,12 +112,15 @@ final class VoyagesBackController extends AbstractController
 
 		$voyageId = $voyage->getIdVoyage() ?? 0;
 		$budgetSummary = $budgetRepository->findVoyageBudgetSummaries([$voyage])[$voyageId] ?? null;
+		$participants = $participationRepository->findByVoyageOrdered($voyage);
+		$budgetTotalLabel = $this->formatBudgetSummary($budgetSummary);
 
 		return $this->render('admin/voyage_show.html.twig', [
 			'voyage' => $voyage,
-			'participants' => $participationRepository->findByVoyageOrdered($voyage),
+			'participants' => $participants,
 			'budget_summary' => $budgetSummary,
-			'budget_total_label' => $this->formatBudgetSummary($budgetSummary),
+			'budget_total_label' => $budgetTotalLabel,
+			'qr_data_uri' => $voyageQrCodeFactory->createDataUri($voyage, $budgetTotalLabel, count($participants)),
 		]);
 	}
 
@@ -174,7 +179,7 @@ final class VoyagesBackController extends AbstractController
 			}
 
 			fwrite($handle, "\xEF\xBB\xBF");
-			fputcsv($handle, ['ID', 'Titre', 'Date debut', 'Date fin', 'Statut', 'Montant total', 'ID destination', 'Destination', 'Pays'], ';');
+			fputcsv($handle, ['Titre', 'Date debut', 'Date fin', 'Statut', 'Montant total', 'Destination', 'Pays'], ';');
 			foreach ($voyages as $voyage) {
 				$budgetSummary = $budgetSummaries[$voyage->getIdVoyage() ?? 0] ?? null;
 				fputcsv($handle, $this->buildVoyageExportRow($voyage, $budgetSummary), ';');
@@ -453,13 +458,11 @@ final class VoyagesBackController extends AbstractController
 		$destination = $voyage->getDestination();
 
 		return [
-			(string) ($voyage->getIdVoyage() ?? ''),
 			(string) ($voyage->getTitreVoyage() ?? ''),
 			$voyage->getDateDebut()?->format('Y-m-d') ?? '-',
 			$voyage->getDateFin()?->format('Y-m-d') ?? '-',
 			(string) ($voyage->getStatut() ?? ''),
 			$this->formatBudgetSummary($budgetSummary),
-			(string) ($destination?->getIdDestination() ?? ''),
 			(string) ($destination?->getNomDestination() ?? ''),
 			(string) ($destination?->getPaysDestination() ?? ''),
 		];

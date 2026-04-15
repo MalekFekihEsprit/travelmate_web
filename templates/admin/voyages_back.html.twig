@@ -785,13 +785,11 @@
                     <table class="admin-voyages-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Titre</th>
                                 <th>Debut</th>
                                 <th>Fin</th>
                                 <th>Statut</th>
                                 <th>Montant total</th>
-                                <th>ID Dest</th>
                                 <th>Destination</th>
                                 <th>Actions</th>
                             </tr>
@@ -800,7 +798,6 @@
                             {% for voyage in voyages %}
                                 {% set budgetSummary = budget_summaries[voyage.idVoyage] ?? null %}
                                 <tr>
-                                    <td>{{ voyage.idVoyage }}</td>
                                     <td>{{ voyage.titreVoyage }}</td>
                                     <td>{{ voyage.dateDebut ? voyage.dateDebut|date('Y-m-d') : '-' }}</td>
                                     <td>{{ voyage.dateFin ? voyage.dateFin|date('Y-m-d') : '-' }}</td>
@@ -817,7 +814,6 @@
                                             -
                                         {% endif %}
                                     </td>
-                                    <td>{{ voyage.destination ? voyage.destination.idDestination : '-' }}</td>
                                     <td>
                                         <div class="admin-voyages-destination">
                                             <span>{{ voyage.destination ? voyage.destination.nomDestination : 'Non definie' }}</span>
@@ -962,6 +958,47 @@
                     }
                 });
             });
+
+            // Load flatpickr dynamically and initialize date fields
+            (function () {
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css';
+                document.head.appendChild(link);
+
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+                script.async = true;
+                script.onload = function () {
+                    var adminStart = document.getElementById('admin-voyage-start');
+                    var adminEnd = document.getElementById('admin-voyage-end');
+                    var endPicker = null;
+
+                    if (adminStart) {
+                        flatpickr(adminStart, {
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            allowInput: true,
+                            onChange: function (selectedDates) {
+                                if (selectedDates && selectedDates[0] && endPicker) {
+                                    endPicker.set('minDate', selectedDates[0]);
+                                }
+                            }
+                        });
+                    }
+
+                    if (adminEnd) {
+                        endPicker = flatpickr(adminEnd, {
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            allowInput: true,
+                        });
+                    }
+                };
+                document.head.appendChild(script);
+            }());
         });
     </script>
 {% endblock %}

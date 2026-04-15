@@ -209,7 +209,6 @@
 
 {% block body %}
     {% set publicUrl = absolute_url(path('app_voyages_show', {'id_voyage': voyage.idVoyage})) %}
-    {% set qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' ~ publicUrl|url_encode %}
 
     <div class="admin-voyage-show-page">
         <section class="admin-voyage-show-hero">
@@ -240,10 +239,10 @@
             <aside class="admin-voyage-show-qr">
                 <h2 class="admin-voyage-show-panel__title">QR public</h2>
                 <div class="admin-voyage-show-qr__frame">
-                    <img src="{{ qrUrl }}" alt="Code QR du voyage {{ voyage.titreVoyage }}">
+                    <img src="{{ qr_data_uri }}" alt="Code QR du voyage {{ voyage.titreVoyage }}">
                 </div>
                 <p class="admin-voyage-show-qr__text">
-                    Ce QR code ouvre la fiche publique du voyage. Il peut etre partage pour un acces direct depuis un mobile.
+                    Ce QR code est genere localement et contient les informations principales du voyage, sans dependre d'un service externe.
                 </p>
             </aside>
         </section>

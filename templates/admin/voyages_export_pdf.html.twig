@@ -66,13 +66,11 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Titre</th>
                 <th>Date debut</th>
                 <th>Date fin</th>
                 <th>Statut</th>
                 <th>Montant total</th>
-                <th>ID destination</th>
                 <th>Destination</th>
             </tr>
         </thead>
@@ -80,7 +78,6 @@
             {% for voyage in voyages %}
                 {% set budgetSummary = budget_summaries[voyage.idVoyage] ?? null %}
                 <tr>
-                    <td>{{ voyage.idVoyage }}</td>
                     <td>{{ voyage.titreVoyage }}</td>
                     <td>{{ voyage.dateDebut ? voyage.dateDebut|date('Y-m-d') : '-' }}</td>
                     <td>{{ voyage.dateFin ? voyage.dateFin|date('Y-m-d') : '-' }}</td>
@@ -97,7 +94,6 @@
                             -
                         {% endif %}
                     </td>
-                    <td>{{ voyage.destination ? voyage.destination.idDestination : '-' }}</td>
                     <td>
                         {{ voyage.destination ? voyage.destination.nomDestination : 'Non definie' }}
                         {% if voyage.destination and voyage.destination.paysDestination %}
@@ -107,7 +103,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="8">Aucun voyage disponible.</td>
+                    <td colspan="6">Aucun voyage disponible.</td>
                 </tr>
             {% endfor %}
         </tbody>

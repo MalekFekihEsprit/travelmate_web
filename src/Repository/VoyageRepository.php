@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Voyage;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator as DoctrinePaginator;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -23,6 +24,43 @@ class VoyageRepository extends ServiceEntityRepository
      * @return Voyage[]
      */
     public function findFilteredVoyages(array $filters): array
+    {
+        return $this->createFilteredVoyagesQueryBuilder($filters)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @param array{search?: string, statut?: string, destination?: int|null, sort?: string} $filters
+     *
+     * @return array{items: Voyage[], total: int, current_page: int, per_page: int, total_pages: int}
+     */
+    public function paginateFilteredVoyages(array $filters, int $page, int $perPage): array
+    {
+        $page = max(1, $page);
+        $perPage = max(1, $perPage);
+
+        $queryBuilder = $this->createFilteredVoyagesQueryBuilder($filters)
+            ->setFirstResult(($page - 1) * $perPage)
+            ->setMaxResults($perPage);
+
+        $paginator = new DoctrinePaginator($queryBuilder->getQuery());
+        $total = count($paginator);
+        $totalPages = $total > 0 ? (int) ceil($total / $perPage) : 1;
+
+        return [
+            'items' => iterator_to_array($paginator->getIterator(), false),
+            'total' => $total,
+            'current_page' => min($page, $totalPages),
+            'per_page' => $perPage,
+            'total_pages' => $totalPages,
+        ];
+    }
+
+    /**
+     * @param array{search?: string, statut?: string, destination?: int|null, sort?: string} $filters
+     */
+    private function createFilteredVoyagesQueryBuilder(array $filters): QueryBuilder
     {
         $queryBuilder = $this->createQueryBuilder('v')
             ->leftJoin('v.destination', 'd')
@@ -51,7 +89,7 @@ class VoyageRepository extends ServiceEntityRepository
 
         $this->applySort($queryBuilder, (string) ($filters['sort'] ?? 'date_asc'));
 
-        return $queryBuilder->getQuery()->getResult();
+        return $queryBuilder;
     }
 
     private function applySort(QueryBuilder $queryBuilder, string $sort): void

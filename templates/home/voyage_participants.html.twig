@@ -475,6 +475,10 @@
                     <p class="participants-card__text">Renseignez l'email d'un utilisateur deja present dans votre base pour l'associer a ce voyage.</p>
                 </div>
 
+                <div class="participants-note">
+                    Un email de confirmation est envoye automatiquement apres l'ajout ou la mise a jour du role depuis ce formulaire.
+                </div>
+
                 <form method="post" action="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="participants-form">
                     <input type="hidden" name="_token" value="{{ csrf_token('add_participant_' ~ voyage.idVoyage) }}">
 
