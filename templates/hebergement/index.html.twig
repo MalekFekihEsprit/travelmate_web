@@ -27,21 +27,22 @@
                 </div>
             </div>
 
-                {% if selected_destination %}
-                    <div class="toolbar-count" style="margin-top: 1rem; display: inline-flex;">
-                        Filtre actif : {{ selected_destination.nomDestination }}
-                        {% if selected_destination.paysDestination %} - {{ selected_destination.paysDestination }}{% endif %}
-                    </div>
-                {% endif %}
+            {% if selected_destination %}
+                <div class="toolbar-count" style="margin-top: 1rem; display: inline-flex;">
+                    Filtre actif : {{ selected_destination.nomDestination }}
+                    {% if selected_destination.paysDestination %} - {{ selected_destination.paysDestination }}{% endif %}
+                </div>
+            {% endif %}
         </div>
         <div class="destinations-hero__visual">
             <img src="{{ asset('images/destination.jpg') }}" alt="Accommodations" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
         </div>
     </div>
 
+    {# ── Flash messages ──────────────────────────────────────────────────────── #}
     {% set successFlashes = app.flashes('success') %}
     {% set warningFlashes = app.flashes('warning') %}
-    {% set errorFlashes = app.flashes('error') %}
+    {% set errorFlashes   = app.flashes('error') %}
 
     {% if successFlashes is not empty or warningFlashes is not empty or errorFlashes is not empty %}
         <div class="destinations-toast-stack" aria-live="polite" aria-atomic="true">
@@ -49,28 +50,27 @@
                 <div class="destinations-flash destinations-flash--success" data-destinations-toast>
                     <strong class="destinations-flash__title">Opération réussie</strong>
                     <div class="destinations-flash__message">{{ message }}</div>
-                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer">×</button>
                 </div>
             {% endfor %}
-
             {% for message in warningFlashes %}
                 <div class="destinations-flash destinations-flash--warning" data-destinations-toast>
                     <strong class="destinations-flash__title">Attention</strong>
                     <div class="destinations-flash__message">{{ message }}</div>
-                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer">×</button>
                 </div>
             {% endfor %}
-
             {% for message in errorFlashes %}
                 <div class="destinations-flash destinations-flash--error" data-destinations-toast>
                     <strong class="destinations-flash__title">Action impossible</strong>
                     <div class="destinations-flash__message">{{ message }}</div>
-                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer">×</button>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
 
+    {# ── Toolbar ─────────────────────────────────────────────────────────────── #}
     <div class="destinations-toolbar-wrapper">
         <div class="toolbar-header">
             <h2 class="toolbar-title">Filtrer & Trier</h2>
@@ -85,9 +85,9 @@
                 </svg>
                 <input type="text" id="hbergSearch" placeholder="Rechercher un hébergement..." class="toolbar-search__input" value="{{ search }}">
             </div>
-            
+
             <div class="toolbar-divider"></div>
-            
+
             <div class="toolbar-filters">
                 <div class="filter-group">
                     <label for="typeFilter" class="filter-label">Type</label>
@@ -116,110 +116,75 @@
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <div class="filter-group">
                     <label for="hebergSort" class="filter-label">Trier par</label>
                     <select id="hebergSort" class="toolbar-filter__select">
-                        <option value="default" {{ selected_sort == 'default' ? 'selected' : '' }}>Par défaut</option>
-                        <option value="name" {{ selected_sort == 'name' ? 'selected' : '' }}>📝 Nom (A-Z)</option>
-                        <option value="price-asc" {{ selected_sort == 'price-asc' ? 'selected' : '' }}>💰 Prix (bas → élevé)</option>
+                        <option value="default"    {{ selected_sort == 'default'    ? 'selected' : '' }}>Par défaut</option>
+                        <option value="name"       {{ selected_sort == 'name'       ? 'selected' : '' }}>📝 Nom (A-Z)</option>
+                        <option value="price-asc"  {{ selected_sort == 'price-asc'  ? 'selected' : '' }}>💰 Prix (bas → élevé)</option>
                         <option value="price-desc" {{ selected_sort == 'price-desc' ? 'selected' : '' }}>💰 Prix (élevé → bas)</option>
-                        <option value="rating-desc" {{ selected_sort == 'rating-desc' ? 'selected' : '' }}>⭐ Note (élevée → basse)</option>
+                        <option value="rating-desc"{{ selected_sort == 'rating-desc'? 'selected' : '' }}>⭐ Note (élevée → basse)</option>
                         <option value="rating-asc" {{ selected_sort == 'rating-asc' ? 'selected' : '' }}>⭐ Note (basse → élevée)</option>
                     </select>
                 </div>
             </div>
-            
+
             <div class="toolbar-divider"></div>
-            
+
             <div class="toolbar-info">
+                {# ── Main suggestion button (now linked to RapidAPI flow) ── #}
                 <button type="button" id="suggestHebergementButton" class="btn btn--primary toolbar-suggest-btn" disabled>
                     <span class="toolbar-suggest-btn__icon">✨</span>
-                    <span>Suggérer des hebergement</span>
+                    <span>Suggérer des hébergements</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <style>
-        .toolbar-suggest-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            border: 0;
-            border-radius: 999px;
-            padding: 0.72rem 1.2rem;
-            font-size: 0.9rem;
-            font-weight: 700;
-            letter-spacing: 0.2px;
-            background: linear-gradient(135deg, #c46f4b 0%, #a85a3a 100%);
-            color: #fff;
-            box-shadow: 0 10px 24px rgba(196, 111, 75, 0.28);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-        }
-
-        .toolbar-suggest-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 14px 30px rgba(196, 111, 75, 0.34);
-        }
-
-        .toolbar-suggest-btn:active:not(:disabled) {
-            transform: translateY(0);
-            box-shadow: 0 8px 18px rgba(196, 111, 75, 0.28);
-        }
-
-        .toolbar-suggest-btn:focus-visible {
-            outline: 3px solid rgba(196, 111, 75, 0.3);
-            outline-offset: 2px;
-        }
-
-        .toolbar-suggest-btn__icon {
-            font-size: 0.95rem;
-            line-height: 1;
-            opacity: 0.95;
-        }
-
-        #suggestHebergementButton:disabled {
-            background: linear-gradient(135deg, #d9dbe1 0%, #c9cdd6 100%);
-            color: #6c727a;
-            box-shadow: none;
-            cursor: not-allowed;
-            pointer-events: none;
-            opacity: 0.95;
-        }
-    </style>
-
+    {# ── Cards grid ──────────────────────────────────────────────────────────── #}
     {% if hebergements is not empty %}
         <div class="destinations-grid" id="hebergementContainer">
-            {% for hebergement in hebergements %}<div class="destination-card" onclick="openHebergementModal({{ hebergement.idHebergement }})" data-type="{{ hebergement.typeHebergement ?? 'Sans type' }}" data-price="{{ hebergement.prixNuitHebergement ?? 0 }}" data-rating="{{ hebergement.noteHebergement ?? '' }}" data-name="{{ hebergement.nomHebergement }}" data-destination-id="{{ hebergement.destination ? hebergement.destination.idDestination : '' }}"><div class="destination-card__image-wrapper"><div class="destination-card__image-placeholder">🏨</div></div><div class="destination-card__content">
-                    <h3 class="destination-card__title">{{ hebergement.nomHebergement }}</h3>
-                    <p class="destination-card__location">
-                        📍 {{ hebergement.adresseHebergement ?? 'Adresse non disponible' }}
-                    </p>
-                    
-                    {% if hebergement.destination %}
-                        <p class="destination-card__description">
-                            À {{ hebergement.destination.nomDestination }}
-                        </p>
-                    {% endif %}
+            {% for hebergement in hebergements %}
+                <div class="destination-card"
+                     onclick="openHebergementModal({{ hebergement.idHebergement }})"
+                     data-type="{{ hebergement.typeHebergement ?? 'Sans type' }}"
+                     data-price="{{ hebergement.prixNuitHebergement ?? 0 }}"
+                     data-rating="{{ hebergement.noteHebergement ?? '' }}"
+                     data-name="{{ hebergement.nomHebergement }}"
+                     data-destination-id="{{ hebergement.destination ? hebergement.destination.idDestination : '' }}">
 
-                    <div class="destination-card__meta">
-                        {% if hebergement.typeHebergement %}
-                            <span class="destination-card__badge destination-card__badge--climate">
-                                <span class="badge-icon">🏠</span>{{ hebergement.typeHebergement }}
-                            </span>
+                    <div class="destination-card__image-wrapper">
+                        <div class="destination-card__image-placeholder">🏨</div>
+                    </div>
+                    <div class="destination-card__content">
+                        <h3 class="destination-card__title">{{ hebergement.nomHebergement }}</h3>
+                        <p class="destination-card__location">
+                            📍 {{ hebergement.adresseHebergement ?? 'Adresse non disponible' }}
+                        </p>
+                        {% if hebergement.destination %}
+                            <p class="destination-card__description">À {{ hebergement.destination.nomDestination }}</p>
                         {% endif %}
-                        {% if hebergement.prixNuitHebergement is not null %}
-                            <span class="destination-card__badge destination-card__badge--climate">
-                                <span class="badge-icon">💰</span>{{ hebergement.prixNuitHebergement }} €/nuit
-                            </span>
-                        {% endif %}
-                        {% if hebergement.noteHebergement %}
-                            <span class="destination-card__badge destination-card__badge--season">
-                                <span class="badge-icon">⭐</span>{{ hebergement.noteHebergement }}/5
-                            </span>
-                        {% endif %}
-                    </div></div></div>{% endfor %}
+                        <div class="destination-card__meta">
+                            {% if hebergement.typeHebergement %}
+                                <span class="destination-card__badge destination-card__badge--climate">
+                                    <span class="badge-icon">🏠</span>{{ hebergement.typeHebergement }}
+                                </span>
+                            {% endif %}
+                            {% if hebergement.prixNuitHebergement is not null %}
+                                <span class="destination-card__badge destination-card__badge--climate">
+                                    <span class="badge-icon">💰</span>{{ hebergement.prixNuitHebergement }} €/nuit
+                                </span>
+                            {% endif %}
+                            {% if hebergement.noteHebergement %}
+                                <span class="destination-card__badge destination-card__badge--season">
+                                    <span class="badge-icon">⭐</span>{{ hebergement.noteHebergement }}/5
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     {% else %}
         <div class="destinations-empty">
@@ -229,203 +194,513 @@
     {% endif %}
 </section>
 
-<!-- Modal pour afficher les détails -->
+{# ── Detail modal (existing) ─────────────────────────────────────────────────── #}
 <div id="hebergementModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeHebergementModal()">&times;</span>
-        <div id="modalBody">
-            <!-- Le contenu sera chargé dynamiquement -->
-        </div>
+        <div id="modalBody"></div>
     </div>
 </div>
+
+{# ── Scrape modal (new) ──────────────────────────────────────────────────────── #}
+{{ include('hebergement/_scrape_modal.html.twig') }}
+
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* ── Suggest button (existing) ── */
+        .toolbar-suggest-btn {
+            display: inline-flex; align-items: center; gap: .5rem;
+            border: 0; border-radius: 999px; padding: .72rem 1.2rem;
+            font-size: .9rem; font-weight: 700; letter-spacing: .2px;
+            background: linear-gradient(135deg,#c46f4b,#a85a3a);
+            color: #fff; box-shadow: 0 10px 24px rgba(196,111,75,.28);
+            transition: transform .2s,box-shadow .2s,opacity .2s; cursor: pointer;
+        }
+        .toolbar-suggest-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(196,111,75,.34); }
+        .toolbar-suggest-btn:disabled {
+            background: linear-gradient(135deg,#d9dbe1,#c9cdd6);
+            color: #6c727a; box-shadow: none; cursor: not-allowed; opacity: .95;
+        }
+
+        /* ── Scrape modal overlay ── */
+        .scrape-modal-overlay {
+            position: fixed; inset: 0; z-index: 1100;
+            background: rgba(0,0,0,.55); display: flex;
+            align-items: center; justify-content: center;
+            padding: 1rem;
+        }
+        .scrape-modal-overlay[hidden] { display: none; }
+
+        .scrape-modal {
+            background: #fff; border-radius: 16px; width: 100%; max-width: 860px;
+            max-height: 90vh; display: flex; flex-direction: column;
+            box-shadow: 0 24px 60px rgba(0,0,0,.25); overflow: hidden;
+        }
+
+        /* header */
+        .scrape-modal__header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.25rem 1.5rem; border-bottom: 1px solid #e5e7eb;
+        }
+        .scrape-modal__title { font-size: 1.2rem; font-weight: 700; margin: 0; color: #111827; }
+        .scrape-modal__close {
+            background: none; border: none; font-size: 1.6rem; cursor: pointer;
+            color: #6b7280; line-height: 1; padding: 0 .25rem;
+        }
+        .scrape-modal__close:hover { color: #111827; }
+
+        /* buttons inside modal */
+        .scrape-modal__btn {
+            display: inline-flex; align-items: center; gap: .4rem;
+            border-radius: 8px; padding: .6rem 1.1rem; font-size: .9rem;
+            font-weight: 600; cursor: pointer; transition: background .15s, opacity .15s;
+        }
+        .scrape-modal__btn--ghost { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+        .scrape-modal__btn--ghost:hover { background: #e5e7eb; }
+        .scrape-modal__btn--save { background: #16a34a; color: #fff; border: none; }
+        .scrape-modal__btn--save:hover:not(:disabled) { background: #15803d; }
+        .scrape-modal__btn:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* status */
+        .scrape-modal__status {
+            padding: .75rem 1.5rem; font-size: .9rem; color: #6b7280;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        /* results wrapper */
+        #scrapeResultsWrapper {
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+        }
+        #scrapeResultsWrapper[hidden] { display: none; }
+
+        .scrape-modal__results-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6; flex-shrink: 0;
+        }
+        .scrape-modal__count { font-size: .85rem; color: #6b7280; font-weight: 600; }
+        .scrape-modal__bulk-actions { display: flex; gap: .5rem; }
+
+        /* results grid */
+        .scrape-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem; padding: 1rem 1.5rem; overflow-y: auto;
+        }
+
+        /* individual scrape card */
+        .scrape-card {
+            border: 2px solid #e5e7eb; border-radius: 12px; overflow: hidden;
+            cursor: pointer; transition: border-color .2s, box-shadow .2s;
+            display: flex; flex-direction: column; position: relative;
+            min-height: 360px;
+        }
+        .scrape-card:hover { border-color: #2563eb; box-shadow: 0 4px 16px rgba(37,99,235,.15); }
+        .scrape-card.is-selected { border-color: #2563eb; background: #eff6ff; }
+        .scrape-card.is-selected .scrape-card__check { opacity: 1; }
+
+        /* checkbox overlay */
+        .scrape-card__check {
+            position: absolute; top: .5rem; right: .5rem;
+            width: 22px; height: 22px; background: #2563eb; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: .8rem; opacity: 0; transition: opacity .2s;
+        }
+
+        /* image */
+        .scrape-card__img {
+            width: 100%; height: 160px; object-fit: cover; background: #f3f4f6;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; color: #9ca3af; flex-shrink: 0;
+        }
+        .scrape-card__img img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* body */
+        .scrape-card__body { padding: .85rem; flex: 1; display: flex; flex-direction: column; gap: .45rem; }
+        .scrape-card__name { font-weight: 700; font-size: .9rem; margin: 0 0 .3rem; color: #111827; }
+        .scrape-card__meta { font-size: .78rem; color: #6b7280; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .scrape-card__badge {
+            display: inline-block; background: #f3f4f6; border-radius: 999px;
+            padding: .15rem .55rem; font-size: .72rem; font-weight: 600;
+            margin: .2rem .15rem 0 0; color: #374151;
+        }
+
+        /* footer */
+        .scrape-modal__footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.5rem; border-top: 1px solid #e5e7eb; flex-shrink: 0;
+        }
+
+        /* spinner */
+        .scrape-spinner {
+            width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4);
+            border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 {% endblock %}
 
 {% block javascripts %}
 <script>
+// ── Existing detail-modal helpers ────────────────────────────────────────────
 function openHebergementModal(hebergementId) {
-    const modal = document.getElementById('hebergementModal');
+    const modal    = document.getElementById('hebergementModal');
     const modalBody = document.getElementById('modalBody');
-    
-    fetch(`{{ path('app_hebergement_show', {'id_hebergement': '__ID__'}) }}`.replace('__ID__', hebergementId))
-        .then(response => response.text())
-        .then(html => {
-            modalBody.innerHTML = html;
-            modal.classList.add('active');
-        })
-        .catch(error => console.error('Erreur:', error));
+    fetch(`/hebergement/${hebergementId}`)
+        .then(r => r.text())
+        .then(html => { modalBody.innerHTML = html; modal.classList.add('active'); })
+        .catch(err => console.error('Erreur:', err));
 }
-
 function closeHebergementModal() {
-    const modal = document.getElementById('hebergementModal');
-    modal.classList.remove('active');
+    document.getElementById('hebergementModal').classList.remove('active');
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('hebergementModal');
-    window.onclick = function(event) {
-        if (event.target === modal) {
-            closeHebergementModal();
+// ── Scrape modal ─────────────────────────────────────────────────────────────
+(function () {
+    'use strict';
+
+    const SCRAPE_URL      = '{{ path('app_hebergement_scrape') }}';
+    const SAVE_URL        = '{{ path('app_hebergement_save_scraped') }}';
+
+    // DOM refs (resolved after DOMContentLoaded)
+    let overlay, closeBtn, openBtn,
+        statusMsg, resultsWrapper, resultsGrid,
+        resultsCount, selectedCount,
+        selectAllBtn, deselectAllBtn,
+        saveBtn, saveBtnLabel, saveBtnSpinner;
+
+    let scrapedItems = [];   // full data from last scrape
+    let selectedIndices = new Set();
+
+    // ── Open / Close ──────────────────────────────────────────────────────────
+    function openModal()  {
+        overlay.hidden = false;
+        closeBtn?.focus();
+    }
+    function closeModal() { overlay.hidden = true; }
+
+    // ── Fetch scrape results ──────────────────────────────────────────────────
+    function getSelectedDestinationName() {
+        const destinationFilter = document.getElementById('destinationFilter');
+        const selectedText = destinationFilter?.options[destinationFilter.selectedIndex]?.textContent?.trim() || '';
+        if (!selectedText || selectedText.toLowerCase().includes('toutes les destinations')) {
+            return '';
         }
+
+        return selectedText.includes(' - ')
+            ? selectedText.split(' - ')[0].trim()
+            : selectedText;
     }
 
-    // Gestion des toasts
-    var toasts = document.querySelectorAll('[data-destinations-toast]');
-
-    function hideToast(toast) {
-        if (!toast || toast.classList.contains('is-hiding')) {
+    function startScrape() {
+        const dest = getSelectedDestinationName();
+        if (!dest) {
+            showStatus('Veuillez sélectionner une destination.', 'error');
             return;
         }
 
-        toast.classList.add('is-hiding');
-        window.setTimeout(function () {
-            toast.remove();
-        }, 220);
-    }
+        setStartLoading(true);
+        showStatus('Recherche en cours, cela peut prendre quelques secondes…');
+        resultsWrapper.hidden = true;
+        scrapedItems = [];
+        selectedIndices.clear();
 
-    toasts.forEach(function (toast) {
-        var closeButton = toast.querySelector('[data-destinations-toast-close]');
-
-        if (closeButton) {
-            closeButton.addEventListener('click', function () {
-                hideToast(toast);
+        fetch(`${SCRAPE_URL}?destination=${encodeURIComponent(dest)}`)
+            .then(r => r.json())
+            .then(data => {
+                setStartLoading(false);
+                if (!data.success) { showStatus('Erreur : ' + (data.error || 'Inconnue'), 'error'); return; }
+                if (!data.data || data.data.length === 0) {
+                    showStatus('Aucun hébergement trouvé pour cette destination.', 'warn');
+                    return;
+                }
+                scrapedItems = data.data;
+                renderResults(scrapedItems);
+            })
+            .catch(err => {
+                setStartLoading(false);
+                showStatus('Erreur réseau : ' + err.message, 'error');
+                console.error(err);
             });
+    }
+
+    // ── Render cards ──────────────────────────────────────────────────────────
+    function renderResults(items) {
+        resultsGrid.innerHTML = '';
+        items.forEach((item, idx) => {
+            resultsGrid.appendChild(buildCard(item, idx));
+        });
+        resultsCount.textContent = items.length + ' hébergement(s) trouvé(s)';
+        updateSelectedCount();
+        statusMsg.hidden = true;
+        resultsWrapper.hidden = false;
+    }
+
+    function buildCard(item, idx) {
+        const card = document.createElement('div');
+        card.className = 'scrape-card';
+        card.dataset.idx = idx;
+
+        // checkmark overlay
+        const check = document.createElement('div');
+        check.className = 'scrape-card__check';
+        check.innerHTML = '✓';
+        card.appendChild(check);
+
+        // image
+        const imgBox = document.createElement('div');
+        imgBox.className = 'scrape-card__img';
+        if (item.image_url) {
+            const img = document.createElement('img');
+            img.src = item.image_url;
+            img.alt = item.name;
+            img.onerror = () => { imgBox.textContent = '🏨'; };
+            imgBox.appendChild(img);
+        } else {
+            imgBox.textContent = '🏨';
         }
+        card.appendChild(imgBox);
 
-        window.setTimeout(function () {
-            hideToast(toast);
-        }, 4200);
-    });
+        // body
+        const body = document.createElement('div');
+        body.className = 'scrape-card__body';
 
-    // Search, filter and sort functionality
-    const searchInput = document.getElementById('hbergSearch');
-    const typeFilter = document.getElementById('typeFilter');
-    const destinationFilter = document.getElementById('destinationFilter');
-    const hebergSort = document.getElementById('hebergSort');
-    const suggestButton = document.getElementById('suggestHebergementButton');
+        const name = document.createElement('p');
+        name.className = 'scrape-card__name';
+        name.textContent = item.name || 'Sans nom';
+        body.appendChild(name);
 
-    function updateSuggestButtonState() {
-        if (!suggestButton) {
+        const meta = document.createElement('p');
+        meta.className = 'scrape-card__meta';
+        if (item.address) meta.appendChild(makeSpan('📍 ' + item.address));
+        body.appendChild(meta);
+
+        const badges = document.createElement('div');
+        if (item.type)   badges.appendChild(makeBadge('🏠 ' + item.type));
+        if (item.price)  badges.appendChild(makeBadge('💰 ' + item.price + ' €/nuit'));
+        if (item.rating) badges.appendChild(makeBadge('⭐ ' + item.rating + '/5'));
+        body.appendChild(badges);
+
+        card.appendChild(body);
+
+        card.addEventListener('click', () => toggleCard(card, idx));
+        return card;
+    }
+
+    function makeSpan(text) {
+        const s = document.createElement('span');
+        s.textContent = text;
+        return s;
+    }
+    function makeBadge(text) {
+        const b = document.createElement('span');
+        b.className = 'scrape-card__badge';
+        b.textContent = text;
+        return b;
+    }
+
+    // ── Selection ─────────────────────────────────────────────────────────────
+    function toggleCard(card, idx) {
+        if (selectedIndices.has(idx)) {
+            selectedIndices.delete(idx);
+            card.classList.remove('is-selected');
+        } else {
+            selectedIndices.add(idx);
+            card.classList.add('is-selected');
+        }
+        updateSelectedCount();
+    }
+
+    function selectAll() {
+        resultsGrid.querySelectorAll('.scrape-card').forEach((card, idx) => {
+            selectedIndices.add(idx);
+            card.classList.add('is-selected');
+        });
+        updateSelectedCount();
+    }
+
+    function deselectAll() {
+        selectedIndices.clear();
+        resultsGrid.querySelectorAll('.scrape-card').forEach(c => c.classList.remove('is-selected'));
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const n = selectedIndices.size;
+        selectedCount.textContent = n + ' sélectionné(s)';
+        saveBtn.disabled = n === 0;
+    }
+
+    // ── Save selected ─────────────────────────────────────────────────────────
+    function saveSelected() {
+        if (selectedIndices.size === 0) return;
+
+        const items = Array.from(selectedIndices).map(i => scrapedItems[i]);
+        const destinationFilter = document.getElementById('destinationFilter');
+        const destinationId = destinationFilter?.value || '';
+        if (!destinationId) {
+            showStatus('Veuillez sélectionner une destination avant l\'enregistrement.', 'error');
             return;
         }
 
-        const selectedValue = (destinationFilter?.value || '').trim().toLowerCase();
-        const selectedIndex = destinationFilter ? destinationFilter.selectedIndex : 0;
-        const selectedOptionText = destinationFilter && destinationFilter.options[selectedIndex]
-            ? destinationFilter.options[selectedIndex].textContent.trim().toLowerCase()
-            : '';
+        setSaveLoading(true);
 
-        const isAllDestinations = selectedValue === ''
-            || selectedValue === '0'
-            || selectedValue === 'all'
-            || selectedOptionText.includes('toutes les destinations');
-
-        suggestButton.disabled = isAllDestinations;
-        suggestButton.setAttribute('aria-disabled', isAllDestinations ? 'true' : 'false');
-    }
-    
-    function applyHebergementFiltersAndSort() {
-        const searchTerm = (searchInput?.value || '').toLowerCase();
-        const selectedType = typeFilter?.value || '';
-        const selectedDestinationId = destinationFilter?.value || '';
-        const sortOption = hebergSort?.value || 'default';
-        
-        const container = document.getElementById('hebergementContainer');
-        if (!container) return;
-        
-        let allCards = Array.from(container.querySelectorAll('.destination-card'));
-        let visibleCards = [];
-        
-        // Apply filters
-        allCards.forEach(function(card) {
-            let matches = true;
-            
-            // Filter by search term
-            if (searchTerm) {
-                const title = card.querySelector('.destination-card__title')?.textContent.toLowerCase() || '';
-                const location = card.querySelector('.destination-card__location')?.textContent.toLowerCase() || '';
-                const description = card.querySelector('.destination-card__description')?.textContent.toLowerCase() || '';
-                matches = title.includes(searchTerm) || location.includes(searchTerm) || description.includes(searchTerm);
-            }
-            
-            // Filter by type
-            if (matches && selectedType) {
-                matches = card.getAttribute('data-type') === selectedType;
-            }
-
-            // Filter by destination
-            if (matches && selectedDestinationId) {
-                matches = card.getAttribute('data-destination-id') === selectedDestinationId;
-            }
-            
-            if (matches) {
-                visibleCards.push(card);
-                card.style.display = 'block';
+        fetch(SAVE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items, destination_id: destinationId }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            setSaveLoading(false);
+            if (data.success) {
+                showStatus(`✅ ${data.saved} hébergement(s) enregistré(s) avec succès !`, 'success');
+                deselectAll();
+                // Optionally reload the page to show new items in the list
+                setTimeout(() => { closeModal(); window.location.reload(); }, 1800);
             } else {
-                card.style.display = 'none';
+                showStatus('Erreur lors de l\'enregistrement : ' + (data.error || 'Inconnue'), 'error');
             }
+        })
+        .catch(err => {
+            setSaveLoading(false);
+            showStatus('Erreur réseau : ' + err.message, 'error');
         });
-        
-        // Sort visible cards
-        visibleCards.sort(function(a, b) {
-            const nameA = a.getAttribute('data-name') || '';
-            const nameB = b.getAttribute('data-name') || '';
-            const priceA = parseFloat(a.getAttribute('data-price')) || 0;
-            const priceB = parseFloat(b.getAttribute('data-price')) || 0;
-            const ratingA = parseFloat(a.getAttribute('data-rating')) || 0;
-            const ratingB = parseFloat(b.getAttribute('data-rating')) || 0;
-            
-            if (sortOption === 'name') {
-                return nameA.localeCompare(nameB);
-            } else if (sortOption === 'price-asc') {
-                if (priceA === 0 && priceB === 0) return 0;
-                if (priceA === 0) return 1;
-                if (priceB === 0) return -1;
-                return priceA - priceB;
-            } else if (sortOption === 'price-desc') {
-                if (priceA === 0 && priceB === 0) return 0;
-                if (priceA === 0) return 1;
-                if (priceB === 0) return -1;
-                return priceB - priceA;
-            } else if (sortOption === 'rating-desc') {
-                if (ratingA === 0 && ratingB === 0) return 0;
-                if (ratingA === 0) return 1;
-                if (ratingB === 0) return -1;
-                return ratingB - ratingA;
-            } else if (sortOption === 'rating-asc') {
-                if (ratingA === 0 && ratingB === 0) return 0;
-                if (ratingA === 0) return 1;
-                if (ratingB === 0) return -1;
-                return ratingA - ratingB;
-            }
-            return 0;
-        });
-        
-        // Update DOM order for visible cards
-        visibleCards.forEach(function(card) {
-            container.appendChild(card);
-        });
-        
-        updateSuggestButtonState();
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', applyHebergementFiltersAndSort);
-    }
-    if (typeFilter) {
-        typeFilter.addEventListener('change', applyHebergementFiltersAndSort);
-    }
-    if (destinationFilter) {
-        destinationFilter.addEventListener('change', function () {
-            applyHebergementFiltersAndSort();
-            updateSuggestButtonState();
-        });
-    }
-    if (hebergSort) {
-        hebergSort.addEventListener('change', applyHebergementFiltersAndSort);
     }
 
-    updateSuggestButtonState();
-    applyHebergementFiltersAndSort();
-});
+    // ── UI helpers ────────────────────────────────────────────────────────────
+    function showStatus(msg, level = 'info') {
+        statusMsg.textContent = msg;
+        statusMsg.style.color = level === 'error' ? '#dc2626'
+                              : level === 'success' ? '#16a34a'
+                              : level === 'warn'    ? '#d97706'
+                              : '#6b7280';
+        statusMsg.hidden = false;
+    }
+
+    function setStartLoading(on) {
+        if (openBtn) {
+            openBtn.disabled = on;
+            openBtn.setAttribute('aria-busy', on ? 'true' : 'false');
+        }
+    }
+
+    function setSaveLoading(on) {
+        saveBtn.disabled          = on;
+        saveBtnLabel.textContent  = on ? 'Enregistrement…' : '💾 Enregistrer la sélection';
+        saveBtnSpinner.hidden     = !on;
+    }
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function () {
+        overlay          = document.getElementById('scrapeModal');
+        closeBtn         = document.getElementById('scrapeModalClose');
+        openBtn          = document.getElementById('suggestHebergementButton');
+        statusMsg        = document.getElementById('scrapeStatusMsg');
+        resultsWrapper   = document.getElementById('scrapeResultsWrapper');
+        resultsGrid      = document.getElementById('scrapeResultsGrid');
+        resultsCount     = document.getElementById('scrapeResultsCount');
+        selectedCount    = document.getElementById('scrapeSelectedCount');
+        selectAllBtn     = document.getElementById('scrapeSelectAll');
+        deselectAllBtn   = document.getElementById('scrapeDeselectAll');
+        saveBtn          = document.getElementById('scrapeSaveBtn');
+        saveBtnLabel     = document.getElementById('scrapeSaveBtnLabel');
+        saveBtnSpinner   = document.getElementById('scrapeSaveBtnSpinner');
+
+        openBtn.addEventListener('click', function () {
+            openModal();
+            startScrape();
+        });
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+        selectAllBtn.addEventListener('click', selectAll);
+        deselectAllBtn.addEventListener('click', deselectAll);
+        saveBtn.addEventListener('click', saveSelected);
+
+        // ── existing filter / sort / suggest logic ────────────────────────────
+        const searchInput        = document.getElementById('hbergSearch');
+        const typeFilter         = document.getElementById('typeFilter');
+        const destinationFilter  = document.getElementById('destinationFilter');
+        const hebergSort         = document.getElementById('hebergSort');
+        const suggestButton      = document.getElementById('suggestHebergementButton');
+
+        function updateSuggestButtonState() {
+            if (!suggestButton) return;
+            const val  = (destinationFilter?.value || '').trim().toLowerCase();
+            const text = destinationFilter?.options[destinationFilter.selectedIndex]?.textContent.trim().toLowerCase() || '';
+            const none = val === '' || val === '0' || val === 'all' || text.includes('toutes les destinations');
+            suggestButton.disabled = none;
+            suggestButton.setAttribute('aria-disabled', none ? 'true' : 'false');
+        }
+
+        function applyFilters() {
+            const term    = (searchInput?.value || '').toLowerCase();
+            const selType = typeFilter?.value || '';
+            const selDest = destinationFilter?.value || '';
+            const sort    = hebergSort?.value || 'default';
+            const container = document.getElementById('hebergementContainer');
+            if (!container) return;
+
+            let cards = Array.from(container.querySelectorAll('.destination-card'));
+            let visible = [];
+
+            cards.forEach(card => {
+                let ok = true;
+                if (term) {
+                    const haystack = [
+                        card.querySelector('.destination-card__title')?.textContent || '',
+                        card.querySelector('.destination-card__location')?.textContent || '',
+                        card.querySelector('.destination-card__description')?.textContent || '',
+                    ].join(' ').toLowerCase();
+                    ok = haystack.includes(term);
+                }
+                if (ok && selType) ok = card.dataset.type === selType;
+                if (ok && selDest) ok = card.dataset.destinationId === selDest;
+                card.style.display = ok ? 'block' : 'none';
+                if (ok) visible.push(card);
+            });
+
+            visible.sort((a, b) => {
+                const na = a.dataset.name || '', nb = b.dataset.name || '';
+                const pa = parseFloat(a.dataset.price) || 0, pb = parseFloat(b.dataset.price) || 0;
+                const ra = parseFloat(a.dataset.rating) || 0, rb = parseFloat(b.dataset.rating) || 0;
+                if (sort === 'name')        return na.localeCompare(nb);
+                if (sort === 'price-asc')   return (pa || Infinity) - (pb || Infinity);
+                if (sort === 'price-desc')  return (pb || -1) - (pa || -1);
+                if (sort === 'rating-desc') return (rb || -1) - (ra || -1);
+                if (sort === 'rating-asc')  return (ra || Infinity) - (rb || Infinity);
+                return 0;
+            });
+            visible.forEach(c => container.appendChild(c));
+            updateSuggestButtonState();
+        }
+
+        searchInput?.addEventListener('input', applyFilters);
+        typeFilter?.addEventListener('change', applyFilters);
+        destinationFilter?.addEventListener('change', () => { applyFilters(); updateSuggestButtonState(); });
+        hebergSort?.addEventListener('change', applyFilters);
+
+        updateSuggestButtonState();
+        applyFilters();
+
+        // ── Existing detail-modal backdrop close ──────────────────────────────
+        const detailModal = document.getElementById('hebergementModal');
+        window.addEventListener('click', e => { if (e.target === detailModal) closeHebergementModal(); });
+
+        // ── Toasts ────────────────────────────────────────────────────────────
+        document.querySelectorAll('[data-destinations-toast]').forEach(toast => {
+            toast.querySelector('[data-destinations-toast-close]')?.addEventListener('click', () => hideToast(toast));
+            setTimeout(() => hideToast(toast), 4200);
+        });
+
+        function hideToast(toast) {
+            if (!toast || toast.classList.contains('is-hiding')) return;
+            toast.classList.add('is-hiding');
+            setTimeout(() => toast.remove(), 220);
+        }
+    });
+}());
 </script>
 {% endblock %}

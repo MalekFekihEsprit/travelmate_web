@@ -24,15 +24,17 @@ class DestinationType extends AbstractType
                 ]
             ])
             ->add('pays_destination', TextType::class, [
+                'label' => 'Pays',
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'Le pays est requis']),
                     new Assert\Regex(['pattern' => '/^[a-zA-ZÀ-ÿ\s-]+$/', 'message' => 'Le pays ne doit contenir que des lettres']),
                 ]
             ])
             ->add('region_destination', TextType::class, [
+                'label' => 'Ville',
                 'required' => false,
                 'constraints' => [
-                    new Assert\Regex(['pattern' => '/^[a-zA-ZÀ-ÿ\s-]*$/', 'message' => 'La région ne doit contenir que des lettres']),
+                    new Assert\Regex(['pattern' => '/^[a-zA-ZÀ-ÿ\s-]*$/', 'message' => 'La ville ne doit contenir que des lettres']),
                 ]
             ])
             ->add('description_destination', TextareaType::class, [

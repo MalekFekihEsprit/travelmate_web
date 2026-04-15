@@ -2,9 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Hebergement;
 use App\Repository\DestinationRepository;
 use App\Repository\HebergementRepository;
+use App\Service\HebergementScraperService;
+use App\Service\ImageDownloaderService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -21,7 +26,7 @@ class HebergementController extends AbstractController
         $destinationId = $request->query->getInt('destination', 0);
 
         $selectedDestination = $destinationId > 0 ? $destinationRepository->find($destinationId) : null;
-        $allHebergements = $hebergementRepository->findBy([], ['id_hebergement' => 'DESC']);
+        $allHebergements = $hebergementRepository->findBy([], ['idHebergement' => 'DESC']);
         $destinationOptionsMap = [];
 
         foreach ($allHebergements as $item) {
@@ -99,7 +104,110 @@ class HebergementController extends AbstractController
         ]);
     }
 
-    #[Route('/{id_hebergement}', name: 'app_hebergement_show', methods: ['GET'])]
+    
+    
+
+// ──────────────────────────────────────────────────────────────────────────
+    // NEW: Scraping actions
+    // ──────────────────────────────────────────────────────────────────────────
+ 
+    /**
+     * GET /hebergement/scrape?destination=Paris
+     *
+     * Calls the scraper service and returns results as JSON.
+     * The frontend renders the results as selectable cards.
+     */
+    #[Route('/scrape', name: 'app_hebergement_scrape', methods: ['GET'])]
+    public function scrapeHebergements( Request $request, HebergementScraperService $scraperService): JsonResponse {
+        $destination = trim((string) $request->query->get('destination', 'Paris'));
+        $maxResults = max(1, min(40, (int) $request->query->get('max', 20)));
+ 
+        if ($destination === '') {
+            return $this->json(['error' => 'Veuillez fournir une destination.'], Response::HTTP_BAD_REQUEST);
+        }
+ 
+        try {
+            $results = $scraperService->scrape($destination, $maxResults);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Erreur lors du scraping : ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+ 
+        return $this->json([
+            'success' => true,
+            'count'   => count($results),
+            'data'    => $results,
+        ]);
+    }
+ 
+    /**
+     * POST /hebergement/save-scraped
+     *
+     * Receives a JSON body: { "items": [ {...}, ... ] }
+     * Creates Hebergement entities, downloads images, persists everything.
+     */
+    #[Route('/save-scraped', name: 'app_hebergement_save_scraped', methods: ['POST'])]
+    public function saveSelectedHebergements(
+        Request $request,
+        EntityManagerInterface $em,
+        DestinationRepository $destinationRepository,
+        ImageDownloaderService $imageDownloader
+    ): JsonResponse {
+        $payload = json_decode($request->getContent(), true);
+ 
+        if (!isset($payload['items']) || !is_array($payload['items'])) {
+            return $this->json(['error' => 'Données invalides.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $destinationId = isset($payload['destination_id']) ? (int) $payload['destination_id'] : 0;
+        if ($destinationId <= 0) {
+            return $this->json(['error' => 'Destination invalide.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $destination = $destinationRepository->find($destinationId);
+        if ($destination === null) {
+            return $this->json(['error' => 'Destination introuvable.'], Response::HTTP_BAD_REQUEST);
+        }
+ 
+        $saved  = 0;
+        $errors = [];
+ 
+        foreach ($payload['items'] as $index => $data) {
+            try {
+                $hebergement = new Hebergement();
+                $hebergement->setNomHebergement((string) ($data['name'] ?? 'Sans nom'));
+                $hebergement->setTypeHebergement($data['type'] ?? null);
+                $hebergement->setPrixNuitHebergement(isset($data['price']) ? (float) $data['price'] : null);
+                $hebergement->setAdresseHebergement($data['address'] ?? null);
+                $hebergement->setNoteHebergement(isset($data['rating']) ? (float) $data['rating'] : null);
+                $hebergement->setLatitudeHebergement(isset($data['latitude']) ? (float) $data['latitude'] : null);
+                $hebergement->setLongitudeHebergement(isset($data['longitude']) ? (float) $data['longitude'] : null);
+                $hebergement->setDestination($destination);
+ 
+                // Download image and hand it to VichUploader
+                if (!empty($data['image_url'])) {
+                    $file = $imageDownloader->download((string) $data['image_url']);
+                    if ($file !== null) {
+                        $hebergement->setImageFile($file);
+                    }
+                }
+ 
+                $em->persist($hebergement);
+                ++$saved;
+            } catch (\Throwable $e) {
+                $errors[] = sprintf('Élément %d : %s', $index, $e->getMessage());
+            }
+        }
+ 
+        $em->flush();
+ 
+        return $this->json([
+            'success' => true,
+            'saved'   => $saved,
+            'errors'  => $errors,
+        ]);
+    }
+
+    #[Route('/{id_hebergement}', name: 'app_hebergement_show', methods: ['GET'], requirements: ['id_hebergement' => '\d+'])]
     public function show(int $id_hebergement, HebergementRepository $hebergementRepository): Response
     {
         $hebergement = $hebergementRepository->find($id_hebergement);
@@ -112,4 +220,60 @@ class HebergementController extends AbstractController
             'hebergement' => $hebergement,
         ]);
     }
+
+    #[Route('/scrape-debug', name: 'app_hebergement_scrape_debug', methods: ['GET'])]
+public function scrapeDebug(
+    Request $request,
+    \Symfony\Contracts\HttpClient\HttpClientInterface $httpClient,
+): Response {
+    $cookies     = trim((string) $request->query->get('cookies', ''));
+    $destination = trim((string) $request->query->get('destination', 'Paris'));
+
+    $checkin  = (new \DateTimeImmutable('tomorrow'))->format('Y-m-d');
+    $checkout = (new \DateTimeImmutable('+2 days'))->format('Y-m-d');
+
+    $url = sprintf(
+        'https://www.booking.com/searchresults.html?ss=%s&checkin=%s&checkout=%s&group_adults=2&no_rooms=1&lang=fr',
+        urlencode($destination),
+        $checkin,
+        $checkout,
+    );
+
+    $headers = [
+        'User-Agent'      => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language' => 'fr-FR,fr;q=0.9',
+        'Cache-Control'   => 'no-cache',
+    ];
+
+    if ($cookies !== '') {
+        $headers['Cookie'] = $cookies;
+    }
+
+    $response = $httpClient->request('GET', $url, [
+        'timeout' => 30,
+        'headers' => $headers,
+    ]);
+
+    $html       = $response->getContent(false);
+    $statusCode = $response->getStatusCode();
+    $length     = strlen($html);
+
+    // Count how many property cards are found
+    $crawler    = new \Symfony\Component\DomCrawler\Crawler($html);
+    $cards1     = $crawler->filter('[data-testid="property-card"]')->count();
+    $cards2     = $crawler->filter('.sr_property_block')->count();
+    $hasCaptcha = str_contains($html, 'captcha') || str_contains($html, 'robot');
+
+    return new \Symfony\Component\HttpFoundation\JsonResponse([
+        'url'          => $url,
+        'status_code'  => $statusCode,
+        'html_length'  => $length,
+        'has_captcha'  => $hasCaptcha,
+        'cards_found_strategy1' => $cards1,
+        'cards_found_strategy2' => $cards2,
+        'html_preview' => substr($html, 0, 2000),
+    ]);
 }
+}
+ 

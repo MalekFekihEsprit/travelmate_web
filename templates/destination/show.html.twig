@@ -14,8 +14,12 @@
 
     <div class="destination-detail__header">
         <div class="destination-detail__flag-rating">
-            {% if destination.flagDestination %}
+            {% if destination.imageName %}
+                <img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
+            {% elseif destination.flagDestination %}
                 <img src="{{ destination.flagDestination }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
+            {% else %}
+                <div style="width: 120px; height: 120px; border-radius: 16px; border: 4px solid white; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: rgba(196,111,75,0.1);">🌍</div>
             {% endif %}
             <span class="destination-detail__rating">⭐ {{ average_score|default(destination.scoreDestination)|number_format(2, '.', '') }}/5</span>
         </div>

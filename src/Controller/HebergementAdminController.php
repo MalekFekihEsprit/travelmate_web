@@ -22,7 +22,7 @@ class HebergementAdminController extends AbstractController
         $destinationFilter = trim((string) $request->query->get('destination', ''));
         $sort = (string) $request->query->get('sort', 'recent');
 
-        $allHebergements = $hebergementRepository->findBy([], ['id_hebergement' => 'DESC']);
+        $allHebergements = $hebergementRepository->findBy([], ['idHebergement' => 'DESC']);
 
         $hebergements = array_values(array_filter($allHebergements, static function (Hebergement $hebergement) use ($search, $typeFilter, $destinationFilter): bool {
             if ($search !== '') {

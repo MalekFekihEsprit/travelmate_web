@@ -249,17 +249,17 @@
 
     {# Région #}
     <div class="admin-form__group">
-        {{ form_label(form.region_destination, 'Région') }}
+        {{ form_label(form.region_destination, 'Ville') }}
         <div class="admin-form-wrapper">
             {{ form_widget(form.region_destination, {
                 'attr': {
                     'class': 'admin-input',
-                    'placeholder': 'ex: Île-de-France',
+                    'placeholder': 'ex: Paris',
                     'data-validate': 'pattern:[a-zA-ZÀ-ÿ -]*'
                 }
             }) }}
             <div class="field-error" data-error-for="region_destination"></div>
-            <p class="field-hint">Optionnel</p>
+            <p class="field-hint">Optionnel - la ville sera utilisée pour valider et récupérer les coordonnées</p>
         </div>
     </div>
 
@@ -342,6 +342,76 @@
 {{ form_end(form) }}
 
 <script>
+const locationValidateUrl = '{{ path('app_destination_location_validate') }}';
+const cityInput = document.querySelector('input[name$="[nom_destination]"]');
+const countryInput = document.querySelector('input[name$="[pays_destination]"]');
+let locationValidationTimer = null;
+
+function setFieldError(fieldName, message) {
+    const input = document.querySelector(`[name$="[${fieldName}]"]`);
+    const errorContainer = document.querySelector(`[data-error-for="${fieldName}"]`);
+
+    if (!input || !errorContainer) {
+        return;
+    }
+
+    if (message) {
+        input.classList.add('input-error');
+        input.classList.remove('input-success');
+        errorContainer.textContent = message;
+        errorContainer.classList.add('show');
+    } else {
+        errorContainer.textContent = '';
+        errorContainer.classList.remove('show');
+        if (input.value.trim() !== '') {
+            input.classList.remove('input-error');
+            input.classList.add('input-success');
+        }
+    }
+}
+
+function runLiveLocationValidation() {
+    if (!cityInput || !countryInput) {
+        return;
+    }
+
+    const city = cityInput.value.trim();
+    const country = countryInput.value.trim();
+
+    if (city === '' || country === '') {
+        setFieldError('nom_destination', null);
+        setFieldError('pays_destination', null);
+        return;
+    }
+
+    const params = new URLSearchParams({ city, country });
+
+    fetch(`${locationValidateUrl}?${params.toString()}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.is_valid_country) {
+                setFieldError('pays_destination', 'Ce pays n\'existe pas dans la base locale.');
+                return;
+            }
+
+            setFieldError('pays_destination', null);
+
+            if (!data.is_valid_pair) {
+                setFieldError('nom_destination', 'Cette ville ne correspond pas au pays saisi.');
+                return;
+            }
+
+            setFieldError('nom_destination', null);
+        })
+        .catch(() => {
+            // Keep client-side validation non-blocking if endpoint is temporarily unavailable.
+        });
+}
+
 function validateForm() {
     const form = document.querySelector('.admin-form');
     const inputs = form.querySelectorAll('[data-validate]');
@@ -452,6 +522,14 @@ document.querySelector('.admin-form')?.addEventListener('input', function(e) {
         } else {
             input.classList.remove('input-error', 'input-success');
         }
+    }
+
+    if (e.target === cityInput || e.target === countryInput) {
+        if (locationValidationTimer) {
+            clearTimeout(locationValidationTimer);
+        }
+
+        locationValidationTimer = setTimeout(runLiveLocationValidation, 280);
     }
 });
 </script>

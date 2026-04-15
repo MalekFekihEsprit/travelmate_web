@@ -40,7 +40,7 @@ class Hebergement
     private ?float $longitudeHebergement = null;
 
     #[ORM\ManyToOne(targetEntity: Destination::class, inversedBy: 'hebergements')]
-    #[ORM\JoinColumn(name: 'destination_hebergement', referencedColumnName: 'id_destination')]
+    #[ORM\JoinColumn(name: 'destination_hebergement', referencedColumnName: 'id_destination', onDelete: 'CASCADE')]
     private ?Destination $destination = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'hebergements')]
