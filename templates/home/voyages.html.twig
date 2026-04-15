@@ -621,6 +621,7 @@
 
                 <div class="voyages-hero__actions">
                     <a href="{{ path('app_voyages_new') }}" class="btn btn--primary">Ajouter un voyage</a>
+                    <button id="recommend-btn-front" class="btn btn--ghost" type="button">Trouver un voyage (AI)</button>
                 </div>
 
                 <div class="voyages-hero__stats">
@@ -637,7 +638,9 @@
                 {% endif %}
             </div>
         </div>
-
+        
+        {# Include front recommendation quiz modal (client opens modal -> server calls recommender) #}
+        {% include 'front/_recommendation_quiz.html.twig' %}
         <div class="voyages-toolbar">
             <div class="voyages-toolbar__top">
                 <div>
@@ -730,6 +733,8 @@
                 </div>
             {% endif %}
         </div>
+
+        
 
         {% set successFlashes = app.flashes('success') %}
         {% set warningFlashes = app.flashes('warning') %}
