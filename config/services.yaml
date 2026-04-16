@@ -36,5 +36,9 @@ services:
             $cacheDirectory: '%kernel.cache_dir%/openrouteservice_geocoder'
             $cacheTtl: '%app.openrouteservice.cache_ttl%'
 
+    App\Service\FalVideoService:
+        arguments:
+            $apiKey: '%env(string:FAL_KEY)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

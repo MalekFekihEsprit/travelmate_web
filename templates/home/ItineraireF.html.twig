@@ -787,6 +787,9 @@
                     <a href="{{ path('app_itineraires_export_pdf', {voyageId: voyageId}) }}" class="btn btn--secondary itineraires-hero__cta">
                         📄 PDF
                     </a>
+                    <a href="{{ path('app_flights', {voyageId: voyageId}) }}" class="btn btn--primary itineraires-hero__cta" style="background: var(--color-secondary);">
+                        ✈️ Vols
+                    </a>
                     <a href="{{ path('app_voyages') }}" class="btn btn--secondary itineraires-hero__cta">
                         ← Mes voyages
                     </a>
@@ -919,6 +922,7 @@
                             </div>
 
                             <div class="itineraire-card__actions">
+                                <button type="button" class="action-btn" title="Générer une vidéo IA" data-card-link-ignore data-video-generate="{{ itineraire.id_itineraire }}">🎬</button>
                                 <a href="{{ path('app_itineraires_edit', {id: itineraire.id_itineraire}) }}" class="action-btn" title="Éditer" data-card-link-ignore>✏️</a>
                                 <form method="POST" action="{{ path('app_itineraires_delete', {id: itineraire.id_itineraire}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet itinéraire ?');" data-card-link-ignore>
                                     <button type="submit" class="action-btn danger" title="Supprimer" data-card-link-ignore>🗑️</button>
@@ -941,6 +945,30 @@
             {% endif %}
         </div>
     </div>
+
+    {# ── Video generation modal ── #}
+    <div id="video-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.65); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+        <div style="background:#1e1e2e; border-radius:1.2rem; padding:2rem 2.2rem; max-width:720px; width:92%; position:relative; box-shadow:0 20px 60px rgba(0,0,0,.5); color:#f5f0eb;">
+            <button type="button" id="video-modal-close" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:#f5f0eb; font-size:1.4rem; cursor:pointer;">&times;</button>
+            <div id="video-modal-generating" style="text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:.8rem;">🎬</div>
+                <h3 style="margin:0 0 .6rem; font-size:1.25rem;">Génération de la vidéo IA</h3>
+                <p id="video-modal-status" style="color:#c46f4b; font-size:.95rem;">Envoi de la requête…</p>
+                <div style="margin:1.2rem auto; width:48px; height:48px; border:4px solid rgba(196,111,75,.25); border-top-color:#c46f4b; border-radius:50%; animation:videoSpin 1s linear infinite;"></div>
+            </div>
+            <div id="video-modal-result" style="display:none; text-align:center;">
+                <video id="video-modal-player" controls autoplay style="width:100%; border-radius:.75rem; margin-bottom:1rem; max-height:480px; background:#000;"></video>
+                <a id="video-modal-download" href="#" download="itineraire.mp4" style="display:inline-block; padding:.6rem 1.4rem; background:#c46f4b; color:#fff; border-radius:.5rem; text-decoration:none; font-weight:600;">⬇ Télécharger</a>
+            </div>
+            <div id="video-modal-error" style="display:none; text-align:center;">
+                <div style="font-size:2rem; margin-bottom:.5rem;">⚠️</div>
+                <p id="video-modal-error-msg" style="color:#e74c3c;"></p>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes videoSpin { to { transform: rotate(360deg); } }
+    </style>
 {% endblock %}
 
 {% block javascripts %}
@@ -1134,5 +1162,107 @@
                 });
             }
         });
+    </script>
+
+    {# ── Video generation JS (fal.ai polling) ── #}
+    <script>
+    (function () {
+        var modal = document.getElementById('video-modal');
+        var closeBtn = document.getElementById('video-modal-close');
+        var generatingSection = document.getElementById('video-modal-generating');
+        var resultSection = document.getElementById('video-modal-result');
+        var errorSection = document.getElementById('video-modal-error');
+        var statusText = document.getElementById('video-modal-status');
+        var player = document.getElementById('video-modal-player');
+        var downloadLink = document.getElementById('video-modal-download');
+        var errorMsg = document.getElementById('video-modal-error-msg');
+        var pollTimer = null;
+
+        function showModal() {
+            generatingSection.style.display = 'block';
+            resultSection.style.display = 'none';
+            errorSection.style.display = 'none';
+            statusText.textContent = 'Envoi de la requête…';
+            modal.style.display = 'flex';
+        }
+
+        function hideModal() {
+            modal.style.display = 'none';
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            player.pause();
+            player.removeAttribute('src');
+        }
+
+        function showError(msg) {
+            generatingSection.style.display = 'none';
+            resultSection.style.display = 'none';
+            errorSection.style.display = 'block';
+            errorMsg.textContent = msg;
+        }
+
+        function showVideo(url) {
+            generatingSection.style.display = 'none';
+            errorSection.style.display = 'none';
+            resultSection.style.display = 'block';
+            player.src = url;
+            downloadLink.href = url;
+        }
+
+        function pollStatus(requestId) {
+            pollTimer = setInterval(function () {
+                fetch('/itineraires/video-status/' + requestId)
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.state === 'COMPLETED' && data.video_url) {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                            showVideo(data.video_url);
+                        } else if (data.state === 'IN_PROGRESS') {
+                            statusText.textContent = "L\u2019IA génère votre vidéo…";
+                        } else if (data.state === 'IN_QUEUE') {
+                            statusText.textContent = 'En file d\u2019attente…';
+                        } else if (data.state === 'FAILED') {
+                            clearInterval(pollTimer);
+                            pollTimer = null;
+                            showError(data.message || 'La génération a échoué.');
+                        }
+                    })
+                    .catch(function () {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                        showError('Erreur de connexion au serveur.');
+                    });
+            }, 5000);
+        }
+
+        closeBtn.addEventListener('click', hideModal);
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) hideModal();
+        });
+
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-video-generate]');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            var itineraireId = btn.getAttribute('data-video-generate');
+            showModal();
+
+            fetch('/itineraires/' + itineraireId + '/generate-video', { method: 'POST' })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.status === 'ok' && data.generation_id) {
+                        statusText.textContent = 'En file d\u2019attente…';
+                        pollStatus(data.generation_id);
+                    } else {
+                        showError(data.message || 'Erreur lors de la génération.');
+                    }
+                })
+                .catch(function () {
+                    showError('Erreur de connexion au serveur.');
+                });
+        });
+    })();
     </script>
 {% endblock %}

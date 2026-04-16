@@ -1,0 +1,347 @@
+/* ============================================================
+   TravelMate — Dark Mode
+   Activated via [data-theme="dark"] on <html>
+   ============================================================ */
+
+[data-theme="dark"] {
+    /* ── Core palette overrides ── */
+    --color-bg: #121218;
+    --color-surface: #1a1a24;
+    --color-surface-soft: #22222e;
+    --color-border: #2e2e3a;
+
+    --color-text: #e8e4df;
+    --color-text-muted: #9a9490;
+
+    --color-primary: #d4845e;          /* terracotta – slightly lighter for contrast */
+    --color-primary-dark: #c46f4b;
+    --color-secondary: #3dada5;        /* teal – brighter for dark bg */
+    --color-secondary-soft: #1a2e2d;
+    --color-accent: #c9a86c;
+
+    --color-hover: rgba(212, 132, 94, 0.10);
+    --color-active: rgba(212, 132, 94, 0.18);
+    --color-shadow: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Body background ── */
+[data-theme="dark"] body {
+    background:
+        radial-gradient(circle at top right, rgba(212, 132, 94, 0.06), transparent 22%),
+        linear-gradient(180deg, #151520 0%, var(--color-bg) 100%);
+    color: var(--color-text);
+}
+
+/* ── Navbar ── */
+[data-theme="dark"] .app-navbar {
+    background: rgba(26, 26, 36, 0.88);
+    border-bottom-color: var(--color-border);
+}
+
+[data-theme="dark"] .main-nav {
+    background: rgba(34, 34, 46, 0.75);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] .main-nav__link.is-active {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+/* ── Icon buttons ── */
+[data-theme="dark"] .icon-button {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .icon-button:hover {
+    background: var(--color-hover);
+    border-color: rgba(212, 132, 94, 0.3);
+    color: var(--color-primary);
+}
+
+[data-theme="dark"] .icon-button__badge {
+    border-color: var(--color-surface);
+}
+
+/* ── Profile menu ── */
+[data-theme="dark"] .profile-menu__trigger {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] .profile-menu__trigger:hover {
+    background: var(--color-hover);
+    border-color: rgba(212, 132, 94, 0.3);
+}
+
+[data-theme="dark"] .profile-menu__avatar {
+    border-color: rgba(212, 132, 94, 0.2);
+}
+
+[data-theme="dark"] .profile-dropdown {
+    background: rgba(26, 26, 36, 0.98);
+    border-color: var(--color-border);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .profile-dropdown__header {
+    border-bottom-color: var(--color-border);
+}
+
+[data-theme="dark"] .profile-dropdown__link:hover {
+    background: var(--color-hover);
+    color: var(--color-primary);
+}
+
+[data-theme="dark"] .profile-dropdown__footer {
+    border-top-color: var(--color-border);
+}
+
+[data-theme="dark"] .profile-dropdown__logout {
+    background: rgba(212, 132, 94, 0.1);
+    color: var(--color-primary);
+}
+
+[data-theme="dark"] .profile-dropdown__logout:hover {
+    background: rgba(212, 132, 94, 0.18);
+}
+
+/* ── Buttons ── */
+[data-theme="dark"] .btn {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] .btn--primary {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: transparent;
+}
+
+[data-theme="dark"] .btn--primary:hover {
+    background: var(--color-primary-dark);
+}
+
+[data-theme="dark"] .btn--ghost {
+    background: transparent;
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] .btn--ghost:hover {
+    color: var(--color-primary);
+    border-color: rgba(212, 132, 94, 0.3);
+    background: var(--color-hover);
+}
+
+[data-theme="dark"] .btn--secondary {
+    background: var(--color-secondary-soft);
+    color: var(--color-secondary);
+    border-color: rgba(61, 173, 165, 0.2);
+}
+
+/* ── Surface cards ── */
+[data-theme="dark"] .surface-card {
+    background: rgba(26, 26, 36, 0.92);
+    border-color: var(--color-border);
+}
+
+/* ── Hero section ── */
+[data-theme="dark"] .home-hero__content {
+    background: linear-gradient(135deg, rgba(26, 26, 36, 0.96), rgba(34, 34, 46, 0.9));
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] .home-hero__content::before {
+    background: rgba(212, 132, 94, 0.05);
+}
+
+[data-theme="dark"] .home-hero__content::after {
+    background: rgba(61, 173, 165, 0.05);
+}
+
+/* ── Footer ── */
+[data-theme="dark"] .site-footer {
+    background: var(--color-surface);
+    border-top-color: var(--color-border);
+    color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .site-footer a {
+    color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .site-footer a:hover {
+    color: var(--color-primary);
+}
+
+[data-theme="dark"] .site-footer__heading {
+    color: var(--color-text);
+}
+
+[data-theme="dark"] .site-footer__bottom {
+    border-top-color: var(--color-border);
+}
+
+[data-theme="dark"] .social-link {
+    background: var(--color-surface-soft);
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] .social-link:hover {
+    background: var(--color-hover);
+    color: var(--color-primary);
+}
+
+[data-theme="dark"] .store-badge {
+    background: var(--color-surface-soft);
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+}
+
+/* ── Forms & inputs ── */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background: var(--color-surface-soft);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+    border-color: var(--color-primary);
+    outline-color: var(--color-primary);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* ── Itinerary / Etape / Voyage cards (common patterns) ── */
+[data-theme="dark"] .itineraire-card,
+[data-theme="dark"] .etape-card,
+[data-theme="dark"] .voyage-card {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] .itineraire-card:hover,
+[data-theme="dark"] .etape-card:hover,
+[data-theme="dark"] .voyage-card:hover {
+    border-color: rgba(212, 132, 94, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Action buttons (emoji buttons on cards) ── */
+[data-theme="dark"] .action-btn {
+    background: var(--color-surface-soft);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] .action-btn:hover {
+    background: var(--color-hover);
+}
+
+/* ── Modals ── */
+[data-theme="dark"] #video-modal > div,
+[data-theme="dark"] #flight-modal > div {
+    background: #1a1a24;
+}
+
+/* ── Tables ── */
+[data-theme="dark"] table {
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] th {
+    background: var(--color-surface-soft);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] td {
+    border-color: var(--color-border);
+}
+
+[data-theme="dark"] tr:hover td {
+    background: var(--color-hover);
+}
+
+/* ── Scrollbars (webkit) ── */
+[data-theme="dark"] ::-webkit-scrollbar {
+    width: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--color-bg);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}
+
+/* ── Dark mode toggle button ── */
+.dark-mode-toggle {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+        background 180ms ease,
+        border-color 180ms ease,
+        color 180ms ease,
+        transform 180ms ease;
+    cursor: pointer;
+    font-size: 0;         /* hide text, keep SVG */
+}
+
+.dark-mode-toggle:hover {
+    background: var(--color-hover);
+    border-color: rgba(196, 111, 75, 0.28);
+    color: var(--color-primary);
+    transform: translateY(-1px);
+}
+
+.dark-mode-toggle .icon-sun,
+.dark-mode-toggle .icon-moon {
+    position: absolute;
+    transition: opacity 200ms ease, transform 300ms ease;
+}
+
+/* Light mode: show moon (click to go dark) */
+.dark-mode-toggle .icon-moon {
+    opacity: 1;
+    transform: rotate(0deg);
+}
+.dark-mode-toggle .icon-sun {
+    opacity: 0;
+    transform: rotate(-90deg);
+}
+
+/* Dark mode: show sun (click to go light) */
+[data-theme="dark"] .dark-mode-toggle .icon-moon {
+    opacity: 0;
+    transform: rotate(90deg);
+}
+[data-theme="dark"] .dark-mode-toggle .icon-sun {
+    opacity: 1;
+    transform: rotate(0deg);
+}
