@@ -4,6 +4,12 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
     <style>
         .etapes-page {
             display: grid;
@@ -177,6 +183,264 @@
             border: 1px solid var(--color-border);
             border-radius: var(--radius-xl);
             box-shadow: 0 14px 28px rgba(71, 48, 35, 0.05);
+        }
+
+        .etapes-map {
+            position: relative;
+            display: grid;
+            gap: 0;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(214, 132, 91, 0.2), transparent 30%),
+                radial-gradient(circle at bottom left, rgba(237, 189, 122, 0.2), transparent 25%),
+                linear-gradient(135deg, rgba(255, 248, 241, 0.99), rgba(252, 241, 232, 0.98));
+            border: 1px solid rgba(230, 204, 181, 0.94);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 16px 34px rgba(126, 78, 52, 0.08);
+        }
+
+        .etapes-map::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 4px;
+            background: linear-gradient(90deg, #c46f4b, #e2a15d);
+        }
+
+        .etapes-map__toggle {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 1rem;
+            align-items: center;
+            width: 100%;
+            padding: 1.15rem 1.35rem;
+            background: transparent;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .etapes-map__toggle:hover,
+        .etapes-map__toggle:focus-visible {
+            background: rgba(255, 255, 255, 0.4);
+            outline: none;
+        }
+
+        .etapes-map__header {
+            display: flex;
+            align-items: center;
+            gap: 0.95rem;
+        }
+
+        .etapes-map__icon {
+            width: 52px;
+            height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(196, 111, 75, 0.15), rgba(255, 255, 255, 0.95));
+            border: 1px solid rgba(196, 111, 75, 0.18);
+            color: #c46f4b;
+            font-size: 1.45rem;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+            flex-shrink: 0;
+        }
+
+        .etapes-map__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 0.3rem;
+            color: #c46f4b;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .etapes-map__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.35rem;
+            color: var(--color-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .etapes-map__text {
+            color: var(--color-text-muted);
+            max-width: 66ch;
+            line-height: 1.65;
+            font-size: 0.95rem;
+        }
+
+        .etapes-map__actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .etapes-map__status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.55rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(230, 204, 181, 0.95);
+            color: #c46f4b;
+            font-size: 0.82rem;
+            font-weight: 700;
+            box-shadow: 0 8px 18px rgba(126, 78, 52, 0.06);
+        }
+
+        .etapes-map__status.is-warning {
+            background: rgba(196, 111, 75, 0.14);
+            border-color: rgba(196, 111, 75, 0.2);
+            color: #9a593f;
+        }
+
+        .etapes-map__chevron {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(230, 204, 181, 0.95);
+            color: #c46f4b;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 18px rgba(126, 78, 52, 0.06);
+            transition: transform var(--transition-fast), background var(--transition-fast);
+        }
+
+        .etapes-map.is-open .etapes-map__chevron {
+            transform: rotate(180deg);
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        .etapes-map__content {
+            display: none;
+            padding: 0 1.35rem 1.35rem;
+        }
+
+        .etapes-map.is-open .etapes-map__content {
+            display: block;
+        }
+
+        .etapes-map__layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .etapes-map__canvas {
+            min-height: 560px;
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(230, 204, 181, 0.92);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.66), 0 14px 24px rgba(126, 78, 52, 0.08);
+        }
+
+        .etapes-map__sidebar {
+            display: grid;
+            gap: 1rem;
+            align-content: start;
+        }
+
+        .etapes-map__panel {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(230, 204, 181, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 12px 20px rgba(126, 78, 52, 0.05);
+        }
+
+        .etapes-map__panel-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.05rem;
+            color: var(--color-text);
+            margin-bottom: 0.75rem;
+        }
+
+        .etapes-map__day-list,
+        .etapes-map__city-list,
+        .etapes-map__address-list {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .etapes-map__day-option {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.55rem 0.65rem;
+            border-radius: var(--radius-md);
+            background: rgba(255, 249, 243, 0.96);
+            border: 1px solid rgba(234, 214, 196, 0.95);
+        }
+
+        .etapes-map__day-option input {
+            width: 18px;
+            height: 18px;
+            accent-color: #c46f4b;
+            flex-shrink: 0;
+        }
+
+        .etapes-map__day-option strong {
+            color: var(--color-text);
+            font-size: 0.95rem;
+        }
+
+        .etapes-map__day-option span {
+            color: var(--color-text-muted);
+            font-size: 0.86rem;
+        }
+
+        .etapes-map__city-item,
+        .etapes-map__address-item {
+            padding: 0.7rem 0.8rem;
+            border-radius: var(--radius-md);
+            background: rgba(255, 249, 243, 0.96);
+            border: 1px solid rgba(234, 214, 196, 0.95);
+        }
+
+        .etapes-map__city-item {
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .etapes-map__address-item strong {
+            display: block;
+            color: var(--color-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .etapes-map__address-item span {
+            display: block;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+
+        .etapes-map__empty {
+            color: var(--color-text-muted);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .etapes-map__marker {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            background: #4f46e5;
+            border: 3px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.3);
         }
 
         .etapes-filters {
@@ -559,6 +823,31 @@
                 padding: 1.35rem;
             }
 
+            .etapes-map__toggle {
+                grid-template-columns: 1fr;
+                padding: 1rem 1rem 0.95rem;
+            }
+
+            .etapes-map__header {
+                align-items: flex-start;
+            }
+
+            .etapes-map__actions {
+                justify-content: flex-start;
+            }
+
+            .etapes-map__content {
+                padding: 0 1rem 1rem;
+            }
+
+            .etapes-map__layout {
+                grid-template-columns: 1fr;
+            }
+
+            .etapes-map__canvas {
+                min-height: 420px;
+            }
+
             .etapes-hero__title {
                 font-size: 1.9rem;
             }
@@ -710,6 +999,75 @@
             </form>
         </section>
 
+        <section
+            class="etapes-map"
+            aria-label="Carte des activités de l'itinéraire"
+            data-etapes-map
+            data-map-endpoint="{{ path('app_etapes_map_data', {itineraireId: itineraire.id_itineraire}) }}"
+            data-current-day="{{ jour }}"
+            data-default-lat="{{ itineraire.voyage and itineraire.voyage.destination and itineraire.voyage.destination.latitude_destination is not null ? itineraire.voyage.destination.latitude_destination : 48.8566 }}"
+            data-default-lng="{{ itineraire.voyage and itineraire.voyage.destination and itineraire.voyage.destination.longitude_destination is not null ? itineraire.voyage.destination.longitude_destination : 2.3522 }}"
+        >
+            <button type="button" class="etapes-map__toggle" data-map-toggle aria-expanded="false" aria-controls="etapes-map-content">
+                <div class="etapes-map__header">
+                    <div class="etapes-map__icon" aria-hidden="true">🗺️</div>
+                    <div>
+                        <div class="etapes-map__eyebrow">Carte interactive</div>
+                        <h2 class="etapes-map__title">Explorer les activités sur la carte</h2>
+                        <p class="etapes-map__text">
+                            Appuie ici pour afficher la carte, puis choisis un ou plusieurs jours pour voir les adresses des activités.
+                        </p>
+                    </div>
+                </div>
+                <div class="etapes-map__actions">
+                    <div class="etapes-map__status" data-map-status>Clique pour afficher la carte</div>
+                    <span class="etapes-map__chevron" aria-hidden="true">⌃</span>
+                </div>
+            </button>
+
+            <div class="etapes-map__content" id="etapes-map-content" data-map-content>
+                <div class="etapes-map__layout">
+                    <div class="etapes-map__canvas" data-map-canvas></div>
+
+                    <aside class="etapes-map__sidebar">
+                        <section class="etapes-map__panel">
+                            <h3 class="etapes-map__panel-title">Jours de l'itinéraire</h3>
+                            <div class="etapes-map__day-list">
+                                {% for timelineDay in timelineDays %}
+                                    <label class="etapes-map__day-option">
+                                        <input
+                                            type="checkbox"
+                                            value="{{ timelineDay.number }}"
+                                            data-map-day-input
+                                            {% if timelineDay.number == jour %}checked{% endif %}
+                                        >
+                                        <div>
+                                            <strong>Jour {{ timelineDay.number }}</strong>
+                                            <span>{{ timelineDay.full_label }}</span>
+                                        </div>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <section class="etapes-map__panel">
+                            <h3 class="etapes-map__panel-title">Villes</h3>
+                            <div class="etapes-map__city-list" data-map-cities>
+                                <div class="etapes-map__empty">Les villes des activités sélectionnées apparaîtront ici.</div>
+                            </div>
+                        </section>
+
+                        <section class="etapes-map__panel">
+                            <h3 class="etapes-map__panel-title">Adresses des activités</h3>
+                            <div class="etapes-map__address-list" data-map-addresses>
+                                <div class="etapes-map__empty">Les adresses géocodées seront listées ici.</div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
         <section class="etapes-board">
             <div class="etapes-board__header">
                 <div>
@@ -805,6 +1163,11 @@
 
 {% block javascripts %}
     {{ parent() }}
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var filterForm = document.querySelector('[data-etapes-filter-form]');
@@ -848,6 +1211,234 @@
                 }
 
                 filterForm.addEventListener('submit', updateFormAction);
+            }
+
+            var mapSection = document.querySelector('[data-etapes-map]');
+            if (mapSection && window.L) {
+                var toggleButton = mapSection.querySelector('[data-map-toggle]');
+                var mapCanvas = mapSection.querySelector('[data-map-canvas]');
+                var statusElement = mapSection.querySelector('[data-map-status]');
+                var cityList = mapSection.querySelector('[data-map-cities]');
+                var addressList = mapSection.querySelector('[data-map-addresses]');
+                var dayInputs = Array.prototype.slice.call(mapSection.querySelectorAll('[data-map-day-input]'));
+                var endpoint = mapSection.dataset.mapEndpoint || '';
+                var currentDayForMap = mapSection.dataset.currentDay || '1';
+                var defaultLat = parseFloat(mapSection.dataset.defaultLat || '48.8566');
+                var defaultLng = parseFloat(mapSection.dataset.defaultLng || '2.3522');
+                var map = null;
+                var markersLayer = null;
+                var hasLoadedMapData = false;
+
+                var colorPalette = ['#4f46e5', '#0f766e', '#c2410c', '#b45309', '#9333ea', '#2563eb', '#047857'];
+
+                var ensureMap = function () {
+                    if (map) {
+                        return;
+                    }
+
+                    map = L.map(mapCanvas, {
+                        zoomControl: true,
+                        scrollWheelZoom: true
+                    }).setView([defaultLat, defaultLng], 11);
+                    markersLayer = L.layerGroup().addTo(map);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+                };
+
+                var setStatus = function (message, tone) {
+                    if (!statusElement) {
+                        return;
+                    }
+
+                    statusElement.textContent = message;
+                    statusElement.classList.toggle('is-warning', tone === 'warning');
+                };
+
+                var renderEmptyList = function (container, message) {
+                    if (!container) {
+                        return;
+                    }
+
+                    container.innerHTML = '<div class="etapes-map__empty">' + message + '</div>';
+                };
+
+                var getSelectedDays = function () {
+                    return dayInputs
+                        .filter(function (input) {
+                            return input.checked;
+                        })
+                        .map(function (input) {
+                            return input.value;
+                        });
+                };
+
+                var renderCities = function (cities) {
+                    if (!cityList) {
+                        return;
+                    }
+
+                    if (!cities || cities.length === 0) {
+                        renderEmptyList(cityList, 'Aucune ville détectée pour la sélection courante.');
+                        return;
+                    }
+
+                    cityList.innerHTML = cities.map(function (city) {
+                        return '<div class="etapes-map__city-item">' + city + '</div>';
+                    }).join('');
+                };
+
+                var renderAddresses = function (markers) {
+                    if (!addressList) {
+                        return;
+                    }
+
+                    if (!markers || markers.length === 0) {
+                        renderEmptyList(addressList, 'Aucune adresse à afficher pour les jours choisis.');
+                        return;
+                    }
+
+                    addressList.innerHTML = markers.map(function (marker) {
+                        var cityLine = marker.city ? ' · ' + marker.city : '';
+                        return [
+                            '<div class="etapes-map__address-item">',
+                            '<strong>Jour ' + marker.day + ' · ' + marker.time + ' · ' + marker.activity + '</strong>',
+                            '<span>' + marker.address + cityLine + '</span>',
+                            '</div>'
+                        ].join('');
+                    }).join('');
+                };
+
+                var renderMarkers = function (markers) {
+                    ensureMap();
+                    markersLayer.clearLayers();
+
+                    if (!markers || markers.length === 0) {
+                        map.setView([defaultLat, defaultLng], 11);
+                        return;
+                    }
+
+                    var bounds = [];
+                    markers.forEach(function (marker) {
+                        var color = colorPalette[(marker.day - 1) % colorPalette.length];
+                        var markerLayer = L.circleMarker([marker.lat, marker.lng], {
+                            radius: 9,
+                            color: '#ffffff',
+                            weight: 2,
+                            fillColor: color,
+                            fillOpacity: 0.95
+                        });
+
+                        markerLayer.bindPopup([
+                            '<strong>Jour ' + marker.day + ' · ' + marker.activity + '</strong><br>',
+                            marker.dayLabel + '<br>',
+                            marker.time + ' · ' + marker.address,
+                            marker.description ? '<br><em>' + marker.description + '</em>' : ''
+                        ].join(''));
+
+                        markerLayer.addTo(markersLayer);
+                        bounds.push([marker.lat, marker.lng]);
+                    });
+
+                    if (bounds.length === 1) {
+                        map.setView(bounds[0], 13);
+                    } else {
+                        map.fitBounds(bounds, { padding: [30, 30] });
+                    }
+                };
+
+                var fetchMapData = function () {
+                    ensureMap();
+
+                    if (!endpoint) {
+                        setStatus('La source de données de la carte est introuvable.', 'warning');
+                        return;
+                    }
+
+                    var selectedDays = getSelectedDays();
+                    if (selectedDays.length === 0) {
+                        markersLayer.clearLayers();
+                        renderCities([]);
+                        renderAddresses([]);
+                        setStatus('Sélectionne au moins un jour pour afficher la carte.', 'warning');
+                        map.setView([defaultLat, defaultLng], 11);
+                        return;
+                    }
+
+                    var url = new URL(endpoint, window.location.origin);
+                    var searchParams = new URLSearchParams(window.location.search);
+
+                    selectedDays.forEach(function (dayValue) {
+                        url.searchParams.append('days[]', dayValue);
+                    });
+
+                    if (searchParams.has('q')) {
+                        url.searchParams.set('q', searchParams.get('q'));
+                    }
+
+                    if (searchParams.has('sort')) {
+                        url.searchParams.set('sort', searchParams.get('sort'));
+                    }
+
+                    url.searchParams.set('jour', currentDayForMap);
+                    setStatus('Chargement des activités géolocalisées…');
+
+                    fetch(url.toString(), {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                        .then(function (response) {
+                            if (!response.ok) {
+                                throw new Error('HTTP ' + response.status);
+                            }
+
+                            return response.json();
+                        })
+                        .then(function (payload) {
+                            renderMarkers(payload.markers || []);
+                            renderCities(payload.cities || []);
+                            renderAddresses(payload.markers || []);
+                            hasLoadedMapData = true;
+
+                            if (payload.status === 'ready') {
+                                setStatus(payload.message || 'Carte mise à jour.');
+                            } else {
+                                setStatus(payload.message || 'La carte ne peut pas être alimentée pour le moment.', 'warning');
+                            }
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                            markersLayer.clearLayers();
+                            renderCities([]);
+                            renderAddresses([]);
+                            setStatus('Impossible de charger les adresses sur la carte.', 'warning');
+                            map.setView([defaultLat, defaultLng], 11);
+                        });
+                };
+
+                dayInputs.forEach(function (input) {
+                    input.addEventListener('change', fetchMapData);
+                });
+
+                if (toggleButton) {
+                    toggleButton.addEventListener('click', function () {
+                        var isOpen = mapSection.classList.toggle('is-open');
+                        toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                        if (isOpen) {
+                            ensureMap();
+                            window.setTimeout(function () {
+                                map.invalidateSize();
+
+                                if (!hasLoadedMapData) {
+                                    fetchMapData();
+                                }
+                            }, 120);
+                        }
+                    });
+                }
             }
 
             var timeline = document.querySelector('[data-timeline]');

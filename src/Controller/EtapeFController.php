@@ -6,11 +6,13 @@ use App\Entity\Etape;
 use App\Entity\Itineraire;
 use App\Repository\EtapeRepository;
 use App\Repository\ItineraireRepository;
+use App\Service\OpenRouteServiceGeocoder;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -103,6 +105,107 @@ class EtapeFController extends AbstractController
             'alpha_desc' => 'Description Z a A',
             default => 'Heure croissante',
         };
+    }
+
+    private static function normalizeSelectedDays(array $rawDays, int $totalDays, int $fallbackDay): array
+    {
+        $normalized = [];
+        foreach ($rawDays as $rawDay) {
+            if (!is_scalar($rawDay)) {
+                continue;
+            }
+
+            $day = (int) $rawDay;
+            if ($day >= 1 && $day <= $totalDays) {
+                $normalized[$day] = $day;
+            }
+        }
+
+        if ($normalized === []) {
+            $normalized[$fallbackDay] = $fallbackDay;
+        }
+
+        ksort($normalized);
+
+        return array_values($normalized);
+    }
+
+    private function buildMapPayload(
+        Itineraire $itineraire,
+        array $timelineDays,
+        array $selectedDays,
+        OpenRouteServiceGeocoder $geocoder
+    ): array {
+        if (!$geocoder->isConfigured()) {
+            return [
+                'status' => 'unconfigured',
+                'message' => 'Ajoute la cle OpenRouteService pour activer la carte des activites.',
+                'markers' => [],
+                'cities' => [],
+                'selectedDays' => $selectedDays,
+            ];
+        }
+
+        $destination = $itineraire->getVoyage()?->getDestination();
+        $selectedDayLookup = array_flip($selectedDays);
+        $markers = [];
+        $cities = [];
+
+        foreach ($timelineDays as $timelineDay) {
+            if (!isset($selectedDayLookup[$timelineDay['number']])) {
+                continue;
+            }
+
+            foreach ($timelineDay['etapes'] as $etape) {
+                $activite = $etape->getActivite();
+                $place = trim((string) $activite?->getLieu());
+                if ($place === '') {
+                    continue;
+                }
+
+                $geocoded = $geocoder->geocodePlace($place, $destination);
+                if ($geocoded === null) {
+                    continue;
+                }
+
+                $city = trim((string) ($geocoded['locality'] ?? ''));
+                if ($city !== '') {
+                    $cities[$city] = $city;
+                }
+
+                $markers[] = [
+                    'day' => $timelineDay['number'],
+                    'dayLabel' => $timelineDay['full_label'],
+                    'time' => $etape->getHeure()?->format('H:i') ?? '--:--',
+                    'activity' => (string) ($activite?->getNom() ?: 'Activite'),
+                    'description' => (string) ($etape->getDescription_etape() ?: ''),
+                    'address' => (string) ($geocoded['label'] ?? $place),
+                    'city' => $city,
+                    'lat' => (float) $geocoded['lat'],
+                    'lng' => (float) $geocoded['lng'],
+                ];
+            }
+        }
+
+        if ($markers === []) {
+            return [
+                'status' => 'empty',
+                'message' => 'Aucune activite avec adresse exploitable n\'a ete trouvee pour les jours selectionnes.',
+                'markers' => [],
+                'cities' => [],
+                'selectedDays' => $selectedDays,
+            ];
+        }
+
+        sort($cities);
+
+        return [
+            'status' => 'ready',
+            'message' => count($markers) . ' adresse(s) affichee(s) sur la carte.',
+            'markers' => $markers,
+            'cities' => array_values($cities),
+            'selectedDays' => $selectedDays,
+        ];
     }
 
     private static function buildPdfFileName(Itineraire $itineraire, int $jour): string
@@ -243,6 +346,32 @@ class EtapeFController extends AbstractController
             $jour,
             $request,
             $etapeRepository
+        ));
+    }
+
+    #[Route('/{itineraireId}/map-data', name: 'map_data', methods: ['GET'])]
+    public function mapData(
+        int $itineraireId,
+        Request $request,
+        ItineraireRepository $itineraireRepository,
+        EtapeRepository $etapeRepository,
+        OpenRouteServiceGeocoder $openRouteServiceGeocoder
+    ): JsonResponse {
+        $itineraire = $itineraireRepository->find($itineraireId);
+        if (!$itineraire) {
+            throw $this->createNotFoundException('Itinéraire non trouvé');
+        }
+
+        $totalDays = self::getTotalDays($itineraire);
+        $anchorDay = max(1, min((int) $request->query->get('jour', 1), $totalDays));
+        $viewData = $this->buildJourViewData($itineraire, $anchorDay, $request, $etapeRepository);
+        $selectedDays = self::normalizeSelectedDays((array) $request->query->all('days'), $totalDays, $anchorDay);
+
+        return $this->json($this->buildMapPayload(
+            $itineraire,
+            $viewData['timelineDays'],
+            $selectedDays,
+            $openRouteServiceGeocoder
         ));
     }
 
