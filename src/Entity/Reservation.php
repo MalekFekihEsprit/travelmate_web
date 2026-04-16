@@ -33,10 +33,10 @@ class Reservation
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $commentaire = null;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[ORM\Column(type: 'float')]
     private ?float $montantTotal = null;
 
-    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[ORM\Column(type: 'float')]
     private ?float $acompte = null;
 
     #[ORM\Column(type: 'string', length: 50)]
