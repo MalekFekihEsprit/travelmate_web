@@ -1,0 +1,19 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Nouvel hebergement | Admin{% endblock %}
+
+{% block body %}
+<section class="admin-destinations-page">
+    <div class="admin-page-header">
+        <div>
+            <span class="admin-page-header__eyebrow">Administration</span>
+            <h1 class="admin-page-header__title">Ajouter un hebergement</h1>
+            <p class="admin-page-header__desc">Ajoutez un hebergement a votre catalogue.</p>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        {{ include('hebergement_admin/_form.html.twig', {button_label: 'Ajouter'}) }}
+    </div>
+</section>
+{% endblock %}

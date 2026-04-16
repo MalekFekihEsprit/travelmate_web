@@ -20,10 +20,11 @@ final class Version20260331132923 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('DROP INDEX IDX_766B5EB5BCF5E73D ON activites');
-        $this->addSql('ALTER TABLE liste_activite DROP FOREIGN KEY `FK_A4A80EEF19AA3CB8`');
-        $this->addSql('DROP INDEX fk_liste_activite_voyage ON liste_activite');
-        $this->addSql('CREATE INDEX IDX_A4A80EEF19AA3CB8 ON liste_activite (id_voyage)');
+        // Check if index exists before dropping (for MariaDB compatibility)
+        $this->addSql("ALTER TABLE activites DROP INDEX IF EXISTS IDX_766B5EB5BCF5E73D");
+        $this->addSql('ALTER TABLE liste_activite DROP FOREIGN KEY IF EXISTS `FK_A4A80EEF19AA3CB8`');
+        $this->addSql("ALTER TABLE liste_activite DROP INDEX IF EXISTS fk_liste_activite_voyage");
+        $this->addSql('CREATE INDEX IDX_A4A80EEF19AA3CB8 ON liste_activite (id_voyage) IF NOT EXISTS');
         $this->addSql('ALTER TABLE liste_activite ADD CONSTRAINT `FK_A4A80EEF19AA3CB8` FOREIGN KEY (id_voyage) REFERENCES voyage (id_voyage)');
 
         $this->addSql('ALTER TABLE budget DROP FOREIGN KEY `fk_budget_user`');

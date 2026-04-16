@@ -1,0 +1,513 @@
+<style>
+    .admin-form {
+        display: flex;
+        flex-direction: column;
+        gap: 2.5rem;
+    }
+
+    .admin-form__grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .admin-form__grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .admin-form__group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .admin-form__group--full {
+        grid-column: 1 / -1;
+    }
+
+    .admin-form label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #555;
+        text-transform: capitalize;
+        letter-spacing: 0.2px;
+    }
+
+    .admin-form-wrapper {
+        position: relative;
+    }
+
+    .admin-input {
+        width: 100%;
+        padding: 0.75rem 0.9rem;
+        border: 1px solid #d8d8d8;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        box-sizing: border-box;
+    }
+
+    .admin-input::placeholder {
+        color: #bbb;
+    }
+
+    .admin-input:hover {
+        border-color: #c46f4b;
+        box-shadow: 0 2px 6px rgba(196, 111, 75, 0.1);
+    }
+
+    .admin-input:focus {
+        outline: none;
+        border-color: #c46f4b;
+        background: #fff;
+        box-shadow: 0 0 0 2px rgba(196, 111, 75, 0.15);
+    }
+
+    .admin-input.input-error {
+        border-color: #e63946;
+        background: rgba(230, 57, 70, 0.03);
+    }
+
+    .admin-input.input-error:focus {
+        box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.15);
+    }
+
+    .admin-input.input-success {
+        border-color: #06a77d;
+        background: rgba(6, 168, 125, 0.02);
+    }
+
+    textarea.admin-input {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .field-error {
+        display: none;
+        font-size: 0.8rem;
+        color: #e63946;
+        margin-top: 0.3rem;
+    }
+
+    .field-error.show {
+        display: block;
+    }
+
+    .field-hint {
+        font-size: 0.8rem;
+        color: #999;
+        margin-top: 0.2rem;
+    }
+
+    .admin-form ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-form li {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: #e63946;
+        margin-top: 0.3rem;
+    }
+
+    .admin-form li::before {
+        content: '✕';
+        font-weight: bold;
+        width: 16px;
+        text-align: center;
+    }
+
+    .admin-form__actions {
+        display: flex;
+        gap: 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e9e9e9;
+    }
+
+    .btn {
+        padding: 0.8rem 1.6rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn--primary {
+        background: #c46f4b;
+        color: white;
+        box-shadow: 0 2px 8px rgba(196, 111, 75, 0.2);
+    }
+
+    .btn--primary:hover {
+        background: #a85a38;
+        box-shadow: 0 4px 12px rgba(196, 111, 75, 0.3);
+    }
+
+    .btn--primary:active {
+        transform: scale(0.98);
+    }
+
+    .btn--ghost {
+        background: transparent;
+        color: #666;
+        border: 1px solid #d8d8d8;
+    }
+
+    .btn--ghost:hover {
+        border-color: #c46f4b;
+        color: #c46f4b;
+        background: rgba(196, 111, 75, 0.05);
+    }
+
+    .admin-form .form-group-error {
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-form ul.form-error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .admin-form ul.form-error-list li {
+        font-size: 0.8rem;
+        color: #e63946;
+        margin-top: 0.3rem;
+    }
+
+    .admin-form .has-error .admin-input {
+        border-color: #e63946;
+        background: rgba(230, 57, 70, 0.03);
+    }
+
+    .admin-form .has-error .admin-input:focus {
+        box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.15);
+    }
+</style>
+
+{{ form_start(form, {
+    'attr': {
+        'class': 'admin-form',
+        'novalidate': 'novalidate',
+        'onsubmit': confirm_message is defined and confirm_message ? 'return validateForm() && confirm("' ~ confirm_message|e('js') ~ '");' : 'return validateForm();'
+    }
+}) }}
+
+<div class="admin-form__grid">
+
+    {# Nom Destination #}
+    <div class="admin-form__group">
+        {{ form_label(form.nom_destination, 'Nom du lieu') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.nom_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'placeholder': 'ex: Paris',
+                    'data-validate': 'required|minLength:2|maxLength:100|pattern:[a-zA-ZÀ-ÿ -]+',
+                    'data-error-required': 'Le nom est requis',
+                    'data-error-minLength': 'Le nom doit avoir au moins 2 caractères',
+                    'data-error-maxLength': 'Le nom ne doit pas dépasser 100 caractères',
+                    'data-error-pattern': 'Le nom ne doit contenir que des lettres'
+                }
+            }) }}
+            <div class="field-error" data-error-for="nom_destination"></div>
+        </div>
+    </div>
+
+    {# Pays #}
+    <div class="admin-form__group">
+        {{ form_label(form.pays_destination, 'Pays') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.pays_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'placeholder': 'ex: France',
+                    'data-validate': 'required|minLength:2|pattern:[a-zA-ZÀ-ÿ -]+',
+                    'data-error-required': 'Le pays est requis',
+                    'data-error-minLength': 'Le pays doit avoir au moins 2 caractères',
+                    'data-error-pattern': 'Le pays ne doit contenir que des lettres'
+                }
+            }) }}
+            <div class="field-error" data-error-for="pays_destination"></div>
+        </div>
+    </div>
+
+    {# Région #}
+    <div class="admin-form__group">
+        {{ form_label(form.region_destination, 'Région') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.region_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'placeholder': 'ex: Île-de-France',
+                    'data-validate': 'pattern:[a-zA-ZÀ-ÿ -]*'
+                }
+            }) }}
+            <div class="field-error" data-error-for="region_destination"></div>
+            <p class="field-hint">Optionnel</p>
+        </div>
+    </div>
+
+    {# Score #}
+    <div class="admin-form__group">
+        {{ form_label(form.score_destination, 'Note (1-5)') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.score_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'type': 'number',
+                    'min': '1',
+                    'max': '5',
+                    'placeholder': 'ex: 5',
+                    'data-validate': 'required|number|min:1|max:5',
+                    'data-error-required': 'La note est requise',
+                    'data-error-number': 'La note doit être un nombre',
+                    'data-error-min': 'La note doit être entre 1 et 5',
+                    'data-error-max': 'La note doit être entre 1 et 5'
+                }
+            }) }}
+            <div class="field-error" data-error-for="score_destination"></div>
+        </div>
+    </div>
+
+    {# Description #}
+    <div class="admin-form__group admin-form__group--full">
+        {{ form_label(form.description_destination, 'Description') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.description_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'placeholder': 'Décrivez cette destination...',
+                    'data-validate': 'required|minLength:10',
+                    'data-error-required': 'La description est requise',
+                    'data-error-minLength': 'La description doit avoir au moins 10 caractères'
+                }
+            }) }}
+            <div class="field-error" data-error-for="description_destination"></div>
+        </div>
+    </div>
+
+    {# Climat #}
+    <div class="admin-form__group">
+        {{ form_label(form.climat_destination, 'Climat') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.climat_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'data-validate': 'required',
+                    'data-error-required': 'Le climat est requis'
+                }
+            }) }}
+            <div class="field-error" data-error-for="climat_destination"></div>
+        </div>
+    </div>
+
+    {# Saison #}
+    <div class="admin-form__group">
+        {{ form_label(form.saison_destination, 'Meilleure saison') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.saison_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'data-validate': 'required',
+                    'data-error-required': 'La saison idéale est requise'
+                }
+            }) }}
+            <div class="field-error" data-error-for="saison_destination"></div>
+        </div>
+    </div>
+
+    {# Devise #}
+    <div class="admin-form__group">
+        {{ form_label(form.currency_destination, 'Devise') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.currency_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'placeholder': 'ex: EUR',
+                    'data-validate': 'required|maxLength:10',
+                    'data-error-required': 'La devise est requise',
+                    'data-error-maxLength': 'La devise ne doit pas dépasser 10 caractères'
+                }
+            }) }}
+            <div class="field-error" data-error-for="currency_destination"></div>
+        </div>
+    </div>
+
+    {# Langues #}
+    <div class="admin-form__group admin-form__group--full">
+        {{ form_label(form.languages_destination, 'Langues parlées') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.languages_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'placeholder': 'ex: Français, Anglais',
+                    'data-validate': 'required|minLength:2',
+                    'data-error-required': 'Les langues sont requises',
+                    'data-error-minLength': 'Veuillez entrer au moins 2 caractères'
+                }
+            }) }}
+            <div class="field-error" data-error-for="languages_destination"></div>
+        </div>
+    </div>
+
+    {# URL Vidéo #}
+    <div class="admin-form__group admin-form__group--full">
+        {{ form_label(form.video_url, 'Lien vidéo YouTube') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.video_url, {
+                'attr': {
+                    'class': 'admin-input',
+                    'placeholder': 'ex: https://www.youtube.com/watch?v=...',
+                    'data-validate': 'url',
+                    'data-error-url': 'Veuillez entrer une URL valide'
+                }
+            }) }}
+            <div class="field-error" data-error-for="video_url"></div>
+            <p class="field-hint">Optionnel - YouTube uniquement</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="admin-form__actions">
+    <button type="submit" class="btn btn--primary">
+        {{ button_label|default('Enregistrer') }}
+    </button>
+
+    <a href="{{ path('app_admin_destinations') }}" class="btn btn--ghost">
+        Annuler
+    </a>
+</div>
+
+{{ form_end(form) }}
+
+<script>
+function validateForm() {
+    const form = document.querySelector('.admin-form');
+    const inputs = form.querySelectorAll('[data-validate]');
+    let isValid = true;
+
+    inputs.forEach(input => {
+        const rules = input.dataset.validate.split('|');
+        const value = input.value.trim();
+        
+        // Find error container by looking up to the wrapper
+        const wrapper = input.closest('.admin-form-wrapper');
+        const errorContainer = wrapper ? wrapper.querySelector('.field-error') : null;
+        
+        if (!errorContainer) return;
+        
+        input.classList.remove('input-error', 'input-success');
+        errorContainer.innerHTML = '';
+        errorContainer.classList.remove('show');
+
+        for (const rule of rules) {
+            const [ruleName, ruleValue] = rule.split(':');
+            let error = null;
+
+            switch (ruleName) {
+                case 'required':
+                    if (!value || (input.type === 'select-one' && value === '')) {
+                        error = input.dataset.errorRequired || 'Ce champ est requis';
+                    }
+                    break;
+
+                case 'minLength':
+                    if (value && value.length < parseInt(ruleValue)) {
+                        error = input.dataset.errorMinLength || `Minimum ${ruleValue} caractères`;
+                    }
+                    break;
+
+                case 'maxLength':
+                    if (value && value.length > parseInt(ruleValue)) {
+                        error = input.dataset.errorMaxLength || `Maximum ${ruleValue} caractères`;
+                    }
+                    break;
+
+                case 'pattern':
+                    if (value) {
+                        const pattern = new RegExp('^' + ruleValue + '$');
+                        if (!pattern.test(value)) {
+                            error = input.dataset.errorPattern || 'Format invalide';
+                        }
+                    }
+                    break;
+
+                case 'number':
+                    if (value && isNaN(value)) {
+                        error = input.dataset.errorNumber || 'Doit être un nombre';
+                    }
+                    break;
+
+                case 'min':
+                    if (value && parseInt(value) < parseInt(ruleValue)) {
+                        error = input.dataset.errorMin || `Minimum ${ruleValue}`;
+                    }
+                    break;
+
+                case 'max':
+                    if (value && parseInt(value) > parseInt(ruleValue)) {
+                        error = input.dataset.errorMax || `Maximum ${ruleValue}`;
+                    }
+                    break;
+
+                case 'url':
+                    if (value) {
+                        try {
+                            new URL(value);
+                        } catch {
+                            error = input.dataset.errorUrl || 'URL invalide';
+                        }
+                    }
+                    break;
+            }
+
+            if (error) {
+                isValid = false;
+                input.classList.add('input-error');
+                errorContainer.textContent = error;
+                errorContainer.classList.add('show');
+                break;
+            }
+        }
+
+        // Only add success class if field has value and no errors
+        if (!errorContainer.classList.contains('show') && value) {
+            input.classList.add('input-success');
+        }
+    });
+
+    return isValid;
+}
+
+// Add success visual feedback when user is typing (but not validation errors)
+document.querySelector('.admin-form')?.addEventListener('input', function(e) {
+    if (e.target.hasAttribute('data-validate')) {
+        const input = e.target;
+        const value = input.value.trim();
+        
+        if (value) {
+            input.classList.remove('input-error');
+            input.classList.add('input-success');
+        } else {
+            input.classList.remove('input-error', 'input-success');
+        }
+    }
+});
+</script>

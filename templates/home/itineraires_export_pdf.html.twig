@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Itinéraires | TravelMate</title>
+    <style>
+        @page {
+            margin: 14mm 16mm 22mm 16mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.45;
+            color: #2c1810;
+            margin: 0;
+            padding: 0;
+        }
+
+        .pdf-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 18mm;
+            border-top: 1px solid #e7dccd;
+            padding-top: 6px;
+            font-size: 8.5pt;
+            color: #71665c;
+        }
+
+        .pdf-footer table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pdf-footer td {
+            vertical-align: top;
+        }
+
+        .pdf-footer .brand {
+            font-weight: 700;
+            color: #c46f4b;
+        }
+
+        .hero-wrap {
+            background: linear-gradient(135deg, #fffdf9 0%, #f3eadf 100%);
+            border: 1px solid #e7dccd;
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 18px;
+        }
+
+        .hero-inner {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .hero-inner td {
+            vertical-align: middle;
+        }
+
+        .hero-plane {
+            font-size: 34pt;
+            text-align: center;
+            width: 72px;
+            color: #c46f4b;
+            line-height: 1;
+        }
+
+        .eyebrow {
+            color: #c46f4b;
+            font-size: 8.5pt;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin: 0 0 8px;
+        }
+
+        .hero-title {
+            font-size: 22pt;
+            font-weight: 700;
+            margin: 0 0 10px;
+            color: #2c1810;
+            line-height: 1.15;
+        }
+
+        .hero-dates {
+            margin: 0;
+            color: #5c5349;
+            font-size: 10.5pt;
+        }
+
+        h2.section-title {
+            font-size: 12pt;
+            margin: 0 0 12px;
+            color: #2c1810;
+            border-bottom: 2px solid #c46f4b;
+            padding-bottom: 6px;
+        }
+
+        .stats-row {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 10px 0;
+            margin: 0 0 22px;
+        }
+
+        .stats-row td {
+            width: 33.33%;
+            vertical-align: top;
+        }
+
+        .stat-box {
+            border: 1px solid #e7dccd;
+            border-radius: 8px;
+            background: #fffdf9;
+            padding: 14px 12px;
+            text-align: center;
+        }
+
+        .stat-box .num {
+            display: block;
+            font-size: 20pt;
+            font-weight: 700;
+            color: #c46f4b;
+            line-height: 1.1;
+        }
+
+        .stat-box .lbl {
+            display: block;
+            font-size: 7.5pt;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8a7f72;
+            margin-top: 6px;
+        }
+
+        .itineraire-block {
+            border: 1px solid #e7dccd;
+            border-radius: 10px;
+            background: #fffdf9;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            page-break-inside: avoid;
+        }
+
+        .itineraire-head {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+
+        .itineraire-num {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #c46f4b;
+            width: 36px;
+            vertical-align: top;
+            line-height: 1.2;
+        }
+
+        .itineraire-name {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #2c1810;
+            vertical-align: top;
+            line-height: 1.2;
+        }
+
+        .itineraire-loc {
+            font-size: 9.5pt;
+            color: #c46f4b;
+            font-weight: 600;
+            margin: 0 0 6px;
+        }
+
+        .itineraire-desc {
+            margin: 0;
+            color: #5c5349;
+            font-size: 10pt;
+        }
+
+        .muted {
+            color: #8a7f72;
+            font-size: 9pt;
+        }
+
+        .meta-top {
+            text-align: right;
+            font-size: 8pt;
+            color: #8a7f72;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="meta-top">
+        {{ generated_at|date('d/m/Y H:i') }} &nbsp;|&nbsp; Mes Itinéraires | TravelMate
+    </div>
+
+    <div class="hero-wrap">
+        <table class="hero-inner">
+            <tr>
+                <td>
+                    <p class="eyebrow">Itinéraires &amp; Planification de Voyage</p>
+                    <h1 class="hero-title">{{ voyage.titre_voyage }}</h1>
+                    {% if voyage.date_debut and voyage.date_fin %}
+                        <p class="hero-dates">
+                            📅 {{ voyage.date_debut|date('d/m/Y') }} &rarr; {{ voyage.date_fin|date('d/m/Y') }}
+                        </p>
+                    {% else %}
+                        <p class="hero-dates muted">Dates du voyage non renseignées</p>
+                    {% endif %}
+                </td>
+                <td class="hero-plane">✈</td>
+            </tr>
+        </table>
+    </div>
+
+    <h2 class="section-title">Résumé du Voyage</h2>
+    <table class="stats-row">
+        <tr>
+            <td>
+                <div class="stat-box">
+                    <span class="num">{{ voyageNbJours ?? '—' }}</span>
+                    <span class="lbl">Jours</span>
+                </div>
+            </td>
+            <td>
+                <div class="stat-box">
+                    <span class="num">{{ total_itineraires }}</span>
+                    <span class="lbl">Itinéraires</span>
+                </div>
+            </td>
+            <td>
+                <div class="stat-box">
+                    <span class="num">{{ total_planifies }}</span>
+                    <span class="lbl">Planifiés</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <h2 class="section-title">📋 Détail des Itinéraires</h2>
+
+    {% if itineraires|length == 0 %}
+        <p class="muted">Aucun itinéraire pour ce voyage.</p>
+    {% endif %}
+
+    {% for itineraire in itineraires %}
+        <div class="itineraire-block">
+            <table class="itineraire-head">
+                <tr>
+                    <td class="itineraire-num">{{ '%02d'|format(loop.index) }}</td>
+                    <td class="itineraire-name">{{ itineraire.nom_itineraire }}</td>
+                </tr>
+            </table>
+            {% if itineraire.voyage and itineraire.voyage.destination %}
+                <p class="itineraire-loc">📍 📍 {{ itineraire.voyage.destination.nom_destination }}</p>
+            {% endif %}
+            <p class="itineraire-desc">{{ itineraire.description_itineraire }}</p>
+        </div>
+    {% endfor %}
+
+    <div class="pdf-footer">
+        <table>
+            <tr>
+                <td>
+                    <span class="brand">📱 TravelMate</span> &mdash; Planificateur de Voyage<br>
+                    <span>{{ generated_label_fr }}</span>
+                </td>
+                <td style="text-align: right; font-size: 18pt; line-height: 1; color: #2f7f79;">🌍</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
