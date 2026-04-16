@@ -1365,7 +1365,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     <div class="chat-fab__tooltip" data-translate="true">Une question ? On vous répond</div>
 </div>
 
-{# Le script météo est déplacé dans block javascripts ci-dessous pour éviter tout conflit avec weather-forecast.js #}
+{# Le script météo est injecté directement ici pour garantir l'exécution après le DOM #}
 
 <script>
 // Calcul total réservation
@@ -1413,54 +1413,54 @@ document.addEventListener('keydown', function (e) {
 }); 
 </script>
 
-{% endblock %}
-
-{% block javascripts %}
-{{ parent() }}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="{{ asset('js/geocoding-service.js') }}"></script>
-<script src="{{ asset('js/public-geo-map-toggle.js') }}"></script>
-{# NE PAS charger weather-forecast.js ici — la logique météo est gérée ci-dessous #}
-<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
-
+{# ══════════════════════════════════════════════════════
+   MÉTÉO — placé ici (fin de block body, DOM garanti prêt)
+   pour éviter tout problème de timing avec les assets JS
+══════════════════════════════════════════════════════ #}
 <script>
-// ══════════════════════════════════════════════════════
-// MÉTÉO — connexion datepicker → API /weather/forecast
-// Placé ici (après tous les JS) pour éviter tout conflit
-// ══════════════════════════════════════════════════════
 (function () {
     var activiteLocation = '{{ activite.lieu ? activite.lieu|e("js") : "Tunis" }}';
 
     function initWeather() {
         var resaDate       = document.getElementById('resaDate');
         var weatherContent = document.getElementById('weatherContent');
-        var weatherTimer   = null;
 
-        if (!resaDate || !weatherContent) return;
+        if (!resaDate || !weatherContent) {
+            // Retry si le DOM n'est pas encore complet (edge case)
+            setTimeout(initWeather, 100);
+            return;
+        }
 
         function onDateChange() {
             var date = resaDate.value;
             if (!date) {
-                weatherContent.innerHTML = '<div class="weather-widget__placeholder"><span>🌤️</span><span data-translate="true">Choisissez une date pour voir la météo prévue</span></div>';
+                weatherContent.innerHTML =
+                    '<div class="weather-widget__placeholder"><span>🌤️</span>' +
+                    '<span>Choisissez une date pour voir la météo prévue</span></div>';
                 return;
             }
-            clearTimeout(weatherTimer);
-            weatherTimer = setTimeout(function () { fetchWeather(date); }, 300);
+            fetchWeather(date);
         }
 
         // Écouter 'change' ET 'input' pour compatibilité tous navigateurs + mobile
         resaDate.addEventListener('change', onDateChange);
         resaDate.addEventListener('input',  onDateChange);
 
-        // Auto-déclencher si une date est déjà présente dans le champ
+        // ✅ FIX PRINCIPAL : déclencher immédiatement si une date est déjà présente
         if (resaDate.value) {
-            onDateChange();
+            fetchWeather(resaDate.value);
         }
 
         function fetchWeather(date) {
-            weatherContent.innerHTML = '<div class="weather-loading"><div class="weather-spinner"></div><span>Chargement de la météo…</span></div>';
+            weatherContent.innerHTML =
+                '<div style="display:flex;align-items:center;gap:0.6rem;padding:1rem;color:var(--color-text-muted);font-size:0.88rem">' +
+                    '<div style="width:18px;height:18px;border:2px solid var(--color-border);border-top-color:var(--color-primary);border-radius:50%;animation:wmSpin .7s linear infinite;flex-shrink:0"></div>' +
+                    '<span>Chargement de la météo…</span>' +
+                '</div>' +
+                '<style>@keyframes wmSpin{to{transform:rotate(360deg)}}</style>';
 
-            var url = '/weather/forecast?date=' + encodeURIComponent(date) + '&location=' + encodeURIComponent(activiteLocation);
+            var url = '/weather/forecast?date=' + encodeURIComponent(date) +
+                      '&location=' + encodeURIComponent(activiteLocation);
 
             fetch(url)
                 .then(function(r) {
@@ -1472,7 +1472,10 @@ document.addEventListener('keydown', function (e) {
                     renderWeather(data);
                 })
                 .catch(function(err) {
-                    weatherContent.innerHTML = '<div class="weather-error-msg">⚠️ Météo indisponible : ' + err.message + '</div>';
+                    weatherContent.innerHTML =
+                        '<div style="padding:0.9rem;background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.15);border-radius:8px;font-size:0.83rem;color:#dc2626">' +
+                            '⚠️ Météo indisponible : ' + err.message +
+                        '</div>';
                 });
         }
 
@@ -1481,8 +1484,8 @@ document.addEventListener('keydown', function (e) {
             if (!forecasts.length) {
                 weatherContent.innerHTML =
                     '<div class="weather-widget__placeholder" style="background:rgba(196,111,75,0.06);border:1px solid rgba(196,111,75,0.2);border-radius:12px;padding:1.2rem;text-align:center">' +
-                        '<span style="font-size:1.8rem">📅</span>' +
-                        '<span style="display:block;margin-top:0.5rem;font-size:0.9rem;color:var(--color-text-muted)">' +
+                        '<span style="font-size:1.8rem;display:block">📅</span>' +
+                        '<span style="display:block;margin-top:0.5rem;font-size:0.88rem;color:var(--color-text-muted)">' +
                             'Prévisions indisponibles pour cette date.<br>' +
                             '<small>L\'API météo couvre uniquement les 5 prochains jours.</small>' +
                         '</span>' +
@@ -1490,16 +1493,15 @@ document.addEventListener('keydown', function (e) {
                 return;
             }
 
-            var temps = forecasts.map(function(f){ return f.temperature; });
-            var minT  = Math.min.apply(null, temps);
-            var maxT  = Math.max.apply(null, temps);
-            var avgT  = Math.round(temps.reduce(function(a,b){return a+b;},0) / temps.length);
+            var temps   = forecasts.map(function(f){ return f.temperature; });
+            var minT    = Math.min.apply(null, temps);
+            var maxT    = Math.max.apply(null, temps);
+            var avgT    = Math.round(temps.reduce(function(a,b){return a+b;},0) / temps.length);
             var maxRain = Math.max.apply(null, forecasts.map(function(f){ return f.rain_probability || 0; }));
-            var midForecast = forecasts[Math.floor(forecasts.length / 2)] || forecasts[0];
-            var humidity  = midForecast.humidity || 0;
-            var windSpeed = midForecast.wind_speed || 0;
-
-            var icon = getWeatherEmoji(midForecast.icon, midForecast.description);
+            var mid     = forecasts[Math.floor(forecasts.length / 2)] || forecasts[0];
+            var humidity  = mid.humidity || 0;
+            var windSpeed = mid.wind_speed || 0;
+            var icon      = getWeatherEmoji(mid.icon, mid.description);
 
             var alertClass, alertText;
             if (maxRain > 70) {
@@ -1513,11 +1515,12 @@ document.addEventListener('keydown', function (e) {
                 alertText  = '☀️ Températures élevées. Hydratez-vous bien.';
             } else {
                 alertClass = 'wcard__alert--good';
-                alertText  = '✅ Bonnes conditions météo prévues pour votre activité.';
+                alertText  = ' Bonnes conditions météo prévues pour votre activité.';
             }
 
             var mockBadge = (data.mock || data.out_of_range)
-                ? '<span style="font-size:0.7rem;opacity:0.5;margin-left:0.5rem">' + (data.out_of_range ? '(estimé)' : '(démo)') + '</span>'
+                ? '<span style="font-size:0.7rem;opacity:0.5;margin-left:0.5rem">' +
+                  (data.out_of_range ? '(estimé)' : '(démo)') + '</span>'
                 : '';
 
             weatherContent.innerHTML =
@@ -1526,15 +1529,15 @@ document.addEventListener('keydown', function (e) {
                         '<div class="wcard__icon">' + icon + '</div>' +
                         '<div class="wcard__main">' +
                             '<div class="wcard__temp">' + avgT + '°C' + mockBadge + '</div>' +
-                            '<div class="wcard__desc">' + midForecast.description + '</div>' +
+                            '<div class="wcard__desc">' + mid.description + '</div>' +
                             '<div class="wcard__minmax">' + minT + '° / ' + maxT + '°</div>' +
                         '</div>' +
                     '</div>' +
                     '<div class="wcard__details">' +
                         '<div class="wcard__detail">' +
                             '<span class="wcard__detail-label">Pluie</span>' +
-                            '<span class="wcard__detail-value">' + maxRain + '%</span>' +
-                            '<div class="wcard__rain-bar"><div class="wcard__rain-fill" style="width:' + maxRain + '%"></div></div>' +
+                            '<span class="wcard__detail-value">' + Math.round(maxRain) + '%</span>' +
+                            '<div class="wcard__rain-bar"><div class="wcard__rain-fill" style="width:' + Math.round(maxRain) + '%"></div></div>' +
                         '</div>' +
                         '<div class="wcard__detail">' +
                             '<span class="wcard__detail-label">Humidité</span>' +
@@ -1554,7 +1557,6 @@ document.addEventListener('keydown', function (e) {
         }
 
         function getWeatherEmoji(icon, desc) {
-            desc = (desc || '').toLowerCase();
             if (!icon) return '🌡️';
             var code = icon.replace('d','').replace('n','');
             var map = {'01':'☀️','02':'⛅','03':'☁️','04':'☁️','09':'🌧️','10':'🌦️','11':'⛈️','13':'❄️','50':'🌫️'};
@@ -1562,7 +1564,7 @@ document.addEventListener('keydown', function (e) {
         }
     }
 
-    // Garantir que le DOM est prêt
+    // DOM est déjà prêt ici (script en fin de body), mais on garde le guard
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initWeather);
     } else {
@@ -1570,6 +1572,15 @@ document.addEventListener('keydown', function (e) {
     }
 })();
 </script>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{{ asset('js/geocoding-service.js') }}"></script>
+<script src="{{ asset('js/public-geo-map-toggle.js') }}"></script>
+<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
 
 <script>
 (function () {
