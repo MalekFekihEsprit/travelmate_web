@@ -425,7 +425,11 @@
                             <p class="security-box__text">
                                 Utilisez un mot de passe fort contenant au moins une lettre et un chiffre.
                             </p>
-
+                            <div style="margin-top: 1rem;">
+                                <a href="{{ path('app_profile_face') }}" class="profile-submit profile-submit--ghost" style="text-decoration:none; display:inline-flex; align-items:center;">
+                                    Gérer mon visage
+                                </a>
+                            </div>
                             {{ form_start(changePasswordForm, {'attr': {'novalidate': 'novalidate'}}) }}
                                 <div class="profile-form-grid">
                                     <div class="form-control-block full">

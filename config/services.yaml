@@ -5,6 +5,8 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     profile_photos_directory: '%kernel.project_dir%/public/uploads/profiles'
+    face_api_base_url: '%env(FACE_API_BASE_URL)%'
+    face_match_threshold: '%env(float:FACE_MATCH_THRESHOLD)%'
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -20,5 +22,8 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Service\FaceRecognitionClient:
+        arguments:
+            $faceApiBaseUrl: '%face_api_base_url%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

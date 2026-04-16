@@ -18,6 +18,7 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use App\Service\FaceRecognitionClient;
 
 class RegistrationController extends AbstractController
 {
@@ -28,7 +29,8 @@ class RegistrationController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         UserRepository $userRepository,
         SluggerInterface $slugger,
-        MailerInterface $mailer
+        MailerInterface $mailer,
+        FaceRecognitionClient $faceRecognitionClient
     ): Response {
         $user = new User();
 
@@ -93,8 +95,6 @@ class RegistrationController extends AbstractController
                 $user->setPhotoFileName(null);
                 $this->addFlash('success', 'URL de la photo de profil enregistrée.');
             }
-            // Case 3: No photo – keep null
-
             $entityManager->persist($user);
             $entityManager->flush();
 

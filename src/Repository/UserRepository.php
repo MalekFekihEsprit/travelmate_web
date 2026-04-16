@@ -318,6 +318,19 @@ class UserRepository extends ServiceEntityRepository
         return $birthYears;
     }
 
+    public function findVerifiedUsersWithFaceEmbedding(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.face_embedding IS NOT NULL')
+            ->andWhere('u.face_embedding <> :empty')
+            ->andWhere('u.is_verified = :verified')
+            ->setParameter('empty', '')
+            ->setParameter('verified', true)
+            ->orderBy('u.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */
