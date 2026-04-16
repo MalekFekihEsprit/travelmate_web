@@ -6,6 +6,7 @@ use App\Entity\Itineraire;
 use App\Entity\Voyage;
 use App\Repository\ItineraireRepository;
 use App\Repository\VoyageRepository;
+use App\Service\GroqCulturalRulesService;
 use Doctrine\ORM\EntityManagerInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -51,7 +52,8 @@ class ItineraireFController extends AbstractController
     public function index(
         Request $request,
         ItineraireRepository $itineraireRepository,
-        VoyageRepository $voyageRepository
+        VoyageRepository $voyageRepository,
+        GroqCulturalRulesService $groqCulturalRulesService
     ): Response {
         $voyageId = $request->query->get('voyageId');
 
@@ -95,6 +97,9 @@ class ItineraireFController extends AbstractController
         $tousItineraires = $itineraireRepository->findBy(['voyage' => $voyageSelectionne]);
         $totalItineraires = count($tousItineraires);
         $totalJours = $voyageNbJours ?? 0;
+        $culturalRules = $request->isXmlHttpRequest()
+            ? null
+            : $groqCulturalRulesService->generateForVoyage($voyageSelectionne);
 
         return $this->render('home/ItineraireF.html.twig', [
             'itineraires' => $itineraires,
@@ -105,6 +110,7 @@ class ItineraireFController extends AbstractController
             'voyageNbJours' => $voyageNbJours,
             'search_q' => trim((string) $request->query->get('q', '')),
             'sort' => $sort,
+            'culturalRules' => $culturalRules,
         ]);
     }
 
