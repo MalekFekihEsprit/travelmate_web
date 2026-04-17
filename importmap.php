@@ -14,6 +14,7 @@
 return [
     'app' => [
         'path' => './assets/app.js',
+        'chart.js' => 'node_modules/chart.js/dist/chart.js', 
         'entrypoint' => true,
     ],
     '@hotwired/stimulus' => [
@@ -24,5 +25,14 @@ return [
     ],
     '@hotwired/turbo' => [
         'version' => '7.3.0',
+    ],
+    'chart.js' => [
+        'version' => '4.5.1',
+    ],
+    '@kurkle/color' => [
+        'version' => '0.3.4',
+    ],
+    '@symfony/ux-chartjs' => [
+        'version' => '2.35.0',
     ],
 ];

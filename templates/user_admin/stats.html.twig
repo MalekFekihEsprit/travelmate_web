@@ -44,6 +44,12 @@
             color: var(--admin-text-muted);
         }
 
+        .admin-page-header__actions {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -80,6 +86,10 @@
             gap: 1rem;
         }
 
+        .stats-grid--insights {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
         .stat-card,
         .chart-card {
             background: rgba(255, 253, 249, 0.94);
@@ -87,6 +97,10 @@
             border-radius: 26px;
             padding: 1.25rem;
             box-shadow: var(--admin-shadow-soft);
+        }
+
+        .stat-card--highlight {
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.85));
         }
 
         .stat-card__label {
@@ -113,14 +127,18 @@
 
         .charts-grid {
             display: grid;
-            grid-template-columns: 1fr 1.1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 1rem;
+        }
+
+        .chart-card--wide {
+            grid-column: 1 / -1;
         }
 
         .chart-title {
             font-size: 1.2rem;
             color: var(--admin-text);
-            margin-bottom: .35rem;
+            margin-bottom: .25rem;
         }
 
         .chart-subtitle {
@@ -128,255 +146,149 @@
             margin-bottom: 1rem;
         }
 
-        .role-bars {
+        .chart-box {
+            height: 320px;
+            position: relative;
+        }
+
+        .chart-box--small {
+            height: 280px;
+        }
+
+        .section-title {
+            font-size: 1.45rem;
+            color: var(--admin-text);
+            margin-bottom: .3rem;
+        }
+
+        .section-subtitle {
+            color: var(--admin-text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .stats-section {
             display: grid;
             gap: 1rem;
         }
 
-        .role-bar__top {
+        .window-nav {
             display: flex;
+            align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            margin-bottom: .4rem;
-            color: var(--admin-text-muted);
-            font-size: .9rem;
-        }
-
-        .role-bar__top strong {
-            color: var(--admin-text);
-        }
-
-        .progress {
-            height: 14px;
-            border-radius: 999px;
-            background: rgba(196, 111, 75, 0.10);
-            overflow: hidden;
-        }
-
-        .progress span {
-            display: block;
-            height: 100%;
-            border-radius: inherit;
-        }
-
-        .progress--admin span {
-            background: linear-gradient(90deg, var(--admin-primary), #d69372);
-        }
-
-        .progress--user {
-            background: rgba(47, 127, 121, 0.10);
-        }
-
-        .progress--user span {
-            background: linear-gradient(90deg, var(--admin-secondary), #63aaa4);
-        }
-
-        .daily-chart {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
-            gap: .75rem;
-            align-items: end;
-            min-height: 280px;
-            padding-top: 1rem;
-        }
-
-        .daily-chart__item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: end;
-            gap: .65rem;
-            min-height: 260px;
-        }
-
-        .daily-chart__value {
-            font-size: .85rem;
-            font-weight: 700;
-            color: var(--admin-text);
-        }
-
-        .daily-chart__bar-wrap {
-            width: 100%;
-            max-width: 52px;
-            height: 190px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            background: rgba(243, 234, 223, 0.45);
+            margin-bottom: 1rem;
+            padding: .95rem 1rem;
             border-radius: 18px;
-            padding: .4rem;
+            background: rgba(243,234,223,0.45);
+            border: 1px solid var(--admin-border);
         }
 
-        .daily-chart__bar {
-            width: 100%;
-            border-radius: 14px;
-            background: linear-gradient(180deg, var(--admin-secondary), var(--admin-primary));
-            min-height: 10px;
-            transition: height .3s ease;
+        .window-nav__label {
+            color: var(--admin-text);
+            font-weight: 700;
         }
 
-        .daily-chart__label {
-            font-size: .8rem;
-            color: var(--admin-text-muted);
-            text-align: center;
+        .window-nav__actions {
+            display: flex;
+            gap: .65rem;
+            flex-wrap: wrap;
         }
 
-        @media (max-width: 980px) {
-            .charts-grid,
-            .stats-grid {
+        @media (max-width: 1100px) {
+            .stats-grid,
+            .stats-grid--insights,
+            .charts-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .chart-card--wide {
+                grid-column: auto;
             }
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 700px) {
             .admin-page-header {
                 padding: 1.2rem;
+                flex-direction: column;
             }
 
             .admin-page-header__title {
                 font-size: 1.5rem;
             }
 
-            .daily-chart {
-                gap: .45rem;
+            .window-nav {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
 
-        /* Second row of stat cards */
-        .stats-grid--insights {
-            margin-top: 1.5rem;
-        }
-        .stat-card--highlight {
-            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-            border-left: 4px solid #4f46e5;
-        }
-        .progress--verified span { background: #10b981; }
-        .progress--unverified span { background: #f59e0b; }
-        .chart-card--wide {
-            grid-column: span 2;
-        }
-        .daily-chart--30 .daily-chart__item {
-            min-width: 24px;
-        }
-        @media (max-width: 1024px) {
-            .daily-chart--30 .daily-chart__item {
-                min-width: 20px;
-            }
+        /* In your admin.css file */
+        .stat-card--chart {
+            position: relative;
+            min-height: 160px;
         }
 
-        /* Age Statistics */
-        .stats-section {
-            margin-top: 3rem;
+        .stat-card__chart {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 12px;
         }
 
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #1f2937;
-        }
-
-        .section-subtitle {
-            color: #6b7280;
-            margin-bottom: 1.5rem;
-        }
-
-        .stats-grid--age {
-            grid-template-columns: repeat(3, 1fr);
-            margin-bottom: 2rem;
-        }
-
-        .stat-card--age-summary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .stat-card--age-summary .stat-card__label,
-        .stat-card--age-summary .stat-card__meta {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .age-distribution {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }
-
-        .age-range__header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .age-range__label {
-            font-weight: 500;
-            color: #374151;
-        }
-
-        .age-range__count {
-            color: #6b7280;
-        }
-
-        .birth-years {
-            overflow-x: auto;
-        }
-
-        .birth-years__chart {
-            display: flex;
-            align-items: flex-end;
-            gap: 0.5rem;
-            min-height: 200px;
-            padding: 1rem 0;
-        }
-
-        .birth-year__item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .birth-year__bar-wrap {
-            height: 150px;
-            display: flex;
-            align-items: flex-end;
+        .stat-card__chart .mini-chart {
             width: 100%;
+            height: 100%;
         }
 
-        .birth-year__bar {
-            width: 100%;
-            background: linear-gradient(to top, #667eea, #764ba2);
-            border-radius: 4px 4px 0 0;
-            transition: height 0.3s ease;
-            min-height: 2px;
+        .stat-card__chart-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-align: center;
         }
 
-        .birth-year__label {
-            font-size: 0.7rem;
-            color: #6b7280;
-            transform: rotate(-45deg);
-            white-space: nowrap;
+        .stat-card__value-group {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 5px;
         }
 
-        .birth-year__count {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #374151;
+        .stat-card__value-label {
+            font-size: 0.8rem;
+            color: #6c757d;
         }
 
-        .progress--neutral span {
-            background: #9ca3af;
+        .stat-card__chart-value.positive {
+            color: #2f7f79;
         }
 
+        .stat-card__chart-value.negative {
+            color: #c46f4b;
+        }
+
+        .stat-card__chart--small {
+            width: 60px;
+            height: 60px;
+        }
+
+        .stats-grid--insights .stat-card__chart {
+            width: 100px;
+            height: 100px;
+        }
+
+        /* Responsive adjustments */
         @media (max-width: 768px) {
-            .stats-grid--age {
-                grid-template-columns: 1fr;
+            .stat-card__chart {
+                width: 60px;
+                height: 60px;
             }
             
-            .birth-year__label {
-                transform: rotate(-90deg);
+            .stat-card__chart-value {
+                font-size: 1rem;
             }
         }
     </style>
@@ -392,157 +304,67 @@
                     Analyse complète de la répartition des rôles, de la vérification des comptes et de l’évolution des inscriptions.
                 </p>
             </div>
-            <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Retour à la liste</a>
+
+            <div class="admin-page-header__actions">
+                <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Retour à la liste</a>
+            </div>
         </div>
 
-        {# First row: core stats #}
-        <div class="stats-grid">
-            <article class="stat-card">
-                <span class="stat-card__label">Total utilisateurs</span>
-                <span class="stat-card__value">{{ totalUsers }}</span>
-                <span class="stat-card__meta">Comptes présents</span>
-            </article>
-            <article class="stat-card">
-                <span class="stat-card__label">Administrateurs</span>
-                <span class="stat-card__value">{{ adminCount }}</span>
-                <span class="stat-card__meta">{{ adminPercentage }}% du total</span>
-            </article>
-            <article class="stat-card">
-                <span class="stat-card__label">Utilisateurs standards</span>
-                <span class="stat-card__value">{{ userCount }}</span>
-                <span class="stat-card__meta">{{ userPercentage }}% du total</span>
-            </article>
-            <article class="stat-card">
-                <span class="stat-card__label">✅ Comptes vérifiés</span>
-                <span class="stat-card__value">{{ verifiedCount }}</span>
-                <span class="stat-card__meta">{{ verifiedPercentage }}% du total</span>
-            </article>
-            <article class="stat-card">
-                <span class="stat-card__label">⚠️ Non vérifiés</span>
-                <span class="stat-card__value">{{ unverifiedCount }}</span>
-                <span class="stat-card__meta">En attente d’activation</span>
-            </article>
-            <article class="stat-card">
-                <span class="stat-card__label">📱 Actifs (30j)</span>
-                <span class="stat-card__value">{{ activeLast30 }}</span>
-                <span class="stat-card__meta">{{ activePercentage }}% se sont connectés récemment</span>
-            </article>
-        </div>
-
-        {# Second row: registration insights #}
-        <div class="stats-grid stats-grid--insights">
-            <article class="stat-card stat-card--highlight">
-                <span class="stat-card__label">📈 Inscriptions (7j)</span>
-                <span class="stat-card__value">{{ registrationsByDay|sum }}</span>
-                <span class="stat-card__meta">Moyenne : {{ avgDailyRegistrations }}/jour</span>
-            </article>
-            <article class="stat-card stat-card--highlight">
-                <span class="stat-card__label">🏆 Pic d’inscriptions</span>
-                <span class="stat-card__value">{{ peakDay ? peakDay|date('d/m') : 'N/A' }}</span>
-                <span class="stat-card__meta">{{ registrationsByDay[peakDay] ?? 0 }} nouveaux comptes</span>
-            </article>
-            <article class="stat-card stat-card--highlight">
-                <span class="stat-card__label">📊 Croissance (30j vs 30j préc.)</span>
-                <span class="stat-card__value">{{ growth.percentageChange > 0 ? '+' : '' }}{{ growth.percentageChange }}%</span>
-                <span class="stat-card__meta">
-                    {{ growth.last30Total }} inscriptions récentes vs {{ growth.previous30Total }} avant
-                </span>
-            </article>
-        </div>
-
-        {# Charts row #}
         <div class="charts-grid">
-            {# Role distribution bar chart #}
             <article class="chart-card">
                 <h2 class="chart-title">Répartition des rôles</h2>
-                <div class="role-bars">
-                    <div>
-                        <div class="role-bar__top">
-                            <span>Administrateurs</span>
-                            <strong>{{ adminCount }} ({{ adminPercentage }}%)</strong>
-                        </div>
-                        <div class="progress progress--admin">
-                            <span style="width: {{ adminPercentage }}%;"></span>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="role-bar__top">
-                            <span>Utilisateurs</span>
-                            <strong>{{ userCount }} ({{ userPercentage }}%)</strong>
-                        </div>
-                        <div class="progress progress--user">
-                            <span style="width: {{ userPercentage }}%;"></span>
-                        </div>
-                    </div>
+                <p class="chart-subtitle">Vue globale des administrateurs et utilisateurs.</p>
+                <div class="chart-box chart-box--small">
+                    {{ render_chart(roleChart) }}
                 </div>
             </article>
 
-            {# Verification status pie-like (simplified bar) #}
             <article class="chart-card">
                 <h2 class="chart-title">Vérification des comptes</h2>
-                <div class="role-bars">
-                    <div>
-                        <div class="role-bar__top">
-                            <span>✅ Vérifiés</span>
-                            <strong>{{ verifiedCount }} ({{ verifiedPercentage }}%)</strong>
-                        </div>
-                        <div class="progress progress--verified">
-                            <span style="width: {{ verifiedPercentage }}%;"></span>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="role-bar__top">
-                            <span>⚠️ Non vérifiés</span>
-                            <strong>{{ unverifiedCount }} ({{ 100 - verifiedPercentage }}%)</strong>
-                        </div>
-                        <div class="progress progress--unverified">
-                            <span style="width: {{ 100 - verifiedPercentage }}%;"></span>
-                        </div>
-                    </div>
+                <p class="chart-subtitle">Comptes activés et comptes en attente.</p>
+                <div class="chart-box chart-box--small">
+                    {{ render_chart(verificationChart) }}
                 </div>
             </article>
-
-            {# Daily registrations (7 days) #}
-            <article class="chart-card">
-                <h2 class="chart-title">Inscriptions sur 7 jours</h2>
-                <div class="daily-chart">
-                    {% for date, count in registrationsByDay %}
-                        {% set height = maxRegistrations > 0 ? (count / maxRegistrations) * 100 : 5 %}
-                        <div class="daily-chart__item">
-                            <div class="daily-chart__value">{{ count }}</div>
-                            <div class="daily-chart__bar-wrap">
-                                <div class="daily-chart__bar" style="height: {{ height < 8 and count > 0 ? 8 : height }}%;"></div>
-                            </div>
-                            <div class="daily-chart__label">{{ date|date('d/m') }}</div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </article>
-
-            {# Optional: 30-day trend line (simplified as bar chart) #}
+            
             <article class="chart-card chart-card--wide">
-                <h2 class="chart-title">Évolution sur 30 jours</h2>
-                <div class="daily-chart daily-chart--30">
-                    {% for date, count in registrationsLast30 %}
-                        {% set height = max30 > 0 ? (count / max30) * 100 : 5 %}
-                        <div class="daily-chart__item">
-                            <div class="daily-chart__value" style="font-size: 0.7rem;">{{ count }}</div>
-                            <div class="daily-chart__bar-wrap">
-                                <div class="daily-chart__bar" style="height: {{ height < 8 and count > 0 ? 8 : height }}%;"></div>
-                            </div>
-                            <div class="daily-chart__label">{{ date|date('d/m') }}</div>
-                        </div>
-                    {% endfor %}
+                <div class="window-nav">
+                    <div class="window-nav__label">
+                        Inscriptions du <span id="window-start">{{ windowStart }}</span> au <span id="window-end">{{ windowEnd }}</span>
+                    </div>
+
+                    <div class="window-nav__actions">
+                        <button type="button" class="btn btn--ghost" id="prev-week">
+                            ← 7 jours avant
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn--ghost"
+                            id="next-week"
+                            {{ offset <= 0 ? 'style="display:none;"' : '' }}
+                        >
+                            7 jours après →
+                        </button>
+                    </div>
+                </div>
+
+                <h2 class="chart-title">Inscriptions sur 7 jours</h2>
+                <p class="chart-subtitle">Navigation par fenêtres de 7 jours, sans rechargement de page.</p>
+
+                <div class="chart-box">
+                    <canvas id="daily-registrations-chart"></canvas>
                 </div>
             </article>
         </div>
 
-        {# Age Statistics Section #}
         <div class="stats-section">
-            <h2 class="section-title">📊 Démographie par âge</h2>
-            <p class="section-subtitle">Répartition des utilisateurs par tranche d'âge</p>
+            <div>
+                <h2 class="section-title"> Démographie par âge</h2>
+                <p class="section-subtitle">Répartition des utilisateurs par tranche d’âge et année de naissance.</p>
+            </div>
 
-            <div class="stats-grid stats-grid--age">
+            <div class="stats-grid">
                 <article class="stat-card">
                     <span class="stat-card__label">Âge moyen</span>
                     <span class="stat-card__value">{{ averageAge }} ans</span>
@@ -563,70 +385,190 @@
             </div>
 
             <div class="charts-grid">
-                {# Age distribution bar chart #}
                 <article class="chart-card">
-                    <h2 class="chart-title">Répartition par tranche d'âge</h2>
-                    
-                    <div class="age-distribution">
-                        {% for range, count in ageDistribution %}
-                            {% if range != 'unknown' %}
-                                {% set percentage = totalWithAge > 0 ? (count / totalWithAge) * 100 : 0 %}
-                                <div class="age-range">
-                                    <div class="age-range__header">
-                                        <span class="age-range__label">
-                                            {% if range == 'under-18' %}
-                                                Moins de 18 ans
-                                            {% else %}
-                                                {{ range }} ans
-                                            {% endif %}
-                                        </span>
-                                        <span class="age-range__count">{{ count }} utilisateurs ({{ percentage|round(1) }}%)</span>
-                                    </div>
-                                    <div class="progress progress--admin">
-                                        <span style="width: {{ percentage }}%;"></span>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                        
-                        {% if ageDistribution.unknown is defined and ageDistribution.unknown > 0 %}
-                            <div class="age-range">
-                                <div class="age-range__header">
-                                    <span class="age-range__label">Non renseigné</span>
-                                    <span class="age-range__count">{{ ageDistribution.unknown }} utilisateurs</span>
-                                </div>
-                                <div class="progress progress--neutral">
-                                    <span style="width: {{ (ageDistribution.unknown / totalUsers) * 100 }}%;"></span>
-                                </div>
-                            </div>
-                        {% endif %}
+                    <h2 class="chart-title">Répartition par tranche d’âge</h2>
+                    <div class="chart-box">
+                        {{ render_chart(ageDistributionChart) }}
                     </div>
                 </article>
 
-                {# Birth year distribution (compact version) #}
                 <article class="chart-card">
                     <h2 class="chart-title">Distribution par année de naissance</h2>
-                    <div class="birth-years">
-                        {% if birthYears|length > 0 %}
-                            {% set maxYearCount = birthYears|max %}
-                            <div class="birth-years__chart">
-                                {% for year, count in birthYears %}
-                                    {% set height = (count / maxYearCount) * 100 %}
-                                    <div class="birth-year__item">
-                                        <div class="daily-chart__bar-wrap">
-                                            <div class="daily-chart__bar" style="height: {{ height < 8 and count > 0 ? 8 : height }}%;"></div>
-                                        </div>
-                                        <div class="birth-year__label">{{ year }}</div>
-                                        <div class="birth-year__count">{{ count }}</div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <p class="text-muted">Aucune donnée d'âge disponible</p>
-                        {% endif %}
+                    <div class="chart-box">
+                        {{ render_chart(birthYearsChart) }}
                     </div>
                 </article>
             </div>
         </div>
     </section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script type="module">
+        import {
+            Chart,
+            BarController,
+            BarElement,
+            CategoryScale,
+            LinearScale,
+            Tooltip,
+            Legend
+        } from 'chart.js';
+
+        Chart.register(
+            BarController,
+            BarElement,
+            CategoryScale,
+            LinearScale,
+            Tooltip,
+            Legend
+        );
+
+        function initDailyRegistrationsChart() {
+            const chartCanvas = document.getElementById('daily-registrations-chart');
+            const prevBtn = document.getElementById('prev-week');
+            const nextBtn = document.getElementById('next-week');
+            const windowStartEl = document.getElementById('window-start');
+            const windowEndEl = document.getElementById('window-end');
+
+            if (!chartCanvas || !prevBtn || !nextBtn || !windowStartEl || !windowEndEl) {
+                return;
+            }
+
+            let currentOffset = {{ offset }};
+            let isLoading = false;
+
+            const existingChart = Chart.getChart(chartCanvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+
+            const ctx = chartCanvas.getContext('2d');
+
+            const dailyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ dailyLabels|json_encode|raw }},
+                    datasets: [{
+                        label: 'Inscriptions',
+                        data: {{ dailyValues|json_encode|raw }},
+                        backgroundColor: '#c46f4b',
+                        borderRadius: 10,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 250
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            async function updateStats(newOffset) {
+                if (isLoading) {
+                    return;
+                }
+
+                isLoading = true;
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`{{ path('app_admin_users_stats') }}?offset=${newOffset}&ajax=1`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (!data.labels || !data.values) {
+                        throw new Error('Réponse AJAX invalide');
+                    }
+
+                    dailyChart.data.labels = data.labels;
+                    dailyChart.data.datasets[0].data = data.values;
+                    dailyChart.update();
+
+                    windowStartEl.textContent = data.windowStart;
+                    windowEndEl.textContent = data.windowEnd;
+
+                    currentOffset = data.offset;
+
+                    nextBtn.style.display = data.canGoForward ? 'inline-flex' : 'none';
+
+                    const newUrl = `{{ path('app_admin_users_stats') }}?offset=${currentOffset}`;
+                    window.history.replaceState({ offset: currentOffset }, '', newUrl);
+                } catch (error) {
+                    console.error('Erreur lors du chargement des stats:', error);
+                } finally {
+                    isLoading = false;
+                    prevBtn.disabled = false;
+                    nextBtn.disabled = false;
+                }
+            }
+
+            prevBtn.onclick = function (e) {
+                e.preventDefault();
+                updateStats(currentOffset + 7);
+            };
+
+            nextBtn.onclick = function (e) {
+                e.preventDefault();
+                updateStats(Math.max(0, currentOffset - 7));
+            };
+        }
+
+        document.addEventListener('turbo:load', initDailyRegistrationsChart);
+
+        document.addEventListener('turbo:before-cache', () => {
+            const chartCanvas = document.getElementById('daily-registrations-chart');
+            if (!chartCanvas) {
+                return;
+            }
+
+            const existingChart = Chart.getChart(chartCanvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+        });
+    </script>
+
+    <style>
+        #prev-week:disabled,
+        #next-week:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+    </style>
 {% endblock %}
