@@ -105,6 +105,58 @@ class StabilityImageService
     }
 
     /**
+     * Génère une image à partir d'un prompt texte libre.
+     */
+    public function generateFromPrompt(string $prompt): array
+    {
+        if (!$this->isConfigured()) {
+            return [
+                'status'  => 'unconfigured',
+                'message' => 'L\'API Stability AI n\'est pas configurée.',
+            ];
+        }
+
+        try {
+            $boundary = bin2hex(random_bytes(16));
+            $body = $this->buildMultipartBody($boundary, [
+                'prompt'        => mb_substr($prompt, 0, 9990),
+                'aspect_ratio'  => '16:9',
+                'output_format' => 'webp',
+                'style_preset'  => 'cinematic',
+            ]);
+
+            $response = $this->httpClient->request('POST', self::API_BASE, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Accept'        => 'application/json',
+                    'Content-Type'  => 'multipart/form-data; boundary=' . $boundary,
+                ],
+                'body'    => $body,
+                'timeout' => 30,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode >= 400) {
+                $data = $response->toArray(false);
+                $errorDetail = $data['errors'][0] ?? $data['message'] ?? json_encode($data);
+                return ['status' => 'error', 'message' => 'Erreur Stability (HTTP ' . $statusCode . '): ' . $errorDetail];
+            }
+
+            $data = $response->toArray(false);
+            $imageBase64 = $data['image'] ?? null;
+
+            if (!$imageBase64) {
+                return ['status' => 'error', 'message' => 'Aucune image retournée.'];
+            }
+
+            return ['status' => 'ok', 'image_base64' => $imageBase64, 'format' => 'webp'];
+        } catch (\Throwable $e) {
+            return ['status' => 'error', 'message' => 'Erreur : ' . $e->getMessage()];
+        }
+    }
+
+    /**
      * Construit un prompt cinématique à partir de l'itinéraire et ses étapes.
      */
     private function buildPrompt(Itineraire $itineraire): string

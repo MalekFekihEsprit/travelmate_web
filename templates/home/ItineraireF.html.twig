@@ -1010,28 +1010,69 @@
     </div>
     {% endif %}
 
-    {# ── Video generation modal ── #}
-    <div id="video-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.65); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
-        <div style="background:#1e1e2e; border-radius:1.2rem; padding:2rem 2.2rem; max-width:720px; width:92%; position:relative; box-shadow:0 20px 60px rgba(0,0,0,.5); color:#f5f0eb;">
-            <button type="button" id="video-modal-close" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:#f5f0eb; font-size:1.4rem; cursor:pointer;">&times;</button>
-            <div id="video-modal-generating" style="text-align:center;">
-                <div style="font-size:2.5rem; margin-bottom:.8rem;">🎬</div>
-                <h3 style="margin:0 0 .6rem; font-size:1.25rem;">Génération de la vidéo IA</h3>
-                <p id="video-modal-status" style="color:#c46f4b; font-size:.95rem;">Envoi de la requête…</p>
-                <div style="margin:1.2rem auto; width:48px; height:48px; border:4px solid rgba(196,111,75,.25); border-top-color:#c46f4b; border-radius:50%; animation:videoSpin 1s linear infinite;"></div>
+    {# ── Cinematic Video Player ── #}
+    <div id="videoPlayerOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; display:none; align-items:center; justify-content:center;">
+        <div id="videoPlayer" style="position:relative; width:90%; max-width:1100px; background:#000; border-radius:16px; overflow:hidden; box-shadow:0 0 60px rgba(0,0,0,0.8);">
+            {# Close button #}
+            <button id="videoCloseBtn" style="position:absolute; top:12px; right:16px; z-index:10; background:rgba(0,0,0,0.6); border:none; color:#fff; font-size:1.5rem; width:40px; height:40px; border-radius:50%; cursor:pointer; backdrop-filter:blur(4px);">✕</button>
+
+            {# Slides area #}
+            <div id="videoCanvas" style="position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:#111;">
+                <div id="videoSlideA" class="video-slide" style="position:absolute; inset:0; opacity:1; transition:opacity 1.5s ease;"></div>
+                <div id="videoSlideB" class="video-slide" style="position:absolute; inset:0; opacity:0; transition:opacity 1.5s ease;"></div>
+                {# Text overlay #}
+                <div id="videoOverlay" style="position:absolute; bottom:0; left:0; right:0; padding:40px 30px 30px; background:linear-gradient(transparent, rgba(0,0,0,0.85)); color:#fff; z-index:2;">
+                    <div id="videoEmoji" style="font-size:2.5rem; margin-bottom:8px;"></div>
+                    <h2 id="videoTitle" style="margin:0 0 6px; font-size:1.6rem; font-weight:700; text-shadow:0 2px 8px rgba(0,0,0,0.6);"></h2>
+                    <p id="videoDesc" style="margin:0; font-size:1rem; opacity:0.9; text-shadow:0 1px 4px rgba(0,0,0,0.5);"></p>
+                </div>
             </div>
-            <div id="video-modal-result" style="display:none; text-align:center;">
-                <video id="video-modal-player" controls autoplay style="width:100%; border-radius:.75rem; margin-bottom:1rem; max-height:480px; background:#000;"></video>
-                <a id="video-modal-download" href="#" download="itineraire.mp4" style="display:inline-block; padding:.6rem 1.4rem; background:#c46f4b; color:#fff; border-radius:.5rem; text-decoration:none; font-weight:600;">⬇ Télécharger</a>
-            </div>
-            <div id="video-modal-error" style="display:none; text-align:center;">
-                <div style="font-size:2rem; margin-bottom:.5rem;">⚠️</div>
-                <p id="video-modal-error-msg" style="color:#e74c3c;"></p>
+
+            {# Controls bar #}
+            <div id="videoControls" style="display:flex; align-items:center; gap:10px; padding:10px 16px; background:#1a1a1a; color:#fff; font-size:0.85rem;">
+                <button id="videoPrevBtn" title="Précédent" style="background:none; border:none; color:#fff; font-size:1.2rem; cursor:pointer; padding:4px 8px;">⏮</button>
+                <button id="videoPlayBtn" title="Lecture/Pause" style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer; padding:4px 8px;">▶</button>
+                <button id="videoNextBtn" title="Suivant" style="background:none; border:none; color:#fff; font-size:1.2rem; cursor:pointer; padding:4px 8px;">⏭</button>
+                <span id="videoTime" style="min-width:60px; text-align:center; font-variant-numeric:tabular-nums;">0:00</span>
+                <div id="videoProgressBar" style="flex:1; height:6px; background:#333; border-radius:3px; cursor:pointer; position:relative;">
+                    <div id="videoProgressFill" style="height:100%; width:0%; background:linear-gradient(90deg,#c46f4b,#e8a87c); border-radius:3px; transition:width 0.3s linear;"></div>
+                </div>
+                <span id="videoTimeTotal" style="min-width:60px; text-align:center; font-variant-numeric:tabular-nums;">0:00</span>
+                <button id="videoMuteBtn" title="Son" style="background:none; border:none; color:#fff; font-size:1.1rem; cursor:pointer; padding:4px 8px;">🔊</button>
+                <input id="videoVolume" type="range" min="0" max="100" value="40" style="width:70px; accent-color:#c46f4b;">
+                <button id="videoFullscreenBtn" title="Plein écran" style="background:none; border:none; color:#fff; font-size:1.1rem; cursor:pointer; padding:4px 8px;">⛶</button>
             </div>
         </div>
     </div>
+
+    {# Message de chargement #}
+    <div id="loadingMsg" style="display:none; text-align:center; margin-top:1rem;">
+        <div style="margin:1.2rem auto; width:48px; height:48px; border:4px solid rgba(196,111,75,.25); border-top-color:#c46f4b; border-radius:50%; animation:slideSpin 1s linear infinite;"></div>
+        <p style="color:var(--color-primary);">⏳ Génération des images IA en cours... Cela peut prendre 30 secondes.</p>
+    </div>
+
+    {# Message d'erreur #}
+    <div id="errorMsg" style="display:none" class="alert alert-error" style="margin-top:1rem;"></div>
+
     <style>
-        @keyframes videoSpin { to { transform: rotate(360deg); } }
+        .video-slide {
+            display:flex; align-items:center; justify-content:center;
+        }
+        .video-slide img {
+            width:110%; height:110%; object-fit:cover;
+            animation: kenBurns 8s ease-in-out infinite alternate;
+        }
+        @keyframes kenBurns {
+            0%   { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.08) translate(-1%, -1%); }
+        }
+        @keyframes slideSpin { to { transform: rotate(360deg); } }
+        #videoPlayerOverlay.active { display:flex !important; }
+        #videoOverlay * { animation: fadeInUp 0.8s ease-out both; }
+        @keyframes fadeInUp {
+            from { opacity:0; transform:translateY(20px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
     </style>
 {% endblock %}
 
@@ -1228,103 +1269,439 @@
         });
     </script>
 
-    {# ── Video generation JS (fal.ai polling) ── #}
+    {# ── Cinematic Video Player JS ── #}
     <script>
     (function () {
-        var modal = document.getElementById('video-modal');
-        var closeBtn = document.getElementById('video-modal-close');
-        var generatingSection = document.getElementById('video-modal-generating');
-        var resultSection = document.getElementById('video-modal-result');
-        var errorSection = document.getElementById('video-modal-error');
-        var statusText = document.getElementById('video-modal-status');
-        var player = document.getElementById('video-modal-player');
-        var downloadLink = document.getElementById('video-modal-download');
-        var errorMsg = document.getElementById('video-modal-error-msg');
-        var pollTimer = null;
+        /* ─── State ─── */
+        let slides = [];
+        let current = 0;
+        let playing = false;
+        let timer = null;
+        let elapsed = 0;        // seconds elapsed total
+        let slideElapsed = 0;   // seconds on current slide
+        const SLIDE_DURATION = 6; // seconds per slide
+        let audioCtx = null;
+        let audioNodes = null;
+        let muted = false;
 
-        function showModal() {
-            generatingSection.style.display = 'block';
-            resultSection.style.display = 'none';
-            errorSection.style.display = 'none';
-            statusText.textContent = 'Envoi de la requête…';
-            modal.style.display = 'flex';
+        /* ─── DOM refs ─── */
+        const overlay     = document.getElementById('videoPlayerOverlay');
+        const slideA      = document.getElementById('videoSlideA');
+        const slideB      = document.getElementById('videoSlideB');
+        const titleEl     = document.getElementById('videoTitle');
+        const descEl      = document.getElementById('videoDesc');
+        const emojiEl     = document.getElementById('videoEmoji');
+        const playBtn     = document.getElementById('videoPlayBtn');
+        const prevBtn     = document.getElementById('videoPrevBtn');
+        const nextBtn     = document.getElementById('videoNextBtn');
+        const closeBtn    = document.getElementById('videoCloseBtn');
+        const timeEl      = document.getElementById('videoTime');
+        const timeTotalEl = document.getElementById('videoTimeTotal');
+        const progressBar = document.getElementById('videoProgressBar');
+        const progressFill= document.getElementById('videoProgressFill');
+        const muteBtn     = document.getElementById('videoMuteBtn');
+        const volumeEl    = document.getElementById('videoVolume');
+        const fsBtn       = document.getElementById('videoFullscreenBtn');
+
+        /* ─── Cinematic Piano + Strings Music (Web Audio API) ─── */
+        function createAmbientMusic() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const master = ctx.createGain();
+            master.gain.value = 0.25;
+            master.connect(ctx.destination);
+
+            // Reverb via convolver (synthetic impulse)
+            const convolver = ctx.createConvolver();
+            const reverbLen = ctx.sampleRate * 2.5;
+            const reverbBuf = ctx.createBuffer(2, reverbLen, ctx.sampleRate);
+            for (let ch = 0; ch < 2; ch++) {
+                const d = reverbBuf.getChannelData(ch);
+                for (let i = 0; i < reverbLen; i++) {
+                    d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / reverbLen, 2.2);
+                }
+            }
+            convolver.buffer = reverbBuf;
+            const reverbGain = ctx.createGain();
+            reverbGain.gain.value = 0.3;
+            convolver.connect(reverbGain);
+            reverbGain.connect(master);
+
+            const dryGain = ctx.createGain();
+            dryGain.gain.value = 0.7;
+            dryGain.connect(master);
+
+            // Strings pad (warm sustained chord: Cmaj7)
+            const stringNotes = [
+                { freq: 130.81, type: 'sawtooth', gain: 0.012 }, // C3
+                { freq: 164.81, type: 'sawtooth', gain: 0.010 }, // E3
+                { freq: 196.00, type: 'sawtooth', gain: 0.010 }, // G3
+                { freq: 246.94, type: 'sawtooth', gain: 0.008 }, // B3
+            ];
+
+            const stringsFilter = ctx.createBiquadFilter();
+            stringsFilter.type = 'lowpass';
+            stringsFilter.frequency.value = 800;
+            stringsFilter.Q.value = 0.7;
+            stringsFilter.connect(dryGain);
+            stringsFilter.connect(convolver);
+
+            const stringOscs = stringNotes.map(n => {
+                const osc = ctx.createOscillator();
+                osc.type = n.type;
+                osc.frequency.value = n.freq;
+                osc.detune.value = (Math.random() - 0.5) * 12;
+                const g = ctx.createGain();
+                g.gain.value = n.gain;
+                osc.connect(g);
+                // Add a slightly detuned copy for chorus
+                const osc2 = ctx.createOscillator();
+                osc2.type = n.type;
+                osc2.frequency.value = n.freq;
+                osc2.detune.value = 8 + (Math.random() - 0.5) * 6;
+                const g2 = ctx.createGain();
+                g2.gain.value = n.gain * 0.7;
+                osc2.connect(g2);
+                g.connect(stringsFilter);
+                g2.connect(stringsFilter);
+                return [osc, osc2];
+            }).flat();
+
+            // Piano melody: arpeggio pattern using triangle waves
+            const melodyNotes = [
+                // Pattern repeats ~every 16 beats at tempo ~55 bpm
+                { freq: 523.25, time: 0,    dur: 1.8 },  // C5
+                { freq: 659.25, time: 2.0,  dur: 1.5 },  // E5
+                { freq: 783.99, time: 4.0,  dur: 2.0 },  // G5
+                { freq: 659.25, time: 6.5,  dur: 1.2 },  // E5
+                { freq: 587.33, time: 8.0,  dur: 2.0 },  // D5
+                { freq: 523.25, time: 10.5, dur: 1.8 },  // C5
+                { freq: 493.88, time: 12.5, dur: 2.5 },  // B4
+                { freq: 440.00, time: 15.0, dur: 2.0 },  // A4
+                { freq: 523.25, time: 17.5, dur: 2.2 },  // C5
+                { freq: 659.25, time: 20.0, dur: 1.5 },  // E5
+                { freq: 698.46, time: 22.0, dur: 2.0 },  // F5
+                { freq: 783.99, time: 24.5, dur: 2.5 },  // G5
+                { freq: 659.25, time: 27.5, dur: 1.5 },  // E5
+                { freq: 523.25, time: 29.5, dur: 3.0 },  // C5
+            ];
+            const melodyLoopLen = 32.5; // seconds per loop
+
+            let melodyTimers = [];
+            function scheduleMelody(startTime) {
+                melodyNotes.forEach(note => {
+                    const osc = ctx.createOscillator();
+                    osc.type = 'triangle';
+                    osc.frequency.value = note.freq;
+                    const env = ctx.createGain();
+                    env.gain.value = 0;
+                    osc.connect(env);
+                    env.connect(dryGain);
+                    env.connect(convolver);
+
+                    const t = startTime + note.time;
+                    // Soft attack and release envelope
+                    env.gain.setValueAtTime(0, t);
+                    env.gain.linearRampToValueAtTime(0.045, t + 0.08);
+                    env.gain.setValueAtTime(0.045, t + note.dur * 0.6);
+                    env.gain.exponentialRampToValueAtTime(0.001, t + note.dur);
+
+                    osc.start(t);
+                    osc.stop(t + note.dur + 0.1);
+                });
+            }
+
+            // Schedule first 4 loops
+            let loopCount = 0;
+            function scheduleLoops() {
+                const now = ctx.currentTime;
+                for (let i = 0; i < 4; i++) {
+                    scheduleMelody(now + (loopCount + i) * melodyLoopLen);
+                }
+                loopCount += 4;
+            }
+
+            // LFO for strings gentle swell
+            const lfo = ctx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.value = 0.08;
+            const lfoGain = ctx.createGain();
+            lfoGain.gain.value = 0.004;
+            lfo.connect(lfoGain);
+            lfoGain.connect(stringsFilter.frequency);
+
+            let loopInterval = null;
+
+            return {
+                ctx, master,
+                start() {
+                    stringOscs.forEach(o => o.start());
+                    lfo.start();
+                    scheduleLoops();
+                    // Re-schedule more loops before they run out
+                    loopInterval = setInterval(() => scheduleLoops(), melodyLoopLen * 3 * 1000);
+                },
+                stop() {
+                    clearInterval(loopInterval);
+                    stringOscs.forEach(o => { try { o.stop(); } catch(e){} });
+                    try { lfo.stop(); } catch(e){}
+                    ctx.close();
+                },
+                setVolume(v) {
+                    master.gain.value = v;
+                }
+            };
         }
 
-        function hideModal() {
-            modal.style.display = 'none';
-            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-            player.pause();
-            player.removeAttribute('src');
+        /* ─── Format time ─── */
+        function fmt(s) {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return m + ':' + (sec < 10 ? '0' : '') + sec;
         }
 
+        /* ─── Show a slide with crossfade ─── */
+        let activeSlot = 'A'; // which slot is visible
+        function showSlide(index, animate) {
+            if (slides.length === 0) return;
+            current = ((index % slides.length) + slides.length) % slides.length;
+            const slide = slides[current];
+
+            const fallback = 'https://placehold.co/1280x720/2c1e14/f5f0eb?text=' + encodeURIComponent(slide.titre);
+            const imgUrl = slide.image_url || fallback;
+
+            const incoming = activeSlot === 'A' ? slideB : slideA;
+            const outgoing = activeSlot === 'A' ? slideA : slideB;
+
+            incoming.innerHTML = '<img src="' + imgUrl + '" alt="' + (slide.titre||'') + '" onerror="this.onerror=null;this.src=\'' + fallback + '\'">';
+
+            if (animate !== false) {
+                incoming.style.opacity = '1';
+                outgoing.style.opacity = '0';
+            } else {
+                incoming.style.transition = 'none';
+                incoming.style.opacity = '1';
+                outgoing.style.transition = 'none';
+                outgoing.style.opacity = '0';
+                // Re-enable transitions
+                requestAnimationFrame(() => {
+                    incoming.style.transition = 'opacity 1.5s ease';
+                    outgoing.style.transition = 'opacity 1.5s ease';
+                });
+            }
+
+            activeSlot = activeSlot === 'A' ? 'B' : 'A';
+
+            // Update text overlay with fresh animation
+            const overlayDiv = document.getElementById('videoOverlay');
+            overlayDiv.style.animation = 'none';
+            overlayDiv.offsetHeight; // trigger reflow
+            overlayDiv.style.animation = '';
+            emojiEl.textContent = slide.emoji || '';
+            titleEl.textContent = 'Jour ' + (slide.jour||'') + ' — ' + (slide.titre||'');
+            descEl.textContent = slide.description || '';
+
+            slideElapsed = 0;
+        }
+
+        /* ─── Update progress ─── */
+        function updateProgress() {
+            const totalDuration = slides.length * SLIDE_DURATION;
+            const currentTime = current * SLIDE_DURATION + slideElapsed;
+            progressFill.style.width = (currentTime / totalDuration * 100) + '%';
+            timeEl.textContent = fmt(currentTime);
+            timeTotalEl.textContent = fmt(totalDuration);
+        }
+
+        /* ─── Play / Pause ─── */
+        function play() {
+            if (slides.length === 0) return;
+            playing = true;
+            playBtn.textContent = '⏸';
+
+            // Start music
+            if (!audioCtx) {
+                audioNodes = createAmbientMusic();
+                audioCtx = audioNodes.ctx;
+                audioNodes.setVolume(volumeEl.value / 100 * 0.3);
+                audioNodes.start();
+            } else if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            clearInterval(timer);
+            timer = setInterval(tick, 1000);
+        }
+
+        function pause() {
+            playing = false;
+            playBtn.textContent = '▶';
+            clearInterval(timer);
+        }
+
+        function stop() {
+            pause();
+            elapsed = 0;
+            slideElapsed = 0;
+            current = 0;
+            if (audioNodes) {
+                audioNodes.stop();
+                audioNodes = null;
+                audioCtx = null;
+            }
+        }
+
+        function tick() {
+            slideElapsed++;
+            elapsed++;
+            updateProgress();
+
+            if (slideElapsed >= SLIDE_DURATION) {
+                if (current >= slides.length - 1) {
+                    // End of video
+                    pause();
+                    return;
+                }
+                showSlide(current + 1, true);
+            }
+        }
+
+        /* ─── Build the video from slide data ─── */
+        function buildVideo(slidesData) {
+            slides = slidesData;
+            current = 0;
+            elapsed = 0;
+            slideElapsed = 0;
+
+            showSlide(0, false);
+            updateProgress();
+
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Auto-play
+            play();
+        }
+
+        /* ─── Close video ─── */
+        function closeVideo() {
+            stop();
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        /* ─── Error display ─── */
         function showError(msg) {
-            generatingSection.style.display = 'none';
-            resultSection.style.display = 'none';
-            errorSection.style.display = 'block';
-            errorMsg.textContent = msg;
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
         }
 
-        function showVideo(url) {
-            generatingSection.style.display = 'none';
-            errorSection.style.display = 'none';
-            resultSection.style.display = 'block';
-            player.src = url;
-            downloadLink.href = url;
-        }
+        /* ─── Event listeners ─── */
+        playBtn.addEventListener('click', () => playing ? pause() : play());
+        prevBtn.addEventListener('click', () => { showSlide(current - 1, true); slideElapsed = 0; updateProgress(); });
+        nextBtn.addEventListener('click', () => { showSlide(current + 1, true); slideElapsed = 0; updateProgress(); });
+        closeBtn.addEventListener('click', closeVideo);
 
-        function pollStatus(requestId) {
-            pollTimer = setInterval(function () {
-                fetch('/itineraires/video-status/' + requestId)
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        if (data.state === 'COMPLETED' && data.video_url) {
-                            clearInterval(pollTimer);
-                            pollTimer = null;
-                            showVideo(data.video_url);
-                        } else if (data.state === 'IN_PROGRESS') {
-                            statusText.textContent = "L\u2019IA génère votre vidéo…";
-                        } else if (data.state === 'IN_QUEUE') {
-                            statusText.textContent = 'En file d\u2019attente…';
-                        } else if (data.state === 'FAILED') {
-                            clearInterval(pollTimer);
-                            pollTimer = null;
-                            showError(data.message || 'La génération a échoué.');
-                        }
-                    })
-                    .catch(function () {
-                        clearInterval(pollTimer);
-                        pollTimer = null;
-                        showError('Erreur de connexion au serveur.');
-                    });
-            }, 5000);
-        }
-
-        closeBtn.addEventListener('click', hideModal);
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) hideModal();
+        // Click overlay background to close
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeVideo();
         });
 
+        // ESC to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && overlay.classList.contains('active')) closeVideo();
+            if (e.key === ' ' && overlay.classList.contains('active')) { e.preventDefault(); playing ? pause() : play(); }
+            if (e.key === 'ArrowRight' && overlay.classList.contains('active')) { showSlide(current + 1, true); slideElapsed = 0; updateProgress(); }
+            if (e.key === 'ArrowLeft' && overlay.classList.contains('active')) { showSlide(current - 1, true); slideElapsed = 0; updateProgress(); }
+        });
+
+        // Progress bar seeking
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const pct = (e.clientX - rect.left) / rect.width;
+            const totalDuration = slides.length * SLIDE_DURATION;
+            const targetTime = pct * totalDuration;
+            const targetSlide = Math.min(Math.floor(targetTime / SLIDE_DURATION), slides.length - 1);
+            const targetSlideElapsed = targetTime - targetSlide * SLIDE_DURATION;
+
+            current = targetSlide;
+            slideElapsed = Math.floor(targetSlideElapsed);
+            elapsed = Math.floor(targetTime);
+            showSlide(current, true);
+            updateProgress();
+        });
+
+        // Volume
+        volumeEl.addEventListener('input', () => {
+            const v = volumeEl.value / 100;
+            if (audioNodes) audioNodes.setVolume(v * 0.3);
+            muted = v === 0;
+            muteBtn.textContent = muted ? '🔇' : '🔊';
+        });
+
+        muteBtn.addEventListener('click', () => {
+            muted = !muted;
+            if (muted) {
+                volumeEl.value = 0;
+                if (audioNodes) audioNodes.setVolume(0);
+                muteBtn.textContent = '🔇';
+            } else {
+                volumeEl.value = 40;
+                if (audioNodes) audioNodes.setVolume(0.12);
+                muteBtn.textContent = '🔊';
+            }
+        });
+
+        // Fullscreen
+        fsBtn.addEventListener('click', () => {
+            const vp = document.getElementById('videoPlayer');
+            if (!document.fullscreenElement) {
+                vp.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        /* ─── Trigger from card button ─── */
         document.addEventListener('click', function (e) {
-            var btn = e.target.closest('[data-video-generate]');
+            const btn = e.target.closest('[data-video-generate]');
             if (!btn) return;
             e.preventDefault();
             e.stopPropagation();
 
-            var itineraireId = btn.getAttribute('data-video-generate');
-            showModal();
+            const itineraireId = btn.getAttribute('data-video-generate');
 
-            fetch('/itineraires/' + itineraireId + '/generate-video', { method: 'POST' })
-                .then(function (r) { return r.json(); })
+            // Reset
+            document.getElementById('errorMsg').style.display = 'none';
+            document.getElementById('loadingMsg').style.display = 'block';
+            btn.disabled = true;
+
+            fetch('/itineraires/' + itineraireId + '/generate-video', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (r) {
+                    return r.json().then(function (data) {
+                        return data;
+                    }).catch(function () {
+                        throw new Error('HTTP ' + r.status + ' — réponse non-JSON');
+                    });
+                })
                 .then(function (data) {
-                    if (data.status === 'ok' && data.generation_id) {
-                        statusText.textContent = 'En file d\u2019attente…';
-                        pollStatus(data.generation_id);
+                    document.getElementById('loadingMsg').style.display = 'none';
+
+                    if (data.status === 'ok' && data.slides) {
+                        buildVideo(data.slides);
                     } else {
-                        showError(data.message || 'Erreur lors de la génération.');
+                        showError(data.message || 'Erreur inconnue.');
                     }
                 })
-                .catch(function () {
-                    showError('Erreur de connexion au serveur.');
+                .catch(function (err) {
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    showError('Erreur de connexion : ' + err.message);
+                })
+                .finally(function () {
+                    btn.disabled = false;
                 });
         });
     })();

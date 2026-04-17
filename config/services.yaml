@@ -38,9 +38,14 @@ services:
             $cacheDirectory: '%kernel.cache_dir%/openrouteservice_geocoder'
             $cacheTtl: '%app.openrouteservice.cache_ttl%'
 
-    App\Service\FalVideoService:
+    App\Service\ReplicateVideoService:
         arguments:
-            $apiKey: '%env(string:FAL_KEY)%'
+            $apiKey: '%env(GROQ_API_KEY)%'
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\StabilityImageService:
+        arguments:
+            $apiKey: '%env(STABILITY_API_KEY)%'
 
     App\Service\CerebrasItinerarySuggestionService:
         arguments:
