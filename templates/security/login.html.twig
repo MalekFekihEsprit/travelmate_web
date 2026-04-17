@@ -309,11 +309,66 @@
             background: transparent;
             color: var(--color-primary);
             border: 1px solid rgba(196, 111, 75, 0.22);
+            width: 100%;
         }
 
         .profile-submit--ghost:hover {
             background: rgba(196, 111, 75, 0.08);
         }
+
+        .social-auth {
+            margin-top: 1.5rem;
+        }
+
+        .social-auth__divider {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1rem;
+            color: var(--color-text-muted);
+            font-size: .9rem;
+        }
+
+        .social-auth__divider::before,
+        .social-auth__divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .social-auth__grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: .75rem;
+        }
+
+        .social-auth__btn {
+            min-height: 48px;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+            transition: all .18s ease;
+        }
+
+        .social-auth__btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(196, 111, 75, 0.35);
+            background: rgba(196, 111, 75, 0.06);
+        }
+
+        @media (max-width: 640px) {
+            .social-auth__grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
 {% endblock %}
 
@@ -429,6 +484,30 @@
                         Me connecter
                     </button>
                 </form>
+
+                <div class="social-auth">
+                    <div class="social-auth__divider">
+                        <span>Ou continuer avec</span>
+                    </div>
+
+                    <div class="social-auth__grid">
+                        <a href="{{ path('connect_google_start') }}" class="social-auth__btn">
+                            <span>Google</span>
+                        </a>
+
+                        <a href="{{ path('connect_github_start') }}" class="social-auth__btn">
+                            <span>GitHub</span>
+                        </a>
+
+                        <a href="{{ path('connect_facebook_start') }}" class="social-auth__btn">
+                            <span>Facebook</span>
+                        </a>
+
+                        <a href="{{ path('connect_microsoft_start') }}" class="social-auth__btn">
+                            <span>Microsoft</span>
+                        </a>
+                    </div>
+                </div>
 
                 <div class="login-divider">ou</div>
 
