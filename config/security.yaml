@@ -1,0 +1,37 @@
+# config/packages/security.yaml
+security:
+    password_hashers:
+        App\Entity\User:
+            algorithm: auto
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        main:
+            lazy: true
+            provider: app_user_provider
+            entry_point: form_login       # ← AJOUT : redirige vers login au lieu de 403
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                default_target_path: app_home
+            logout:
+                path: app_logout
+                target: app_home
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+
+    access_control:
+    - { path: ^/admin,                   roles: ROLE_ADMIN }
+    - { path: ^/profile,                 roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/evenements/.*/rejoindre, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/evenements/.*/quitter,   roles: IS_AUTHENTICATED_FULLY }

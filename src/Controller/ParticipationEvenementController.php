@@ -4,13 +4,12 @@ namespace App\Controller;
 
 use App\Entity\ParticipationEvenement;
 use App\Repository\EvenementRepository;
-use App\Repository\UserRepository;
 use App\Repository\ParticipationEvenementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class ParticipationEvenementController extends AbstractController
 {
@@ -19,10 +18,10 @@ class ParticipationEvenementController extends AbstractController
      * URL : GET /evenements/{id}/rejoindre
      */
     #[Route('/evenements/{id}/rejoindre', name: 'app_participation_join', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function join(
         int                              $id,
         EvenementRepository              $evenementRepository,
-        UserRepository                   $userRepository,
         ParticipationEvenementRepository $participationRepo,
         EntityManagerInterface           $entityManager
     ): Response {
@@ -37,11 +36,8 @@ class ParticipationEvenementController extends AbstractController
             return $this->redirectToRoute('app_evenement_show', ['id' => $id]);
         }
 
-        // Temporaire : utilise user id=5 jusqu'au branchement sécurité
-        $user = $userRepository->find(5);
-        if (!$user) {
-            $user = $userRepository->findOneBy([]);
-        }
+        // Récupère l'utilisateur connecté
+        $user = $this->getUser();
 
         if (!$user) {
             $this->addFlash('error', 'Vous devez être connecté pour rejoindre un événement.');
@@ -77,10 +73,10 @@ class ParticipationEvenementController extends AbstractController
      * URL : POST /evenements/{id}/quitter
      */
     #[Route('/evenements/{id}/quitter', name: 'app_participation_leave', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
     public function leave(
         int                              $id,
         EvenementRepository              $evenementRepository,
-        UserRepository                   $userRepository,
         ParticipationEvenementRepository $participationRepo,
         EntityManagerInterface           $entityManager
     ): Response {
@@ -90,7 +86,8 @@ class ParticipationEvenementController extends AbstractController
             throw $this->createNotFoundException('Événement introuvable.');
         }
 
-        $user = $userRepository->find(5); // Temporaire
+        // Récupère l'utilisateur connecté
+        $user = $this->getUser();
 
         if ($user) {
             $participation = $participationRepo->findOneBy([

@@ -80,11 +80,8 @@ class Evenement
     private ?float $longitude = null;
 
     public function getLatitude(): ?float { return $this->latitude; }
-
     public function setLatitude(?float $latitude): self { $this->latitude = $latitude; return $this; }
-
     public function getLongitude(): ?float { return $this->longitude; }
-
     public function setLongitude(?float $longitude): self { $this->longitude = $longitude; return $this; }
 
     #[ORM\Column(name: 'nb_places', type: 'integer', nullable: false)]
@@ -96,6 +93,11 @@ class Evenement
     public function getNbPlaces(): ?int { return $this->nbPlaces; }
     public function setNbPlaces(int $nbPlaces): self { $this->nbPlaces = $nbPlaces; return $this; }
 
+    // ──────────────────────────────────────────────────────────────
+    // lienGroupe : stocke le lien d'invitation Telegram de l'événement
+    // Ce champ existait déjà — on le réutilise pour Telegram.
+    // Pas de migration nécessaire si la colonne existe déjà en base.
+    // ──────────────────────────────────────────────────────────────
     #[ORM\Column(name: 'lien_groupe', type: 'string', length: 500, nullable: true)]
     #[Assert\Url(message: 'Veuillez saisir une URL valide (ex: https://...)')]
     #[Assert\Length(
@@ -112,6 +114,16 @@ class Evenement
 
     public function getImagePath(): ?string { return $this->imagePath; }
     public function setImagePath(?string $imagePath): self { $this->imagePath = $imagePath; return $this; }
+
+    // ──────────────────────────────────────────────────────────────
+    // telegramGroupId : ID interne du groupe Telegram (ex: -100123456789)
+    // Nouveau champ — nécessite une migration Doctrine (voir ci-dessous)
+    // ──────────────────────────────────────────────────────────────
+    #[ORM\Column(name: 'telegram_group_id', type: 'string', length: 100, nullable: true)]
+    private ?string $telegramGroupId = null;
+
+    public function getTelegramGroupId(): ?string { return $this->telegramGroupId; }
+    public function setTelegramGroupId(?string $telegramGroupId): self { $this->telegramGroupId = $telegramGroupId; return $this; }
 
     #[ORM\OneToMany(targetEntity: Participationevenement::class, mappedBy: 'evenement', cascade: ['persist', 'remove'])]
     private Collection $participations;

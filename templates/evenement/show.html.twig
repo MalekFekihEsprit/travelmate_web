@@ -102,6 +102,61 @@
         .ev-show-bar__fill { height:100%; border-radius:999px; background:var(--color-secondary); }
         .ev-show-progress__sub { font-size:0.82rem; color:var(--color-text-muted); }
 
+        /* Seat Map */
+        .ev-seat-map {
+            background: var(--color-surface); border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem;
+        }
+        .ev-seat-map__header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem;
+        }
+        .ev-seat-map__title { font-weight: 600; color: var(--color-text); }
+        .ev-seat-map__legend {
+            display: flex; gap: 1rem; flex-wrap: wrap;
+            font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 1rem;
+        }
+        .ev-seat-map__legend-item { display: flex; align-items: center; gap: 0.35rem; }
+        .ev-seat-map__legend-dot {
+            width: 14px; height: 14px; border-radius: 3px;
+        }
+        .ev-seat-map__legend-dot--free { background: #e8a820; border: 1.5px solid #c8880a; }
+        .ev-seat-map__legend-dot--taken { background: #c8c8c8; border: 1.5px solid #a0a0a0; }
+        .ev-seat-map__grid {
+            display: flex; flex-direction: column; gap: 5px;
+            align-items: center;
+        }
+        .ev-seat-map__row { display: flex; gap: 5px; }
+        .ev-seat {
+            width: 26px; height: 22px; border-radius: 4px 4px 2px 2px;
+            border: 1.5px solid #c8880a; background: #e8a820;
+            position: relative; cursor: default;
+            transition: transform 0.15s;
+        }
+        .ev-seat::before {
+            content: ''; position: absolute;
+            top: -4px; left: 3px; right: 3px; height: 4px;
+            background: #c8880a; border-radius: 3px 3px 0 0;
+        }
+        .ev-seat--taken {
+            background: #d4d4d4; border-color: #a8a8a8;
+        }
+        .ev-seat--taken::before { background: #a8a8a8; }
+        .ev-seat-map__screen {
+            margin-top: 1rem; text-align: center;
+            position: relative;
+        }
+        .ev-seat-map__screen::before {
+            content: ''; display: block;
+            height: 4px; border-radius: 50% / 100%;
+            background: linear-gradient(to right, transparent 5%, #c8880a 30%, #c8880a 70%, transparent 95%);
+            margin-bottom: 0.4rem;
+        }
+        .ev-seat-map__screen-label {
+            font-size: 0.75rem; color: var(--color-text-muted);
+            letter-spacing: 0.1em; text-transform: uppercase;
+        }
+
         /* Description */
         .ev-show-desc {
             background:var(--color-surface); border:1px solid var(--color-border);
@@ -211,7 +266,7 @@
         {# Image #}
         <div class="ev-show-img-wrap">
             {% if evenement.imagePath %}
-                <img src="{{ asset(evenement.imagePath|replace({'\\\\': '/'})) }}"
+                <img src="{{ asset('uploads/evenements/' ~ evenement.imagePath) }}"
                      alt="{{ evenement.titre }}" class="ev-show-img"
                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                 <div class="ev-show-img-placeholder" style="display:none"></div>
@@ -275,13 +330,73 @@
                         Places disponibles
                     {% endif %}
                 </span>
-                <span class="ev-show-progress__count" data-translate="true" data-original="{{ (evenement.placesRestantes ~ ' restante' ~ (evenement.placesRestantes > 1 ? 's' : ''))|e('html_attr') }}">{{ evenement.placesRestantes }} restante{{ evenement.placesRestantes > 1 ? 's' : '' }}</span>
+                <span class="ev-show-progress__count" data-translate="true" data-original="{{ (evenement.placesRestantes ~ ' restante' ~ (evenement.placesRestantes > 1 ? 's' : '') ~ ' disponible' ~ (evenement.placesRestantes > 1 ? 's' : '') ~ ' !')|e('html_attr') }}">
+                    {{ evenement.placesRestantes }} restante{{ evenement.placesRestantes > 1 ? 's' : '' }} disponible{{ evenement.placesRestantes > 1 ? 's' : '' }} !
+                </span>
             </div>
             <div class="ev-show-bar">
                 <div class="ev-show-bar__fill" style="width:{{ pct }}%;background:{{ evenement.isComplet ? '#8b1a1a' : (evenement.placesRestantes <= 5 ? '#9a7a10' : 'var(--color-secondary)') }}"></div>
             </div>
-            <div class="ev-show-progress__sub" data-translate="true" data-original="{{ (nbPart ~ ' personne' ~ (nbPart > 1 ? 's ont' : ' a') ~ ' déjà rejoint cet événement')|e('html_attr') }}">{{ nbPart }} personne{{ nbPart > 1 ? 's ont' : ' a' }} déjà rejoint cet événement</div>
+            <div class="ev-show-progress__sub" data-translate="true" data-original="{{ (nbPart ~ ' personne' ~ (nbPart > 1 ? 's ont' : ' a') ~ ' déjà rejoint cet événement')|e('html_attr') }}">
+                {{ nbPart }} personne{{ nbPart > 1 ? 's ont' : ' a' }} déjà rejoint cet événement
+            </div>
         </div>
+
+        {# Seat Map — rendu entièrement côté Twig, pas de JS requis #}
+        {% if evenement.nbPlaces is not null and evenement.nbPlaces > 0 %}
+        {% set totalSeats = evenement.nbPlaces %}
+        {% set takenSeats = nbPart %}
+        {% set cols = 10 %}
+        {% if totalSeats <= 20 %}{% set cols = 5 %}
+        {% elseif totalSeats <= 36 %}{% set cols = 6 %}
+        {% elseif totalSeats <= 56 %}{% set cols = 8 %}
+        {% elseif totalSeats <= 90 %}{% set cols = 10 %}
+        {% elseif totalSeats <= 130 %}{% set cols = 12 %}
+        {% else %}{% set cols = 14 %}{% endif %}
+
+        <div class="ev-seat-map">
+            <div class="ev-seat-map__header">
+                <span class="ev-seat-map__title">🪑 Plan des places</span>
+                <span style="font-size:0.85rem;color:var(--color-secondary);font-weight:600">
+                    {{ evenement.placesRestantes }} libre{{ evenement.placesRestantes > 1 ? 's' : '' }}
+                </span>
+            </div>
+            <div class="ev-seat-map__legend">
+                <span class="ev-seat-map__legend-item">
+                    <span class="ev-seat-map__legend-dot ev-seat-map__legend-dot--free"></span>
+                    <span>Places libres</span>
+                </span>
+                <span class="ev-seat-map__legend-item">
+                    <span class="ev-seat-map__legend-dot ev-seat-map__legend-dot--taken"></span>
+                    <span>Places occupées</span>
+                </span>
+            </div>
+            <div class="ev-seat-map__grid">
+                {% set seatIdx = 0 %}
+                {% for rowNum in 1..(totalSeats / cols)|round(0, 'ceil') %}
+                    {% set seatsInRow = cols %}
+                    {% if (rowNum * cols) > totalSeats %}
+                        {% set seatsInRow = totalSeats - ((rowNum - 1) * cols) %}
+                    {% endif %}
+                    {% if seatsInRow > 0 %}
+                    <div class="ev-seat-map__row">
+                        {% for col in 1..seatsInRow %}
+                            {% if col == ((seatsInRow / 2)|round(0, 'floor') + 1) and seatsInRow > 6 %}
+                                <div style="width:14px;flex-shrink:0"></div>
+                            {% endif %}
+                            <div class="ev-seat{% if seatIdx < takenSeats %} ev-seat--taken{% endif %}"
+                                 title="{{ seatIdx < takenSeats ? 'Place occupée' : 'Place libre' }}"></div>
+                            {% set seatIdx = seatIdx + 1 %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="ev-seat-map__screen">
+                <div class="ev-seat-map__screen-label">Réservez vos places maintenant !</div>
+            </div>
+        </div>
+        {% endif %}
 
         {# Description #}
         {% if evenement.description %}
@@ -374,7 +489,7 @@
                 </div>
             {% endif %}
 
-            {# Bouton rejoindre #}
+            {# Bouton rejoindre l'événement #}
             {% if not evenement.isComplet %}
                 <a href="{{ path('app_participation_join', {id: evenement.id}) }}"
                    class="btn-join-big">
@@ -387,13 +502,41 @@
                 </div>
             {% endif %}
 
-            {# Lien groupe si disponible #}
-            {% if evenement.lienGroupe %}
-                <a href="{{ evenement.lienGroupe }}" target="_blank" rel="noopener" class="btn-group-link">
+            {# ──────────────────────────────────────────────────────
+               Bouton Telegram — 2 cas :
+               1. lienGroupe contient déjà un vrai lien Telegram (t.me) → lien direct
+               2. Pas encore de vrai lien Telegram → appel AJAX pour en générer un
+                  Le controller sauvegarde le lien généré dans lienGroupe (cache BDD).
+               NOTE : les anciens liens WhatsApp de test sont ignorés grâce
+                      au filtre 't.me'. Exécuter en BDD :
+                      UPDATE evenement SET lien_groupe = NULL WHERE lien_groupe NOT LIKE '%t.me%';
+            ────────────────────────────────────────────────────── #}
+            {% set hasTelegramLink = evenement.lienGroupe and 't.me' in evenement.lienGroupe %}
+
+            {% if hasTelegramLink %}
+                {# CAS 1 : vrai lien Telegram déjà en base → lien direct #}
+                <a href="{{ evenement.lienGroupe }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn-group-link">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <span data-translate="true">Rejoindre le groupe de discussion</span>
                 </a>
+            {% else %}
+                {# CAS 2 : pas encore de lien Telegram → génération via AJAX #}
+                <button
+                    type="button"
+                    id="btn-telegram-discussion"
+                    class="btn-group-link"
+                    onclick="rejoindreDiscussion({{ evenement.id }})"
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-translate="true" id="btn-telegram-label">Rejoindre le groupe de discussion</span>
+                </button>
             {% endif %}
+
+            {# Message d'erreur Telegram #}
+            <div id="telegram-error-msg" style="display:none; margin-top:0.5rem; font-size:0.82rem; color:#c0392b; text-align:center;"></div>
         </div>
     </aside>
 </div>
@@ -418,5 +561,58 @@
         bootTranslate();
     }
 })();
+
+// ── Seat Map — rendu côté Twig, aucun JS nécessaire ────────
+
+// ── Groupe de discussion Telegram ────────────────────────────
+// Appelle la route Symfony : GET /evenement/{id}/telegram-link
+// Le controller génère un lien d'invitation via l'API Telegram Bot
+// et le sauvegarde en base dans lienGroupe pour les prochains visiteurs.
+function rejoindreDiscussion(eventId) {
+    var btn   = document.getElementById('btn-telegram-discussion');
+    var label = document.getElementById('btn-telegram-label');
+    var errEl = document.getElementById('telegram-error-msg');
+
+    if (!btn) return; // bouton absent si lienGroupe Telegram déjà présent (cas 1)
+
+    btn.disabled = true;
+    btn.style.opacity = '0.65';
+    label.textContent = '⏳ Connexion…';
+    errEl.style.display = 'none';
+
+    fetch('/evenement/' + eventId + '/telegram-link', {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(function(r) {
+        if (!r.ok) { throw new Error('HTTP ' + r.status); }
+        return r.json();
+    })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+
+        if (data.invite_link) {
+            label.textContent = 'Rejoindre le groupe de discussion';
+            window.open(data.invite_link, '_blank');
+            // Remplace le bouton par un lien direct pour les prochains clics
+            btn.outerHTML = '<a href="' + data.invite_link + '" target="_blank" rel="noopener noreferrer" class="btn-group-link">'
+                + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                + '<span>Rejoindre le groupe de discussion</span></a>';
+        } else {
+            btn.disabled = false;
+            label.textContent = 'Rejoindre le groupe de discussion';
+            errEl.textContent = data.error || 'Impossible de rejoindre le groupe pour le moment.';
+            errEl.style.display = 'block';
+        }
+    })
+    .catch(function(err) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        label.textContent = 'Rejoindre le groupe de discussion';
+        errEl.textContent = 'Erreur réseau. Vérifiez votre connexion. (' + err.message + ')';
+        errEl.style.display = 'block';
+    });
+}
 </script>
 {% endblock %}
