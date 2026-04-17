@@ -48,11 +48,25 @@
 {% if destination.videoUrl and destination.videoUrl|trim %}
     <div class="destination-video">
         {% if 'youtube.com' in destination.videoUrl or 'youtu.be' in destination.videoUrl %}
-            {% set videoId = destination.videoUrl|replace({'https://www.youtube.com/watch?v=': '', 'https://youtu.be/': '', 'https://youtube.com/watch?v=': '', 'http://www.youtube.com/watch?v=': '', 'http://youtu.be/': ''}) %}
+            {% set videoUrl = destination.videoUrl|trim %}
+            {% set videoId = '' %}
+
+            {% if 'youtu.be/' in videoUrl %}
+                {% set videoId = videoUrl|split('youtu.be/')|last|split('?')|first|split('&')|first|split('/')|first %}
+            {% elseif '/shorts/' in videoUrl %}
+                {% set videoId = videoUrl|split('/shorts/')|last|split('?')|first|split('&')|first|split('/')|first %}
+            {% elseif 'watch?v=' in videoUrl %}
+                {% set videoId = videoUrl|split('watch?v=')|last|split('&')|first|split('#')|first %}
+            {% elseif '/embed/' in videoUrl %}
+                {% set videoId = videoUrl|split('/embed/')|last|split('?')|first|split('&')|first|split('/')|first %}
+            {% endif %}
+
             {% if videoId and videoId|length > 0 %}
                 <div class="destination-video__frame">
-                    <iframe width="100%" height="420" src="https://www.youtube.com/embed/{{ videoId }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <iframe width="100%" height="420" src="https://www.youtube.com/embed/{{ videoId|trim }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
+            {% else %}
+                <a href="{{ destination.videoUrl }}" target="_blank" rel="noopener noreferrer">Voir la vidéo sur YouTube</a>
             {% endif %}
         {% else %}
             <a href="{{ destination.videoUrl }}" target="_blank" rel="noopener noreferrer">Voir la vidéo</a>

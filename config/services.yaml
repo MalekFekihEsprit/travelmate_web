@@ -36,3 +36,9 @@ services:
     App\Service\DestinationImageFetcherService:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+    App\Service\YouTubeVideoService:
+        arguments:
+            $apiKey: '%env(YOUTUBE_API_KEY)%'
+            $minDurationSeconds: 30
+            $maxDurationSeconds: 240

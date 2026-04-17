@@ -210,25 +210,6 @@
 
 <div class="admin-form__grid">
 
-    {# Nom Destination #}
-    <div class="admin-form__group">
-        {{ form_label(form.nom_destination, 'Nom du lieu') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.nom_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: Paris',
-                    'data-validate': 'required|minLength:2|maxLength:100|pattern:[a-zA-ZÀ-ÿ -]+',
-                    'data-error-required': 'Le nom est requis',
-                    'data-error-minLength': 'Le nom doit avoir au moins 2 caractères',
-                    'data-error-maxLength': 'Le nom ne doit pas dépasser 100 caractères',
-                    'data-error-pattern': 'Le nom ne doit contenir que des lettres'
-                }
-            }) }}
-            <div class="field-error" data-error-for="nom_destination"></div>
-        </div>
-    </div>
-
     {# Pays #}
     <div class="admin-form__group">
         {{ form_label(form.pays_destination, 'Pays') }}
@@ -247,19 +228,22 @@
         </div>
     </div>
 
-    {# Région #}
+    {# Nom Destination #}
     <div class="admin-form__group">
-        {{ form_label(form.region_destination, 'Ville') }}
+        {{ form_label(form.nom_destination, 'Nom du lieu') }}
         <div class="admin-form-wrapper">
-            {{ form_widget(form.region_destination, {
+            {{ form_widget(form.nom_destination, {
                 'attr': {
                     'class': 'admin-input',
                     'placeholder': 'ex: Paris',
-                    'data-validate': 'pattern:[a-zA-ZÀ-ÿ -]*'
+                    'data-validate': 'required|minLength:2|maxLength:100|pattern:[a-zA-ZÀ-ÿ -]+',
+                    'data-error-required': 'Le nom est requis',
+                    'data-error-minLength': 'Le nom doit avoir au moins 2 caractères',
+                    'data-error-maxLength': 'Le nom ne doit pas dépasser 100 caractères',
+                    'data-error-pattern': 'Le nom ne doit contenir que des lettres'
                 }
             }) }}
-            <div class="field-error" data-error-for="region_destination"></div>
-            <p class="field-hint">Optionnel - la ville sera utilisée pour valider et récupérer les coordonnées</p>
+            <div class="field-error" data-error-for="nom_destination"></div>
         </div>
     </div>
 
@@ -307,23 +291,6 @@
                 }
             }) }}
             <div class="field-error" data-error-for="saison_destination"></div>
-        </div>
-    </div>
-
-    {# URL Vidéo #}
-    <div class="admin-form__group admin-form__group--full">
-        {{ form_label(form.video_url, 'Lien vidéo YouTube') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.video_url, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: https://www.youtube.com/watch?v=...',
-                    'data-validate': 'url',
-                    'data-error-url': 'Veuillez entrer une URL valide'
-                }
-            }) }}
-            <div class="field-error" data-error-for="video_url"></div>
-            <p class="field-hint">Optionnel - YouTube uniquement</p>
         </div>
     </div>
 

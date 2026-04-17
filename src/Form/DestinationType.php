@@ -30,13 +30,6 @@ class DestinationType extends AbstractType
                     new Assert\Regex(['pattern' => '/^[a-zA-ZÀ-ÿ\s-]+$/', 'message' => 'Le pays ne doit contenir que des lettres']),
                 ]
             ])
-            ->add('region_destination', TextType::class, [
-                'label' => 'Ville',
-                'required' => false,
-                'constraints' => [
-                    new Assert\Regex(['pattern' => '/^[a-zA-ZÀ-ÿ\s-]*$/', 'message' => 'La ville ne doit contenir que des lettres']),
-                ]
-            ])
             ->add('description_destination', TextareaType::class, [
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La description est requise']),
@@ -68,12 +61,6 @@ class DestinationType extends AbstractType
                 ],
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La saison idéale est requise']),
-                ]
-            ])
-            ->add('video_url', TextType::class, [
-                'required' => false,
-                'constraints' => [
-                    new Assert\Url(['message' => 'Veuillez entrer une URL valide']),
                 ]
             ])
         ;

@@ -9,6 +9,7 @@ use App\Repository\UserRepository;
 use App\Service\CityCountryLookupService;
 use App\Service\DestinationImageFetcherService;
 use App\Service\RestCountriesService;
+use App\Service\YouTubeVideoService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -126,6 +127,7 @@ class DestinationAdminController extends AbstractController
         RestCountriesService $restCountriesService,
         CityCountryLookupService $lookupService,
         DestinationImageFetcherService $imageFetcher,
+        YouTubeVideoService $youTubeVideoService,
     ): Response {
         $destination = new Destination();
         $destination->setScore_destination(0.0);
@@ -162,6 +164,17 @@ class DestinationAdminController extends AbstractController
             $user = $this->getUser() ?? $userRepository->find(2);
             if ($user) {
                 $destination->setUser($user);
+            }
+
+            $videoUrl = $youTubeVideoService->fetchVideoUrl(
+                (string) $destination->getNom_destination(),
+                (string) $destination->getPays_destination()
+            );
+
+            if ($videoUrl !== null) {
+                $destination->setVideo_url($videoUrl);
+            } else {
+                $this->addFlash('warning', 'Vidéo YouTube non trouvée automatiquement pour cette destination.');
             }
 
             // ── Auto-fetch image from Unsplash and assign via VichUploader ──
