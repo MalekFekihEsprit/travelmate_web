@@ -2,15 +2,19 @@
 
 namespace App\Controller;
 
+use App\Entity\Etape;
+use App\Entity\Itineraire;
 use App\Entity\Participation;
 use App\Entity\User;
 use App\Entity\Voyage;
 use App\Form\VoyageType;
 use App\Repository\ActiviteRepository;
 use App\Repository\DestinationRepository;
+use App\Repository\ItineraireRepository;
 use App\Repository\ParticipationRepository;
 use App\Repository\UserRepository;
 use App\Repository\VoyageRepository;
+use App\Service\CerebrasItinerarySuggestionService;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -71,7 +75,8 @@ class VoyagesFrontController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         DestinationRepository $destinationRepository,
-        ActiviteRepository $activiteRepository
+        ActiviteRepository $activiteRepository,
+        CerebrasItinerarySuggestionService $cerebrasItinerarySuggestionService
     ): Response {
         $formScope = 'voyage_new';
         $voyage = new Voyage();
@@ -94,9 +99,19 @@ class VoyagesFrontController extends AbstractController
             $entityManager->persist($voyage);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Le voyage a ete ajoute avec succes.');
+            $proposal = $cerebrasItinerarySuggestionService->generateForVoyage($voyage);
+            $request->getSession()->set($this->getPendingAiItinerarySessionKey($voyage), $proposal);
 
-            return $this->redirectToRoute('app_voyages');
+            $this->addFlash('success', 'Le voyage a ete ajoute.');
+
+            if (($proposal['status'] ?? null) !== 'ready') {
+                $this->addFlash('warning', (string) ($proposal['summary'] ?? 'La proposition IA n\'a pas pu etre generee.'));
+            }
+
+            return $this->redirectToRoute('app_itineraires_index', [
+                'voyageId' => $voyage->getIdVoyage(),
+                'ai_proposal' => 1,
+            ]);
         }
 
         return $this->render('home/voyage_form.html.twig', [
@@ -108,6 +123,84 @@ class VoyagesFrontController extends AbstractController
             'has_activites' => $activiteRepository->count([]) > 0,
             'form_nonce' => $formNonce !== '' ? $formNonce : $this->createFormNonce($request, $formScope),
         ]);
+    }
+
+
+    #[Route('/voyages/{id_voyage}/itineraire-ia/accepter', name: 'app_voyages_ai_itinerary_accept', requirements: ['id_voyage' => '\\d+'], methods: ['POST'])]
+    public function acceptAiItinerary(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ItineraireRepository $itineraireRepository,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage
+    ): Response {
+        if (!$this->isCsrfTokenValid('accept_ai_itinerary_' . $voyage->getIdVoyage(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'La requete de validation de l\'itineraire IA est invalide.');
+
+            return $this->redirectToRoute('app_itineraires_index', ['voyageId' => $voyage->getIdVoyage()]);
+        }
+
+        $proposal = $this->getPendingAiItineraryProposal($request, $voyage);
+        if ($proposal === null || ($proposal['status'] ?? null) !== 'ready') {
+            $this->addFlash('warning', 'Aucune proposition IA exploitable n\'est disponible pour ce voyage.');
+
+            return $this->redirectToRoute('app_itineraires_index', ['voyageId' => $voyage->getIdVoyage()]);
+        }
+
+        $itineraire = new Itineraire();
+        $itineraire->setVoyage($voyage);
+        $itineraire->setNom_itineraire($this->buildUniqueItineraryName(
+            $itineraireRepository,
+            $voyage,
+            (string) ($proposal['nom_itineraire'] ?? '')
+        ));
+        $itineraire->setDescription_itineraire((string) $proposal['description_itineraire']);
+
+        $entityManager->persist($itineraire);
+        $entityManager->flush();
+
+        foreach (($proposal['etapes'] ?? []) as $etapeData) {
+            if (!is_array($etapeData)) {
+                continue;
+            }
+
+            $etape = new Etape();
+            $etape->setItineraire($itineraire);
+            $etape->setNumero_jour((int) ($etapeData['numero_jour'] ?? 1));
+            $etape->setDescription_etape((string) ($etapeData['description_etape'] ?? ''));
+
+            $heure = trim((string) ($etapeData['heure'] ?? '09:00'));
+            $heureDateTime = \DateTime::createFromFormat('H:i', $heure);
+            if (!$heureDateTime) {
+                $heureDateTime = new \DateTime('09:00');
+            }
+            $etape->setHeure($heureDateTime);
+
+            $entityManager->persist($etape);
+        }
+
+        $entityManager->flush();
+
+        $this->clearPendingAiItineraryProposal($request, $voyage);
+        $this->addFlash('success', 'L\'itineraire IA et ses etapes ont ete enregistres avec succes.');
+
+        return $this->redirectToRoute('app_itineraires_index', ['voyageId' => $voyage->getIdVoyage()]);
+    }
+
+    #[Route('/voyages/{id_voyage}/itineraire-ia/refuser', name: 'app_voyages_ai_itinerary_decline', requirements: ['id_voyage' => '\\d+'], methods: ['POST'])]
+    public function declineAiItinerary(
+        Request $request,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage
+    ): Response {
+        if (!$this->isCsrfTokenValid('decline_ai_itinerary_' . $voyage->getIdVoyage(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'La requete de refus de l\'itineraire IA est invalide.');
+
+            return $this->redirectToRoute('app_itineraires_index', ['voyageId' => $voyage->getIdVoyage()]);
+        }
+
+        $this->clearPendingAiItineraryProposal($request, $voyage);
+        $this->addFlash('warning', 'La proposition IA a ete ignoree. Le voyage a bien ete conserve.');
+
+        return $this->redirectToRoute('app_itineraires_index', ['voyageId' => $voyage->getIdVoyage()]);
     }
 
     #[Route('/voyages/{id_voyage}/modifier', name: 'app_voyages_edit', requirements: ['id_voyage' => '\\d+'], methods: ['GET', 'POST'])]
@@ -471,5 +564,44 @@ class VoyagesFrontController extends AbstractController
                 unset($nonces[$scope]);
             }
         }
+    }
+
+    private function buildUniqueItineraryName(ItineraireRepository $itineraireRepository, Voyage $voyage, string $proposedName): string
+    {
+        $baseName = trim($proposedName);
+        if ($baseName === '') {
+            $baseName = 'Itineraire IA';
+        }
+
+        $candidate = mb_substr($baseName, 0, 120);
+        $index = 2;
+
+        while ($itineraireRepository->findOneBy([
+            'voyage' => $voyage,
+            'nom_itineraire' => $candidate,
+        ]) instanceof Itineraire) {
+            $suffix = sprintf(' (%d)', $index);
+            $candidate = mb_substr($baseName, 0, 120 - mb_strlen($suffix)) . $suffix;
+            ++$index;
+        }
+
+        return $candidate;
+    }
+
+    private function getPendingAiItinerarySessionKey(Voyage $voyage): string
+    {
+        return 'voyage_ai_itinerary_' . $voyage->getIdVoyage();
+    }
+
+    private function getPendingAiItineraryProposal(Request $request, Voyage $voyage): ?array
+    {
+        $proposal = $request->getSession()->get($this->getPendingAiItinerarySessionKey($voyage));
+
+        return is_array($proposal) ? $proposal : null;
+    }
+
+    private function clearPendingAiItineraryProposal(Request $request, Voyage $voyage): void
+    {
+        $request->getSession()->remove($this->getPendingAiItinerarySessionKey($voyage));
     }
 }

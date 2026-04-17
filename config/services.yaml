@@ -6,6 +6,8 @@
 parameters:
     app.groq.cache_ttl: 86400
     app.openrouteservice.cache_ttl: 604800
+    app.cerebras.api_key: ''
+    app.cerebras.model: 'llama3.1-8b'
 
 services:
     # default configuration for services in *this* file
@@ -39,6 +41,11 @@ services:
     App\Service\FalVideoService:
         arguments:
             $apiKey: '%env(string:FAL_KEY)%'
+
+    App\Service\CerebrasItinerarySuggestionService:
+        arguments:
+            $apiKey: '%env(default:app.cerebras.api_key:CEREBRAS_API_KEY)%'
+            $model: '%env(default:app.cerebras.model:CEREBRAS_MODEL)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

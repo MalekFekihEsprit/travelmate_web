@@ -11,9 +11,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fraunces:wght@500;600&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
-    <script src="{{ asset('js/dark-mode-toggle.js') }}"></script>
-
     {% block stylesheets %}
         <style>
             :root {
@@ -985,17 +982,6 @@
 
             {# Actions à droite #}
             <div class="navbar-actions">
-                {# Dark mode toggle #}
-                <button class="dark-mode-toggle" type="button" aria-label="Basculer le mode sombre">
-                    <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.7"/>
-                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                    </svg>
-                    <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </button>
-
                 {# Notifications #}
                 <button class="icon-button" type="button" aria-label="Notifications">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">

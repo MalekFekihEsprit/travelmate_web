@@ -68,6 +68,25 @@ class ItineraireFController extends AbstractController
             throw $this->createNotFoundException('Voyage non trouvé');
         }
 
+        // Check for pending AI itinerary proposal
+        $showAiProposal = $request->query->getBoolean('ai_proposal', false);
+        $aiProposal = null;
+        if ($showAiProposal) {
+            $sessionKey = 'voyage_ai_itinerary_' . $voyageSelectionne->getIdVoyage();
+            $aiProposal = $request->getSession()->get($sessionKey);
+            if (!is_array($aiProposal) || ($aiProposal['status'] ?? null) !== 'ready') {
+                $aiProposal = null;
+            } else {
+                $grouped = [];
+                foreach ($aiProposal['etapes'] ?? [] as $etape) {
+                    $jour = (int) ($etape['numero_jour'] ?? 1);
+                    $grouped[$jour][] = $etape;
+                }
+                ksort($grouped);
+                $aiProposal['etapes_par_jour'] = $grouped;
+            }
+        }
+
         $search = mb_strtolower(trim((string) $request->query->get('q', '')));
         $sort = (string) $request->query->get('sort', 'nom_asc');
         if (!in_array($sort, ['nom_asc', 'nom_desc'], true)) {
@@ -111,6 +130,7 @@ class ItineraireFController extends AbstractController
             'search_q' => trim((string) $request->query->get('q', '')),
             'sort' => $sort,
             'culturalRules' => $culturalRules,
+            'aiProposal' => $aiProposal,
         ]);
     }
 
