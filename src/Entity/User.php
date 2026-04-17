@@ -97,7 +97,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setTelephone(?string $telephone): self
     {
-        $this->telephone = $telephone;
+        // Remove all spaces before saving
+        $this->telephone = $telephone ? preg_replace('/\s+/', '', $telephone) : null;
+        
         return $this;
     }
 

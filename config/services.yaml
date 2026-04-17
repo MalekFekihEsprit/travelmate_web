@@ -7,6 +7,7 @@ parameters:
     profile_photos_directory: '%kernel.project_dir%/public/uploads/profiles'
     face_api_base_url: '%env(FACE_API_BASE_URL)%'
     face_match_threshold: '%env(float:FACE_MATCH_THRESHOLD)%'
+    ipapi_base_url: '%env(IPAPI_BASE_URL)%'
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -25,5 +26,9 @@ services:
     App\Service\FaceRecognitionClient:
         arguments:
             $faceApiBaseUrl: '%face_api_base_url%'
+
+    App\Service\GeoIpService:
+        arguments:
+            $baseUrl: '%ipapi_base_url%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
