@@ -79,24 +79,15 @@
 
         .itineraires-hero__visual {
             position: relative;
-            min-height: 280px;
-            border-radius: calc(var(--radius-xl) - 4px);
-            overflow: hidden;
-            background: linear-gradient(145deg, rgba(196, 111, 75, 0.18), rgba(47, 127, 121, 0.2));
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 1rem;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
         }
 
         .itineraires-hero__visual::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(22, 18, 15, 0.04), rgba(22, 18, 15, 0.15));
-            pointer-events: none;
+            display: none;
         }
 
         .itineraires-hero__icon {
@@ -107,7 +98,32 @@
 
         .itineraires-hero__cta {
             z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .6rem 1.25rem;
+            border-radius: 999px;
+            font-size: .9rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+            box-shadow: 0 3px 10px rgba(71,48,35,.12);
         }
+
+        .itineraires-hero__cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(71,48,35,.18);
+            filter: brightness(1.07);
+        }
+
+        .itineraires-hero__cta--create  { background: var(--color-primary);       color: #fff; }
+        .itineraires-hero__cta--ai      { background: var(--color-secondary);      color: #fff; }
+        .itineraires-hero__cta--pdf     { background: rgba(196,111,75,.12);        color: var(--color-primary); border: 1px solid rgba(196,111,75,.3); }
+        .itineraires-hero__cta--flights { background: var(--color-secondary-soft); color: var(--color-secondary); border: 1px solid rgba(47,127,121,.25); }
+        .itineraires-hero__cta--back    { background: rgba(255,253,249,.9);        color: var(--color-primary); border: 1px solid var(--color-border); }
 
         .itineraires-toolbar {
             display: grid;
@@ -779,19 +795,30 @@
                 </div>
             </div>
             <div class="itineraires-hero__visual">
-                <div class="itineraires-hero__icon">🗺️</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; z-index: 1; justify-content: center;">
-                    <a href="{{ path('app_itineraires_create', {voyageId: voyageId}) }}" class="btn btn--primary itineraires-hero__cta">
-                        + Créer
+                <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; z-index: 1; justify-content: center;">
+                    <a href="{{ path('app_itineraires_create', {voyageId: voyageId}) }}" class="itineraires-hero__cta itineraires-hero__cta--create">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Créer
                     </a>
-                    <a href="{{ path('app_itineraires_export_pdf', {voyageId: voyageId}) }}" class="btn btn--secondary itineraires-hero__cta">
-                        📄 PDF
+                    <form method="POST" action="{{ path('app_itineraires_generate_ai') }}" style="display:contents; margin:0;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('generate_ai_itinerary_' ~ voyageId) }}">
+                        <input type="hidden" name="voyageId" value="{{ voyageId }}">
+                        <button type="submit" class="itineraires-hero__cta itineraires-hero__cta--ai">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            Générer avec IA
+                        </button>
+                    </form>
+                    <a href="{{ path('app_itineraires_export_pdf', {voyageId: voyageId}) }}" class="itineraires-hero__cta itineraires-hero__cta--pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        PDF
                     </a>
-                    <a href="{{ path('app_flights', {voyageId: voyageId}) }}" class="btn btn--primary itineraires-hero__cta" style="background: var(--color-secondary);">
-                        ✈️ Vols
+                    <a href="{{ path('app_flights', {voyageId: voyageId}) }}" class="itineraires-hero__cta itineraires-hero__cta--flights">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+                        Vols
                     </a>
-                    <a href="{{ path('app_voyages') }}" class="btn btn--secondary itineraires-hero__cta">
-                        ← Mes voyages
+                    <a href="{{ path('app_voyages') }}" class="itineraires-hero__cta itineraires-hero__cta--back">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                        Mes voyages
                     </a>
                 </div>
             </div>
@@ -997,11 +1024,11 @@
 
             {# Footer with accept/decline buttons #}
             <div style="padding:1.2rem 2rem; border-top:1px solid rgba(231,220,205,.6); display:flex; gap:1rem; justify-content:flex-end; flex-shrink:0; background:rgba(255,253,249,.95);">
-                <form method="POST" action="{{ path('app_voyages_ai_itinerary_decline', {id_voyage: voyageSelectionne.id_voyage}) }}">
+                <form method="POST" action="{{ path('app_itineraires_decline_ai', {id_voyage: voyageSelectionne.id_voyage}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('decline_ai_itinerary_' ~ voyageSelectionne.id_voyage) }}">
                     <button type="submit" style="padding:.7rem 1.6rem; background:transparent; color:#6d5545; border:1px solid rgba(231,220,205,.95); border-radius:.6rem; font-weight:600; cursor:pointer; font-size:.92rem; transition:all .2s;">✕ Refuser</button>
                 </form>
-                <form method="POST" action="{{ path('app_voyages_ai_itinerary_accept', {id_voyage: voyageSelectionne.id_voyage}) }}">
+                <form method="POST" action="{{ path('app_itineraires_accept_ai', {id_voyage: voyageSelectionne.id_voyage}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('accept_ai_itinerary_' ~ voyageSelectionne.id_voyage) }}">
                     <button type="submit" style="padding:.7rem 1.6rem; background:linear-gradient(135deg,#c46f4b,#d4886a); color:#fff; border:none; border-radius:.6rem; font-weight:700; cursor:pointer; font-size:.92rem; box-shadow:0 8px 20px rgba(196,111,75,.25); transition:all .2s;">✓ Accepter et créer les étapes</button>
                 </form>
