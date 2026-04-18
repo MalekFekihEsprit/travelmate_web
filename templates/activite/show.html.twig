@@ -1594,7 +1594,7 @@ document.addEventListener('keydown', function (e) {
         function getWeatherEmoji(icon, desc) {
             if (!icon) return '🌡️';
             var code = icon.replace('d','').replace('n','');
-            var map = {'01':'☀️','02':'⛅','03':'☁️','04':'☁️','09':'🌧️','10':'🌦️','11':'⛈️','13':'❄️','50':'🌫️'};
+            //var map = {'01':'☀️','02':'⛅','03':'☁️','04':'☁️','09':'🌧️','10':'🌦️','11':'⛈️','13':'❄️','50':'🌫️'};
             return map[code] || '🌡️';
         }
     }
