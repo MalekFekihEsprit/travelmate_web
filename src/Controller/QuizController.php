@@ -44,11 +44,11 @@ class QuizController extends AbstractController
             'budget'           => (string)($a->getBudget() ?? ''),
             'imagePath'        => $a->getImagePath() ?? '',
             // Champs de la catégorie — très importants pour le matching
-            //'categorie'        => $a->getCategorie()?->getNom() ?? '',
-            //'categorie_type'   => $a->getCategorie()?->getType() ?? '',
-            //'niveauintensite'  => $a->getCategorie()?->getNiveauintensite() ?? '',
-            //'publiccible'      => $a->getCategorie()?->getPubliccible() ?? '',
-            //'saison'           => $a->getCategorie()?->getSaison() ?? '',
+            'categorie'        => $a->getCategorie()?->getNom() ?? '',
+            'categorie_type'   => $a->getCategorie()?->getType() ?? '',
+            'niveauintensite'  => $a->getCategorie()?->getNiveauintensite() ?? '',
+            'publiccible'      => $a->getCategorie()?->getPubliccible() ?? '',
+            'saison'           => $a->getCategorie()?->getSaison() ?? '',
             'keywords'         => '',
         ], $activites);
 
