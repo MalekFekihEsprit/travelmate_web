@@ -1,0 +1,306 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }} | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .form-page {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            gap: 1.75rem;
+        }
+
+        .form-header {
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+
+        .form-header__title {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            color: var(--color-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header__subtitle {
+            color: var(--color-text-muted);
+            font-size: 1rem;
+        }
+
+        .form-card {
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
+        }
+
+        .form-group {
+            display: grid;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--color-primary);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            padding: 0.85rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(196, 111, 75, 0.1);
+            background: var(--color-surface);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-help {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            margin-top: 0.35rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.85rem;
+            justify-content: flex-end;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .btn-form {
+            padding: 0.85rem 1.75rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.95rem;
+        }
+
+        .btn-form.primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-form.primary:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(196, 111, 75, 0.25);
+        }
+
+        .btn-form.secondary {
+            background: transparent;
+            color: var(--color-text-muted);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-form.secondary:hover {
+            background: var(--color-hover);
+            color: var(--color-primary);
+        }
+
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: rgba(39, 174, 96, 0.1);
+            border: 1px solid rgba(39, 174, 96, 0.3);
+            color: #27ae60;
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+
+        .alert-warning {
+            background: rgba(241, 196, 15, 0.1);
+            border: 1px solid rgba(241, 196, 15, 0.3);
+            color: #f39c12;
+        }
+
+        @media (max-width: 768px) {
+            .form-page {
+                padding: 0 1rem;
+            }
+
+            .form-card {
+                padding: 1.5rem;
+            }
+
+            .form-header__title {
+                font-size: 1.5rem;
+            }
+
+            .form-actions {
+                flex-wrap: wrap;
+                gap: 0.6rem;
+            }
+
+            .btn-form {
+                flex: 1;
+                min-width: 140px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="form-page">
+        <!-- Messages Flash - Erreurs et Avertissements -->
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-error">
+                <span>!</span>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('warning') %}
+            <div class="alert alert-warning">
+                <span>⚠</span>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+
+        <div class="form-header">
+            <h1 class="form-header__title">
+                {% if voyageSelectionne %}
+                    {{ title }} - {{ voyageSelectionne.titre_voyage }}
+                {% else %}
+                    {{ title }}
+                {% endif %}
+            </h1>
+            <p class="form-header__subtitle">
+                {% if itineraire %}
+                    Modifiez les informations de votre itinéraire
+                {% else %}
+                    {% if voyageSelectionne %}
+                        Créez un nouvel itinéraire pour <strong>{{ voyageSelectionne.titre_voyage }}</strong>
+                    {% else %}
+                        Créez un nouvel itinéraire pour votre voyage
+                    {% endif %}
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="form-card">
+            <form method="POST" action="{% if itineraire %}{{ path('app_itineraires_edit', {id: itineraire.id_itineraire}) }}{% else %}{{ path('app_itineraires_create', {voyageId: voyageId}) }}{% endif %}">
+                <!-- Nom de l'itinéraire -->
+                <div class="form-group">
+                    <label for="nom_itineraire" class="form-label required">Nom de l'itinéraire</label>
+                    <input
+                        type="text"
+                        id="nom_itineraire"
+                        name="nom_itineraire"
+                        class="form-input"
+                        value="{{ itineraire ? itineraire.nom_itineraire : '' }}"
+                        placeholder="Ex: Découverte du sud"
+                        required
+                    />
+
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label for="description_itineraire" class="form-label required">Description</label>
+                    <textarea
+                        id="description_itineraire"
+                        name="description_itineraire"
+                        class="form-textarea"
+                        placeholder="Décrivez les points clés et l'essence de votre itinéraire..."
+                        required
+                    >{{ itineraire ? itineraire.description_itineraire : '' }}</textarea>
+
+                </div>
+
+                <!-- Voyage -->
+                {% if voyageSelectionne %}
+                    <!-- Si un voyage est sélectionné, afficher en lecture seule -->
+                    <div class="form-group">
+                        <label class="form-label">Voyage associé</label>
+                        <input 
+                            type="text" 
+                            class="form-input" 
+                            value="{{ voyageSelectionne.titre_voyage }}{% if voyageSelectionne.date_debut %} ({{ voyageSelectionne.date_debut|date('d/m/Y') }}){% endif %}"
+                            disabled 
+                        />
+                        <!-- Champ caché pour passer la valeur au serveur -->
+                        <input type="hidden" name="id_voyage" value="{{ voyageSelectionne.id_voyage }}" />
+
+                    </div>
+                {% elseif voyages|length > 0 %}
+                    <!-- Si pas de voyage sélectionné, afficher le select (rare) -->
+                    <div class="form-group">
+                        <label for="id_voyage" class="form-label required">Voyage associé</label>
+                        <select id="id_voyage" name="id_voyage" class="form-select" required>
+                            <option value="">-- Sélectionnez un voyage --</option>
+                            {% for voyage in voyages %}
+                                <option value="{{ voyage.id_voyage }}" {% if itineraire and itineraire.voyage and itineraire.voyage.id_voyage == voyage.id_voyage %}selected{% endif %}>
+                                    {{ voyage.titre_voyage }}
+                                    {% if voyage.date_debut %}
+                                        ({{ voyage.date_debut|date('d/m/Y') }})
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-help">Liez cet itinéraire à un voyage existant</small>
+                    </div>
+                {% endif %}
+
+                <!-- Boutons d'action -->
+                <div class="form-actions">
+                    <a href="{% if voyageId %}{{ path('app_itineraires_index', {voyageId: voyageId}) }}{% else %}{{ path('app_itineraires_index') }}{% endif %}" class="btn-form secondary">Annuler</a>
+                    <button type="submit" class="btn-form primary">
+                        {% if itineraire %}
+                            ✓ Enregistrer les modifications
+                        {% else %}
+                            + Créer l'itinéraire
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

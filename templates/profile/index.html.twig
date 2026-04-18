@@ -1,0 +1,698 @@
+{% extends base_template %}
+
+{% block title %}Mon profil | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('styles/base.css') }}">
+    <style>
+        .profile-shell {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 2rem 0 3rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .profile-side,
+        .profile-main-card,
+        .profile-danger-card {
+            border: 1px solid var(--color-border);
+            border-radius: 30px;
+            background: rgba(255, 253, 249, 0.94);
+        }
+
+        .profile-side {
+            padding: 1.5rem;
+            position: sticky;
+            top: calc(var(--navbar-height) + 1rem);
+        }
+
+        .profile-avatar-wrap {
+            text-align: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .profile-avatar {
+            width: 160px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            border: 4px solid rgba(196, 111, 75, 0.12);
+            background: var(--color-surface-soft);
+        }
+
+        .profile-name {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            color: var(--color-text);
+            margin-bottom: .25rem;
+        }
+
+        .profile-email {
+            color: var(--color-text-muted);
+            margin-bottom: .9rem;
+            word-break: break-word;
+        }
+
+        .profile-role {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .5rem .9rem;
+            border-radius: 999px;
+            background: rgba(47, 127, 121, 0.12);
+            color: var(--color-secondary);
+            font-weight: 700;
+            font-size: .85rem;
+        }
+
+        .profile-meta {
+            display: grid;
+            gap: .8rem;
+            margin-top: 1.4rem;
+        }
+
+        .profile-meta__item {
+            padding: .95rem 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 18px;
+            background: rgba(243, 234, 223, 0.45);
+        }
+
+        .profile-meta__label {
+            display: block;
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: .25rem;
+        }
+
+        .profile-meta__value {
+            color: var(--color-text);
+            font-weight: 500;
+        }
+
+        .profile-main {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .profile-main-card,
+        .profile-danger-card {
+            padding: 1.6rem;
+            box-shadow: 0 16px 36px rgba(71, 48, 35, 0.05);
+        }
+
+        .card-title {
+            font-size: 1.45rem;
+            color: var(--color-text);
+            margin-bottom: .35rem;
+        }
+
+        .card-subtitle {
+            color: var(--color-text-muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .flash-message {
+            padding: .95rem 1rem;
+            border-radius: 16px;
+            font-size: .95rem;
+            border: 1px solid transparent;
+        }
+
+        .flash-message--success {
+            background: rgba(47, 127, 121, 0.10);
+            border-color: rgba(47, 127, 121, 0.16);
+            color: #245f5a;
+        }
+
+        .flash-message--error {
+            background: rgba(191, 91, 91, 0.10);
+            border-color: rgba(191, 91, 91, 0.16);
+            color: #9e4747;
+        }
+
+        .profile-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .profile-form-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .form-control-block {
+            display: grid;
+            gap: .45rem;
+        }
+
+        .form-control-block label {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: .94rem;
+        }
+
+        .form-control-block input,
+        .form-control-block textarea,
+        .form-control-block select {
+            width: 100%;
+            min-height: 52px;
+            padding: .9rem 1rem;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            color: var(--color-text);
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        .form-control-block input:focus,
+        .form-control-block textarea:focus,
+        .form-control-block select:focus {
+            border-color: rgba(196, 111, 75, 0.35);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.08);
+        }
+
+        .form-help {
+            font-size: .82rem;
+            color: var(--color-text-muted);
+        }
+
+        .form-error {
+            color: #b84d4d;
+            font-size: .84rem;
+        }
+
+        .profile-submit {
+            min-height: 52px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--color-primary);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease;
+            padding: 0 1.4rem;
+        }
+
+        .profile-submit:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .profile-submit--ghost {
+            background: transparent;
+            color: var(--color-primary);
+            border: 1px solid rgba(196, 111, 75, 0.22);
+        }
+
+        .profile-submit--ghost:hover {
+            background: rgba(196, 111, 75, 0.08);
+        }
+
+        .security-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .security-box {
+            padding: 1.1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 22px;
+            background: rgba(243, 234, 223, 0.4);
+        }
+
+        .security-box__title {
+            font-size: 1.05rem;
+            color: var(--color-text);
+            margin-bottom: .25rem;
+        }
+
+        .security-box__text {
+            color: var(--color-text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .danger-card-title {
+            color: #aa4f4f;
+            font-size: 1.35rem;
+            margin-bottom: .35rem;
+        }
+
+        .danger-card-subtitle {
+            color: var(--color-text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .danger-submit {
+            min-height: 52px;
+            border: 0;
+            border-radius: 999px;
+            background: #bf5b5b;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease;
+            padding: 0 1.4rem;
+        }
+
+        .danger-submit:hover {
+            background: #a84c4c;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 980px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-side {
+                position: static;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .profile-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-side,
+            .profile-main-card,
+            .profile-danger-card {
+                padding: 1.25rem;
+                border-radius: 24px;
+            }
+        }
+        
+        .geo-phone-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-top: .5rem;
+            padding: .55rem .8rem;
+            border-radius: 999px;
+            background: rgba(47, 127, 121, 0.08);
+            color: var(--color-text);
+            font-size: .9rem;
+        }
+
+        .geo-phone-code {
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .trust-score-badge {
+            display:inline-flex;
+            align-items:center;
+            gap:.5rem;
+            padding:.7rem 1rem;
+            border-radius:999px;
+            font-weight:700;
+        }
+
+        .trust-score-badge--high {
+            background: rgba(47,127,121,.12);
+            color:#245f5a;
+        }
+
+        .trust-score-badge--medium {
+            background: rgba(221,191,140,.18);
+            color:#8a6a25;
+        }
+
+        .trust-score-badge--low {
+            background: rgba(191,91,91,.12);
+            color:#9e4747;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="profile-shell">
+        <div class="profile-grid">
+            <aside class="profile-side">
+                <div class="profile-avatar-wrap">
+                    <img src="{{ user.profileImage  }}" alt="Photo de profil" class="profile-avatar">
+                    <h1 class="profile-name">{{ user.prenom }} {{ user.nom }}</h1>
+                    <div class="profile-email">{{ user.email }}</div>
+                    <span class="profile-role">
+                        {{ user.role == 'ADMIN' ? 'Administrateur' : 'Utilisateur' }}
+                    </span>
+                    <div style="margin: 1rem;">
+                        <a href="{{ path('app_profile_face') }}" class="profile-submit profile-submit--ghost" style="text-decoration:none; display:inline-flex; align-items:center;">
+                            Gérer mon visage
+                        </a>
+                    </div>
+                </div>
+
+                <div class="profile-meta">
+                    <div class="profile-meta__item">
+                        <span class="profile-meta__label">Date de naissance</span>
+                        <span class="profile-meta__value">
+                            {{ user.dateNaissance ? user.dateNaissance|date('d/m/Y') : 'Non renseignée' }}
+                        </span>
+                    </div>
+
+                    <div class="profile-meta__item">
+                        <span class="profile-meta__label">Téléphone</span>
+                        <span class="profile-meta__value">
+                            {{ user.telephone ?: 'Non renseigné' }}
+                        </span>
+                    </div>
+
+                    <div class="profile-meta__item">
+                        <span class="profile-meta__label">Compte créé le</span>
+                        <span class="profile-meta__value">
+                            {{ user.createdAt ? user.createdAt|date('d/m/Y H:i') : '—' }}
+                        </span>
+                    </div>
+
+                    <div class="profile-meta__item">
+                        <span class="profile-meta__label">Statut du compte</span>
+                        <span class="profile-meta__value">
+                            {{ user.isVerified ? 'Vérifié' : 'Non vérifié' }}
+                        </span>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="profile-main">
+                <div class="profile-main-card">
+                    <h2 class="card-title">Mes informations personnelles</h2>
+                    <p class="card-subtitle">
+                        Mettez à jour votre profil, votre photo et vos coordonnées.
+                    </p>
+
+                    <div class="flash-stack">
+                        {% for message in app.flashes('success') %}
+                            <div class="flash-message flash-message--success">{{ message }}</div>
+                        {% endfor %}
+                        {% for message in app.flashes('error') %}
+                            <div class="flash-message flash-message--error">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {{ form_start(profileForm, {'attr': {'novalidate': 'novalidate'}}) }}
+                        <div class="profile-form-grid">
+                            <div class="form-control-block">
+                                {{ form_label(profileForm.nom) }}
+                                {{ form_widget(profileForm.nom) }}
+                                <div class="form-error">{{ form_errors(profileForm.nom) }}</div>
+                            </div>
+
+                            <div class="form-control-block">
+                                {{ form_label(profileForm.prenom) }}
+                                {{ form_widget(profileForm.prenom) }}
+                                <div class="form-error">{{ form_errors(profileForm.prenom) }}</div>
+                            </div>
+
+                            <div class="form-control-block">
+                                {{ form_label(profileForm.dateNaissance) }}
+                                {{ form_widget(profileForm.dateNaissance) }}
+                                <div class="form-error">{{ form_errors(profileForm.dateNaissance) }}</div>
+                            </div>
+
+                        {% set geo_data = get_geo_phone_context() %} 
+                        <div class="phone-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                            <div class="phone-prefix" style="position: absolute; left: 10px; top: 60%; transform: translateY(-50%); display: flex; gap: 5px; align-items: center; pointer-events: none; z-index: 1; background: transparent;">
+                                <span id="geo-flag-input" style="font-size:1.2rem;">{{ geo_data.flag_emoji|raw }}</span>
+                                <span id="geo-code-prefix" style="color: #666; font-weight: 500;">{{ geo_data.calling_code }}</span>
+                            </div>
+                            <div class="form-control-block" id="user_telephone" style="flex: 1;">
+                                {{ form_label(profileForm.telephone) }}
+                                {{ form_widget(profileForm.telephone, { attr: { style: 'padding-left: 90px;' } }) }}
+                                <div class="form-error">{{ form_errors(profileForm.telephone) }}</div>
+                            </div>
+                        </div>
+                        <script>
+                            // Store the calling code directly in JavaScript
+                            const geoCallingCode = '{{ geo_data.calling_code }}';
+                            const phoneInput = document.getElementById('profile_form_telephone');
+                            if (phoneInput && geoCallingCode) {
+                                phoneInput.dataset.callingCode = geoCallingCode;
+                                
+                                // Set placeholder
+                                if (!phoneInput.value.trim()) {
+                                    phoneInput.placeholder = '12 34 56 78 90';
+                                }
+                            }
+                            
+                            // Form submission handler
+                            const form = phoneInput ? phoneInput.closest('form') : null;
+                            if (form && phoneInput) {
+                                form.addEventListener('submit', function() {
+                                    const callingCode = phoneInput.dataset.callingCode;
+                                    const userNumber = phoneInput.value.trim();
+                                    
+                                    if (callingCode && userNumber && !userNumber.startsWith(callingCode)) {
+                                        phoneInput.value = callingCode + ' ' + userNumber;
+                                    }
+                                });
+                            }
+                        </script>
+
+
+                            <div class="form-control-block full">
+                                {{ form_label(profileForm.photoUrl) }}
+                                {{ form_widget(profileForm.photoUrl) }}
+                                <div class="form-help">Optionnel. Collez un lien image si vous ne souhaitez pas importer de fichier.</div>
+                                <div class="form-error">{{ form_errors(profileForm.photoUrl) }}</div>
+                            </div>
+
+                            <div class="form-control-block full">
+                                {{ form_label(profileForm.photoFile) }}
+                                {{ form_widget(profileForm.photoFile) }}
+                                <div class="form-help">Optionnel. Si vous importez une image, elle remplacera la photo actuelle.</div>
+                                <div class="form-error">{{ form_errors(profileForm.photoFile) }}</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.2rem;">
+                            <button type="submit" class="profile-submit">
+                                Enregistrer les modifications
+                            </button>
+                        </div>
+                    {{ form_end(profileForm) }}
+                </div>
+
+                <div class="profile-main-card">
+                    <h2 class="card-title">Sécurité du compte</h2>
+                    <p class="card-subtitle">
+                        Modifiez votre mot de passe pour renforcer la sécurité de votre compte.
+                    </p>
+
+                    <div class="security-grid">
+                        <div class="security-box">
+                            <h3 class="security-box__title">Changer le mot de passe</h3>
+                            <p class="security-box__text">
+                                Utilisez un mot de passe fort contenant au moins une lettre et un chiffre.
+                            </p>
+                            {{ form_start(changePasswordForm, {'attr': {'novalidate': 'novalidate'}}) }}
+                                <div class="profile-form-grid">
+                                    <div class="form-control-block full">
+                                        {{ form_label(changePasswordForm.currentPassword) }}
+                                        {{ form_widget(changePasswordForm.currentPassword) }}
+                                        <div class="form-error">{{ form_errors(changePasswordForm.currentPassword) }}</div>
+                                    </div>
+
+                                    <div class="form-control-block">
+                                        {{ form_label(changePasswordForm.newPassword.first) }}
+                                        {{ form_widget(changePasswordForm.newPassword.first) }}
+                                        <div class="form-error">{{ form_errors(changePasswordForm.newPassword.first) }}</div>
+                                    </div>
+
+                                    <div class="form-control-block">
+                                        {{ form_label(changePasswordForm.newPassword.second) }}
+                                        {{ form_widget(changePasswordForm.newPassword.second) }}
+                                        <div class="form-error">{{ form_errors(changePasswordForm.newPassword.second) }}</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 1.2rem;">
+                                    <button type="submit" class="profile-submit profile-submit--ghost">
+                                        Mettre à jour le mot de passe
+                                    </button>
+                                </div>
+                            {{ form_end(changePasswordForm) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-security-score">
+                    <h3>Niveau de confiance</h3>
+                    <div class="trust-score-badge trust-score-badge--{{ user.getTrustScore >= 80 ? 'high' : (user.getTrustScore >= 50 ? 'medium' : 'low') }}">
+                        Score : {{ user.getTrustScore }}/100
+                        —
+                        {{ user.getTrustScore >= 80 ? 'Élevé' : (user.getTrustScore >= 50 ? 'Moyen' : 'Faible') }}
+                    </div>
+                </div>
+                
+                <div class="profile-danger-card">
+                    <h2 class="danger-card-title">Zone sensible</h2>
+                    <p class="danger-card-subtitle">
+                        La suppression du compte est définitive. Toutes vos données utilisateur liées à ce compte seront perdues.
+                    </p>
+
+                    {{ form_start(deleteAccountForm, {'attr': {'novalidate': 'novalidate'}}) }}
+                        <div class="profile-form-grid">
+                            <div class="form-control-block full">
+                                {{ form_label(deleteAccountForm.password) }}
+                                {{ form_widget(deleteAccountForm.password) }}
+                                <div class="form-error">{{ form_errors(deleteAccountForm.password) }}</div>
+                            </div>
+
+                            <div class="form-control-block full">
+                                <div style="display:flex; align-items:flex-start; gap:.75rem; padding:.95rem 1rem; border:1px solid var(--color-border); border-radius:16px; background:rgba(191,91,91,.06);">
+                                    {{ form_widget(deleteAccountForm.confirm) }}
+                                    <div>
+                                        {{ form_label(deleteAccountForm.confirm) }}
+                                        <div class="form-error">{{ form_errors(deleteAccountForm.confirm) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.2rem;">
+                            <button type="submit" class="danger-submit">
+                                Supprimer définitivement mon compte
+                            </button>
+                        </div>
+                    {{ form_end(deleteAccountForm) }}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            console.log('DOMContentLoaded fired - starting geo detection');
+            
+            const phoneInput = document.getElementById('profile_form_telephone');
+            const flagPrefix = document.getElementById('geo-flag-input');
+            const codePrefix = document.getElementById('geo-code-prefix');
+            
+            // Get the form element
+            const form = phoneInput ? phoneInput.closest('form') : null;
+
+            console.log('DOM elements found:', {
+                phoneInput: !!phoneInput,
+                flagPrefix: !!flagPrefix,
+                codePrefix: !!codePrefix,
+                form: !!form
+            });
+
+            if (!phoneInput || !flagPrefix || !codePrefix || !form) {
+                console.error('Required DOM elements not found');
+                return;
+            }
+
+            try {
+                console.log('Fetching geo data from {{ path('app_geo_phone_context') }}');
+                const response = await fetch('{{ path('app_geo_phone_context') }}', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Response not OK:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Geo data received:', data);
+
+                if (!data.success) {
+                    console.error('Data success is false');
+                    return;
+                }
+
+                // Update the prefix display with flag and calling code
+                if (data.flag_emoji) {
+                    if (data.flag_url) {
+                        flagPrefix.innerHTML = `<img src="${data.flag_url}" alt="${data.country_name}" style="width: 20px; height: 15px; vertical-align: middle;">`;
+                    } else if (data.flag_emoji) {
+                        flagPrefix.textContent = data.flag_emoji;
+                    }
+                }
+                if (data.calling_code) {
+                    codePrefix.textContent = data.calling_code;
+                }
+                
+                console.log('Prefix updated:', {
+                    flag: flagPrefix.textContent,
+                    code: codePrefix.textContent
+                });
+
+                // Pre-fill hint (if you still want to show it somewhere else)
+                const hint = document.getElementById('geo-phone-hint');
+                if (hint) {
+                    hint.style.display = 'inline-flex';
+                }
+
+                // Only pre-fill if input is empty
+                if (!phoneInput.value.trim()) {
+                    phoneInput.placeholder = '12 34 56 78 90'; // User only types local number
+                    console.log('Input is empty, ready for user input');
+                }
+
+                // Store the calling code for form submission
+                phoneInput.dataset.callingCode = data.calling_code;
+                
+            } catch (e) {
+                console.error('Geo phone context error:', e);
+            }
+        });
+
+        // Handle form submission - combine calling code with user input
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneInput = document.getElementById('profile_form_telephone');
+            const form = phoneInput ? phoneInput.closest('form') : null;
+            
+            if (form && phoneInput) {
+                form.addEventListener('submit', function(e) {
+                    const callingCode = phoneInput.dataset.callingCode;
+                    const userNumber = phoneInput.value.trim();
+                    
+                    console.log('Form submit - combining numbers:', {
+                        callingCode: callingCode,
+                        userNumber: userNumber,
+                        currentValue: phoneInput.value
+                    });
+                    
+                    // Only combine if we have a calling code and the user entered something
+                    if (callingCode && userNumber) {
+                        // Check if the user already included the calling code
+                        if (!userNumber.startsWith(callingCode)) {
+                            phoneInput.value = callingCode + ' ' + userNumber;
+                            console.log('Combined value:', phoneInput.value);
+                        } else {
+                            console.log('Calling code already present');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

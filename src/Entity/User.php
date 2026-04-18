@@ -8,10 +8,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 
 use App\Repository\UserRepository;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'user')]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -95,7 +97,9 @@ class User
 
     public function setTelephone(?string $telephone): self
     {
-        $this->telephone = $telephone;
+        // Remove all spaces before saving
+        $this->telephone = $telephone ? preg_replace('/\s+/', '', $telephone) : null;
+        
         return $this;
     }
 
@@ -588,4 +592,133 @@ class User
         return $this;
     }
 
+    public function getPassword(): ?string
+    {
+        return $this->mot_de_passe;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        // Often email is used, but you can choose id or username
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        $role = $this->role ?: 'USER';
+
+        return match ($role) {
+            'ADMIN' => ['ROLE_ADMIN'],
+            default => ['ROLE_USER'],
+        };
+    }
+    public function eraseCredentials(): void
+    {
+    }
+
+    public function getProfileImage(): string
+    {
+        if ($this->photo_file_name) {
+            return '/uploads/profiles/'.$this->photo_file_name;
+        }
+
+        if ($this->photo_url) {
+            return $this->photo_url;
+        }
+
+        $email = trim(mb_strtolower((string) $this->email));
+        $hash = md5($email);
+
+        return 'https://www.gravatar.com/avatar/'.$hash.'?d=identicon&s=300';
+    }
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $last_login = null;
+    public function getLastLogin(): ?\DateTimeInterface { return $this->last_login; }
+    public function setLastLogin(?\DateTimeInterface $last_login): self { $this->last_login = $last_login; return $this; }
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $failed_login_attempts = 0;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $last_failed_login_at = null;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 50])]
+    private int $trust_score = 50;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $suspicious_login_count = 0;
+
+    #[ORM\Column(type: 'string', length: 10, nullable: true)]
+    private ?string $last_login_country_code = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $security_alert_photo = null;
+        
+    public function getFailedLoginAttempts(): int
+    {
+        return $this->failed_login_attempts;
+    }
+
+    public function setFailedLoginAttempts(int $failed_login_attempts): static
+    {
+        $this->failed_login_attempts = $failed_login_attempts;
+        return $this;
+    }
+
+    public function getLastFailedLoginAt(): ?\DateTimeInterface
+    {
+        return $this->last_failed_login_at;
+    }
+
+    public function setLastFailedLoginAt(?\DateTimeInterface $last_failed_login_at): static
+    {
+        $this->last_failed_login_at = $last_failed_login_at;
+        return $this;
+    }
+
+    public function getTrustScore(): int
+    {
+        return $this->trust_score;
+    }
+
+    public function setTrustScore(int $trust_score): static
+    {
+        $this->trust_score = $trust_score;
+        return $this;
+    }
+
+    public function getSuspiciousLoginCount(): int
+    {
+        return $this->suspicious_login_count;
+    }
+
+    public function setSuspiciousLoginCount(int $suspicious_login_count): static
+    {
+        $this->suspicious_login_count = $suspicious_login_count;
+        return $this;
+    }
+
+    public function getLastLoginCountryCode(): ?string
+    {
+        return $this->last_login_country_code;
+    }
+
+    public function setLastLoginCountryCode(?string $last_login_country_code): static
+    {
+        $this->last_login_country_code = $last_login_country_code;
+        return $this;
+    }
+
+    public function getSecurityAlertPhoto(): ?string
+    {
+        return $this->security_alert_photo;
+    }
+
+    public function setSecurityAlertPhoto(?string $security_alert_photo): static
+    {
+        $this->security_alert_photo = $security_alert_photo;
+        return $this;
+    }
+    
 }

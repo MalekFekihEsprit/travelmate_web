@@ -1,0 +1,411 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Etape;
+use App\Entity\Itineraire;
+use App\Repository\EtapeRepository;
+use App\Repository\ItineraireRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+
+#[Route('/etapes', name: 'app_etapes_')]
+class EtapeFController extends AbstractController
+{
+    #[Route('/jour/{itineraireId}/{jour}', name: 'jour', methods: ['GET'])]
+    public function afficherJour(
+        int $itineraireId,
+        int $jour,
+        Request $request,
+        ItineraireRepository $itineraireRepository,
+        EtapeRepository $etapeRepository
+    ): Response {
+        $itineraire = $itineraireRepository->find($itineraireId);
+        
+        if (!$itineraire) {
+            throw $this->createNotFoundException('Itinéraire non trouvé');
+        }
+
+        // Vérifier que le jour est valide
+        if ($itineraire->getVoyage()) {
+            $voyage = $itineraire->getVoyage();
+            if ($voyage->getDate_debut() && $voyage->getDate_fin()) {
+                $diff = $voyage->getDate_fin()->diff($voyage->getDate_debut());
+                $totalDays = $diff->days + 1;
+                
+                if ($jour < 1 || $jour > $totalDays) {
+                    throw $this->createNotFoundException('Jour invalide');
+                }
+            }
+        }
+
+        // Récupérer les étapes du jour
+        $etapes = $etapeRepository->findBy([
+            'itineraire' => $itineraire,
+            'numero_jour' => $jour
+        ]);
+
+        $search = mb_strtolower(trim((string) $request->query->get('q', '')));
+        if ($search !== '') {
+            $etapes = array_values(array_filter($etapes, static function (Etape $e) use ($search): bool {
+                $desc = mb_strtolower((string) $e->getDescription_etape());
+                $act = $e->getActivite() ? mb_strtolower((string) $e->getActivite()->getNom()) : '';
+
+                return str_contains($desc, $search) || ($act !== '' && str_contains($act, $search));
+            }));
+        }
+
+        $sort = (string) $request->query->get('sort', 'heure_asc');
+        if (!in_array($sort, ['heure_asc', 'heure_desc', 'alpha_asc', 'alpha_desc'], true)) {
+            $sort = 'heure_asc';
+        }
+
+        $cmpHeure = static function (Etape $a, Etape $b, bool $desc): int {
+            $ta = $a->getHeure()?->getTimestamp() ?? ($desc ? PHP_INT_MIN : PHP_INT_MAX);
+            $tb = $b->getHeure()?->getTimestamp() ?? ($desc ? PHP_INT_MIN : PHP_INT_MAX);
+            $c = $ta <=> $tb;
+
+            return $desc ? -$c : $c;
+        };
+
+        $cmpAlpha = static function (Etape $a, Etape $b, bool $desc): int {
+            $sa = mb_strtolower((string) $a->getDescription_etape());
+            $sb = mb_strtolower((string) $b->getDescription_etape());
+            $c = strcasecmp($sa, $sb);
+
+            return $desc ? -$c : $c;
+        };
+
+        usort($etapes, function (Etape $a, Etape $b) use ($sort, $cmpHeure, $cmpAlpha): int {
+            return match ($sort) {
+                'heure_desc' => $cmpHeure($a, $b, true),
+                'alpha_asc' => $cmpAlpha($a, $b, false),
+                'alpha_desc' => $cmpAlpha($a, $b, true),
+                default => $cmpHeure($a, $b, false),
+            };
+        });
+
+        return $this->render('home/EtapeF.html.twig', [
+            'itineraire' => $itineraire,
+            'jour' => $jour,
+            'etapes' => $etapes,
+            'search_q' => trim((string) $request->query->get('q', '')),
+            'sort' => $sort,
+        ]);
+    }
+
+    #[Route('/create', name: 'create', methods: ['GET', 'POST'])]
+    public function create(
+        Request $request,
+        ItineraireRepository $itineraireRepository,
+        EtapeRepository $etapeRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $itineraireId = $request->query->get('itineraireId');
+        $jour = $request->query->get('jour');
+
+        $itineraire = $itineraireRepository->find($itineraireId);
+        
+        if (!$itineraire) {
+            throw $this->createNotFoundException('Itinéraire non trouvé');
+        }
+
+        if ($request->isMethod('POST')) {
+            $data = $request->request->all();
+            $errors = [];
+
+            // Validation de la description
+            if (empty($data['description_etape'])) {
+                $errors[] = 'La description est obligatoire.';
+            } elseif (strlen($data['description_etape']) < 10) {
+                $errors[] = 'La description doit contenir au minimum 10 caractères.';
+            }
+
+            // Validation de l'heure
+            if (empty($data['heure'])) {
+                $errors[] = 'L\'heure est obligatoire.';
+            }
+
+            // Vérifier que l'heure est unique pour ce jour
+            if (!empty($data['heure'])) {
+                $heure = new \DateTime($data['heure']);
+                $etapesDuJour = $etapeRepository->findBy([
+                    'itineraire' => $itineraire,
+                    'numero_jour' => (int)$jour
+                ]);
+                
+                foreach ($etapesDuJour as $autreEtape) {
+                    if ($autreEtape->getHeure() && $autreEtape->getHeure()->format('H:i') === $heure->format('H:i')) {
+                        $errors[] = 'Une autre étape a déjà cette heure pour ce jour.';
+                        break;
+                    }
+                }
+            }
+
+            if (!empty($errors)) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error);
+                }
+                // Récupérer les activités du voyage
+                $activites = [];
+                if ($itineraire->getVoyage()) {
+                    $allActivites = $itineraire->getVoyage()->getActivites();
+                    $etapesDuJour = $etapeRepository->findBy([
+                        'itineraire' => $itineraire,
+                        'numero_jour' => (int)$jour
+                    ]);
+                    $activitesUtilisees = [];
+                    foreach ($etapesDuJour as $etape) {
+                        if ($etape->getActivite()) {
+                            $activitesUtilisees[] = $etape->getActivite()->getId();
+                        }
+                    }
+                    foreach ($allActivites as $activite) {
+                        if (!in_array($activite->getId(), $activitesUtilisees)) {
+                            $activites[] = $activite;
+                        }
+                    }
+                }
+                return $this->render('home/etape_form.html.twig', [
+                    'etape' => null,
+                    'itineraire' => $itineraire,
+                    'jour' => $jour,
+                    'activites' => $activites,
+                    'title' => 'Créer une étape'
+                ]);
+            }
+
+            $etape = new Etape();
+            $etape->setItineraire($itineraire);
+            $etape->setNumero_jour((int)($data['numero_jour'] ?? $jour));
+            $etape->setDescription_etape($data['description_etape']);
+            $etape->setHeure(new \DateTime($data['heure']));
+
+            if (!empty($data['id_activite'])) {
+                $voyage = $itineraire->getVoyage();
+                if ($voyage) {
+                    foreach ($voyage->getActivites() as $activite) {
+                        if ($activite->getId() == $data['id_activite']) {
+                            $etape->setActivite($activite);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $entityManager->persist($etape);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Étape créée avec succès!');
+
+            return $this->redirectToRoute('app_etapes_jour', [
+                'itineraireId' => $itineraire->getId_itineraire(),
+                'jour' => $etape->getNumero_jour()
+            ]);
+        }
+
+        // Récupérer les activités du voyage
+        $activites = [];
+        if ($itineraire->getVoyage()) {
+            $allActivites = $itineraire->getVoyage()->getActivites();
+            
+            // Récupérer les étapes du jour pour exclure les activités déjà utilisées
+            $etapesDuJour = $etapeRepository->findBy([
+                'itineraire' => $itineraire,
+                'numero_jour' => (int)$jour
+            ]);
+            
+            $activitesUtilisees = [];
+            foreach ($etapesDuJour as $etape) {
+                if ($etape->getActivite()) {
+                    $activitesUtilisees[] = $etape->getActivite()->getId();
+                }
+            }
+            
+            // Filtrer les activités pour exclure celles déjà utilisées
+            foreach ($allActivites as $activite) {
+                if (!in_array($activite->getId(), $activitesUtilisees)) {
+                    $activites[] = $activite;
+                }
+            }
+        }
+
+        return $this->render('home/etape_form.html.twig', [
+            'etape' => null,
+            'itineraire' => $itineraire,
+            'jour' => $jour,
+            'activites' => $activites,
+            'title' => 'Créer une étape'
+        ]);
+    }
+
+    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
+    public function edit(
+        int $id,
+        Request $request,
+        EtapeRepository $etapeRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $etape = $etapeRepository->find($id);
+
+        if (!$etape) {
+            throw $this->createNotFoundException('Étape non trouvée');
+        }
+
+        if ($request->isMethod('POST')) {
+            $data = $request->request->all();
+            $errors = [];
+
+            // Validation de la description
+            if (empty($data['description_etape'])) {
+                $errors[] = 'La description est obligatoire.';
+            } elseif (strlen($data['description_etape']) < 10) {
+                $errors[] = 'La description doit contenir au minimum 10 caractères.';
+            }
+
+            // Validation de l'heure
+            if (empty($data['heure'])) {
+                $errors[] = 'L\'heure est obligatoire.';
+            }
+
+            // Vérifier que l'heure est unique pour ce jour (en excluant l'étape actuelle)
+            if (!empty($data['heure'])) {
+                $heure = new \DateTime($data['heure']);
+                $etapesDuJour = $etapeRepository->findBy([
+                    'itineraire' => $etape->getItineraire(),
+                    'numero_jour' => (int)($data['numero_jour'] ?? $etape->getNumero_jour())
+                ]);
+                
+                foreach ($etapesDuJour as $autreEtape) {
+                    if ($autreEtape->getId_etape() !== $id && $autreEtape->getHeure() && $autreEtape->getHeure()->format('H:i') === $heure->format('H:i')) {
+                        $errors[] = 'Une autre étape a déjà cette heure pour ce jour.';
+                        break;
+                    }
+                }
+            }
+
+            if (!empty($errors)) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error);
+                }
+                // Récupérer les activités du voyage
+                $activites = [];
+                if ($etape->getItineraire()->getVoyage()) {
+                    $allActivites = $etape->getItineraire()->getVoyage()->getActivites();
+                    $etapesDuJour = $etapeRepository->findBy([
+                        'itineraire' => $etape->getItineraire(),
+                        'numero_jour' => $etape->getNumero_jour()
+                    ]);
+                    $activitesUtilisees = [];
+                    foreach ($etapesDuJour as $autreEtape) {
+                        if ($autreEtape->getId_etape() !== $id && $autreEtape->getActivite()) {
+                            $activitesUtilisees[] = $autreEtape->getActivite()->getId();
+                        }
+                    }
+                    foreach ($allActivites as $activite) {
+                        if (!in_array($activite->getId(), $activitesUtilisees)) {
+                            $activites[] = $activite;
+                        }
+                    }
+                }
+                return $this->render('home/etape_form.html.twig', [
+                    'etape' => $etape,
+                    'itineraire' => $etape->getItineraire(),
+                    'jour' => $etape->getNumero_jour(),
+                    'activites' => $activites,
+                    'title' => 'Modifier l\'étape'
+                ]);
+            }
+
+            $etape->setDescription_etape($data['description_etape']);
+            $etape->setNumero_jour((int)($data['numero_jour'] ?? $etape->getNumero_jour()));
+            $etape->setHeure(new \DateTime($data['heure']));
+
+            if (!empty($data['id_activite'])) {
+                $voyage = $etape->getItineraire()->getVoyage();
+                if ($voyage) {
+                    foreach ($voyage->getActivites() as $activite) {
+                        if ($activite->getId() == $data['id_activite']) {
+                            $etape->setActivite($activite);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                $etape->setActivite(null);
+            }
+
+            $entityManager->flush();
+            $this->addFlash('success', 'Étape modifiée avec succès!');
+
+            return $this->redirectToRoute('app_etapes_jour', [
+                'itineraireId' => $etape->getItineraire()->getId_itineraire(),
+                'jour' => $etape->getNumero_jour()
+            ]);
+        }
+
+        // Récupérer les activités du voyage
+        $activites = [];
+        if ($etape->getItineraire()->getVoyage()) {
+            $allActivites = $etape->getItineraire()->getVoyage()->getActivites();
+            
+            // Récupérer les étapes du jour pour exclure les activités déjà utilisées
+            $etapesDuJour = $etapeRepository->findBy([
+                'itineraire' => $etape->getItineraire(),
+                'numero_jour' => $etape->getNumero_jour()
+            ]);
+            
+            $activitesUtilisees = [];
+            foreach ($etapesDuJour as $autreEtape) {
+                // Exclure l'activité de l'étape en cours d'édition
+                if ($autreEtape->getId_etape() !== $id && $autreEtape->getActivite()) {
+                    $activitesUtilisees[] = $autreEtape->getActivite()->getId();
+                }
+            }
+            
+            // Filtrer les activités pour exclure celles déjà utilisées
+            foreach ($allActivites as $activite) {
+                if (!in_array($activite->getId(), $activitesUtilisees)) {
+                    $activites[] = $activite;
+                }
+            }
+        }
+
+        return $this->render('home/etape_form.html.twig', [
+            'etape' => $etape,
+            'itineraire' => $etape->getItineraire(),
+            'jour' => $etape->getNumero_jour(),
+            'activites' => $activites,
+            'title' => 'Modifier l\'étape'
+        ]);
+    }
+
+    #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
+    public function delete(
+        int $id,
+        EtapeRepository $etapeRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $etape = $etapeRepository->find($id);
+
+        if (!$etape) {
+            throw $this->createNotFoundException('Étape non trouvée');
+        }
+
+        $itineraireId = $etape->getItineraire()->getId_itineraire();
+        $jour = $etape->getNumero_jour();
+
+        $entityManager->remove($etape);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Étape supprimée avec succès!');
+
+        return $this->redirectToRoute('app_etapes_jour', [
+            'itineraireId' => $itineraireId,
+            'jour' => $jour
+        ]);
+    }
+}

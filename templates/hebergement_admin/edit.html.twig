@@ -1,0 +1,19 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Modifier hebergement | Admin{% endblock %}
+
+{% block body %}
+<section class="admin-destinations-page">
+    <div class="admin-page-header">
+        <div>
+            <span class="admin-page-header__eyebrow">Administration</span>
+            <h1 class="admin-page-header__title">Modifier l'hebergement</h1>
+            <p class="admin-page-header__desc">Mettez a jour les informations de cet hebergement.</p>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        {{ include('hebergement_admin/_form.html.twig', {confirm_message: 'Confirmer la modification de cet hebergement ?'}) }}
+    </div>
+</section>
+{% endblock %}

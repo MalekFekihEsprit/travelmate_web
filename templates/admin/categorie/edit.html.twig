@@ -1,0 +1,195 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Modifier Catégorie — Admin TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+        .page-header__title { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 600; color: var(--admin-text); }
+        .page-header__sub { font-size: 0.88rem; color: var(--admin-text-muted); margin-top: 0.2rem; }
+
+        .form-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
+        @media (max-width: 900px) { .form-layout { grid-template-columns: 1fr; } }
+
+        .admin-card { background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 1.25rem; }
+        .admin-card__header { padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--admin-border); font-weight: 600; font-size: 0.95rem; color: var(--admin-text); }
+        .admin-card__body { padding: 1.5rem; }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.45rem; }
+        .req { color: var(--admin-danger); margin-left: 2px; }
+
+        .form-control { width: 100%; padding: 0.82rem 1rem; border: 1px solid var(--admin-border); border-radius: var(--radius-md); background: var(--admin-bg-soft); font: inherit; font-size: 0.92rem; color: var(--admin-text); outline: none; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+        .form-control:focus { border-color: var(--admin-secondary); box-shadow: 0 0 0 3px rgba(47,127,121,0.1); background: var(--admin-surface); }
+        .form-control.is-invalid { border-color: #e74c3c !important; background: #fff5f5; box-shadow: 0 0 0 3px rgba(231,76,60,0.12); }
+        textarea.form-control { resize: vertical; min-height: 120px; }
+
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 600px) { .form-grid-2 { grid-template-columns: 1fr; } }
+
+        .field-error {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            padding: 0.55rem 0.85rem;
+            background: #fef2f2;
+            border: 1.5px solid #fca5a5;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            color: #b91c1c;
+            font-weight: 600;
+            animation: shake 0.3s ease;
+        }
+        .field-error .err-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+        .field-error ul { list-style: none; margin: 0; padding: 0; }
+        .field-error ul li + li { margin-top: 0.2rem; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .flash-success { background: var(--admin-success-soft); border: 1px solid rgba(60,139,114,0.25); color: var(--admin-success); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; font-size: 0.9rem; }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+{% for msg in app.flashes('success') %}
+    <div class="flash-success">{{ msg }}</div>
+{% endfor %}
+
+<div class="page-header">
+    <div>
+        <div class="page-header__title">Modifier la catégorie</div>
+        <div class="page-header__sub">Modifiez « {{ categorie.nom }} »</div>
+    </div>
+    <a href="{{ path('app_categorie_index') }}" class="btn btn--ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Retour à la liste
+    </a>
+</div>
+
+{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+<div class="form-layout">
+    <div>
+        <div class="admin-card">
+            <div class="admin-card__header">Informations de la catégorie</div>
+            <div class="admin-card__body">
+
+                <div class="form-group">
+                    <label>{{ form_label(form.nom) }} <span class="req">*</span></label>
+                    {{ form_widget(form.nom, {'attr': {
+                        'class': 'form-control' ~ (form.nom.vars.errors|length > 0 ? ' is-invalid' : ''),
+                        'placeholder': 'Obligatoire — unique, entre 3 et 100 caractères'
+                    }}) }}
+                    {% if form.nom.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.nom.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form_label(form.description) }} <span class="req">*</span></label>
+                    {{ form_widget(form.description, {'attr': {
+                        'class': 'form-control' ~ (form.description.vars.errors|length > 0 ? ' is-invalid' : ''),
+                        'rows': 4,
+                        'placeholder': 'Obligatoire — minimum 15 caractères'
+                    }}) }}
+                    {% if form.description.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.description.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form_label(form.type) }} <span class="req">*</span></label>
+                    {{ form_widget(form.type, {'attr': {
+                        'class': 'form-control' ~ (form.type.vars.errors|length > 0 ? ' is-invalid' : ''),
+                        'placeholder': 'Obligatoire — entre 3 et 50 caractères'
+                    }}) }}
+                    {% if form.type.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.type.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form_label(form.publiccible) }} <span class="req">*</span></label>
+                    {{ form_widget(form.publiccible, {'attr': {
+                        'class': 'form-control' ~ (form.publiccible.vars.errors|length > 0 ? ' is-invalid' : ''),
+                        'placeholder': 'Obligatoire — entre 3 et 100 caractères (ex: Familles, Adultes…)'
+                    }}) }}
+                    {% if form.publiccible.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.publiccible.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="admin-card">
+            <div class="admin-card__header">Classification</div>
+            <div class="admin-card__body">
+
+                <div class="form-group">
+                    <label>{{ form_label(form.saison) }} <span class="req">*</span></label>
+                    {{ form_widget(form.saison, {'attr': {
+                        'class': 'form-control' ~ (form.saison.vars.errors|length > 0 ? ' is-invalid' : '')
+                    }}) }}
+                    {% if form.saison.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.saison.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ form_label(form.niveauintensite) }} <span class="req">*</span></label>
+                    {{ form_widget(form.niveauintensite, {'attr': {
+                        'class': 'form-control' ~ (form.niveauintensite.vars.errors|length > 0 ? ' is-invalid' : '')
+                    }}) }}
+                    {% if form.niveauintensite.vars.errors|length > 0 %}
+                        <div class="field-error">
+                            <span class="err-icon">✖</span>
+                            <ul>{% for error in form.niveauintensite.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card__body">
+                <div class="btn-group">
+                    <button type="submit" class="btn btn--primary" style="flex:1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.8"/><polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="1.8"/></svg>
+                        Enregistrer les modifications
+                    </button>
+                    <a href="{{ path('app_categorie_index') }}" class="btn btn--ghost">Annuler</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ form_end(form) }}
+{% endblock %}

@@ -1,0 +1,87 @@
+<style>
+    .admin-form ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-form li {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: #e63946;
+        margin-top: 0.3rem;
+    }
+
+    .admin-form li::before {
+        content: '✕';
+        font-weight: bold;
+        width: 16px;
+        text-align: center;
+    }
+</style>
+
+{{ form_start(form, {
+    attr: {
+        class: 'admin-form',
+        onsubmit: confirm_message is defined and confirm_message ? 'return confirm("' ~ confirm_message|e('js') ~ '");' : null
+    }
+}) }}
+
+<div class="admin-form__grid">
+    <div class="admin-form__group">
+        {{ form_label(form.nom_hebergement, 'Nom') }}
+        {{ form_widget(form.nom_hebergement, {'attr': {'class': 'admin-input', 'placeholder': 'ex: Atlas Suites'}}) }}
+        {{ form_errors(form.nom_hebergement) }}
+    </div>
+
+    <div class="admin-form__group">
+        {{ form_label(form.type_hebergement, 'Type') }}
+        {{ form_widget(form.type_hebergement, {'attr': {'class': 'admin-input', 'placeholder': 'ex: Hotel'}}) }}
+        {{ form_errors(form.type_hebergement) }}
+    </div>
+
+    <div class="admin-form__group">
+        {{ form_label(form.prixNuit_hebergement, 'Prix / nuit') }}
+        {{ form_widget(form.prixNuit_hebergement, {'attr': {'class': 'admin-input', 'placeholder': 'ex: 220'}}) }}
+        {{ form_errors(form.prixNuit_hebergement) }}
+    </div>
+
+    <div class="admin-form__group">
+        {{ form_label(form.note_hebergement, 'Note (0-5)') }}
+        {{ form_widget(form.note_hebergement, {'attr': {'class': 'admin-input', 'placeholder': 'ex: 4.5'}}) }}
+        {{ form_errors(form.note_hebergement) }}
+    </div>
+
+    <div class="admin-form__group admin-form__group--full">
+        {{ form_label(form.adresse_hebergement, 'Adresse') }}
+        {{ form_widget(form.adresse_hebergement, {'attr': {'class': 'admin-input', 'placeholder': 'ex: 12 rue des Roses, Tunis'}}) }}
+        {{ form_errors(form.adresse_hebergement) }}
+    </div>
+
+    <div class="admin-form__group">
+        {{ form_label(form.latitude_hebergement, 'Latitude') }}
+        {{ form_widget(form.latitude_hebergement, {'attr': {'class': 'admin-input', 'placeholder': 'ex: 36.8065'}}) }}
+        {{ form_errors(form.latitude_hebergement) }}
+    </div>
+
+    <div class="admin-form__group">
+        {{ form_label(form.longitude_hebergement, 'Longitude') }}
+        {{ form_widget(form.longitude_hebergement, {'attr': {'class': 'admin-input', 'placeholder': 'ex: 10.1815'}}) }}
+        {{ form_errors(form.longitude_hebergement) }}
+    </div>
+
+    <div class="admin-form__group admin-form__group--full">
+        {{ form_label(form.destination, 'Destination') }}
+        {{ form_widget(form.destination, {'attr': {'class': 'admin-input'}}) }}
+        {{ form_errors(form.destination) }}
+    </div>
+</div>
+
+<div class="admin-form__actions">
+    <button class="btn btn--primary">{{ button_label|default('Enregistrer') }}</button>
+    <a href="{{ path('app_admin_hebergements') }}" class="btn btn--ghost">Annuler</a>
+</div>
+
+{{ form_end(form) }}

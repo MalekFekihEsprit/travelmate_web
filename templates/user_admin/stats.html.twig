@@ -1,0 +1,574 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Statistiques utilisateurs | Administration TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .stats-page {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .admin-page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.6rem;
+            border-radius: 28px;
+            border: 1px solid var(--admin-border);
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.9));
+        }
+
+        .admin-page-header__eyebrow {
+            display: inline-block;
+            margin-bottom: .45rem;
+            color: var(--admin-secondary);
+            font-size: .8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .admin-page-header__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.9rem;
+            line-height: 1.08;
+            color: var(--admin-text);
+            margin-bottom: .45rem;
+        }
+
+        .admin-page-header__desc {
+            max-width: 60ch;
+            color: var(--admin-text-muted);
+        }
+
+        .admin-page-header__actions {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .82rem 1.1rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all .18s ease;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn--ghost {
+            background: transparent;
+            color: var(--admin-text-muted);
+            border-color: var(--admin-border);
+        }
+
+        .btn--ghost:hover {
+            background: rgba(196, 111, 75, 0.08);
+            color: var(--admin-primary);
+            border-color: rgba(196, 111, 75, 0.28);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .stats-grid--insights {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .stat-card,
+        .chart-card {
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--admin-border);
+            border-radius: 26px;
+            padding: 1.25rem;
+            box-shadow: var(--admin-shadow-soft);
+        }
+
+        .stat-card--highlight {
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.85));
+        }
+
+        .stat-card__label {
+            display: block;
+            color: var(--admin-text-muted);
+            font-size: .84rem;
+            margin-bottom: .35rem;
+        }
+
+        .stat-card__value {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--admin-text);
+            line-height: 1;
+        }
+
+        .stat-card__meta {
+            display: block;
+            margin-top: .45rem;
+            color: var(--admin-text-muted);
+            font-size: .84rem;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .chart-card--wide {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            color: var(--admin-text);
+            margin-bottom: .25rem;
+        }
+
+        .chart-subtitle {
+            color: var(--admin-text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .chart-box {
+            height: 320px;
+            position: relative;
+        }
+
+        .chart-box--small {
+            height: 280px;
+        }
+
+        .section-title {
+            font-size: 1.45rem;
+            color: var(--admin-text);
+            margin-bottom: .3rem;
+        }
+
+        .section-subtitle {
+            color: var(--admin-text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .stats-section {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .window-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: .95rem 1rem;
+            border-radius: 18px;
+            background: rgba(243,234,223,0.45);
+            border: 1px solid var(--admin-border);
+        }
+
+        .window-nav__label {
+            color: var(--admin-text);
+            font-weight: 700;
+        }
+
+        .window-nav__actions {
+            display: flex;
+            gap: .65rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1100px) {
+            .stats-grid,
+            .stats-grid--insights,
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card--wide {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .admin-page-header {
+                padding: 1.2rem;
+                flex-direction: column;
+            }
+
+            .admin-page-header__title {
+                font-size: 1.5rem;
+            }
+
+            .window-nav {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* In your admin.css file */
+        .stat-card--chart {
+            position: relative;
+            min-height: 160px;
+        }
+
+        .stat-card__chart {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 12px;
+        }
+
+        .stat-card__chart .mini-chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .stat-card__chart-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .stat-card__value-group {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .stat-card__value-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .stat-card__chart-value.positive {
+            color: #2f7f79;
+        }
+
+        .stat-card__chart-value.negative {
+            color: #c46f4b;
+        }
+
+        .stat-card__chart--small {
+            width: 60px;
+            height: 60px;
+        }
+
+        .stats-grid--insights .stat-card__chart {
+            width: 100px;
+            height: 100px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .stat-card__chart {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .stat-card__chart-value {
+                font-size: 1rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="stats-page">
+        <div class="admin-page-header">
+            <div>
+                <span class="admin-page-header__eyebrow">Administration</span>
+                <h1 class="admin-page-header__title">Statistiques utilisateurs</h1>
+                <p class="admin-page-header__desc">
+                    Analyse complète de la répartition des rôles, de la vérification des comptes et de l’évolution des inscriptions.
+                </p>
+            </div>
+
+            <div class="admin-page-header__actions">
+                <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Retour à la liste</a>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <article class="chart-card">
+                <h2 class="chart-title">Répartition des rôles</h2>
+                <p class="chart-subtitle">Vue globale des administrateurs et utilisateurs.</p>
+                <div class="chart-box chart-box--small">
+                    {{ render_chart(roleChart) }}
+                </div>
+            </article>
+
+            <article class="chart-card">
+                <h2 class="chart-title">Vérification des comptes</h2>
+                <p class="chart-subtitle">Comptes activés et comptes en attente.</p>
+                <div class="chart-box chart-box--small">
+                    {{ render_chart(verificationChart) }}
+                </div>
+            </article>
+            
+            <article class="chart-card chart-card--wide">
+                <div class="window-nav">
+                    <div class="window-nav__label">
+                        Inscriptions du <span id="window-start">{{ windowStart }}</span> au <span id="window-end">{{ windowEnd }}</span>
+                    </div>
+
+                    <div class="window-nav__actions">
+                        <button type="button" class="btn btn--ghost" id="prev-week">
+                            ← 7 jours avant
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn--ghost"
+                            id="next-week"
+                            {{ offset <= 0 ? 'style="display:none;"' : '' }}
+                        >
+                            7 jours après →
+                        </button>
+                    </div>
+                </div>
+
+                <h2 class="chart-title">Inscriptions sur 7 jours</h2>
+                <p class="chart-subtitle">Navigation par fenêtres de 7 jours, sans rechargement de page.</p>
+
+                <div class="chart-box">
+                    <canvas id="daily-registrations-chart"></canvas>
+                </div>
+            </article>
+        </div>
+
+        <div class="stats-section">
+            <div>
+                <h2 class="section-title"> Démographie par âge</h2>
+                <p class="section-subtitle">Répartition des utilisateurs par tranche d’âge et année de naissance.</p>
+            </div>
+
+            <div class="stats-grid">
+                <article class="stat-card">
+                    <span class="stat-card__label">Âge moyen</span>
+                    <span class="stat-card__value">{{ averageAge }} ans</span>
+                    <span class="stat-card__meta">Moyenne globale</span>
+                </article>
+
+                <article class="stat-card">
+                    <span class="stat-card__label">Plus jeune</span>
+                    <span class="stat-card__value">{{ youngestAge ?? 'N/A' }} ans</span>
+                    <span class="stat-card__meta">Âge minimum</span>
+                </article>
+
+                <article class="stat-card">
+                    <span class="stat-card__label">Plus âgé</span>
+                    <span class="stat-card__value">{{ oldestAge ?? 'N/A' }} ans</span>
+                    <span class="stat-card__meta">Âge maximum</span>
+                </article>
+            </div>
+
+            <div class="charts-grid">
+                <article class="chart-card">
+                    <h2 class="chart-title">Répartition par tranche d’âge</h2>
+                    <div class="chart-box">
+                        {{ render_chart(ageDistributionChart) }}
+                    </div>
+                </article>
+
+                <article class="chart-card">
+                    <h2 class="chart-title">Distribution par année de naissance</h2>
+                    <div class="chart-box">
+                        {{ render_chart(birthYearsChart) }}
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script type="module">
+        import {
+            Chart,
+            BarController,
+            BarElement,
+            CategoryScale,
+            LinearScale,
+            Tooltip,
+            Legend
+        } from 'chart.js';
+
+        Chart.register(
+            BarController,
+            BarElement,
+            CategoryScale,
+            LinearScale,
+            Tooltip,
+            Legend
+        );
+
+        function initDailyRegistrationsChart() {
+            const chartCanvas = document.getElementById('daily-registrations-chart');
+            const prevBtn = document.getElementById('prev-week');
+            const nextBtn = document.getElementById('next-week');
+            const windowStartEl = document.getElementById('window-start');
+            const windowEndEl = document.getElementById('window-end');
+
+            if (!chartCanvas || !prevBtn || !nextBtn || !windowStartEl || !windowEndEl) {
+                return;
+            }
+
+            let currentOffset = {{ offset }};
+            let isLoading = false;
+
+            const existingChart = Chart.getChart(chartCanvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+
+            const ctx = chartCanvas.getContext('2d');
+
+            const dailyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ dailyLabels|json_encode|raw }},
+                    datasets: [{
+                        label: 'Inscriptions',
+                        data: {{ dailyValues|json_encode|raw }},
+                        backgroundColor: '#c46f4b',
+                        borderRadius: 10,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 250
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            async function updateStats(newOffset) {
+                if (isLoading) {
+                    return;
+                }
+
+                isLoading = true;
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`{{ path('app_admin_users_stats') }}?offset=${newOffset}&ajax=1`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (!data.labels || !data.values) {
+                        throw new Error('Réponse AJAX invalide');
+                    }
+
+                    dailyChart.data.labels = data.labels;
+                    dailyChart.data.datasets[0].data = data.values;
+                    dailyChart.update();
+
+                    windowStartEl.textContent = data.windowStart;
+                    windowEndEl.textContent = data.windowEnd;
+
+                    currentOffset = data.offset;
+
+                    nextBtn.style.display = data.canGoForward ? 'inline-flex' : 'none';
+
+                    const newUrl = `{{ path('app_admin_users_stats') }}?offset=${currentOffset}`;
+                    window.history.replaceState({ offset: currentOffset }, '', newUrl);
+                } catch (error) {
+                    console.error('Erreur lors du chargement des stats:', error);
+                } finally {
+                    isLoading = false;
+                    prevBtn.disabled = false;
+                    nextBtn.disabled = false;
+                }
+            }
+
+            prevBtn.onclick = function (e) {
+                e.preventDefault();
+                updateStats(currentOffset + 7);
+            };
+
+            nextBtn.onclick = function (e) {
+                e.preventDefault();
+                updateStats(Math.max(0, currentOffset - 7));
+            };
+        }
+
+        document.addEventListener('turbo:load', initDailyRegistrationsChart);
+
+        document.addEventListener('turbo:before-cache', () => {
+            const chartCanvas = document.getElementById('daily-registrations-chart');
+            if (!chartCanvas) {
+                return;
+            }
+
+            const existingChart = Chart.getChart(chartCanvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+        });
+    </script>
+
+    <style>
+        #prev-week:disabled,
+        #next-week:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+    </style>
+{% endblock %}

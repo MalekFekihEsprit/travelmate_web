@@ -2,15 +2,19 @@
 
 namespace App\Entity;
 
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-
 use App\Repository\CategorieRepository;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CategorieRepository::class)]
 #[ORM\Table(name: 'categories')]
+#[UniqueEntity(
+    fields: ['nom'],
+    message: 'Une catégorie avec ce nom existe déjà. Veuillez choisir un nom différent.'
+)]
 class Categorie
 {
     #[ORM\Id]
@@ -29,7 +33,14 @@ class Categorie
         return $this;
     }
 
-    #[ORM\Column(type: 'string', nullable: false)]
+    #[ORM\Column(type: 'string', nullable: false, unique: true)]
+    #[Assert\NotBlank(message: 'Le nom de la catégorie est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 100,
+        minMessage: 'Le nom doit comporter au moins {{ limit }} caractères.',
+        maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private ?string $nom = null;
 
     public function getNom(): ?string
@@ -44,6 +55,11 @@ class Categorie
     }
 
     #[ORM\Column(type: 'text', nullable: false)]
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
+    #[Assert\Length(
+        min: 15,
+        minMessage: 'La description doit comporter au moins {{ limit }} caractères.'
+    )]
     private ?string $description = null;
 
     public function getDescription(): ?string
@@ -58,6 +74,13 @@ class Categorie
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'Le type est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 50,
+        minMessage: 'Le type doit comporter au moins {{ limit }} caractères.',
+        maxMessage: 'Le type ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private ?string $type = null;
 
     public function getType(): ?string
@@ -72,6 +95,11 @@ class Categorie
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'La saison est obligatoire.')]
+    #[Assert\Choice(
+        choices: ['printemps', 'été', 'automne', 'hiver', 'Toutes saisons', 'Printemps', 'Été', 'Automne', 'Hiver'],
+        message: 'Veuillez choisir une saison valide.'
+    )]
     private ?string $saison = null;
 
     public function getSaison(): ?string
@@ -86,6 +114,11 @@ class Categorie
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: "Le niveau d'intensité est obligatoire.")]
+    #[Assert\Choice(
+        choices: ['Faible', 'faible', 'Modéré', 'modéré', 'Élevé', 'élevé', 'Extrême', 'extrême', 'Moyen', 'moyen'],
+        message: "Veuillez choisir un niveau d'intensité valide."
+    )]
     private ?string $niveauintensite = null;
 
     public function getNiveauintensite(): ?string
@@ -100,6 +133,13 @@ class Categorie
     }
 
     #[ORM\Column(type: 'string', nullable: false)]
+    #[Assert\NotBlank(message: 'Le public cible est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 100,
+        minMessage: 'Le public cible doit comporter au moins {{ limit }} caractères.',
+        maxMessage: 'Le public cible ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private ?string $publiccible = null;
 
     public function getPubliccible(): ?string
@@ -145,5 +185,4 @@ class Categorie
         $this->getActivites()->removeElement($activite);
         return $this;
     }
-
 }

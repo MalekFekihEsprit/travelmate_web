@@ -1,0 +1,264 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Itinéraires | Administration TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .itin-b-page {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .itin-b-flash {
+            padding: 0.9rem 1.1rem;
+            border-radius: var(--radius-md, 14px);
+            font-size: 0.92rem;
+        }
+
+        .itin-b-flash--success {
+            background: var(--admin-success-soft, #e5f2ed);
+            border: 1px solid rgba(60, 139, 114, 0.25);
+            color: var(--admin-success, #3c8b72);
+        }
+
+        .itin-b-flash--error {
+            background: var(--admin-danger-soft, #f8e7e7);
+            border: 1px solid rgba(191, 91, 91, 0.2);
+            color: var(--admin-danger, #bf5b5b);
+        }
+
+        .itin-b-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.65rem;
+        }
+
+        .itin-b-delete-form {
+            margin: 0;
+            display: inline;
+        }
+
+        .itin-b-btn-delete {
+            padding: 0.45rem 0.85rem;
+            border-radius: 999px;
+            border: 1px solid rgba(191, 91, 91, 0.35);
+            background: var(--admin-danger-soft, #f8e7e7);
+            color: var(--admin-danger, #bf5b5b);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+
+        .itin-b-btn-delete:hover {
+            background: rgba(191, 91, 91, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .itin-b-section-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.2rem;
+            color: var(--admin-text);
+            margin: 0 0 1rem;
+        }
+
+        .itin-b-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+            gap: 1rem;
+        }
+
+        .itin-b-stat {
+            padding: 1.15rem 1.2rem;
+            border-radius: 22px;
+            border: 1px solid var(--admin-border);
+            background: rgba(255, 253, 249, 0.94);
+            box-shadow: var(--admin-shadow-soft);
+        }
+
+        .itin-b-stat--accent {
+            border-color: rgba(47, 127, 121, 0.22);
+            background: linear-gradient(145deg, rgba(227, 240, 238, 0.55), rgba(255, 253, 249, 0.96));
+        }
+
+        .itin-b-stat--accent .itin-b-stat__value {
+            color: var(--admin-secondary);
+        }
+
+        .itin-b-stat__value {
+            font-family: 'Fraunces', serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+            line-height: 1.1;
+        }
+
+        .itin-b-stat__value--sm {
+            font-size: 1.35rem;
+        }
+
+        .itin-b-stat__label {
+            margin-top: .5rem;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--admin-text-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .itin-b-stat__meta {
+            margin-top: .35rem;
+            font-size: .8rem;
+            color: var(--admin-text-muted);
+        }
+
+        .itin-b-card {
+            border-radius: 26px;
+            border: 1px solid var(--admin-border);
+            background: rgba(255, 253, 249, 0.96);
+            box-shadow: var(--admin-shadow-soft);
+            overflow: hidden;
+        }
+
+        .itin-b-card__head {
+            padding: 1.1rem 1.35rem;
+            border-bottom: 1px solid var(--admin-border);
+            font-family: 'Fraunces', serif;
+            font-size: 1.15rem;
+            color: var(--admin-text);
+        }
+
+        .itin-b-table-wrap {
+            overflow-x: auto;
+        }
+
+        .itin-b-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .92rem;
+        }
+
+        .itin-b-table th,
+        .itin-b-table td {
+            padding: .85rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .itin-b-table th {
+            background: rgba(244, 235, 223, 0.55);
+            font-weight: 700;
+            color: var(--admin-text-muted);
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .itin-b-table tbody tr:hover {
+            background: rgba(196, 111, 75, 0.05);
+        }
+
+        .itin-b-table a {
+            color: var(--admin-secondary);
+            font-weight: 600;
+        }
+
+        .itin-b-table a:hover {
+            text-decoration: underline;
+        }
+
+        .itin-b-muted {
+            color: var(--admin-text-muted);
+        }
+
+        .itin-b-empty {
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            color: var(--admin-text-muted);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="itin-b-page">
+        {% for message in app.flashes('success') %}
+            <div class="itin-b-flash itin-b-flash--success" role="status">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="itin-b-flash itin-b-flash--error" role="alert">{{ message }}</div>
+        {% endfor %}
+
+        <section aria-labelledby="itin-b-stats-title">
+            <h2 id="itin-b-stats-title" class="itin-b-section-title">Statistiques</h2>
+            <div class="itin-b-stats">
+                <div class="itin-b-stat">
+                    <div class="itin-b-stat__value itin-b-stat__value--sm">{{ stats.moyenne_etapes_par_itineraire }}</div>
+                    <div class="itin-b-stat__label">Moy. étapes / itinéraire</div>
+                </div>
+                <div class="itin-b-stat itin-b-stat--accent">
+                    <div class="itin-b-stat__value itin-b-stat__value--sm">{{ stats.voyages_avec_itineraire }} / {{ stats.total_voyages }}</div>
+                    <div class="itin-b-stat__label">Voyages avec itinéraire</div>
+                    {% if stats.total_voyages > 0 %}
+                        <div class="itin-b-stat__meta">{{ stats.voyages_sans_itineraire }} sans itinéraire</div>
+                    {% endif %}
+                </div>
+                <div class="itin-b-stat itin-b-stat--accent">
+                    <div class="itin-b-stat__value">{{ stats.taux_itineraires_planifies_pct }}&nbsp;%</div>
+                    <div class="itin-b-stat__label">Taux planifiés</div>
+                    <div class="itin-b-stat__meta">Itinéraires ayant au moins une étape</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="itin-b-card" aria-labelledby="itin-b-list-title">
+            <h2 id="itin-b-list-title" class="itin-b-card__head">Liste des itinéraires</h2>
+            {% if itineraires|length > 0 %}
+                <div class="itin-b-table-wrap">
+                    <table class="itin-b-table">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Voyage</th>
+                                <th>Étapes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for itineraire in itineraires %}
+                                <tr>
+                                    <td><strong>{{ itineraire.nom_itineraire }}</strong></td>
+                                    <td>
+                                        {% if itineraire.voyage %}
+                                            {{ itineraire.voyage.titre_voyage }}
+                                        {% else %}
+                                            <span class="itin-b-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ itineraire.etapes|length }}</td>
+                                    <td>
+                                        <div class="itin-b-actions">
+                                            <a href="{{ path('app_admin_etapes_index', { itineraireId: itineraire.id_itineraire }) }}">Voir etapes</a>
+                                            <form
+                                                method="post"
+                                                action="{{ path('app_admin_itineraires_delete', { id_itineraire: itineraire.id_itineraire }) }}"
+                                                class="itin-b-delete-form"
+                                                onsubmit="return confirm('Supprimer cet itinéraire et toutes ses étapes ? Cette action est définitive.');"
+                                            >
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_itineraire_' ~ itineraire.id_itineraire) }}">
+                                                <button type="submit" class="itin-b-btn-delete">Supprimer</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="itin-b-empty">Aucun itinéraire en base. Créez-en depuis un voyage (espace public ou prochain écran admin).</p>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

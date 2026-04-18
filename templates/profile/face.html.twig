@@ -1,0 +1,417 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gérer mon visage | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .face-profile-shell { max-width: 960px; margin: 0 auto; padding: 2rem 0 3rem; }
+        .face-profile-card {
+            border: 1px solid var(--color-border);
+            border-radius: 30px;
+            background: rgba(255,253,249,.94);
+            padding: 2rem;
+        }
+        .face-profile-title { font-family:'Fraunces', serif; font-size:2rem; margin-bottom:.4rem; }
+        .face-profile-text { color: var(--color-text-muted); margin-bottom:1.2rem; }
+        .status-box {
+            margin-bottom: 1rem;
+            padding: .9rem 1rem;
+            border-radius: 16px;
+            background: rgba(47,127,121,.10);
+            color: #245f5a;
+        }
+        .flash-stack { display:grid; gap:.75rem; margin-bottom:1rem; }
+        .flash-message { padding:.95rem 1rem; border-radius:16px; border:1px solid transparent; }
+        .flash-message--success { background:rgba(47,127,121,.10); border-color:rgba(47,127,121,.16); color:#245f5a; }
+        .flash-message--error { background:rgba(191,91,91,.10); border-color:rgba(191,91,91,.16); color:#9e4747; }
+
+        .camera-wrap {
+            border:1px solid var(--color-border);
+            border-radius:24px;
+            overflow:hidden;
+            background:#111;
+            aspect-ratio: 4 / 3;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin-bottom:1rem;
+        }
+
+        video {
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+        }
+
+        .capture-row {
+            display:grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .75rem;
+            margin: 1rem 0;
+        }
+
+        .capture-card {
+            border:1px solid var(--color-border);
+            border-radius:18px;
+            background:#fffdfa;
+            padding:.5rem;
+            min-height:140px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+        }
+
+        .capture-card img {
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            border-radius:12px;
+        }
+
+        .btn-row { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem; }
+        .btn-primary, .btn-ghost, .btn-danger {
+            min-height:48px; padding:0 1rem; border-radius:999px; font-weight:700; cursor:pointer; border:0;
+        }
+        .btn-primary { background:var(--color-primary); color:#fff; }
+        .btn-ghost { background:transparent; color:var(--color-primary); border:1px solid rgba(196,111,75,.22); }
+        .btn-danger { background:#bf5b5b; color:#fff; }
+        .form-error { color:#b84d4d; font-size:.84rem; margin-top:.5rem; }
+
+        @media (max-width: 700px) {
+            .capture-row { grid-template-columns: 1fr; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<section class="face-profile-shell">
+    <div class="face-profile-card">
+        <h1 class="face-profile-title">Gérer mon visage</h1>
+        <p class="face-profile-text">
+            Utilisez la caméra pour capturer 3 images de votre visage. Cela rendra la connexion faciale plus stable et plus compatible avec votre appareil.
+        </p>
+
+        <div class="status-box">
+            Statut actuel :
+            <strong>{{ hasFace ? 'visage enregistré' : 'aucun visage enregistré' }}</strong>
+        </div>
+
+        <div class="flash-stack">
+            {% for message in app.flashes('success') %}
+                <div class="flash-message flash-message--success">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="flash-message flash-message--error">{{ message }}</div>
+            {% endfor %}
+        </div>
+
+        {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'id': 'face-enroll-form'}}) }}
+            <div class="camera-wrap">
+                <video id="video" autoplay playsinline></video>
+            </div>
+
+            <div class="btn-row">
+                <button type="button" class="btn-ghost" id="startCameraBtn">Activer la caméra</button>
+                <button type="button" class="btn-ghost" id="captureBtn">Capturer</button>
+                <button type="button" class="btn-ghost" id="resetBtn">Réinitialiser</button>
+            </div>
+
+            <div class="capture-row">
+                <div class="capture-card"><img id="preview1" alt="" style="display:none;"></div>
+                <div class="capture-card"><img id="preview2" alt="" style="display:none;"></div>
+                <div class="capture-card"><img id="preview3" alt="" style="display:none;"></div>
+            </div>
+
+            <div style="display:none;">
+                {{ form_widget(form.faceCaptures) }}
+            </div>
+
+            <div class="form-error">
+                {{ form_errors(form.faceCaptures) }}
+                {{ form_errors(form) }}
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">
+                    {{ hasFace ? 'Mettre à jour mon visage' : 'Enregistrer mon visage' }}
+                </button>
+
+                <a href="{{ path('app_profile') }}" class="btn-ghost" style="text-decoration:none; display:inline-flex; align-items:center;">
+                    Retour au profil
+                </a>
+            </div>
+        {{ form_end(form) }}
+
+        {% if hasFace %}
+            <form method="post" action="{{ path('app_profile_face_remove') }}" style="margin-top:1rem;">
+                <button type="submit" class="btn-danger">Supprimer le visage enregistré</button>
+            </form>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        console.log("=== Face Capture Script Loaded ===");
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("DOM fully loaded and parsed");
+            
+            // Check if elements exist
+            const video = document.getElementById('video');
+            const startCameraBtn = document.getElementById('startCameraBtn');
+            const captureBtn = document.getElementById('captureBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            let fileInput = document.getElementById('face_enrollment_form_type_faceCaptures');
+            if (!fileInput) {
+                console.log("Trying alternative selector...");
+                // Try finding by name attribute (most reliable)
+                fileInput = document.querySelector('input[type="file"][name*="faceCaptures"]');
+            }
+            
+            if (!fileInput) {
+                console.log("Trying by class or other attributes...");
+                // Try finding any file input in the form
+                const form = document.querySelector('form');
+                if (form) {
+                    fileInput = form.querySelector('input[type="file"]');
+                }
+            }
+            const previews = [
+                document.getElementById('preview1'),
+                document.getElementById('preview2'),
+                document.getElementById('preview3'),
+            ];
+
+            console.log("DOM Elements found:", {
+                video: !!video,
+                startCameraBtn: !!startCameraBtn,
+                captureBtn: !!captureBtn,
+                resetBtn: !!resetBtn,
+                fileInput: !!fileInput,
+                preview1: !!previews[0],
+                preview2: !!previews[1],
+                preview3: !!previews[2]
+            });
+
+            let stream = null;
+            let capturedFiles = [];
+
+            async function startCamera() {
+                console.log("startCamera() called");
+                
+                try {
+                    if (stream) {
+                        console.log("Camera stream already exists, skipping");
+                        return;
+                    }
+                    
+                    console.log("Requesting camera access...");
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                        audio: false
+                    });
+                    
+                    console.log("Camera access granted, stream:", stream);
+                    video.srcObject = stream;
+                    console.log("Video srcObject set, waiting for video to load...");
+                    
+                    // Wait for video to be ready
+                    video.onloadedmetadata = () => {
+                        console.log("Video metadata loaded, dimensions:", video.videoWidth, "x", video.videoHeight);
+                        video.play().then(() => {
+                            console.log("Video playback started");
+                        }).catch(err => {
+                            console.error("Error playing video:", err);
+                        });
+                    };
+                    
+                } catch (e) {
+                    console.error("Camera access error:", e);
+                    alert("Impossible d'accéder à la caméra. Erreur: " + (e.message || "Inconnue"));
+                }
+            }
+
+            function stopCamera() {
+                console.log("stopCamera() called, stream exists:", !!stream);
+                
+                if (stream) {
+                    const trackCount = stream.getTracks().length;
+                    console.log(`Stopping ${trackCount} camera tracks`);
+                    stream.getTracks().forEach(track => {
+                        console.log(`Stopping track: ${track.kind}`, track);
+                        track.stop();
+                    });
+                    stream = null;
+                    console.log("Camera stopped and cleaned up");
+                } else {
+                    console.log("No stream to stop");
+                }
+            }
+
+            function syncFilesInput() {
+                console.log("syncFilesInput() called, capturedFiles count:", capturedFiles.length);
+                
+                const dataTransfer = new DataTransfer();
+                capturedFiles.forEach((file, index) => {
+                    console.log(`Adding file ${index + 1} to input:`, file.name, file.size, "bytes");
+                    dataTransfer.items.add(file);
+                });
+                
+                fileInput.files = dataTransfer.files;
+                console.log(`Synced ${capturedFiles.length} files to file input`);
+                console.log("File input now has:", fileInput.files.length, "files");
+            }
+
+            function renderPreviews() {
+                console.log("renderPreviews() called, capturedFiles:", capturedFiles.length);
+                
+                previews.forEach((img, index) => {
+                    if (capturedFiles[index]) {
+                        console.log(`Rendering preview ${index + 1} with file:`, capturedFiles[index].name);
+                        
+                        // Clean up old object URL if exists
+                        if (img.src && img.src.startsWith('blob:')) {
+                            console.log(`Revoking old blob URL for preview ${index + 1}:`, img.src);
+                            URL.revokeObjectURL(img.src);
+                        }
+                        
+                        const objectUrl = URL.createObjectURL(capturedFiles[index]);
+                        console.log(`Created new blob URL for preview ${index + 1}:`, objectUrl);
+                        
+                        img.src = objectUrl;
+                        img.style.display = 'block';
+                        console.log(`Preview ${index + 1} displayed`);
+                    } else {
+                        console.log(`Preview ${index + 1} has no file, hiding`);
+                        if (img.src && img.src.startsWith('blob:')) {
+                            URL.revokeObjectURL(img.src);
+                        }
+                        img.src = '';
+                        img.style.display = 'none';
+                    }
+                });
+            }
+
+            function captureFrame() {
+                console.log("captureFrame() called");
+                
+                if (!video.videoWidth || !video.videoHeight) {
+                    console.error("Video not ready - dimensions:", video.videoWidth, "x", video.videoHeight);
+                    alert("Activez la caméra d'abord.");
+                    return;
+                }
+                
+                console.log("Video dimensions:", video.videoWidth, "x", video.videoHeight);
+
+                if (capturedFiles.length >= 3) {
+                    console.warn("Maximum captures reached (3/3)");
+                    alert("Vous avez déjà capturé 3 images.");
+                    return;
+                }
+
+                console.log(`Capturing image ${capturedFiles.length + 1}/3`);
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                console.log("Canvas created with dimensions:", canvas.width, "x", canvas.height);
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                console.log("Video frame drawn to canvas");
+
+                canvas.toBlob(blob => {
+                    if (!blob) {
+                        console.error("Failed to create blob from canvas");
+                        return;
+                    }
+                    
+                    console.log("Blob created successfully, size:", blob.size, "bytes");
+                    
+                    const fileName = `face-capture-${capturedFiles.length + 1}.jpg`;
+                    const file = new File([blob], fileName, { type: 'image/jpeg' });
+                    console.log("File created:", file.name, file.size, "bytes, type:", file.type);
+
+                    capturedFiles.push(file);
+                    console.log(`Captured files now: ${capturedFiles.length}/3`);
+                    
+                    syncFilesInput();
+                    renderPreviews();
+                    console.log("Capture complete, preview updated");
+                    
+                }, 'image/jpeg', 0.95);
+            }
+
+            function resetAll() {
+                console.log("resetAll() called - resetting all captures");
+                console.log("Previous captures:", capturedFiles.length);
+                
+                // Clean up blob URLs before reset
+                previews.forEach((img, index) => {
+                    if (img.src && img.src.startsWith('blob:')) {
+                        console.log(`Revoking blob URL for preview ${index + 1}`);
+                        URL.revokeObjectURL(img.src);
+                    }
+                });
+                
+                capturedFiles = [];
+                console.log("Captured files cleared, now:", capturedFiles.length);
+                
+                syncFilesInput();
+                renderPreviews();
+                console.log("Reset complete");
+            }
+
+            // Attach event listeners
+            console.log("Attaching event listeners...");
+            
+            if (startCameraBtn) {
+                startCameraBtn.addEventListener('click', () => {
+                    console.log("Start Camera button clicked");
+                    startCamera();
+                });
+                console.log("Start camera listener attached");
+            } else {
+                console.error("startCameraBtn element not found!");
+            }
+            
+            if (captureBtn) {
+                captureBtn.addEventListener('click', () => {
+                    console.log("Capture button clicked");
+                    captureFrame();
+                });
+                console.log("Capture listener attached");
+            } else {
+                console.error("captureBtn element not found!");
+            }
+            
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    console.log("Reset button clicked");
+                    resetAll();
+                });
+                console.log("Reset listener attached");
+            } else {
+                console.error("resetBtn element not found!");
+            }
+
+            // Auto-start camera
+            console.log("Auto-starting camera...");
+            startCamera();
+            
+            // Clean up on page unload
+            window.addEventListener('beforeunload', () => {
+                console.log("Page unloading, stopping camera...");
+                stopCamera();
+            });
+            
+            console.log("=== Initialization complete ===");
+        });
+    </script>
+{% endblock %}

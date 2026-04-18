@@ -1,0 +1,657 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .auth-shell {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 0 3rem;
+        }
+
+        .auth-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.05fr;
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        .auth-panel,
+        .auth-card {
+            border: 1px solid var(--color-border);
+            border-radius: 30px;
+            background: rgba(255, 253, 249, 0.94);
+        }
+
+        .auth-panel {
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.92));
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-panel::before {
+            content: "";
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(196, 111, 75, 0.08);
+        }
+
+        .auth-panel::after {
+            content: "";
+            position: absolute;
+            bottom: -80px;
+            left: -40px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(47, 127, 121, 0.08);
+        }
+
+        .auth-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .5rem .9rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.1);
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: .85rem;
+            margin-bottom: 1rem;
+        }
+
+        .auth-title {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1.05;
+            margin-bottom: 1rem;
+            color: var(--color-text);
+        }
+
+        .auth-text {
+            color: var(--color-text-muted);
+            max-width: 52ch;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-list {
+            display: grid;
+            gap: .85rem;
+        }
+
+        .auth-list__item {
+            display: flex;
+            gap: .8rem;
+            align-items: flex-start;
+            padding: .95rem 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 18px;
+            background: rgba(255, 253, 249, 0.78);
+        }
+
+        .auth-list__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(47, 127, 121, 0.12);
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .auth-card {
+            padding: 2rem;
+            box-shadow: 0 16px 36px rgba(71, 48, 35, 0.05);
+        }
+
+        .auth-card__title {
+            font-size: 1.55rem;
+            margin-bottom: .35rem;
+            color: var(--color-text);
+        }
+
+        .auth-card__subtitle {
+            color: var(--color-text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .flash-message {
+            padding: .95rem 1rem;
+            border-radius: 16px;
+            font-size: .95rem;
+            border: 1px solid transparent;
+        }
+
+        .flash-message--success {
+            background: rgba(47, 127, 121, 0.10);
+            border-color: rgba(47, 127, 121, 0.16);
+            color: #245f5a;
+        }
+
+        .flash-message--error {
+            background: rgba(191, 91, 91, 0.10);
+            border-color: rgba(191, 91, 91, 0.16);
+            color: #9e4747;
+        }
+
+        .flash-message--warning {
+            background: rgba(221, 191, 140, 0.18);
+            border-color: rgba(185, 135, 47, 0.16);
+            color: #8c6a2d;
+        }
+
+        .auth-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .auth-form-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .form-control-block {
+            display: grid;
+            gap: .45rem;
+        }
+
+        .form-control-block label {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: .94rem;
+        }
+
+        .form-control-block input,
+        .form-control-block textarea,
+        .form-control-block select {
+            width: 100%;
+            min-height: 50px;
+            padding: .9rem 1rem;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            color: var(--color-text);
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        .form-control-block input:focus,
+        .form-control-block textarea:focus,
+        .form-control-block select:focus {
+            border-color: rgba(196, 111, 75, 0.35);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.08);
+            background: #ffffff;
+        }
+
+        .form-help {
+            font-size: .82rem;
+            color: var(--color-text-muted);
+        }
+
+        .form-error {
+            color: #b84d4d;
+            font-size: .84rem;
+        }
+
+        .auth-submit {
+            width: 100%;
+            margin-top: 1.25rem;
+            min-height: 52px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--color-primary);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease;
+        }
+
+        .auth-submit:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .auth-bottom {
+            margin-top: 1rem;
+            text-align: center;
+            color: var(--color-text-muted);
+        }
+
+        .auth-bottom a {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 980px) {
+            .auth-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .auth-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-card,
+            .auth-panel {
+                padding: 1.35rem;
+                border-radius: 24px;
+            }
+        }
+
+        .social-auth {
+            margin-top: 1.5rem;
+        }
+
+        .social-auth__divider {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1rem;
+            color: var(--color-text-muted);
+            font-size: .9rem;
+        }
+
+        .social-auth__divider::before,
+        .social-auth__divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .social-auth__grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: .75rem;
+        }
+
+        .social-auth__btn {
+            min-height: 48px;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+            transition: all .18s ease;
+        }
+
+        .social-auth__btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(196, 111, 75, 0.35);
+            background: rgba(196, 111, 75, 0.06);
+        }
+
+        @media (max-width: 640px) {
+            .social-auth__grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .geo-phone-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-top: .5rem;
+            padding: .55rem .8rem;
+            border-radius: 999px;
+            background: rgba(47, 127, 121, 0.08);
+            color: var(--color-text);
+            font-size: .9rem;
+        }
+
+        .geo-phone-code {
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="auth-shell">
+        <div class="auth-grid">
+            <div class="auth-panel">
+                <span class="auth-badge">✨ Rejoignez TravelMate</span>
+                <h1 class="auth-title">Préparez vos voyages avec simplicité et envie.</h1>
+                <p class="auth-text">
+                    Créez votre compte pour organiser vos séjours, suivre vos idées,
+                    partager vos projets de voyage et vivre une expérience plus fluide,
+                    plus belle et plus collaborative.
+                </p>
+
+                <div class="auth-list">
+                    <div class="auth-list__item">
+                        <span class="auth-list__icon">🌍</span>
+                        <div>
+                            <strong>Planifiez facilement</strong>
+                            <p class="form-help">Centralisez vos voyages, activités, budgets et inspirations.</p>
+                        </div>
+                    </div>
+
+                    <div class="auth-list__item">
+                        <span class="auth-list__icon">🔐</span>
+                        <div>
+                            <strong>Compte sécurisé</strong>
+                            <p class="form-help">Activation par code email avant utilisation.</p>
+                        </div>
+                    </div>
+
+                    <div class="auth-list__item">
+                        <span class="auth-list__icon">🤝</span>
+                        <div>
+                            <strong>Voyagez à plusieurs</strong>
+                            <p class="form-help">Préparez vos aventures avec vos amis et votre groupe.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-card">
+                <h2 class="auth-card__title">Créer un compte</h2>
+                <p class="auth-card__subtitle">
+                    Remplissez vos informations. Un code de vérification vous sera envoyé par email.
+                </p>
+
+                <div class="flash-stack">
+                    {% for message in app.flashes('success') %}
+                        <div class="flash-message flash-message--success">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="flash-message flash-message--error">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('warning') %}
+                        <div class="flash-message flash-message--warning">{{ message }}</div>
+                    {% endfor %}
+                </div>
+
+                {{ form_start(registrationForm, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                    <div class="auth-form-grid">
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.nom) }}
+                            {{ form_widget(registrationForm.nom) }}
+                            <div class="form-error">{{ form_errors(registrationForm.nom) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.prenom) }}
+                            {{ form_widget(registrationForm.prenom) }}
+                            <div class="form-error">{{ form_errors(registrationForm.prenom) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.date_naissance) }}
+                            {{ form_widget(registrationForm.date_naissance) }}
+                            <div class="form-error">{{ form_errors(registrationForm.date_naissance) }}</div>
+                        </div>
+
+                        {% set geo_data = get_geo_phone_context() %} {# You'll need to create a Twig function #}
+
+                        <div class="phone-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                            <div class="phone-prefix" style="position: absolute; left: 10px; top: 60%; transform: translateY(-50%); display: flex; gap: 5px; align-items: center; pointer-events: none; z-index: 1; background: transparent;">
+                                <span id="geo-flag-input" style="font-size:1.2rem;">{{ geo_data.flag_emoji|raw }}</span>
+                                <span id="geo-code-prefix" style="color: #666; font-weight: 500;">{{ geo_data.calling_code }}</span>
+                            </div>
+                            <div class="form-control-block" id="user_telephone" style="flex: 1;">
+                                {{ form_label(registrationForm.telephone) }}
+                                {{ form_widget(registrationForm.telephone, { attr: { style: 'padding-left: 90px;' } }) }}
+                                <div class="form-error">{{ form_errors(registrationForm.telephone) }}</div>
+                            </div>
+                        </div>
+                        <script>
+                            // Store the calling code directly in JavaScript
+                            const geoCallingCode = '{{ geo_data.calling_code }}';
+                            const phoneInput = document.getElementById('registration_form_telephone');
+                            if (phoneInput && geoCallingCode) {
+                                phoneInput.dataset.callingCode = geoCallingCode;
+                                
+                                // Set placeholder
+                                if (!phoneInput.value.trim()) {
+                                    phoneInput.placeholder = '12 34 56 78 90';
+                                }
+                            }
+                            
+                            // Form submission handler
+                            const form = phoneInput ? phoneInput.closest('form') : null;
+                            if (form && phoneInput) {
+                                form.addEventListener('submit', function() {
+                                    const callingCode = phoneInput.dataset.callingCode;
+                                    const userNumber = phoneInput.value.trim();
+                                    
+                                    if (callingCode && userNumber && !userNumber.startsWith(callingCode)) {
+                                        phoneInput.value = callingCode + ' ' + userNumber;
+                                    }
+                                });
+                            }
+                        </script>
+
+                        <div class="form-control-block full">
+                            {{ form_label(registrationForm.email) }}
+                            {{ form_widget(registrationForm.email) }}
+                            <div class="form-error">{{ form_errors(registrationForm.email) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(registrationForm.photoUrl) }}
+                            {{ form_widget(registrationForm.photoUrl) }}
+                            <div class="form-help">Optionnel. Vous pouvez coller un lien image.</div>
+                            <div class="form-error">{{ form_errors(registrationForm.photoUrl) }}</div>
+                        </div>
+
+                        <div class="form-control-block full">
+                            {{ form_label(registrationForm.photoFile) }}
+                            {{ form_widget(registrationForm.photoFile) }}
+                            <div class="form-help">Optionnel. Si vous importez une image, elle sera utilisée comme photo de profil.</div>
+                            <div class="form-error">{{ form_errors(registrationForm.photoFile) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.plainPassword.first) }}
+                            <div class="password-wrapper">
+                                {{ form_widget(registrationForm.plainPassword.first, {
+                                    'attr': {
+                                        'class': 'password-field',
+                                        'data-password-field': 'first'
+                                    }
+                                }) }}
+                                <button type="button" class="toggle-password" data-target="first">
+                                    <i class="far fa-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div class="form-error">{{ form_errors(registrationForm.plainPassword.first) }}</div>
+                        </div>
+
+                        <div class="form-control-block">
+                            {{ form_label(registrationForm.plainPassword.second) }}
+                            <div class="password-wrapper">
+                                {{ form_widget(registrationForm.plainPassword.second, {
+                                    'attr': {
+                                        'class': 'password-field',
+                                        'data-password-field': 'second'
+                                    }
+                                }) }}
+                                <button type="button" class="toggle-password" data-target="second">
+                                    <i class="far fa-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div class="form-error">{{ form_errors(registrationForm.plainPassword.second) }}</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-submit">
+                        Créer mon compte
+                    </button>
+
+                {{ form_end(registrationForm) }}
+
+                <p class="auth-bottom">
+                    Vous avez déjà un compte ?
+                    <a href="{{ path('app_login') }}">Se connecter</a>
+                </p>
+
+                <div class="social-auth">
+                    <div class="social-auth__divider">
+                        <span>Inscription rapide avec</span>
+                    </div>
+
+                    <div class="social-auth__grid">
+                        <a href="{{ path('connect_google_start') }}" class="social-auth__btn">
+                            <span>Google</span>
+                        </a>
+
+                        <a href="{{ path('connect_github_start') }}" class="social-auth__btn">
+                            <span>GitHub</span>
+                        </a>
+
+                        <a href="{{ path('connect_facebook_start') }}" class="social-auth__btn">
+                            <span>Facebook</span>
+                        </a>
+
+                        <a href="{{ path('connect_microsoft_start') }}" class="social-auth__btn">
+                            <span>Microsoft</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            console.log('DOMContentLoaded fired - starting geo detection');
+            
+            const phoneInput = document.getElementById('registration_form_telephone');
+            const flagPrefix = document.getElementById('geo-flag-input');
+            const codePrefix = document.getElementById('geo-code-prefix');
+            
+            // Get the form element
+            const form = phoneInput ? phoneInput.closest('form') : null;
+
+            console.log('DOM elements found:', {
+                phoneInput: !!phoneInput,
+                flagPrefix: !!flagPrefix,
+                codePrefix: !!codePrefix,
+                form: !!form
+            });
+
+            if (!phoneInput || !flagPrefix || !codePrefix || !form) {
+                console.error('Required DOM elements not found');
+                return;
+            }
+
+            try {
+                console.log('Fetching geo data from {{ path('app_geo_phone_context') }}');
+                const response = await fetch('{{ path('app_geo_phone_context') }}', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Response not OK:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Geo data received:', data);
+
+                if (!data.success) {
+                    console.error('Data success is false');
+                    return;
+                }
+
+                // Update the prefix display with flag and calling code
+                if (data.flag_emoji) {
+                    if (data.flag_url) {
+                        flagPrefix.innerHTML = `<img src="${data.flag_url}" alt="${data.country_name}" style="width: 20px; height: 15px; vertical-align: middle;">`;
+                    } else if (data.flag_emoji) {
+                        flagPrefix.textContent = data.flag_emoji;
+                    }
+                }
+                if (data.calling_code) {
+                    codePrefix.textContent = data.calling_code;
+                }
+                
+                console.log('Prefix updated:', {
+                    flag: flagPrefix.textContent,
+                    code: codePrefix.textContent
+                });
+
+                // Pre-fill hint (if you still want to show it somewhere else)
+                const hint = document.getElementById('geo-phone-hint');
+                if (hint) {
+                    hint.style.display = 'inline-flex';
+                }
+
+                // Only pre-fill if input is empty
+                if (!phoneInput.value.trim()) {
+                    phoneInput.placeholder = '12 34 56 78 90'; // User only types local number
+                    console.log('Input is empty, ready for user input');
+                }
+
+                // Store the calling code for form submission
+                phoneInput.dataset.callingCode = data.calling_code;
+                
+            } catch (e) {
+                console.error('Geo phone context error:', e);
+            }
+        });
+
+        // Handle form submission - combine calling code with user input
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneInput = document.getElementById('registration_form_telephone');
+            const form = phoneInput ? phoneInput.closest('form') : null;
+            
+            if (form && phoneInput) {
+                form.addEventListener('submit', function(e) {
+                    const callingCode = phoneInput.dataset.callingCode;
+                    const userNumber = phoneInput.value.trim();
+                    
+                    console.log('Form submit - combining numbers:', {
+                        callingCode: callingCode,
+                        userNumber: userNumber,
+                        currentValue: phoneInput.value
+                    });
+                    
+                    // Only combine if we have a calling code and the user entered something
+                    if (callingCode && userNumber) {
+                        // Check if the user already included the calling code
+                        if (!userNumber.startsWith(callingCode)) {
+                            phoneInput.value = callingCode + ' ' + userNumber;
+                            console.log('Combined value:', phoneInput.value);
+                        } else {
+                            console.log('Calling code already present');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

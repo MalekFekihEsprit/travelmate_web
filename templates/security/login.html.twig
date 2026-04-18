@@ -1,0 +1,664 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .login-shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 2rem 0 3rem;
+        }
+
+        .login-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        .login-panel,
+        .login-card {
+            border: 1px solid var(--color-border);
+            border-radius: 30px;
+            background: rgba(255, 253, 249, 0.94);
+        }
+
+        .login-panel {
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.92));
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-panel::before {
+            content: "";
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(196, 111, 75, 0.08);
+        }
+
+        .login-panel::after {
+            content: "";
+            position: absolute;
+            bottom: -80px;
+            left: -40px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(47, 127, 121, 0.08);
+        }
+
+        .login-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .5rem .9rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.1);
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: .85rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-title {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2rem, 4vw, 3.1rem);
+            line-height: 1.05;
+            margin-bottom: 1rem;
+            color: var(--color-text);
+        }
+
+        .login-text {
+            color: var(--color-text-muted);
+            max-width: 54ch;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-highlights {
+            display: grid;
+            gap: .85rem;
+        }
+
+        .login-highlight {
+            display: flex;
+            gap: .8rem;
+            align-items: flex-start;
+            padding: .95rem 1rem;
+            border: 1px solid var(--color-border);
+            border-radius: 18px;
+            background: rgba(255, 253, 249, 0.78);
+        }
+
+        .login-highlight__icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(47, 127, 121, 0.12);
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .login-card {
+            padding: 2rem;
+            box-shadow: 0 16px 36px rgba(71, 48, 35, 0.05);
+        }
+
+        .login-card__title {
+            font-size: 1.55rem;
+            margin-bottom: .35rem;
+            color: var(--color-text);
+        }
+
+        .login-card__subtitle {
+            color: var(--color-text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .flash-message {
+            padding: .95rem 1rem;
+            border-radius: 16px;
+            font-size: .95rem;
+            border: 1px solid transparent;
+        }
+
+        .flash-message--success {
+            background: rgba(47, 127, 121, 0.10);
+            border-color: rgba(47, 127, 121, 0.16);
+            color: #245f5a;
+        }
+
+        .flash-message--error {
+            background: rgba(191, 91, 91, 0.10);
+            border-color: rgba(191, 91, 91, 0.16);
+            color: #9e4747;
+        }
+
+        .flash-message--warning {
+            background: rgba(221, 191, 140, 0.18);
+            border-color: rgba(185, 135, 47, 0.16);
+            color: #8c6a2d;
+        }
+
+        .login-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-control-block {
+            display: grid;
+            gap: .45rem;
+        }
+
+        .form-control-block label {
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: .94rem;
+        }
+
+        .form-control-block input {
+            width: 100%;
+            min-height: 52px;
+            padding: .9rem 1rem;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            color: var(--color-text);
+            outline: none;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        .form-control-block input:focus {
+            border-color: rgba(196, 111, 75, 0.35);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.08);
+            background: #ffffff;
+        }
+
+        .login-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .login-check {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+            color: var(--color-text-muted);
+            font-size: .92rem;
+        }
+
+        .login-check input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--color-primary);
+        }
+
+        .login-link {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .login-submit {
+            width: 100%;
+            min-height: 52px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--color-primary);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease;
+        }
+
+        .login-submit:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .login-bottom {
+            margin-top: 1rem;
+            text-align: center;
+            color: var(--color-text-muted);
+        }
+
+        .login-bottom a {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .login-divider {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            margin: 1rem 0;
+            color: var(--color-text-muted);
+            font-size: .9rem;
+        }
+
+        .login-divider::before,
+        .login-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .login-demo-note {
+            padding: .9rem 1rem;
+            border-radius: 16px;
+            background: rgba(47, 127, 121, 0.08);
+            border: 1px solid rgba(47, 127, 121, 0.14);
+            color: #295f59;
+            font-size: .92rem;
+        }
+
+        @media (max-width: 980px) {
+            .login-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .login-card,
+            .login-panel {
+                padding: 1.35rem;
+                border-radius: 24px;
+            }
+        }
+        .profile-submit {
+            min-height: 52px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--color-primary);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease;
+            padding: 0 1.4rem;
+        }
+
+        .profile-submit:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .profile-submit--ghost {
+            background: transparent;
+            color: var(--color-primary);
+            border: 1px solid rgba(196, 111, 75, 0.22);
+            width: 100%;
+        }
+
+        .profile-submit--ghost:hover {
+            background: rgba(196, 111, 75, 0.08);
+        }
+
+        .social-auth {
+            margin-top: 1.5rem;
+        }
+
+        .social-auth__divider {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1rem;
+            color: var(--color-text-muted);
+            font-size: .9rem;
+        }
+
+        .social-auth__divider::before,
+        .social-auth__divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .social-auth__grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: .75rem;
+        }
+
+        .social-auth__btn {
+            min-height: 48px;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+            transition: all .18s ease;
+        }
+
+        .social-auth__btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(196, 111, 75, 0.35);
+            background: rgba(196, 111, 75, 0.06);
+        }
+
+        @media (max-width: 640px) {
+            .social-auth__grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="login-shell">
+        <div class="login-grid">
+            <div class="login-panel">
+                <span class="login-badge">🔐 Connexion sécurisée</span>
+                <h1 class="login-title">Retrouvez vos voyages, vos idées et votre espace TravelMate.</h1>
+                <p class="login-text">
+                    Connectez-vous pour accéder à vos voyages, vos profils, vos budgets
+                    et toute votre organisation de séjour dans une interface simple et agréable.
+                </p>
+
+                <div class="login-highlights">
+                    <div class="login-highlight">
+                        <span class="login-highlight__icon">🌍</span>
+                        <div>
+                            <strong>Votre univers voyage</strong>
+                            <p class="form-help">Accédez à toutes vos destinations et préparations.</p>
+                        </div>
+                    </div>
+
+                    <div class="login-highlight">
+                        <span class="login-highlight__icon">📩</span>
+                        <div>
+                            <strong>Compte vérifié</strong>
+                            <p class="form-help">La vérification email protège l’accès à votre compte.</p>
+                        </div>
+                    </div>
+
+                    <div class="login-highlight">
+                        <span class="login-highlight__icon">🛡️</span>
+                        <div>
+                            <strong>Sécurité renforcée</strong>
+                            <p class="form-help">Connexion protégée avec mot de passe hashé côté serveur.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-card">
+                <h2 class="login-card__title">Se connecter</h2>
+                <p class="login-card__subtitle">
+                    Entrez vos identifiants pour accéder à votre compte TravelMate.
+                </p>
+
+                <div class="flash-stack">
+                    {% for message in app.flashes('success') %}
+                        <div class="flash-message flash-message--success">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="flash-message flash-message--error">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('warning') %}
+                        <div class="flash-message flash-message--warning">{{ message }}</div>
+                    {% endfor %}
+                </div>
+
+                {% if error %}
+                    <div class="flash-message flash-message--error" style="margin-bottom: 1rem;">
+                        {{ error.messageKey|trans(error.messageData, 'security') }}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="login-form" id="login-form">
+                    <div class="form-control-block">
+                        <label for="inputEmail">Adresse email</label>
+                        <input
+                            type="email"
+                            value="{{ last_username }}"
+                            name="email"
+                            id="inputEmail"
+                            placeholder="Ex: malek@email.com"
+                            autocomplete="email"
+                            required
+                            autofocus
+                        >
+                    </div>
+
+                    <div class="form-control-block">
+                        <label for="inputPassword">Mot de passe</label>
+                        <div class="password-wrapper">
+                            <input
+                                type="password"
+                                name="password"
+                                id="inputPassword"
+                                placeholder="Votre mot de passe"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button type="button" class="toggle-password" data-target="login" aria-label="Afficher/Masquer le mot de passe">
+                                <i class="far fa-eye-slash" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                    <div class="login-row">
+                        <label class="login-check">
+                            <input type="checkbox" name="_remember_me">
+                            <span>Se souvenir de moi</span>
+                        </label>
+
+                        <a href="{{ path('app_forgot_password') }}" class="login-link">Mot de passe oublié ?</a>
+                    </div>
+
+                    <p>
+                        <button type="button" class="profile-submit profile-submit--ghost" onclick="location.href='{{ path('app_face_login') }}'">Continuer avec le visage</button>
+                    </p>
+                    <button class="login-submit" type="submit">
+                        Me connecter
+                    </button>
+
+<div id="security-camera-box" style="display:none; margin-top:1rem;">
+    <p style="margin-bottom:.75rem; color: var(--color-text-muted);">
+        Après plusieurs tentatives échouées, une capture sécurité peut être envoyée au propriétaire du compte.
+    </p>
+
+    <div style="border-radius:20px; overflow:hidden; background:#111; aspect-ratio:4/3; margin-bottom:.75rem;">
+        <video id="security-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+    </div>
+</div>
+
+                </form>
+
+                <div class="social-auth">
+                    <div class="social-auth__divider">
+                        <span>Ou continuer avec</span>
+                    </div>
+
+                    <div class="social-auth__grid">
+                        <a href="{{ path('connect_google_start') }}" class="social-auth__btn">
+                            <span>Google</span>
+                        </a>
+
+                        <a href="{{ path('connect_github_start') }}" class="social-auth__btn">
+                            <span>GitHub</span>
+                        </a>
+
+                        <a href="{{ path('connect_facebook_start') }}" class="social-auth__btn">
+                            <span>Facebook</span>
+                        </a>
+
+                        <a href="{{ path('connect_microsoft_start') }}" class="social-auth__btn">
+                            <span>Microsoft</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="login-divider">ou</div>
+
+                <div class="login-demo-note">
+                    Votre compte doit être vérifié par code email avant la première connexion.
+                </div>
+
+                <p class="login-bottom">
+                    Vous n’avez pas encore de compte ?
+                    <a href="{{ path('app_register') }}">Créer un compte</a>
+                </p>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const failedAttempts = {{ app.session.get('login_failed_attempts_for_last_user') ?? 0 }};
+            const form = document.getElementById('login-form');
+            const cameraBox = document.getElementById('security-camera-box');
+            const video = document.getElementById('security-video');
+
+            let stream = null;
+            let cameraReady = false;
+            let isCapturingSubmit = false;
+
+            console.log('[SECURITY DEBUG] DOM loaded');
+            console.log('[SECURITY DEBUG] failedAttempts =', failedAttempts);
+            console.log('[SECURITY DEBUG] login form found =', !!form);
+            console.log('[SECURITY DEBUG] cameraBox found =', !!cameraBox);
+            console.log('[SECURITY DEBUG] video found =', !!video);
+
+            async function startCamera() {
+                console.log('[SECURITY DEBUG] startCamera() called');
+
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user' },
+                        audio: false
+                    });
+
+                    video.srcObject = stream;
+                    cameraReady = true;
+
+                    console.log('[SECURITY DEBUG] camera started successfully');
+                    console.log('[SECURITY DEBUG] stream =', stream);
+
+                    video.onloadedmetadata = () => {
+                        console.log('[SECURITY DEBUG] video metadata loaded');
+                        console.log('[SECURITY DEBUG] videoWidth =', video.videoWidth);
+                        console.log('[SECURITY DEBUG] videoHeight =', video.videoHeight);
+                    };
+                } catch (e) {
+                    cameraReady = false;
+                    console.error('[SECURITY DEBUG] startCamera failed', e);
+                }
+            }
+
+            async function capturePhotoAndStoreInSession() {
+                console.log('[SECURITY DEBUG] capturePhotoAndStoreInSession() called');
+                console.log('[SECURITY DEBUG] cameraReady =', cameraReady);
+
+                if (!cameraReady) {
+                    console.warn('[SECURITY DEBUG] camera not ready');
+                    return false;
+                }
+
+                if (!video.videoWidth || !video.videoHeight) {
+                    console.warn('[SECURITY DEBUG] video dimensions missing');
+                    return false;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+                console.log('[SECURITY DEBUG] image captured');
+                console.log('[SECURITY DEBUG] dataUrl length =', dataUrl.length);
+
+                try {
+                    const response = await fetch('{{ path('app_security_capture_failed_login_photo') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            image: dataUrl
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    console.log('[SECURITY DEBUG] capture upload response =', result);
+
+                    return !!result.success;
+                } catch (e) {
+                    console.error('[SECURITY DEBUG] failed to upload capture', e);
+                    return false;
+                }
+            }
+
+            if (failedAttempts >= 2 && cameraBox) {
+                console.log('[SECURITY DEBUG] showing camera box because failedAttempts >= 2');
+                cameraBox.style.display = 'block';
+                await startCamera();
+            } else {
+                console.log('[SECURITY DEBUG] camera box not shown');
+            }
+
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    console.log('[SECURITY DEBUG] form submit triggered');
+                    console.log('[SECURITY DEBUG] failedAttempts at submit =', failedAttempts);
+                    console.log('[SECURITY DEBUG] isCapturingSubmit =', isCapturingSubmit);
+
+                    if (failedAttempts >= 2 && !isCapturingSubmit) {
+                        e.preventDefault();
+                        isCapturingSubmit = true;
+
+                        console.log('[SECURITY DEBUG] intercepting submit to capture and upload photo');
+
+                        const stored = await capturePhotoAndStoreInSession();
+
+                        console.log('[SECURITY DEBUG] capture stored in session =', stored);
+                        console.log('[SECURITY DEBUG] submitting REAL login form after capture');
+
+                        HTMLFormElement.prototype.submit.call(form);
+                    } else {
+                        console.log('[SECURITY DEBUG] submit continues normally');
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}
