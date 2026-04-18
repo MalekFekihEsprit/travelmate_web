@@ -1481,7 +1481,7 @@ document.addEventListener('keydown', function (e) {
         resaDate.addEventListener('change', onDateChange);
         resaDate.addEventListener('input',  onDateChange);
 
-        // ✅ FIX PRINCIPAL : déclencher immédiatement si une date est déjà présente
+        // FIX PRINCIPAL : déclencher immédiatement si une date est déjà présente
         if (resaDate.value) {
             fetchWeather(resaDate.value);
         }
