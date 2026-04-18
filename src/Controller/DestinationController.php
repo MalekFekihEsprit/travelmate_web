@@ -10,6 +10,8 @@ use App\Repository\DestinationRepository;
 use App\Repository\NoteDestinationRepository;
 use App\Repository\UserRepository;
 use App\Service\CityCountryLookupService;
+use App\Service\DestinationAiSuggestionException;
+use App\Service\DestinationAiSuggestionService;
 use App\Service\DestinationImageFetcherService;
 use App\Service\RestCountriesService;
 use App\Service\YouTubeVideoService;
@@ -28,6 +30,31 @@ use App\Service\ImageDownloaderService;
 #[Route('/destination')]
 final class DestinationController extends AbstractController
 {
+    #[Route('/ai/suggestions', name: 'app_destination_ai_suggestions', methods: ['GET'])]
+    public function generateAiSuggestions(Request $request, DestinationAiSuggestionService $aiSuggestionService): JsonResponse
+    {
+        $city = trim((string) $request->query->get('city', ''));
+        $country = trim((string) $request->query->get('country', ''));
+
+        if ($city === '' || $country === '') {
+            return $this->json([
+                'error' => 'City and country are required.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $content = $aiSuggestionService->generateDescriptionAndSuggestions($city, $country);
+
+            return $this->json([
+                'content' => $content,
+            ]);
+        } catch (DestinationAiSuggestionException $exception) {
+            return $this->json([
+                'error' => $exception->getMessage(),
+            ], Response::HTTP_BAD_GATEWAY);
+        }
+    }
+
     #[Route('/location/validate', name: 'app_destination_location_validate', methods: ['GET'])]
     public function validateLocation(Request $request, CityCountryLookupService $lookupService): JsonResponse
     {

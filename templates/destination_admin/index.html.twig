@@ -759,6 +759,12 @@
                 <div class="filters-form__actions">
                     <button class="btn btn--ghost" type="submit">Appliquer</button>
                     <a href="{{ path('app_admin_destinations') }}" class="btn btn--ghost">Réinitialiser</a>
+                    {% set mapParts = [] %}
+                    {% if search is not empty %}{% set mapParts = mapParts|merge([search]) %}{% endif %}
+                    {% if countryFilter is not empty %}{% set mapParts = mapParts|merge([countryFilter]) %}{% endif %}
+                    {% if regionFilter is not empty %}{% set mapParts = mapParts|merge([regionFilter]) %}{% endif %}
+                    {% set mapQuery = mapParts is not empty ? mapParts|join(' ') : 'destinations touristiques' %}
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ mapQuery|url_encode }}" target="_blank" rel="noopener noreferrer" class="btn btn--ghost">Voir map</a>
                 </div>
             </form>
         </div>

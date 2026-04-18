@@ -198,6 +198,46 @@
     .admin-form .has-error .admin-input:focus {
         box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.15);
     }
+
+    .admin-form__label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .btn--ai {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.78rem;
+        border: 1px solid #c46f4b;
+        background: rgba(196, 111, 75, 0.08);
+        color: #8a4628;
+        border-radius: 6px;
+    }
+
+    .btn--ai:hover {
+        background: rgba(196, 111, 75, 0.15);
+    }
+
+    .btn--ai:disabled {
+        opacity: 0.65;
+        cursor: wait;
+    }
+
+    .ai-status {
+        margin-top: 0.5rem;
+        font-size: 0.78rem;
+        color: #6d737a;
+        min-height: 1.1rem;
+    }
+
+    .ai-status.is-error {
+        color: #d63838;
+    }
+
+    .ai-status.is-success {
+        color: #0c8a5d;
+    }
 </style>
 
 {{ form_start(form, {
@@ -249,7 +289,10 @@
 
     {# Description #}
     <div class="admin-form__group admin-form__group--full">
-        {{ form_label(form.description_destination, 'Description') }}
+        <div class="admin-form__label-row">
+            {{ form_label(form.description_destination, 'Description') }}
+            <button type="button" id="aiGenerateDescription" class="btn btn--ai">Generer avec IA</button>
+        </div>
         <div class="admin-form-wrapper">
             {{ form_widget(form.description_destination, {
                 'attr': {
@@ -261,6 +304,7 @@
                 }
             }) }}
             <div class="field-error" data-error-for="description_destination"></div>
+            <div id="aiStatus" class="ai-status" aria-live="polite"></div>
         </div>
     </div>
 
@@ -310,9 +354,30 @@
 
 <script>
 const locationValidateUrl = '{{ path('app_destination_location_validate') }}';
+const aiSuggestionsUrl = '{{ path('app_destination_ai_suggestions') }}';
 const cityInput = document.querySelector('input[name$="[nom_destination]"]');
 const countryInput = document.querySelector('input[name$="[pays_destination]"]');
+const descriptionInput = document.querySelector('textarea[name$="[description_destination]"]');
+const aiGenerateButton = document.getElementById('aiGenerateDescription');
+const aiStatus = document.getElementById('aiStatus');
 let locationValidationTimer = null;
+
+function setAiStatus(message, state = '') {
+    if (!aiStatus) {
+        return;
+    }
+
+    aiStatus.textContent = message;
+    aiStatus.classList.remove('is-error', 'is-success');
+
+    if (state === 'error') {
+        aiStatus.classList.add('is-error');
+    }
+
+    if (state === 'success') {
+        aiStatus.classList.add('is-success');
+    }
+}
 
 function setFieldError(fieldName, message) {
     const input = document.querySelector(`[name$="[${fieldName}]"]`);
@@ -377,6 +442,48 @@ function runLiveLocationValidation() {
         .catch(() => {
             // Keep client-side validation non-blocking if endpoint is temporarily unavailable.
         });
+}
+
+async function generateDescriptionWithAi() {
+    if (!cityInput || !countryInput || !descriptionInput || !aiGenerateButton) {
+        return;
+    }
+
+    const city = cityInput.value.trim();
+    const country = countryInput.value.trim();
+
+    if (city === '' || country === '') {
+        setAiStatus('Renseignez d abord le nom du lieu et le pays.', 'error');
+        return;
+    }
+
+    aiGenerateButton.disabled = true;
+    const previousLabel = aiGenerateButton.textContent;
+    aiGenerateButton.textContent = 'Generation...';
+    setAiStatus('Generation du contenu IA en cours...');
+
+    try {
+        const params = new URLSearchParams({ city, country });
+        const response = await fetch(`${aiSuggestionsUrl}?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const payload = await response.json();
+        if (!response.ok || payload.error) {
+            throw new Error(payload.error || 'La generation IA a echoue.');
+        }
+
+        descriptionInput.value = payload.content || '';
+        descriptionInput.dispatchEvent(new Event('input', { bubbles: true }));
+        setAiStatus('Description et suggestions generees avec succes.', 'success');
+    } catch (error) {
+        setAiStatus(error.message || 'Erreur pendant la generation IA.', 'error');
+    } finally {
+        aiGenerateButton.disabled = false;
+        aiGenerateButton.textContent = previousLabel;
+    }
 }
 
 function validateForm() {
@@ -499,4 +606,6 @@ document.querySelector('.admin-form')?.addEventListener('input', function(e) {
         locationValidationTimer = setTimeout(runLiveLocationValidation, 280);
     }
 });
+
+aiGenerateButton?.addEventListener('click', generateDescriptionWithAi);
 </script>
