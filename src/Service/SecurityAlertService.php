@@ -93,6 +93,10 @@ class SecurityAlertService
         }
 
         $this->mailer->send($email);
+
+        if ($fullPath && file_exists($fullPath)) {
+            unlink($fullPath);
+        }
     }
 
     public function sendSuspiciousLoginAlert(User $user, string $currentIp, string $currentCountry): void
