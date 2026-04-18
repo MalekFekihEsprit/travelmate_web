@@ -48,7 +48,7 @@ class QuizController extends AbstractController
             //'categorie_type'   => $a->getCategorie()?->getType() ?? '',
             //'niveauintensite'  => $a->getCategorie()?->getNiveauintensite() ?? '',
             //'publiccible'      => $a->getCategorie()?->getPubliccible() ?? '',
-            'saison'           => $a->getCategorie()?->getSaison() ?? '',
+            //'saison'           => $a->getCategorie()?->getSaison() ?? '',
             'keywords'         => '',
         ], $activites);
 
