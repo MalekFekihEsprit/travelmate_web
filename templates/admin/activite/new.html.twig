@@ -284,7 +284,7 @@
 })();
 
 /* ════════════════════════════════════════════
-   PRICE ADVISOR
+   //PRICE ADVISOR
    IDs réels générés par Symfony :
    - activite_nom
    - activite_lieu
@@ -393,7 +393,7 @@
             return;
         }
 
-        ///* Budget changé uniquement → recalcul local sans re-appeler l'API */
+        /* Budget changé uniquement → recalcul local sans re-appeler l'API */
         if (activity === lastActivity && location === lastLocation && cachedData) {
             advisor.style.display = 'block';
             render(cachedData);
