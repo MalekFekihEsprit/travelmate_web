@@ -16,6 +16,9 @@ class VideoController extends AbstractController
         ItineraireRepository $itineraireRepository,
         ReplicateVideoService $replicateVideoService,
     ): JsonResponse {
+        // Allow up to 3 minutes for concurrent image downloads
+        set_time_limit(180);
+
         $itineraire = $itineraireRepository->find($id);
 
         if (!$itineraire) {

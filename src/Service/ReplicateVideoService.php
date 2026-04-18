@@ -104,16 +104,8 @@ class ReplicateVideoService
                 return ['status' => 'error', 'message' => 'Aucune slide générée.'];
             }
 
-            // Generate AI images for each slide via Stability AI
-            foreach ($slides as &$slide) {
-                $imagePrompt = $slide['image_prompt'] ?? $slide['keyword'] ?? $slide['titre'] ?? '';
-                $slide['image_url'] = $this->generateAndSaveImage(
-                    $imagePrompt,
-                    $itineraire->getIdItineraire(),
-                    $slide['jour'] ?? 0
-                );
-            }
-            unset($slide);
+            // Generate AI images for each slide — concurrent HTTP requests
+            $slides = $this->generateImagesParallel($slides, $itineraire->getIdItineraire());
 
             return [
                 'status' => 'ok',
@@ -184,12 +176,93 @@ Retourne UNIQUEMENT un objet JSON avec une clé \"slides\" contenant un tableau 
 Génère un objet par jour de l'itinéraire. Le champ image_prompt doit être une description très détaillée en anglais d'une photo de voyage cinématique BASÉE DIRECTEMENT sur les activités ou descriptions de chaque étape. Si l'étape mentionne une activité spécifique (randonnée, plongée, visite de monument, etc.), le image_prompt doit représenter cette activité dans le lieu mentionné. Mentionne le lieu spécifique, l'éclairage doré, l'ambiance et le style photographique cinématique.";
     }
 
+    /**
+     * Download all slide images concurrently via Pollinations (flux-schnell).
+     * Uses Symfony HttpClient streaming to run all requests in parallel.
+     */
+    private function generateImagesParallel(array $slides, ?int $itineraireId): array
+    {
+        $dir = $this->projectDir . '/public/slides';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        // Build request map: index => [filename, response]
+        $pending = [];
+
+        foreach ($slides as $idx => $slide) {
+            $prompt = $slide['image_prompt'] ?? $slide['keyword'] ?? $slide['titre'] ?? '';
+            if ($prompt === '') {
+                $slides[$idx]['image_url'] = '';
+                continue;
+            }
+
+            $hash    = substr(md5($prompt), 0, 8);
+            $webp    = sprintf('slide_%d_%d_%s.webp', $itineraireId ?? 0, $slide['jour'] ?? $idx, $hash);
+            $jpg     = sprintf('slide_%d_%d_%s.jpg',  $itineraireId ?? 0, $slide['jour'] ?? $idx, $hash);
+
+            // Return cached file immediately
+            if (file_exists($dir . '/' . $webp)) {
+                $slides[$idx]['image_url'] = '/slides/' . $webp;
+                continue;
+            }
+            if (file_exists($dir . '/' . $jpg)) {
+                $slides[$idx]['image_url'] = '/slides/' . $jpg;
+                continue;
+            }
+
+            // Try Stability AI first (if credits)
+            try {
+                $result = $this->stabilityImageService->generateFromPrompt($prompt);
+                if ($result['status'] === 'ok' && isset($result['image_base64'])) {
+                    file_put_contents($dir . '/' . $webp, base64_decode($result['image_base64']));
+                    $slides[$idx]['image_url'] = '/slides/' . $webp;
+                    continue;
+                }
+            } catch (\Throwable) {}
+
+            // Queue Pollinations request (non-blocking — all launched concurrently)
+            $encodedPrompt = rawurlencode(mb_substr($prompt, 0, 400));
+            $seed = abs(crc32($prompt)) % 9999999;
+            $url  = 'https://image.pollinations.ai/prompt/' . $encodedPrompt
+                  . '?width=1280&height=720&nologo=true&model=flux-schnell&seed=' . $seed;
+
+            $pending[$idx] = [
+                'response' => $this->httpClient->request('GET', $url, ['timeout' => 90]),
+                'filename' => $jpg,
+                'filepath' => $dir . '/' . $jpg,
+            ];
+        }
+
+        // Collect all concurrent responses
+        foreach ($pending as $idx => $item) {
+            try {
+                $statusCode = $item['response']->getStatusCode();
+                if ($statusCode === 200) {
+                    $data = $item['response']->getContent(false);
+                    if (strlen($data) > 1000) {
+                        file_put_contents($item['filepath'], $data);
+                        $slides[$idx]['image_url'] = '/slides/' . $item['filename'];
+                        continue;
+                    }
+                }
+            } catch (\Throwable) {}
+
+            // Last resort: direct Pollinations URL (browser loads it)
+            $prompt = $slides[$idx]['image_prompt'] ?? $slides[$idx]['keyword'] ?? $slides[$idx]['titre'] ?? '';
+            $encodedPrompt = rawurlencode(mb_substr($prompt, 0, 400));
+            $seed = abs(crc32($prompt)) % 9999999;
+            $slides[$idx]['image_url'] = 'https://image.pollinations.ai/prompt/' . $encodedPrompt
+                . '?width=1280&height=720&nologo=true&model=flux-schnell&seed=' . $seed;
+        }
+
+        return $slides;
+    }
+
     private function generateAndSaveImage(string $prompt, ?int $itineraireId, int $jour): string
     {
-        $fallback = 'https://placehold.co/1280x720/2c1e14/f5f0eb?text=' . urlencode(mb_substr($prompt, 0, 40));
-
         if ($prompt === '') {
-            return $fallback;
+            return '';
         }
 
         $dir = $this->projectDir . '/public/slides';
@@ -197,25 +270,24 @@ Génère un objet par jour de l'itinéraire. Le champ image_prompt doit être un
             mkdir($dir, 0755, true);
         }
 
-        $filename = sprintf('slide_%d_%d_%s.webp', $itineraireId ?? 0, $jour, substr(md5($prompt), 0, 8));
-        $filepath = $dir . '/' . $filename;
-
-        // Return cached image if it exists
-        if (file_exists($filepath)) {
-            return '/slides/' . $filename;
+        $hash = substr(md5($prompt), 0, 8);
+        $webpFilename = sprintf('slide_%d_%d_%s.webp', $itineraireId ?? 0, $jour, $hash);
+        if (file_exists($dir . '/' . $webpFilename)) {
+            return '/slides/' . $webpFilename;
         }
 
         try {
             $result = $this->stabilityImageService->generateFromPrompt($prompt);
-
             if ($result['status'] === 'ok' && isset($result['image_base64'])) {
-                file_put_contents($filepath, base64_decode($result['image_base64']));
-                return '/slides/' . $filename;
+                file_put_contents($dir . '/' . $webpFilename, base64_decode($result['image_base64']));
+                return '/slides/' . $webpFilename;
             }
-        } catch (\Throwable) {
-            // Fall through to fallback
-        }
+        } catch (\Throwable) {}
 
-        return $fallback;
+        $encodedPrompt = rawurlencode(mb_substr($prompt, 0, 400));
+        $seed = abs(crc32($prompt)) % 9999999;
+
+        return 'https://image.pollinations.ai/prompt/' . $encodedPrompt
+            . '?width=1280&height=720&nologo=true&model=flux-schnell&seed=' . $seed;
     }
 }

@@ -90,4 +90,26 @@ class VoyageRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    /**
+     * Returns voyages whose date_debut is between tomorrow and $days days from now.
+     * Sends a reminder before the trip starts.
+     *
+     * @return Voyage[]
+     */
+    public function findVoyagesStartingInDays(int $days = 2): array
+    {
+        $now     = new \DateTime('today');
+        $dayEnd  = (new \DateTime('+' . $days . ' days'))->setTime(23, 59, 59);
+
+        return $this->createQueryBuilder('v')
+            ->where('v.date_debut BETWEEN :now AND :end')
+            ->andWhere('LOWER(v.statut) NOT LIKE :cancelled')
+            ->setParameter('now', $now)
+            ->setParameter('end', $dayEnd)
+            ->setParameter('cancelled', '%annul%')
+            ->orderBy('v.date_debut', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

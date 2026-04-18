@@ -1048,7 +1048,7 @@
     {# Message de chargement #}
     <div id="loadingMsg" style="display:none; text-align:center; margin-top:1rem;">
         <div style="margin:1.2rem auto; width:48px; height:48px; border:4px solid rgba(196,111,75,.25); border-top-color:#c46f4b; border-radius:50%; animation:slideSpin 1s linear infinite;"></div>
-        <p style="color:var(--color-primary);">⏳ Génération des images IA en cours... Cela peut prendre 30 secondes.</p>
+        <p style="color:var(--color-primary);">⏳ Génération du scénario IA en cours...</p>
     </div>
 
     {# Message d'erreur #}
@@ -1274,6 +1274,7 @@
     (function () {
         /* ─── State ─── */
         let slides = [];
+        let blobUrls = {};  // cache: slide index -> blob URL or src
         let current = 0;
         let playing = false;
         let timer = null;
@@ -1466,13 +1467,15 @@
             current = ((index % slides.length) + slides.length) % slides.length;
             const slide = slides[current];
 
-            const fallback = 'https://placehold.co/1280x720/2c1e14/f5f0eb?text=' + encodeURIComponent(slide.titre);
-            const imgUrl = slide.image_url || fallback;
+            // Use blob URL (cached preloaded image) if available, fallback to original URL
+            const imgSrc = blobUrls[current] || slide.image_url || '';
 
             const incoming = activeSlot === 'A' ? slideB : slideA;
             const outgoing = activeSlot === 'A' ? slideA : slideB;
 
-            incoming.innerHTML = '<img src="' + imgUrl + '" alt="' + (slide.titre||'') + '" onerror="this.onerror=null;this.src=\'' + fallback + '\'">';
+            incoming.innerHTML = imgSrc
+                ? '<img src="' + imgSrc + '" alt="' + (slide.titre||'').replace(/"/g,'') + '" style="width:100%;height:100%;object-fit:cover;">'
+                : '';
 
             if (animate !== false) {
                 incoming.style.opacity = '1';
@@ -1568,18 +1571,58 @@
         /* ─── Build the video from slide data ─── */
         function buildVideo(slidesData) {
             slides = slidesData;
+            blobUrls = {};
             current = 0;
             elapsed = 0;
             slideElapsed = 0;
 
-            showSlide(0, false);
-            updateProgress();
+            // Show preloading progress
+            const loadingDiv = document.getElementById('loadingMsg');
+            const loadingP   = loadingDiv.querySelector('p');
+            loadingDiv.style.display = 'block';
+            let loaded = 0;
+            const total = slides.length;
 
-            overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            function updateLoadTxt() {
+                loadingP.innerHTML = '🖼️ Chargement des images IA : <strong>' + loaded + ' / ' + total + '</strong>...';
+            }
+            updateLoadTxt();
 
-            // Auto-play
-            play();
+            // Fetch each image as blob to avoid re-generation on every showSlide()
+            const promises = slides.map(function(slide, idx) {
+                return new Promise(function(resolve) {
+                    const src = slide.image_url || '';
+                    if (!src) { loaded++; updateLoadTxt(); resolve(); return; }
+
+                    fetch(src)
+                        .then(function(r) {
+                            if (!r.ok) throw new Error('HTTP ' + r.status);
+                            return r.blob();
+                        })
+                        .then(function(blob) {
+                            if (blob.size > 500) {
+                                blobUrls[idx] = URL.createObjectURL(blob);
+                            } else {
+                                blobUrls[idx] = src; // use original if blob too small
+                            }
+                        })
+                        .catch(function() {
+                            blobUrls[idx] = src; // fallback to original URL
+                        })
+                        .finally(function() {
+                            loaded++; updateLoadTxt(); resolve();
+                        });
+                });
+            });
+
+            Promise.all(promises).then(function() {
+                loadingDiv.style.display = 'none';
+                showSlide(0, false);
+                updateProgress();
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                play();
+            });
         }
 
         /* ─── Close video ─── */
