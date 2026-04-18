@@ -66,7 +66,7 @@ class ProfanityCheckerService
 
             $body = trim($response->getContent(false));
 
-            //// L'API retourne "true" ou "false" en texte brut
+            //L'API retourne "true" ou "false" en texte brut
             return $body === 'true';
 
         } catch (\Throwable $e) {
