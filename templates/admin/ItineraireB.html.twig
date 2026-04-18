@@ -178,6 +178,38 @@
             text-align: center;
             color: var(--admin-text-muted);
         }
+
+        /* ── Charts ── */
+        .itin-b-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 900px) {
+            .itin-b-charts { grid-template-columns: 1fr; }
+        }
+
+        .itin-b-chart-card {
+            border-radius: 26px;
+            border: 1px solid var(--admin-border);
+            background: rgba(255, 253, 249, 0.96);
+            box-shadow: var(--admin-shadow-soft);
+            padding: 1.35rem 1.4rem 1rem;
+        }
+
+        .itin-b-chart-card__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1rem;
+            color: var(--admin-text);
+            margin-bottom: .1rem;
+        }
+
+        .itin-b-chart-card__sub {
+            font-size: .78rem;
+            color: var(--admin-text-muted);
+            margin-bottom: 1rem;
+        }
     </style>
 {% endblock %}
 
@@ -209,6 +241,28 @@
                     <div class="itin-b-stat__label">Taux planifiés</div>
                     <div class="itin-b-stat__meta">Itinéraires ayant au moins une étape</div>
                 </div>
+            </div>
+        </section>
+
+        {# ── Charts ── #}
+        <section aria-labelledby="itin-b-charts-title">
+            <h2 id="itin-b-charts-title" class="itin-b-section-title">📊 Graphiques &amp; Stats</h2>
+            <div class="itin-b-charts">
+
+                {# Pie #}
+                <div class="itin-b-chart-card">
+                    <div class="itin-b-chart-card__title">Taux d'itinéraires générés par IA acceptés</div>
+                    <div class="itin-b-chart-card__sub">Un itinéraire est considéré «&nbsp;IA accepté&nbsp;» quand son nom correspond au titre du voyage.</div>
+                    <div id="chart-pie" style="height:300px;"></div>
+                </div>
+
+                {# Bar #}
+                <div class="itin-b-chart-card">
+                    <div class="itin-b-chart-card__title">Durée moyenne des itinéraires</div>
+                    <div class="itin-b-chart-card__sub">Axe horizontal : durée en jours — Axe vertical : nombre d'itinéraires ayant cette durée.</div>
+                    <div id="chart-bar" style="height:300px;"></div>
+                </div>
+
             </div>
         </section>
 
@@ -261,4 +315,94 @@
             {% endif %}
         </section>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script>
+    (function () {
+        var pieAi     = {{ chartPie.ai|default(0) }};
+        var pieManual = {{ chartPie.manual|default(0) }};
+        var barLabels = {{ chartBarLabels|json_encode|raw }};
+        var barValues = {{ chartBarValues|json_encode|raw }};
+
+        var palette = {
+            teal      : '#2f7f79',
+            terra     : '#c46f4b',
+            sand      : '#ddbf8c',
+            border    : '#e7dccd',
+            text      : '#1f1a17',
+            textMuted : '#71665c',
+        };
+
+        Highcharts.setOptions({
+            chart  : { backgroundColor: 'transparent', style: { fontFamily: "'Outfit', sans-serif" } },
+            title  : { style: { fontSize: '0px' } },
+            credits: { enabled: false },
+            tooltip: { backgroundColor: '#fffdf9', borderColor: palette.border, style: { color: palette.text } },
+        });
+
+        /* ── Pie ── */
+        Highcharts.chart('chart-pie', {
+            chart: { type: 'pie', margin: [10, 0, 30, 0] },
+            title: { text: '' },
+            tooltip: { pointFormat: '<b>{point.y}</b> itinéraire(s) — <b>{point.percentage:.1f}%</b>' },
+            plotOptions: {
+                pie: {
+                    innerSize: '55%',
+                    borderWidth: 0,
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b><br>{point.percentage:.1f} %',
+                        style: { fontSize: '0.78rem', color: palette.textMuted, fontWeight: '600', textOutline: 'none' },
+                        distance: 18
+                    }
+                }
+            },
+            series: [{
+                name: 'Itinéraires',
+                colorByPoint: true,
+                data: [
+                    { name: 'Générés par IA (acceptés)', y: pieAi,     color: palette.teal  },
+                    { name: 'Créés manuellement',        y: pieManual, color: palette.terra }
+                ]
+            }]
+        });
+
+        /* ── Column bar ── */
+        Highcharts.chart('chart-bar', {
+            chart: { type: 'column' },
+            title: { text: '' },
+            xAxis: {
+                categories: barLabels.map(function(d) { return d + ' j'; }),
+                title: { text: 'Durée (jours)', style: { color: palette.textMuted, fontSize: '0.78rem' } },
+                labels: { style: { color: palette.textMuted, fontSize: '0.82rem' } },
+                lineColor: palette.border,
+                tickColor: palette.border
+            },
+            yAxis: {
+                title: { text: "Nombre d'itinéraires", style: { color: palette.textMuted, fontSize: '0.78rem' } },
+                gridLineColor: palette.border,
+                labels: { style: { color: palette.textMuted }, format: '{value}' },
+                allowDecimals: false,
+                min: 0
+            },
+            legend: { enabled: false },
+            tooltip: { formatter: function() { return '<b>' + this.x + '</b><br>' + this.y + ' itinéraire(s)'; } },
+            plotOptions: {
+                column: {
+                    borderRadius: 6,
+                    borderWidth: 0,
+                    color: palette.teal,
+                    dataLabels: {
+                        enabled: true,
+                        style: { fontSize: '0.75rem', color: palette.textMuted, fontWeight: '600', textOutline: 'none' }
+                    }
+                }
+            },
+            series: [{ name: "Nb d'itinéraires", data: barValues }]
+        });
+    })();
+    </script>
 {% endblock %}

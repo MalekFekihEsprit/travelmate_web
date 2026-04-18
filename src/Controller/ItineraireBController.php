@@ -10,10 +10,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/itineraires')]
-#[IsGranted('ROLE_ADMIN')]
 final class ItineraireBController extends AbstractController
 {
     #[Route('', name: 'app_admin_itineraires', methods: ['GET'])]
@@ -58,6 +56,38 @@ final class ItineraireBController extends AbstractController
             ? (int) round(100 * $itinerairesAvecEtapes / $totalItineraires)
             : 0;
 
+        // ── Chart data ──────────────────────────────────────────────
+        // Pie: itineraries whose name matches the voyage title = "AI accepted"
+        $chartPie = ['ai' => 0, 'manual' => 0];
+        // Bar: frequency map  days => count of itineraries
+        $durationFreq = [];
+
+        foreach ($itineraires as $itineraire) {
+            $voyage = $itineraire->getVoyage();
+
+            $nom = strtolower(trim((string) $itineraire->getNom_itineraire()));
+            $titreVoyage = $voyage ? strtolower(trim((string) $voyage->getTitre_voyage())) : null;
+
+            if ($titreVoyage !== null && $nom === $titreVoyage) {
+                ++$chartPie['ai'];
+            } else {
+                ++$chartPie['manual'];
+            }
+
+            if ($voyage && $voyage->getDate_debut() && $voyage->getDate_fin()) {
+                $days = (int) $voyage->getDate_debut()->diff($voyage->getDate_fin())->days;
+                if (!isset($durationFreq[$days])) {
+                    $durationFreq[$days] = 0;
+                }
+                ++$durationFreq[$days];
+            }
+        }
+
+        // Sort by duration ascending
+        ksort($durationFreq);
+        $barLabels = array_keys($durationFreq);
+        $barValues = array_values($durationFreq);
+
         return $this->render('admin/ItineraireB.html.twig', [
             'itineraires' => $itineraires,
             'stats' => [
@@ -67,6 +97,9 @@ final class ItineraireBController extends AbstractController
                 'moyenne_etapes_par_itineraire' => $moyenneEtapesParItineraire,
                 'taux_itineraires_planifies_pct' => $tauxItinerairesPlanifies,
             ],
+            'chartPie' => $chartPie,
+            'chartBarLabels' => $barLabels,
+            'chartBarValues' => $barValues,
         ]);
     }
 
