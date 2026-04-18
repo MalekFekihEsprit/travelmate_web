@@ -5,6 +5,32 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('vendor/leaflet/leaflet.css') }}" />
+    <style>
+        .destinations-page .destinations-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 2rem !important;
+            align-items: stretch;
+        }
+
+        .destinations-page .destinations-grid > .destination-card {
+            width: 100% !important;
+            min-width: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .destinations-page .destinations-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .destinations-page .destinations-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1.2rem !important;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -150,6 +176,14 @@
                         <option value="name">📝 Nom (A-Z)</option>
                     </select>
                 </div>
+
+                <div class="filter-group">
+                    <select id="favoriteFilter" class="toolbar-filter__select" aria-label="Filtrer les favoris">
+                        <option value="all">Tous les destinations</option>
+                        <option value="favorites">Mes favoris</option>
+                        <option value="non-favorites">Non favoris</option>
+                    </select>
+                </div>
             </div>
             
             <div class="toolbar-divider"></div>
@@ -162,7 +196,39 @@
 
     {% if destinations is not empty %}
         <div class="destinations-grid" id="destinationsContainer">
-            {% for destination in destinations %}<div class="destination-card" onclick="openDestinationModal({{ destination.idDestination }})" data-region="{{ destination.regionDestination ?? 'Sans région' }}" data-season="{{ destination.saisonDestination ?? 'Sans saison' }}" data-climate="{{ destination.climatDestination ?? 'Sans climat' }}" data-rating="{{ average_scores[destination.idDestination]|default(destination.scoreDestination ?? '') }}" data-name="{{ destination.nomDestination }}"><div class="destination-card__image-wrapper">{% if destination.imageName %}<img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" alt="{{ destination.nomDestination }}" class="destination-card__image">{% else %}<div class="destination-card__image-placeholder">🌍</div>{% endif %}</div><div class="destination-card__content">
+            {% for destination in destinations %}
+                <div
+                    class="destination-card"
+                    onclick="openDestinationModal({{ destination.idDestination }})"
+                    data-region="{{ destination.regionDestination ?? 'Sans région' }}"
+                    data-season="{{ destination.saisonDestination ?? 'Sans saison' }}"
+                    data-climate="{{ destination.climatDestination ?? 'Sans climat' }}"
+                    data-rating="{{ average_scores[destination.idDestination]|default(destination.scoreDestination ?? '') }}"
+                    data-name="{{ destination.nomDestination }}"
+                    data-favorite="{{ favorite_destination_ids[destination.idDestination]|default(false) ? '1' : '0' }}"
+                >
+                    <div class="destination-card__image-wrapper">
+                        {% if destination.imageName %}
+                            <img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" alt="{{ destination.nomDestination }}" class="destination-card__image">
+                        {% else %}
+                            <div class="destination-card__image-placeholder">🌍</div>
+                        {% endif %}
+
+                        <form method="post" action="{{ path('app_destination_favorite_toggle', {'id_destination': destination.idDestination}) }}" class="destination-card__favorite-form">
+                            <input type="hidden" name="_token" value="{{ csrf_token('favorite_destination_' ~ destination.idDestination) }}">
+                            <button
+                                type="submit"
+                                class="destination-card__favorite-btn {{ favorite_destination_ids[destination.idDestination]|default(false) ? 'is-favorite' : '' }}"
+                                aria-label="{{ favorite_destination_ids[destination.idDestination]|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                                title="{{ favorite_destination_ids[destination.idDestination]|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                                onclick="event.stopPropagation();"
+                            >
+                                ♥
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="destination-card__content">
                     <h3 class="destination-card__title">{{ destination.nomDestination }}</h3>
                     <p class="destination-card__location">
                         📍 {{ destination.paysDestination }}
@@ -194,7 +260,10 @@
                                 <span class="badge-icon">📅</span>{{ destination.saisonDestination }}
                             </span>
                         {% endif %}
-                    </div></div></div>{% endfor %}
+                    </div>
+                </div>
+                </div>
+            {% endfor %}
         </div>
     {% else %}
         <div class="destinations-empty">
@@ -523,6 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const regionFilter = document.getElementById('regionFilter');
     const seasonFilter = document.getElementById('seasonFilter');
     const ratingSort = document.getElementById('ratingSort');
+    const favoriteFilter = document.getElementById('favoriteFilter');
     const countDisplay = document.getElementById('destCount');
     
     function applyFiltersAndSort() {
@@ -530,6 +600,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedRegion = regionFilter?.value || '';
         const selectedSeason = seasonFilter?.value || '';
         const sortOption = ratingSort?.value || 'default';
+        const selectedFavoriteFilter = favoriteFilter?.value || 'all';
         
         const container = document.getElementById('destinationsContainer');
         if (!container) return;
@@ -558,10 +629,19 @@ document.addEventListener('DOMContentLoaded', function() {
             if (matches && selectedSeason) {
                 matches = card.getAttribute('data-season') === selectedSeason;
             }
+
+            // Filter by favorites
+            if (matches && selectedFavoriteFilter === 'favorites') {
+                matches = card.getAttribute('data-favorite') === '1';
+            }
+
+            if (matches && selectedFavoriteFilter === 'non-favorites') {
+                matches = card.getAttribute('data-favorite') !== '1';
+            }
             
             if (matches) {
                 visibleCards.push(card);
-                card.style.display = 'block';
+                card.style.display = '';
             } else {
                 card.style.display = 'none';
             }
@@ -613,6 +693,47 @@ document.addEventListener('DOMContentLoaded', function() {
     if (ratingSort) {
         ratingSort.addEventListener('change', applyFiltersAndSort);
     }
+    if (favoriteFilter) {
+        favoriteFilter.addEventListener('change', applyFiltersAndSort);
+    }
+
+    document.querySelectorAll('.destination-card__favorite-form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const button = form.querySelector('.destination-card__favorite-btn');
+            const card = form.closest('.destination-card');
+            if (!button || !card) {
+                return;
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (!data || typeof data.is_favorite === 'undefined') {
+                        return;
+                    }
+
+                    card.setAttribute('data-favorite', data.is_favorite ? '1' : '0');
+                    button.classList.toggle('is-favorite', data.is_favorite);
+                    button.setAttribute('aria-label', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+                    button.setAttribute('title', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+
+                    applyFiltersAndSort();
+                })
+                .catch(function () {
+                    form.submit();
+                });
+        });
+    });
 });
 </script>
 {% endblock %}

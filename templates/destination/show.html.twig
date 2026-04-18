@@ -13,15 +13,36 @@
     {% endfor %}
 
     <div class="destination-detail__header">
-        <div class="destination-detail__flag-rating">
-            {% if destination.imageName %}
-                <img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
-            {% elseif destination.flagDestination %}
-                <img src="{{ destination.flagDestination }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
-            {% else %}
-                <div style="width: 120px; height: 120px; border-radius: 16px; border: 4px solid white; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: rgba(196,111,75,0.1);">🌍</div>
+        <div class="destination-detail__header-top">
+            <div class="destination-detail__flag-rating">
+                {% if destination.imageName %}
+                    <img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
+                {% elseif destination.flagDestination %}
+                    <img src="{{ destination.flagDestination }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
+                {% else %}
+                    <div style="width: 120px; height: 120px; border-radius: 16px; border: 4px solid white; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: rgba(196,111,75,0.1);">🌍</div>
+                {% endif %}
+                <span class="destination-detail__rating">⭐ {{ average_score|default(destination.scoreDestination)|number_format(2, '.', '') }}/5</span>
+            </div>
+
+            {% if app.user %}
+                <form
+                    method="post"
+                    action="{{ path('app_destination_favorite_toggle', {'id_destination': destination.idDestination}) }}"
+                    class="destination-detail__favorite-form"
+                    data-destination-favorite-form
+                >
+                    <input type="hidden" name="_token" value="{{ csrf_token('favorite_destination_' ~ destination.idDestination) }}">
+                    <button
+                        type="submit"
+                        class="destination-detail__favorite-btn {{ is_favorite|default(false) ? 'is-favorite' : '' }}"
+                        aria-label="{{ is_favorite|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                        title="{{ is_favorite|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                    >
+                        ♥
+                    </button>
+                </form>
             {% endif %}
-            <span class="destination-detail__rating">⭐ {{ average_score|default(destination.scoreDestination)|number_format(2, '.', '') }}/5</span>
         </div>
         <h1>{{ destination.nomDestination }}</h1>
         <p class="destination-detail__location">📍 {{ destination.paysDestination }}{% if destination.regionDestination %} • {{ destination.regionDestination }}{% endif %}</p>
@@ -170,6 +191,42 @@
     margin-bottom: 1.5rem;
 }
 
+.destination-detail__header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.destination-detail__favorite-form {
+    margin: 0;
+}
+
+.destination-detail__favorite-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.75);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    cursor: pointer;
+    transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.destination-detail__favorite-btn:hover {
+    transform: translateY(-1px) scale(1.04);
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.destination-detail__favorite-btn.is-favorite {
+    background: #e53935;
+    color: #fff;
+}
+
 .destination-detail__flag {
     font-size: 2.5rem;
 }
@@ -307,6 +364,11 @@
 .destination-rating__stars label:focus-visible {
     transform: translateY(-1px) scale(1.03);
     outline: none;
+}
+
+.destination-rating__stars input:checked + label,
+.destination-rating__stars input:checked ~ label {
+    color: #f1b70b;
 }
 
 .destination-detail__video-wrapper {
@@ -464,4 +526,36 @@
     }
 }
 </style>
+
+<script>
+document.querySelectorAll('[data-destination-favorite-form]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                const button = form.querySelector('.destination-detail__favorite-btn');
+                if (!button || typeof data.is_favorite === 'undefined') {
+                    return;
+                }
+
+                button.classList.toggle('is-favorite', data.is_favorite);
+                button.setAttribute('aria-label', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+                button.setAttribute('title', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+            })
+            .catch(function () {
+                form.submit();
+            });
+    });
+});
+</script>
 {% endblock %}

@@ -3,15 +3,18 @@
 namespace App\Controller;
 
 use App\Entity\Destination;
+use App\Entity\FavoriteDestination;
 use App\Entity\NoteDestination;
 use App\Entity\User;
 use App\Form\DestinationType;
 use App\Repository\DestinationRepository;
+use App\Repository\FavoriteDestinationRepository;
 use App\Repository\NoteDestinationRepository;
 use App\Repository\UserRepository;
 use App\Service\CityCountryLookupService;
 use App\Service\DestinationAiSuggestionException;
 use App\Service\DestinationAiSuggestionService;
+use App\Service\DestinationSeasonService;
 use App\Service\DestinationImageFetcherService;
 use App\Service\RestCountriesService;
 use App\Service\YouTubeVideoService;
@@ -30,6 +33,34 @@ use App\Service\ImageDownloaderService;
 #[Route('/destination')]
 final class DestinationController extends AbstractController
 {
+    #[Route('/season/suggestion', name: 'app_destination_season_suggestion', methods: ['GET'])]
+    public function suggestSeason(Request $request, CityCountryLookupService $lookupService, DestinationSeasonService $seasonService): JsonResponse
+    {
+        $city = trim((string) $request->query->get('city', ''));
+        $country = trim((string) $request->query->get('country', ''));
+
+        if ($city === '' || $country === '') {
+            return $this->json([
+                'error' => 'City and country are required.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $coordinates = $lookupService->getCoordinates($city, $country);
+        if ($coordinates === null || !isset($coordinates['latitude'], $coordinates['longitude'])) {
+            return $this->json([
+                'error' => 'Coordinates could not be resolved for the provided destination.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $season = $seasonService->getBestSeason((float) $coordinates['latitude'], (float) $coordinates['longitude']);
+
+        return $this->json([
+            'season' => $season,
+            'latitude' => (float) $coordinates['latitude'],
+            'longitude' => (float) $coordinates['longitude'],
+        ]);
+    }
+
     #[Route('/ai/suggestions', name: 'app_destination_ai_suggestions', methods: ['GET'])]
     public function generateAiSuggestions(Request $request, DestinationAiSuggestionService $aiSuggestionService): JsonResponse
     {
@@ -78,6 +109,7 @@ final class DestinationController extends AbstractController
     public function index(
         DestinationRepository $destinationRepository,
         NoteDestinationRepository $noteDestinationRepository,
+        FavoriteDestinationRepository $favoriteDestinationRepository,
     ): Response {
         $destinations = $destinationRepository->findBy([], ['id_destination' => 'DESC']);
 
@@ -85,6 +117,14 @@ final class DestinationController extends AbstractController
         $regions       = [];
         $climates      = [];
         $seasons       = [];
+        $favoriteDestinationIds = [];
+
+        $user = $this->getUser();
+        if ($user instanceof User) {
+            foreach ($favoriteDestinationRepository->findBy(['user' => $user]) as $favoriteDestination) {
+                $favoriteDestinationIds[(int) $favoriteDestination->getDestination()?->getIdDestination()] = true;
+            }
+        }
 
         foreach ($destinations as $destination) {
             $average = $noteDestinationRepository->getAverageForDestination($destination);
@@ -109,7 +149,55 @@ final class DestinationController extends AbstractController
             'unique_regions'  => count(array_unique($regions)),
             'unique_climates' => count(array_unique($climates)),
             'unique_seasons'  => count(array_unique($seasons)),
+            'favorite_destination_ids' => $favoriteDestinationIds,
         ]);
+    }
+
+    #[Route('/{id_destination}/favorite', name: 'app_destination_favorite_toggle', methods: ['POST'])]
+    public function toggleFavorite(
+        Request $request,
+        Destination $destination,
+        EntityManagerInterface $entityManager,
+        FavoriteDestinationRepository $favoriteDestinationRepository,
+    ): Response {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            $this->addFlash('error', 'Vous devez être connecté pour ajouter un favori.');
+
+            return $this->redirectToRoute('app_login');
+        }
+
+        if (!$this->isCsrfTokenValid('favorite_destination_' . $destination->getIdDestination(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token de sécurité invalide.');
+
+            return $this->redirectToRoute('app_destination_index');
+        }
+
+        $existing = $favoriteDestinationRepository->findOneByDestinationAndUser($destination, $user);
+        $isFavorite = false;
+
+        if ($existing instanceof FavoriteDestination) {
+            $entityManager->remove($existing);
+        } else {
+            $favorite = (new FavoriteDestination())
+                ->setDestination($destination)
+                ->setUser($user);
+
+            $entityManager->persist($favorite);
+            $isFavorite = true;
+        }
+
+        $entityManager->flush();
+
+        if ($request->isXmlHttpRequest()) {
+            return $this->json([
+                'is_favorite' => $isFavorite,
+            ]);
+        }
+
+        $this->addFlash($isFavorite ? 'success' : 'warning', $isFavorite ? 'Destination ajoutée aux favoris.' : 'Destination retirée des favoris.');
+
+        return $this->redirectToRoute('app_destination_index');
     }
 
 #[Route('/test-vich', name: 'app_destination_test_vich', methods: ['GET'])]
@@ -259,8 +347,10 @@ public function testVich(
     public function show(
         Destination $destination,
         NoteDestinationRepository $noteDestinationRepository,
+        FavoriteDestinationRepository $favoriteDestinationRepository,
     ): Response {
         $userNote = null;
+        $isFavorite = false;
         $user     = $this->getUser();
 
         if ($user instanceof User) {
@@ -268,12 +358,15 @@ public function testVich(
             if ($note instanceof NoteDestination) {
                 $userNote = $note->getNote();
             }
+
+            $isFavorite = $favoriteDestinationRepository->findOneByDestinationAndUser($destination, $user) !== null;
         }
 
         return $this->render('destination/show.html.twig', [
             'destination'   => $destination,
             'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
             'user_note'     => $userNote,
+            'is_favorite'   => $isFavorite,
         ]);
     }
 
@@ -282,6 +375,7 @@ public function testVich(
         Request $request,
         Destination $destination,
         NoteDestinationRepository $noteDestinationRepository,
+        FavoriteDestinationRepository $favoriteDestinationRepository,
         EntityManagerInterface $entityManager,
     ): Response {
         $isAjax = $request->isXmlHttpRequest();
@@ -293,6 +387,9 @@ public function testVich(
                     'destination'   => $destination,
                     'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
                     'user_note'     => null,
+                    'is_favorite'   => $this->getUser() instanceof User
+                        ? $favoriteDestinationRepository->findOneByDestinationAndUser($destination, $this->getUser()) !== null
+                        : false,
                 ]);
             }
             return $this->redirectToRoute('app_destination_show', ['id_destination' => $destination->getId_destination()]);
@@ -306,6 +403,9 @@ public function testVich(
                     'destination'   => $destination,
                     'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
                     'user_note'     => null,
+                    'is_favorite'   => $this->getUser() instanceof User
+                        ? $favoriteDestinationRepository->findOneByDestinationAndUser($destination, $this->getUser()) !== null
+                        : false,
                 ]);
             }
             return $this->redirectToRoute('app_login');
@@ -320,6 +420,9 @@ public function testVich(
                     'destination'   => $destination,
                     'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
                     'user_note'     => $note instanceof NoteDestination ? $note->getNote() : null,
+                    'is_favorite'   => $this->getUser() instanceof User
+                        ? $favoriteDestinationRepository->findOneByDestinationAndUser($destination, $this->getUser()) !== null
+                        : false,
                 ]);
             }
             return $this->redirectToRoute('app_destination_show', ['id_destination' => $destination->getId_destination()]);
@@ -346,6 +449,9 @@ public function testVich(
                 'destination'   => $destination,
                 'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
                 'user_note'     => $note->getNote(),
+                'is_favorite'   => $this->getUser() instanceof User
+                    ? $favoriteDestinationRepository->findOneByDestinationAndUser($destination, $this->getUser()) !== null
+                    : false,
             ]);
         }
 

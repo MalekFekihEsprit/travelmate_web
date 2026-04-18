@@ -287,11 +287,15 @@ class Destination
     #[ORM\OneToMany(targetEntity: NoteDestination::class, mappedBy: 'destination', orphanRemoval: true)]
     private Collection $notesDestination;
 
+    #[ORM\OneToMany(targetEntity: FavoriteDestination::class, mappedBy: 'destination', orphanRemoval: true)]
+    private Collection $favoriteDestinations;
+
     public function __construct()
     {
         $this->hebergements    = new ArrayCollection();
         $this->voyages         = new ArrayCollection();
         $this->notesDestination = new ArrayCollection();
+        $this->favoriteDestinations = new ArrayCollection();
     }
 
     // ── Camel-case aliases (used by Twig & other controllers) ─────────────────
@@ -514,6 +518,39 @@ class Destination
                 $noteDestination->setDestination(null);
             }
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FavoriteDestination>
+     */
+    public function getFavoriteDestinations(): Collection
+    {
+        if (!$this->favoriteDestinations instanceof Collection) {
+            $this->favoriteDestinations = new ArrayCollection();
+        }
+
+        return $this->favoriteDestinations;
+    }
+
+    public function addFavoriteDestination(FavoriteDestination $favoriteDestination): self
+    {
+        if (!$this->getFavoriteDestinations()->contains($favoriteDestination)) {
+            $this->getFavoriteDestinations()->add($favoriteDestination);
+            $favoriteDestination->setDestination($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFavoriteDestination(FavoriteDestination $favoriteDestination): self
+    {
+        if ($this->getFavoriteDestinations()->removeElement($favoriteDestination)) {
+            if ($favoriteDestination->getDestination() === $this) {
+                $favoriteDestination->setDestination(null);
+            }
+        }
+
         return $this;
     }
 }

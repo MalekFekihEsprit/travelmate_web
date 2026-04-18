@@ -224,6 +224,24 @@
         cursor: wait;
     }
 
+    .btn--season {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.78rem;
+        border: 1px solid #4b8ac4;
+        background: rgba(75, 138, 196, 0.08);
+        color: #27547a;
+        border-radius: 6px;
+    }
+
+    .btn--season:hover {
+        background: rgba(75, 138, 196, 0.15);
+    }
+
+    .btn--season:disabled {
+        opacity: 0.65;
+        cursor: wait;
+    }
+
     .ai-status {
         margin-top: 0.5rem;
         font-size: 0.78rem;
@@ -325,7 +343,10 @@
 
     {# Saison #}
     <div class="admin-form__group">
-        {{ form_label(form.saison_destination, 'Meilleure saison') }}
+        <div class="admin-form__label-row">
+            {{ form_label(form.saison_destination, 'Meilleure saison') }}
+            <button type="button" id="aiSuggestSeason" class="btn btn--season">Suggérer la saison idéale</button>
+        </div>
         <div class="admin-form-wrapper">
             {{ form_widget(form.saison_destination, {
                 'attr': {
@@ -335,6 +356,7 @@
                 }
             }) }}
             <div class="field-error" data-error-for="saison_destination"></div>
+            <div id="seasonStatus" class="ai-status" aria-live="polite"></div>
         </div>
     </div>
 
@@ -354,12 +376,16 @@
 
 <script>
 const locationValidateUrl = '{{ path('app_destination_location_validate') }}';
+const seasonSuggestionUrl = '{{ path('app_destination_season_suggestion') }}';
 const aiSuggestionsUrl = '{{ path('app_destination_ai_suggestions') }}';
 const cityInput = document.querySelector('input[name$="[nom_destination]"]');
 const countryInput = document.querySelector('input[name$="[pays_destination]"]');
 const descriptionInput = document.querySelector('textarea[name$="[description_destination]"]');
 const aiGenerateButton = document.getElementById('aiGenerateDescription');
 const aiStatus = document.getElementById('aiStatus');
+const seasonInput = document.querySelector('select[name$="[saison_destination]"]');
+const seasonButton = document.getElementById('aiSuggestSeason');
+const seasonStatus = document.getElementById('seasonStatus');
 let locationValidationTimer = null;
 
 function setAiStatus(message, state = '') {
@@ -376,6 +402,23 @@ function setAiStatus(message, state = '') {
 
     if (state === 'success') {
         aiStatus.classList.add('is-success');
+    }
+}
+
+function setSeasonStatus(message, state = '') {
+    if (!seasonStatus) {
+        return;
+    }
+
+    seasonStatus.textContent = message;
+    seasonStatus.classList.remove('is-error', 'is-success');
+
+    if (state === 'error') {
+        seasonStatus.classList.add('is-error');
+    }
+
+    if (state === 'success') {
+        seasonStatus.classList.add('is-success');
     }
 }
 
@@ -483,6 +526,48 @@ async function generateDescriptionWithAi() {
     } finally {
         aiGenerateButton.disabled = false;
         aiGenerateButton.textContent = previousLabel;
+    }
+}
+
+async function suggestIdealSeason() {
+    if (!cityInput || !countryInput || !seasonInput || !seasonButton) {
+        return;
+    }
+
+    const city = cityInput.value.trim();
+    const country = countryInput.value.trim();
+
+    if (city === '' || country === '') {
+        setSeasonStatus('Renseignez d abord le nom du lieu et le pays.', 'error');
+        return;
+    }
+
+    seasonButton.disabled = true;
+    const previousLabel = seasonButton.textContent;
+    seasonButton.textContent = 'Recherche...';
+    setSeasonStatus('Calcul de la saison idéale en cours...');
+
+    try {
+        const params = new URLSearchParams({ city, country });
+        const response = await fetch(`${seasonSuggestionUrl}?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const payload = await response.json();
+        if (!response.ok || payload.error) {
+            throw new Error(payload.error || 'La suggestion de saison a echoue.');
+        }
+
+        seasonInput.value = payload.season || '';
+        seasonInput.dispatchEvent(new Event('change', { bubbles: true }));
+        setSeasonStatus(`Saison idéale suggérée: ${payload.season}.`, 'success');
+    } catch (error) {
+        setSeasonStatus(error.message || 'Erreur pendant la suggestion de saison.', 'error');
+    } finally {
+        seasonButton.disabled = false;
+        seasonButton.textContent = previousLabel;
     }
 }
 
@@ -608,4 +693,5 @@ document.querySelector('.admin-form')?.addEventListener('input', function(e) {
 });
 
 aiGenerateButton?.addEventListener('click', generateDescriptionWithAi);
+seasonButton?.addEventListener('click', suggestIdealSeason);
 </script>

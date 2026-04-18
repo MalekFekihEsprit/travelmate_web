@@ -388,6 +388,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: NoteDestination::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $notesDestination;
 
+    #[ORM\OneToMany(targetEntity: FavoriteDestination::class, mappedBy: 'user', orphanRemoval: true)]
+    private Collection $favoriteDestinations;
+
     public function __construct()
     {
         $this->budgets = new ArrayCollection();
@@ -397,6 +400,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->paiements = new ArrayCollection();
         $this->participations = new ArrayCollection();
         $this->notesDestination = new ArrayCollection();
+        $this->favoriteDestinations = new ArrayCollection();
     }
 
     /**
@@ -501,6 +505,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this->getNotesDestination()->removeElement($noteDestination)) {
             if ($noteDestination->getUser() === $this) {
                 $noteDestination->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FavoriteDestination>
+     */
+    public function getFavoriteDestinations(): Collection
+    {
+        if (!$this->favoriteDestinations instanceof Collection) {
+            $this->favoriteDestinations = new ArrayCollection();
+        }
+
+        return $this->favoriteDestinations;
+    }
+
+    public function addFavoriteDestination(FavoriteDestination $favoriteDestination): self
+    {
+        if (!$this->getFavoriteDestinations()->contains($favoriteDestination)) {
+            $this->getFavoriteDestinations()->add($favoriteDestination);
+            $favoriteDestination->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFavoriteDestination(FavoriteDestination $favoriteDestination): self
+    {
+        if ($this->getFavoriteDestinations()->removeElement($favoriteDestination)) {
+            if ($favoriteDestination->getUser() === $this) {
+                $favoriteDestination->setUser(null);
             }
         }
 
