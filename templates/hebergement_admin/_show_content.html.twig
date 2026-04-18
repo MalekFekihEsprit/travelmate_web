@@ -1,0 +1,52 @@
+<div class="destination-overview">
+    <div class="destination-overview__flag" aria-hidden="true">🏨</div>
+    <div>
+        <h2 class="destination-overview__title">{{ hebergement.nomHebergement }}</h2>
+        <p class="destination-overview__sub">
+            {{ hebergement.typeHebergement ?: 'Type non renseigne' }}
+            {% if hebergement.destination %}
+                - {{ hebergement.destination.nomDestination }}
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="destination-grid">
+    <div class="destination-item destination-item--type">
+        <span class="destination-item__label">Type</span>
+        <span class="destination-item__value">{{ hebergement.typeHebergement ?: '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--price">
+        <span class="destination-item__label">Prix / nuit</span>
+        <span class="destination-item__value">{{ hebergement.prixNuitHebergement is not null ? hebergement.prixNuitHebergement : '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--score">
+        <span class="destination-item__label">Note</span>
+        <span class="destination-item__value">{{ hebergement.noteHebergement is not null ? hebergement.noteHebergement ~ '/5' : '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--lat">
+        <span class="destination-item__label">Latitude</span>
+        <span class="destination-item__value">{{ hebergement.latitudeHebergement is not null ? hebergement.latitudeHebergement : '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--lng">
+        <span class="destination-item__label">Longitude</span>
+        <span class="destination-item__value">{{ hebergement.longitudeHebergement is not null ? hebergement.longitudeHebergement : '—' }}</span>
+    </div>
+    <div class="destination-item destination-item--destination">
+        <span class="destination-item__label">Destination</span>
+        <span class="destination-item__value">{{ hebergement.destination ? hebergement.destination.nomDestination : '—' }}</span>
+    </div>
+</div>
+
+{% if hebergement.adresseHebergement %}
+    <div class="destination-description">{{ hebergement.adresseHebergement }}</div>
+{% endif %}
+
+<div class="destination-actions">
+    <a href="{{ path('app_admin_hebergements') }}" class="btn btn--ghost">Retour</a>
+    <a href="{{ path('app_admin_hebergement_edit', {id: hebergement.idHebergement}) }}" class="btn btn--primary" onclick="return confirm('Confirmer la modification de cet hebergement ?');">Modifier</a>
+    <form method="post" action="{{ path('app_admin_hebergement_delete', {id: hebergement.idHebergement}) }}" onsubmit="return confirm('Supprimer cet hebergement ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete_hebergement_' ~ hebergement.idHebergement) }}">
+        <button class="btn btn-delete" type="submit">Supprimer</button>
+    </form>
+</div>

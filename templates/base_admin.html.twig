@@ -305,8 +305,9 @@
                 width: 42px;
                 height: 42px;
                 border-radius: 50%;
-                object-fit: cover;
-                background: var(--admin-surface-alt);
+                object-fit: contain;
+                padding: 0.28rem;
+                background: #fff;
                 border: 2px solid rgba(196, 111, 75, 0.14);
             }
 
@@ -878,6 +879,61 @@
                     width: min(88vw, 260px);
                 }
             }
+
+            /* ADMIN FORM */
+            .admin-form__grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .admin-form__group {
+                display: flex;
+                flex-direction: column;
+                gap: .3rem;
+            }
+
+            .admin-form__group--full {
+                grid-column: span 2;
+            }
+
+            .admin-input {
+                min-height: 46px;
+                padding: .8rem 1rem;
+                border-radius: 14px;
+                border: 1px solid var(--admin-border);
+                background: #fffdfa;
+                transition: all .2s ease;
+            }
+
+            .admin-input:focus {
+                border-color: rgba(196,111,75,0.4);
+                box-shadow: 0 0 0 4px rgba(196,111,75,0.08);
+                outline: none;
+            }
+
+            .admin-form__actions {
+                margin-top: 1.5rem;
+                display: flex;
+                gap: .75rem;
+                flex-wrap: wrap;
+            }
+
+            /* FORM ANIMATION */
+            .admin-card {
+                animation: fadeIn .3s ease;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(6px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
         </style>
     {% endblock %}
 </head>
@@ -909,7 +965,7 @@
             </div>
 
             <div class="admin-topbar__center">
-                <label class="admin-search">
+                <form class="admin-search" method="get" action="{{ app.request.pathInfo }}">
                     <span class="admin-search__icon" aria-hidden="true">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                             <path d="M21 21L16.65 16.65M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -917,10 +973,12 @@
                     </span>
                     <input
                         type="text"
+                        name="search"
                         class="admin-search__input"
+                        value="{{ app.request.query.get('search', '') }}"
                         placeholder="Rechercher un utilisateur, un voyage, une destination..."
                     >
-                </label>
+                </form>
             </div>
 
             <div class="admin-topbar__actions">
@@ -1023,40 +1081,51 @@
                     <span>Utilisateurs</span>
                 </a>
 
-                <a href="#" {# path('app_admin_voyages') #}
+                <a href="{{ path('app_admin_voyages') }}"
                    class="admin-nav__item {{ currentRoute starts with 'app_admin_voyages' ? 'is-active' : '' }}">
                     
                     <span>Voyages</span>
                 </a>
 
-                <a href="#" {# path('app_admin_destinations') #}
+                <a href="{{ path('app_admin_destinations') }}"
                    class="admin-nav__item {{ currentRoute starts with 'app_admin_destinations' ? 'is-active' : '' }}">
                     
                     <span>Destinations</span>
                 </a>
 
-                <a href="#" {# path('app_admin_hebergements') #}
+                <a href="{{ path('app_admin_hebergements') }}"
                    class="admin-nav__item {{ currentRoute starts with 'app_admin_hebergements' ? 'is-active' : '' }}">
                     
                     <span>Hébergements</span>
                 </a>
 
-                <a href="#" {# path('app_admin_categories') #}
-                   class="admin-nav__item {{ currentRoute starts with 'app_admin_categories' ? 'is-active' : '' }}">
+                <a href="{{ path('app_categorie_index') }}" 
+                   class="admin-nav__item {{ currentRoute starts with 'app_categorie_index' ? 'is-active' : '' }}">
                     
                     <span>Catégories</span>
                 </a>
 
-                <a href="#" {# path('app_admin_activites') #}
-                   class="admin-nav__item {{ currentRoute starts with 'app_admin_activites' ? 'is-active' : '' }}">
+                <a href="{{ path('app_activite_index') }}"
+                   class="admin-nav__item {{ currentRoute starts with 'app_activite_index' ? 'is-active' : '' }}">
                     
                     <span>Activités</span>
+                </a>
+
+                <a href="{{ path('app_evenement_index') }}"
+                   class="admin-nav__item {{ currentRoute starts with 'app_evenement_index' ? 'is-active' : '' }}">
+                    
+                    <span>Événements</span>
                 </a>
 
                 <a href="#" {# path('app_admin_budgets') #}
                    class="admin-nav__item {{ currentRoute starts with 'app_admin_budgets' ? 'is-active' : '' }}">
                     
                     <span>Budgets</span>
+                </a>
+
+                <a href="{{ path('app_admin_itineraires') }}"
+                   class="admin-nav__item {{ currentRoute starts with 'app_admin_itineraires' ? 'is-active' : '' }}">
+                    <span>Itinéraires</span>
                 </a>
 
                 <div class="admin-nav__section">Modération</div>

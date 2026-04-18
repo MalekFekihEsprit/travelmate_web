@@ -1,0 +1,220 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Catégories | Administration TravelMate{% endblock %}
+
+{% block body %}
+<section class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Gestion du contenu</span>
+        <h1 class="admin-page-header__title">Catégories</h1>
+        <p class="admin-page-header__desc">
+            {{ categories|length }} catégorie{{ categories|length > 1 ? 's' : '' }} enregistrée{{ categories|length > 1 ? 's' : '' }} dans la plateforme.
+        </p>
+    </div>
+    <div class="admin-page-header__actions">
+        <a href="{{ path('app_categorie_new') }}" class="btn btn--primary">
+            + Nouvelle catégorie
+        </a>
+    </div>
+</section>
+
+{# Flash messages #}
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="admin-flash admin-flash--{{ label }}" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<style>
+    .admin-flash {
+        padding: 0.85rem 1.2rem;
+        border-radius: var(--radius-md);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 1.25rem;
+    }
+    .admin-flash--success {
+        background: var(--admin-success-soft);
+        color: var(--admin-success);
+        border: 1px solid rgba(60,139,114,.25);
+    }
+    .admin-flash--danger {
+        background: var(--admin-danger-soft);
+        color: var(--admin-danger);
+        border: 1px solid rgba(191,91,91,.25);
+    }
+
+    /* ── TABLE ─────────────────────────────────── */
+    .admin-table-wrap {
+        background: var(--admin-surface);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+    }
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+    .admin-table thead {
+        background: var(--admin-surface-alt);
+        border-bottom: 1px solid var(--admin-border);
+    }
+    .admin-table th {
+        padding: 0.85rem 1.1rem;
+        text-align: left;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--admin-text-muted);
+    }
+    .admin-table td {
+        padding: 1rem 1.1rem;
+        border-bottom: 1px solid rgba(231,220,205,.5);
+        color: var(--admin-text);
+        vertical-align: middle;
+    }
+    .admin-table tbody tr:last-child td { border-bottom: none; }
+    .admin-table tbody tr:hover { background: rgba(196,111,75,.03); }
+
+    .admin-table__name {
+        font-weight: 600;
+        color: var(--admin-text);
+    }
+    .admin-table__desc {
+        color: var(--admin-text-muted);
+        font-size: 0.82rem;
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 0.22rem 0.65rem;
+        border-radius: 999px;
+    }
+    .badge--type {
+        background: rgba(196,111,75,.1);
+        color: var(--admin-primary);
+        border: 1px solid rgba(196,111,75,.2);
+    }
+    .badge--saison {
+        background: var(--admin-secondary-soft);
+        color: var(--admin-secondary);
+        border: 1px solid rgba(47,127,121,.2);
+    }
+    .badge--intensity {
+        background: var(--admin-warning-soft);
+        color: var(--admin-warning);
+        border: 1px solid rgba(185,135,47,.2);
+    }
+
+    .admin-table__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 0.38rem 0.85rem;
+        border-radius: var(--radius-sm);
+        transition: background var(--transition-fast), color var(--transition-fast);
+        border: 1px solid transparent;
+        cursor: pointer;
+    }
+    .action-btn--edit {
+        background: var(--admin-secondary-soft);
+        color: var(--admin-secondary);
+        border-color: rgba(47,127,121,.2);
+    }
+    .action-btn--edit:hover { background: rgba(47,127,121,.15); }
+    .action-btn--delete {
+        background: var(--admin-danger-soft);
+        color: var(--admin-danger);
+        border-color: rgba(191,91,91,.2);
+    }
+    .action-btn--delete:hover { background: rgba(191,91,91,.15); }
+    .action-btn--view {
+        background: var(--admin-surface-alt);
+        color: var(--admin-text-muted);
+        border-color: var(--admin-border);
+    }
+    .action-btn--view:hover { background: rgba(196,111,75,.06); color: var(--admin-primary); }
+
+    /* Empty state */
+    .admin-empty {
+        text-align: center;
+        padding: 3.5rem 1rem;
+        color: var(--admin-text-muted);
+    }
+    .admin-empty__icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .admin-empty__title { font-family: 'Fraunces', serif; font-size: 1.2rem; color: var(--admin-text); margin-bottom: 0.4rem; }
+</style>
+
+{% if categories is empty %}
+    <div class="admin-table-wrap">
+        <div class="admin-empty">
+            <div class="admin-empty__icon">🗂️</div>
+            <p class="admin-empty__title">Aucune catégorie</p>
+            <p>Commencez par créer votre première catégorie d'activités.</p>
+        </div>
+    </div>
+{% else %}
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Saison</th>
+                    <th>Intensité</th>
+                    <th>Public cible</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for categorie in categories %}
+                <tr>
+                    <td style="color:var(--admin-text-muted); font-size:0.8rem;">{{ categorie.id }}</td>
+                    <td>
+                        <div class="admin-table__name">{{ categorie.nom }}</div>
+                        <div class="admin-table__desc">{{ categorie.description }}</div>
+                    </td>
+                    <td><span class="badge badge--type">{{ categorie.type }}</span></td>
+                    <td><span class="badge badge--saison">{{ categorie.saison }}</span></td>
+                    <td><span class="badge badge--intensity">{{ categorie.niveauintensite }}</span></td>
+                    <td style="font-size:0.85rem;">{{ categorie.publiccible }}</td>
+                    <td>
+                        <div class="admin-table__actions">
+                            <a href="{{ path('app_categorie_edit', {'id': categorie.id}) }}" class="action-btn action-btn--edit">
+                                 Modifier
+                            </a>
+                            <form method="post"
+                                  action="{{ path('app_categorie_delete', {'id': categorie.id}) }}"
+                                  onsubmit="return confirm('Supprimer « {{ categorie.nom }} » ?');"
+                                  style="margin:0;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ categorie.id) }}">
+                                <button type="submit" class="action-btn action-btn--delete">🗑 Supprimer</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+{% endblock %}

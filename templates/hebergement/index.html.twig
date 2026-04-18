@@ -1,0 +1,359 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hébergements | TravelMate{% endblock %}
+
+{% block body %}
+<section class="destinations-page">
+    <div class="destinations-hero">
+        <div class="destinations-hero__content">
+            <span class="destinations-hero__eyebrow">HÉBERGEMENTS</span>
+            <h1 class="destinations-hero__title">Découvrez nos meilleures adresses</h1>
+            <p class="destinations-hero__text">
+                Explorez une sélection de logements soigneusement sélectionnés. Du luxe à l'économie, trouvez l'hébergement parfait pour votre prochain séjour.
+            </p>
+
+            <div class="destinations-hero__stats">
+                <div class="destinations-stat">
+                    <strong>{{ hebergements|length }}</strong>
+                    <span>hébergements</span>
+                </div>
+                <div class="destinations-stat">
+                    <strong>{{ unique_types }}</strong>
+                    <span>types</span>
+                </div>
+                <div class="destinations-stat">
+                    <strong>{{ unique_destinations }}</strong>
+                    <span>destinations</span>
+                </div>
+            </div>
+
+                {% if selected_destination %}
+                    <div class="toolbar-count" style="margin-top: 1rem; display: inline-flex;">
+                        Filtre actif : {{ selected_destination.nomDestination }}
+                        {% if selected_destination.paysDestination %} - {{ selected_destination.paysDestination }}{% endif %}
+                    </div>
+                {% endif %}
+        </div>
+        <div class="destinations-hero__visual">
+            <img src="{{ asset('images/destination.jpg') }}" alt="Accommodations" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
+        </div>
+    </div>
+
+    {% set successFlashes = app.flashes('success') %}
+    {% set warningFlashes = app.flashes('warning') %}
+    {% set errorFlashes = app.flashes('error') %}
+
+    {% if successFlashes is not empty or warningFlashes is not empty or errorFlashes is not empty %}
+        <div class="destinations-toast-stack" aria-live="polite" aria-atomic="true">
+            {% for message in successFlashes %}
+                <div class="destinations-flash destinations-flash--success" data-destinations-toast>
+                    <strong class="destinations-flash__title">Opération réussie</strong>
+                    <div class="destinations-flash__message">{{ message }}</div>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                </div>
+            {% endfor %}
+
+            {% for message in warningFlashes %}
+                <div class="destinations-flash destinations-flash--warning" data-destinations-toast>
+                    <strong class="destinations-flash__title">Attention</strong>
+                    <div class="destinations-flash__message">{{ message }}</div>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                </div>
+            {% endfor %}
+
+            {% for message in errorFlashes %}
+                <div class="destinations-flash destinations-flash--error" data-destinations-toast>
+                    <strong class="destinations-flash__title">Action impossible</strong>
+                    <div class="destinations-flash__message">{{ message }}</div>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="destinations-toolbar-wrapper">
+        <div class="toolbar-header">
+            <h2 class="toolbar-title">Filtrer & Trier</h2>
+            <p class="toolbar-subtitle">Découvrez nos meilleures adresses</p>
+        </div>
+
+        <div class="destinations-toolbar">
+            <div class="toolbar-search">
+                <svg class="toolbar-search__icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="2"/>
+                    <path d="M13 13L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <input type="text" id="hbergSearch" placeholder="Rechercher un hébergement..." class="toolbar-search__input" value="{{ search }}">
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-filters">
+                <div class="filter-group">
+                    <label for="typeFilter" class="filter-label">Type</label>
+                    <select id="typeFilter" class="toolbar-filter__select">
+                        <option value="">Tous les types</option>
+                        {% set typesMap = {} %}
+                        {% for hebergement in hebergements %}
+                            {% if hebergement.typeHebergement %}
+                                {% set typesMap = typesMap|merge({(hebergement.typeHebergement): true}) %}
+                            {% endif %}
+                        {% endfor %}
+                        {% for type in typesMap|keys|sort %}
+                            <option value="{{ type }}" {{ selected_type == type ? 'selected' : '' }}>{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="destinationFilter" class="filter-label">Destination</label>
+                    <select id="destinationFilter" class="toolbar-filter__select">
+                        <option value="">Toutes les destinations</option>
+                        {% for destinationOption in destination_options %}
+                            <option value="{{ destinationOption.id }}" {{ selected_destination_id == destinationOption.id ? 'selected' : '' }}>
+                                {{ destinationOption.name }}{% if destinationOption.country %} - {{ destinationOption.country }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="hebergSort" class="filter-label">Trier par</label>
+                    <select id="hebergSort" class="toolbar-filter__select">
+                        <option value="default" {{ selected_sort == 'default' ? 'selected' : '' }}>Par défaut</option>
+                        <option value="name" {{ selected_sort == 'name' ? 'selected' : '' }}>📝 Nom (A-Z)</option>
+                        <option value="price-asc" {{ selected_sort == 'price-asc' ? 'selected' : '' }}>💰 Prix (bas → élevé)</option>
+                        <option value="price-desc" {{ selected_sort == 'price-desc' ? 'selected' : '' }}>💰 Prix (élevé → bas)</option>
+                        <option value="rating-desc" {{ selected_sort == 'rating-desc' ? 'selected' : '' }}>⭐ Note (élevée → basse)</option>
+                        <option value="rating-asc" {{ selected_sort == 'rating-asc' ? 'selected' : '' }}>⭐ Note (basse → élevée)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="toolbar-divider"></div>
+            
+            <div class="toolbar-info">
+                <span class="toolbar-count"><strong id="hbergCount">{{ hebergements|length }}</strong> résultat{{ hebergements|length > 1 ? 's' : '' }}</span>
+            </div>
+        </div>
+    </div>
+
+    {% if hebergements is not empty %}
+        <div class="destinations-grid" id="hebergementContainer">
+            {% for hebergement in hebergements %}<div class="destination-card" onclick="openHebergementModal({{ hebergement.idHebergement }})" data-type="{{ hebergement.typeHebergement ?? 'Sans type' }}" data-price="{{ hebergement.prixNuitHebergement ?? 0 }}" data-rating="{{ hebergement.noteHebergement ?? '' }}" data-name="{{ hebergement.nomHebergement }}" data-destination-id="{{ hebergement.destination ? hebergement.destination.idDestination : '' }}"><div class="destination-card__image-wrapper"><div class="destination-card__image-placeholder">🏨</div></div><div class="destination-card__content">
+                    <h3 class="destination-card__title">{{ hebergement.nomHebergement }}</h3>
+                    <p class="destination-card__location">
+                        📍 {{ hebergement.adresseHebergement ?? 'Adresse non disponible' }}
+                    </p>
+                    
+                    {% if hebergement.destination %}
+                        <p class="destination-card__description">
+                            À {{ hebergement.destination.nomDestination }}
+                        </p>
+                    {% endif %}
+
+                    <div class="destination-card__meta">
+                        {% if hebergement.typeHebergement %}
+                            <span class="destination-card__badge destination-card__badge--climate">
+                                <span class="badge-icon">🏠</span>{{ hebergement.typeHebergement }}
+                            </span>
+                        {% endif %}
+                        {% if hebergement.prixNuitHebergement is not null %}
+                            <span class="destination-card__badge destination-card__badge--climate">
+                                <span class="badge-icon">💰</span>{{ hebergement.prixNuitHebergement }} €/nuit
+                            </span>
+                        {% endif %}
+                        {% if hebergement.noteHebergement %}
+                            <span class="destination-card__badge destination-card__badge--season">
+                                <span class="badge-icon">⭐</span>{{ hebergement.noteHebergement }}/5
+                            </span>
+                        {% endif %}
+                    </div></div></div>{% endfor %}
+        </div>
+    {% else %}
+        <div class="destinations-empty">
+            <div class="destinations-empty__icon">🏨</div>
+            <p>Aucun hébergement trouvé</p>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Modal pour afficher les détails -->
+<div id="hebergementModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeHebergementModal()">&times;</span>
+        <div id="modalBody">
+            <!-- Le contenu sera chargé dynamiquement -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+function openHebergementModal(hebergementId) {
+    const modal = document.getElementById('hebergementModal');
+    const modalBody = document.getElementById('modalBody');
+    
+    fetch(`{{ path('app_hebergement_show', {'id_hebergement': '__ID__'}) }}`.replace('__ID__', hebergementId))
+        .then(response => response.text())
+        .then(html => {
+            modalBody.innerHTML = html;
+            modal.classList.add('active');
+        })
+        .catch(error => console.error('Erreur:', error));
+}
+
+function closeHebergementModal() {
+    const modal = document.getElementById('hebergementModal');
+    modal.classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('hebergementModal');
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            closeHebergementModal();
+        }
+    }
+
+    // Gestion des toasts
+    var toasts = document.querySelectorAll('[data-destinations-toast]');
+
+    function hideToast(toast) {
+        if (!toast || toast.classList.contains('is-hiding')) {
+            return;
+        }
+
+        toast.classList.add('is-hiding');
+        window.setTimeout(function () {
+            toast.remove();
+        }, 220);
+    }
+
+    toasts.forEach(function (toast) {
+        var closeButton = toast.querySelector('[data-destinations-toast-close]');
+
+        if (closeButton) {
+            closeButton.addEventListener('click', function () {
+                hideToast(toast);
+            });
+        }
+
+        window.setTimeout(function () {
+            hideToast(toast);
+        }, 4200);
+    });
+
+    // Search, filter and sort functionality
+    const searchInput = document.getElementById('hbergSearch');
+    const typeFilter = document.getElementById('typeFilter');
+    const destinationFilter = document.getElementById('destinationFilter');
+    const hebergSort = document.getElementById('hebergSort');
+    const countDisplay = document.getElementById('hbergCount');
+    
+    function applyHebergementFiltersAndSort() {
+        const searchTerm = (searchInput?.value || '').toLowerCase();
+        const selectedType = typeFilter?.value || '';
+        const selectedDestinationId = destinationFilter?.value || '';
+        const sortOption = hebergSort?.value || 'default';
+        
+        const container = document.getElementById('hebergementContainer');
+        if (!container) return;
+        
+        let allCards = Array.from(container.querySelectorAll('.destination-card'));
+        let visibleCards = [];
+        
+        // Apply filters
+        allCards.forEach(function(card) {
+            let matches = true;
+            
+            // Filter by search term
+            if (searchTerm) {
+                const title = card.querySelector('.destination-card__title')?.textContent.toLowerCase() || '';
+                const location = card.querySelector('.destination-card__location')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.destination-card__description')?.textContent.toLowerCase() || '';
+                matches = title.includes(searchTerm) || location.includes(searchTerm) || description.includes(searchTerm);
+            }
+            
+            // Filter by type
+            if (matches && selectedType) {
+                matches = card.getAttribute('data-type') === selectedType;
+            }
+
+            // Filter by destination
+            if (matches && selectedDestinationId) {
+                matches = card.getAttribute('data-destination-id') === selectedDestinationId;
+            }
+            
+            if (matches) {
+                visibleCards.push(card);
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Sort visible cards
+        visibleCards.sort(function(a, b) {
+            const nameA = a.getAttribute('data-name') || '';
+            const nameB = b.getAttribute('data-name') || '';
+            const priceA = parseFloat(a.getAttribute('data-price')) || 0;
+            const priceB = parseFloat(b.getAttribute('data-price')) || 0;
+            const ratingA = parseFloat(a.getAttribute('data-rating')) || 0;
+            const ratingB = parseFloat(b.getAttribute('data-rating')) || 0;
+            
+            if (sortOption === 'name') {
+                return nameA.localeCompare(nameB);
+            } else if (sortOption === 'price-asc') {
+                if (priceA === 0 && priceB === 0) return 0;
+                if (priceA === 0) return 1;
+                if (priceB === 0) return -1;
+                return priceA - priceB;
+            } else if (sortOption === 'price-desc') {
+                if (priceA === 0 && priceB === 0) return 0;
+                if (priceA === 0) return 1;
+                if (priceB === 0) return -1;
+                return priceB - priceA;
+            } else if (sortOption === 'rating-desc') {
+                if (ratingA === 0 && ratingB === 0) return 0;
+                if (ratingA === 0) return 1;
+                if (ratingB === 0) return -1;
+                return ratingB - ratingA;
+            } else if (sortOption === 'rating-asc') {
+                if (ratingA === 0 && ratingB === 0) return 0;
+                if (ratingA === 0) return 1;
+                if (ratingB === 0) return -1;
+                return ratingA - ratingB;
+            }
+            return 0;
+        });
+        
+        // Update DOM order for visible cards
+        visibleCards.forEach(function(card) {
+            container.appendChild(card);
+        });
+        
+        // Update count
+        if (countDisplay) {
+            countDisplay.textContent = visibleCards.length;
+        }
+    }
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', applyHebergementFiltersAndSort);
+    }
+    if (typeFilter) {
+        typeFilter.addEventListener('change', applyHebergementFiltersAndSort);
+    }
+    if (destinationFilter) {
+        destinationFilter.addEventListener('change', applyHebergementFiltersAndSort);
+    }
+    if (hebergSort) {
+        hebergSort.addEventListener('change', applyHebergementFiltersAndSort);
+    }
+
+    applyHebergementFiltersAndSort();
+});
+</script>
+{% endblock %}

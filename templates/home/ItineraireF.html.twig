@@ -1,0 +1,606 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Itinéraires | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Section Hero et Contenu Principal */
+        .itineraires-page {
+            display: grid;
+            gap: 1.75rem;
+        }
+
+        .itineraires-hero {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+            gap: 1.4rem;
+            padding: 2rem;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(221, 191, 140, 0.28), transparent 30%),
+                linear-gradient(135deg, rgba(255, 253, 249, 0.98), rgba(243, 234, 223, 0.92));
+            border: 1px solid rgba(231, 220, 205, 0.6);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 40px rgba(71, 48, 35, 0.06);
+        }
+
+        .itineraires-hero__content {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+        }
+
+        .itineraires-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--color-primary);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .itineraires-hero__title {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.2rem, 3vw, 3.5rem);
+            line-height: 1.05;
+            margin-bottom: 0.85rem;
+            color: var(--color-text);
+        }
+
+        .itineraires-hero__badge {
+            display: inline-block;
+            margin-left: 0.75rem;
+            padding: 0.45rem 0.85rem;
+            background: var(--color-primary);
+            color: white;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+
+        .itineraires-hero__stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 160px));
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .itineraires-stat {
+            padding: 0.85rem;
+            border: 1px solid rgba(231, 220, 205, 0.85);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.72);
+        }
+
+        .itineraires-stat strong {
+            display: block;
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            color: var(--color-text);
+        }
+
+        .itineraires-stat span {
+            color: var(--color-text-muted);
+            font-size: 0.8rem;
+        }
+
+        .itineraires-hero__visual {
+            position: relative;
+            min-height: 280px;
+            border-radius: calc(var(--radius-xl) - 4px);
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(196, 111, 75, 0.18), rgba(47, 127, 121, 0.2));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .itineraires-hero__visual::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(22, 18, 15, 0.04), rgba(22, 18, 15, 0.15));
+            pointer-events: none;
+        }
+
+        .itineraires-hero__icon {
+            font-size: 3.5rem;
+            z-index: 1;
+            opacity: 0.6;
+        }
+
+        .itineraires-hero__cta {
+            z-index: 1;
+        }
+
+        /* Barre d'outils et Filtres */
+        .itineraires-toolbar {
+            display: grid;
+            gap: 1rem;
+            padding: 1.35rem;
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 40px rgba(71, 48, 35, 0.06);
+        }
+
+        .itineraires-toolbar__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .itineraires-toolbar__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.35rem;
+            color: var(--color-text);
+        }
+
+        .itineraires-toolbar__actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 0.65rem 0.85rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.95rem;
+            transition: all var(--transition-fast);
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(196, 111, 75, 0.1);
+            background: var(--color-surface);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-filter-apply {
+            padding: 0.65rem 1.25rem;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-filter-apply:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            padding: 0.65rem 1rem;
+            background: transparent;
+            color: var(--color-text-muted);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: 500;
+        }
+
+        .btn-reset:hover {
+            background: var(--color-hover);
+            color: var(--color-primary);
+        }
+
+        /* Liste des Itinéraires */
+        .itineraires-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .itineraire-card {
+            padding: 1.5rem;
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
+            transition: all var(--transition-base);
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .itineraire-card:hover {
+            border-color: rgba(196, 111, 75, 0.3);
+            box-shadow: 0 12px 24px rgba(71, 48, 35, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .itineraire-card__header {
+            display: grid;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .itineraire-card__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 0.35rem;
+        }
+
+        .itineraire-card__location {
+            color: var(--color-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .itineraire-card__description {
+            color: var(--color-text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .itineraire-card__days {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .day-badge {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(196, 111, 75, 0.12);
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: 0.75rem;
+            border: 1.5px solid rgba(196, 111, 75, 0.3);
+        }
+
+        .day-badge.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .itineraire-card__actions {
+            display: flex;
+            gap: 0.6rem;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: flex-start;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 1.1rem;
+            background: var(--color-surface-soft);
+            color: var(--color-text-muted);
+            border: 1px solid var(--color-border);
+        }
+
+        .action-btn:hover {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+            transform: scale(1.05);
+        }
+
+        .action-btn.danger:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .action-btn.success:hover {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+
+        .action-btn.info:hover {
+            background: #3498db;
+            border-color: #3498db;
+        }
+
+        /* État vide */
+        .itineraires-empty {
+            padding: 3rem;
+            text-align: center;
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
+        }
+
+        .itineraires-empty__icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+
+        .itineraires-empty__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            color: var(--color-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .itineraires-empty__text {
+            color: var(--color-text-muted);
+            max-width: 40ch;
+            margin: 0 auto 1.5rem;
+        }
+
+        /* Messages Flash */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: rgba(39, 174, 96, 0.1);
+            border: 1px solid rgba(39, 174, 96, 0.3);
+            color: #27ae60;
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .itineraires-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .itineraire-card {
+                grid-template-columns: 1fr;
+            }
+
+            .itineraire-card__actions {
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .itineraires-hero {
+                padding: 1.5rem;
+            }
+
+            .itineraires-hero__title {
+                font-size: 1.75rem;
+            }
+
+            .itineraires-hero__stats {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .itineraires-toolbar__top {
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: flex-start;
+            }
+
+            .itineraires-toolbar__actions {
+                width: 100%;
+            }
+
+            .itineraires-toolbar__actions .btn {
+                flex: 1;
+            }
+
+            .itineraire-card__days {
+                margin-bottom: 1rem;
+            }
+
+            .action-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="itineraires-page">
+        <!-- Messages Flash -->
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">
+                <span>✓</span>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-error">
+                <span>!</span>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+
+        <!-- Section Hero -->
+        <section class="itineraires-hero">
+            <div class="itineraires-hero__content">
+                <div class="itineraires-hero__eyebrow">
+                    📍 Itinéraires du voyage
+                </div>
+                <h1 class="itineraires-hero__title">
+                    {{ voyageSelectionne.titre_voyage }}
+                </h1>
+                {% if voyageSelectionne.date_debut and voyageSelectionne.date_fin %}
+                    <p style="color: var(--color-text-muted); margin-bottom: 1rem;">
+                        {{ voyageSelectionne.date_debut|date('d/m/Y') }} - {{ voyageSelectionne.date_fin|date('d/m/Y') }}
+                    </p>
+                {% endif %}
+                <div class="itineraires-hero__stats">
+                    <div class="itineraires-stat">
+                        <strong>{{ totalItineraires }}</strong>
+                        <span>Itinéraires</span>
+                    </div>
+                    <div class="itineraires-stat">
+                        <strong>{{ totalJours }}</strong>
+                        <span>Jours d'aventure</span>
+                    </div>
+                </div>
+            </div>
+            <div class="itineraires-hero__visual">
+                <div class="itineraires-hero__icon">📍</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; z-index: 1;">
+                    <a href="{{ path('app_itineraires_create', {voyageId: voyageId}) }}" class="btn btn--primary itineraires-hero__cta">
+                        + Créer
+                    </a>
+                    <a href="{{ path('app_itineraires_export_pdf', {voyageId: voyageId}) }}" class="btn btn--secondary itineraires-hero__cta">
+                        📄 PDF
+                    </a>
+                    <a href="{{ path('app_voyages') }}" class="btn btn--secondary itineraires-hero__cta">
+                        ← Mes voyages
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="itineraires-toolbar" aria-label="Recherche et tri">
+            <div class="itineraires-toolbar__top">
+                <h2 class="itineraires-toolbar__title">Filtrer les itinéraires</h2>
+            </div>
+            <form method="get" action="{{ path('app_itineraires_index') }}" class="filter-row">
+                <input type="hidden" name="voyageId" value="{{ voyageId }}">
+                <div class="filter-group">
+                    <label for="itineraire-q">Recherche</label>
+                    <input type="search" id="itineraire-q" name="q" value="{{ search_q }}" placeholder="Nom ou description…" autocomplete="off">
+                </div>
+                <div class="filter-group">
+                    <label for="itineraire-sort">Tri par nom</label>
+                    <select id="itineraire-sort" name="sort">
+                        <option value="nom_asc" {% if sort == 'nom_asc' %}selected{% endif %}>A → Z</option>
+                        <option value="nom_desc" {% if sort == 'nom_desc' %}selected{% endif %}>Z → A</option>
+                    </select>
+                </div>
+                <div class="filter-actions" style="align-self: end;">
+                    <button type="submit" class="btn-filter-apply">Appliquer</button>
+                    <a href="{{ path('app_itineraires_index', {voyageId: voyageId}) }}" class="btn-reset" style="display: inline-flex; align-items: center; text-decoration: none;">Réinitialiser</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- Liste des itinéraires -->
+        {% if itineraires|length > 0 %}
+            <div class="itineraires-list">
+                {% for itineraire in itineraires %}
+                    <article class="itineraire-card">
+                        <div>
+                            <div class="itineraire-card__header">
+                                <h3 class="itineraire-card__title">{{ itineraire.nom_itineraire }}</h3>
+                                {% if itineraire.voyage and itineraire.voyage.destination %}
+                                    <div class="itineraire-card__location">
+                                        📍 {{ itineraire.voyage.destination.nom_destination }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <p class="itineraire-card__description">
+                                {{ itineraire.description_itineraire }}
+                            </p>
+
+                            <!-- Afficher les jours si disponibles -->
+                            {% if voyageNbJours is not null and voyageNbJours > 0 %}
+                                <div class="itineraire-card__days">
+                                    {% for day in range(1, voyageNbJours) %}
+                                        <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: day}) }}" class="day-badge {% if day == 1 %}active{% endif %}" style="text-decoration: none; cursor: pointer;">
+                                            J{{ day }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Boutons d'actions -->
+                        <div class="itineraire-card__actions">
+                            <a href="{{ path('app_itineraires_edit', {id: itineraire.id_itineraire}) }}" class="action-btn" title="Éditer">✏️</a>
+                            <form method="POST" action="{{ path('app_itineraires_delete', {id: itineraire.id_itineraire}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet itinéraire?');">
+                                <button type="submit" class="action-btn danger" title="Supprimer">🗑️</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="itineraires-empty">
+                <div class="itineraires-empty__icon">📍</div>
+                <h3 class="itineraires-empty__title">Aucun itinéraire trouvé</h3>
+                <p class="itineraires-empty__text">
+                    Commencez à créer vos itinéraires pour planifier vos aventures!
+                </p>
+                <a href="{{ path('app_itineraires_create') }}" class="btn btn--primary">
+                    + Créer un itinéraire
+                </a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
