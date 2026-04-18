@@ -490,27 +490,35 @@
     {% endif %}
 
     {% set hebergementTotals = [
-        {'label': 'Total', 'value': stats.total, 'color': '#c46f4b'},
-        {'label': 'Types', 'value': stats.types, 'color': '#2f7f79'},
-        {'label': 'Destinations', 'value': stats.destinations, 'color': '#4f7bb8'},
-        {'label': 'Note', 'value': stats.averageNote is not null ? stats.averageNote : 0, 'color': '#8d5bd1'},
-        {'label': 'Prix moyen', 'value': stats.averagePrice is not null ? stats.averagePrice : 0, 'color': '#3c8b72'}
+        {'label': 'Total', 'value': stats.total, 'color': '#c46f4b', 'max': stats.total > 0 ? stats.total : 1},
+        {'label': 'Types', 'value': stats.types, 'color': '#2f7f79', 'max': 9},
+        {'label': 'Destinations', 'value': stats.destinations, 'color': '#4f7bb8', 'max': stats.destinationsAvailable > 0 ? stats.destinationsAvailable : 1},
+        {'label': 'Note', 'value': stats.averageNote is not null ? stats.averageNote : 0, 'color': '#8d5bd1', 'max': 5},
+        {'label': 'Prix moyen', 'value': stats.averagePrice is not null ? stats.averagePrice : 0, 'color': '#3c8b72', 'max': stats.averagePrice is not null and stats.averagePrice > 0 ? stats.averagePrice : 1}
     ] %}
 
     <div class="stats-chart">
         <div class="stats-chart__title">Vue rapide</div>
         <div class="stats-chart__grid">
             {% for item in hebergementTotals %}
-                {% set percent = (item.value / hebergementChartMax * 100)|round(0, 'floor') %}
+                {% set ringMax = item.max is defined ? item.max : hebergementChartMax %}
+                {% set rawPercent = ringMax > 0 ? (item.value / ringMax * 100) : 0 %}
+                {% if rawPercent < 0 %}
+                    {% set rawPercent = 0 %}
+                {% endif %}
+                {% if rawPercent > 100 %}
+                    {% set rawPercent = 100 %}
+                {% endif %}
+                {% set percent = rawPercent|round(0, 'floor') %}
                 <div class="stats-chart__item">
                     <div class="stats-chart__ring" style="--ring-percent: {{ percent }}%; --ring-color: {{ item.color }};">
                         <div class="stats-chart__ring-value">
-                            {% if item.label == 'Note' and stats.averageNote is not null %}
-                                {{ stats.averageNote }}/5
-                            {% elseif item.label == 'Prix moyen' and stats.averagePrice is not null %}
-                                {{ stats.averagePrice }}
+                            {% if item.label == 'Note' %}
+                                {{ item.value|number_format(1, '.', '') }}
+                            {% elseif item.label == 'Prix moyen' %}
+                                {{ item.value|number_format(2, '.', '') }}
                             {% else %}
-                                {{ item.value }}
+                                {{ item.value|round(0, 'floor') }}
                             {% endif %}
                         </div>
                     </div>

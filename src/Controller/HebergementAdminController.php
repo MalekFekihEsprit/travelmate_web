@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Hebergement;
 use App\Form\HebergementType;
+use App\Repository\DestinationRepository;
 use App\Repository\HebergementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class HebergementAdminController extends AbstractController
 {
     #[Route('/', name: 'app_admin_hebergements', methods: ['GET'])]
-    public function index(Request $request, HebergementRepository $hebergementRepository): Response
+    public function index(Request $request, HebergementRepository $hebergementRepository, DestinationRepository $destinationRepository): Response
     {
         $search = trim((string) $request->query->get('q', ''));
         $typeFilter = trim((string) $request->query->get('type', ''));
@@ -92,6 +93,7 @@ class HebergementAdminController extends AbstractController
 
         $averagePrice = $prices !== [] ? round(array_sum($prices) / count($prices), 2) : null;
         $averageNote = $notes !== [] ? round(array_sum($notes) / count($notes), 1) : null;
+        $totalDestinationsAvailable = $destinationRepository->count([]);
 
         return $this->render('hebergement_admin/index.html.twig', [
             'hebergements' => $hebergements,
@@ -105,6 +107,7 @@ class HebergementAdminController extends AbstractController
                 'total' => count($allHebergements),
                 'types' => count($types),
                 'destinations' => count($destinations),
+                'destinationsAvailable' => $totalDestinationsAvailable,
                 'averagePrice' => $averagePrice,
                 'averageNote' => $averageNote,
             ],

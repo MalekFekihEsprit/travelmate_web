@@ -23,8 +23,9 @@ class DestinationImageFetcherService
     {
         $query = implode(' ', array_filter([
         $destination->getNomDestination(),
-        $destination->getPaysDestination(),
-        'famous landmark architecture ',
+        $destination->getPaysDestination()
+        //,
+        //'famous landmark architecture ',
     ]));
 
         $imageUrl = $this->unsplashService->findPhotoUrl($query);

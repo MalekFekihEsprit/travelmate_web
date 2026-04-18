@@ -12,15 +12,13 @@
         <div class="alert alert-danger" style="margin-bottom: 1rem;">{{ message }}</div>
     {% endfor %}
 
-    <div class="destination-detail__header">
+    <div class="destination-detail__header {{ destination.imageName ? 'destination-detail__header--with-photo' : '' }}"{% if destination.imageName %} style="background-image: linear-gradient(145deg, rgba(28, 20, 14, 0.62), rgba(196, 111, 75, 0.62)), url('{{ asset('uploads/destinations/' ~ destination.imageName) }}');"{% endif %}>
         <div class="destination-detail__header-top">
             <div class="destination-detail__flag-rating">
-                {% if destination.imageName %}
-                    <img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
-                {% elseif destination.flagDestination %}
+                {% if destination.flagDestination %}
                     <img src="{{ destination.flagDestination }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
                 {% else %}
-                    <div style="width: 120px; height: 120px; border-radius: 16px; border: 4px solid white; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: rgba(196,111,75,0.1);">🌍</div>
+                    <div class="destination-detail__flag-placeholder">🌍</div>
                 {% endif %}
                 <span class="destination-detail__rating">⭐ {{ average_score|default(destination.scoreDestination)|number_format(2, '.', '') }}/5</span>
             </div>
@@ -157,8 +155,20 @@
     height: 120px;
     border-radius: 16px;
     box-shadow: 0 12px 40px rgba(196, 111, 75, 0.35);
-    object-fit: cover;
+    object-fit: contain;
+}
+
+.destination-detail__flag-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 16px;
     border: 4px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 40px rgba(196, 111, 75, 0.35);
 }
 
 .destination-detail__header {
@@ -171,6 +181,12 @@
     box-shadow: 0 20px 60px rgba(196, 111, 75, 0.25);
     position: relative;
     overflow: hidden;
+}
+
+.destination-detail__header--with-photo {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .destination-detail__header h1 {
@@ -192,6 +208,8 @@
 }
 
 .destination-detail__header-top {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;

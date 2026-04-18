@@ -650,19 +650,33 @@
     {% set destinationTotals = [
         {'label': 'Total', 'value': stats.total, 'color': '#c46f4b'},
         {'label': 'Pays', 'value': stats.countries, 'color': '#2f7f79'},
-        {'label': 'Régions', 'value': stats.regions, 'color': '#4f7bb8'},
-        {'label': 'Climats', 'value': stats.climates, 'color': '#8d5bd1'},
-        {'label': 'Score moyen', 'value': stats.averageScore is not null ? stats.averageScore : 0, 'color': '#3c8b72'}
+        {'label': 'Régions', 'value': stats.visibleRegions is defined ? stats.visibleRegions : stats.regions, 'color': '#4f7bb8', 'max': 7},
+        {'label': 'Climats', 'value': stats.visibleClimates is defined ? stats.visibleClimates : stats.climates, 'color': '#8d5bd1', 'max': climates|length},
+        {'label': 'Score moyen', 'value': stats.averageScore is not null ? stats.averageScore : 0, 'color': '#3c8b72', 'max': 5}
     ] %}
 
     <div class="stats-chart">
         <div class="stats-chart__title">Vue rapide</div>
         <div class="stats-chart__grid">
             {% for item in destinationTotals %}
-                {% set percent = (item.value / destinationChartMax * 100)|round(0, 'floor') %}
+                {% set ringMax = item.max is defined ? item.max : destinationChartMax %}
+                {% set rawPercent = ringMax > 0 ? (item.value / ringMax * 100) : 0 %}
+                {% if rawPercent < 0 %}
+                    {% set rawPercent = 0 %}
+                {% endif %}
+                {% if rawPercent > 100 %}
+                    {% set rawPercent = 100 %}
+                {% endif %}
+                {% set percent = rawPercent|round(0, 'floor') %}
                 <div class="stats-chart__item">
                     <div class="stats-chart__ring" style="--ring-percent: {{ percent }}%; --ring-color: {{ item.color }};">
-                        <div class="stats-chart__ring-value">{{ item.value }}</div>
+                        <div class="stats-chart__ring-value">
+                            {% if item.label == 'Score moyen' %}
+                                {{ item.value|number_format(2, '.', '') }}
+                            {% else %}
+                                {{ item.value|round(0, 'floor') }}
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="stats-chart__label">{{ item.label }}</div>
                 </div>
@@ -759,12 +773,6 @@
                 <div class="filters-form__actions">
                     <button class="btn btn--ghost" type="submit">Appliquer</button>
                     <a href="{{ path('app_admin_destinations') }}" class="btn btn--ghost">Réinitialiser</a>
-                    {% set mapParts = [] %}
-                    {% if search is not empty %}{% set mapParts = mapParts|merge([search]) %}{% endif %}
-                    {% if countryFilter is not empty %}{% set mapParts = mapParts|merge([countryFilter]) %}{% endif %}
-                    {% if regionFilter is not empty %}{% set mapParts = mapParts|merge([regionFilter]) %}{% endif %}
-                    {% set mapQuery = mapParts is not empty ? mapParts|join(' ') : 'destinations touristiques' %}
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ mapQuery|url_encode }}" target="_blank" rel="noopener noreferrer" class="btn btn--ghost">Voir map</a>
                 </div>
             </form>
         </div>

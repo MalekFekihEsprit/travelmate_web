@@ -71,6 +71,8 @@ class DestinationAdminController extends AbstractController
         $regions     = [];
         $climates    = [];
         $scoreValues = [];
+        $visibleRegions = [];
+        $visibleClimates = [];
 
         foreach ($allDestinations as $destination) {
             if ($destination->getPaysDestination())    $countries[]   = $destination->getPaysDestination();
@@ -79,9 +81,20 @@ class DestinationAdminController extends AbstractController
             if ($destination->getScoreDestination() !== null) $scoreValues[] = (float) $destination->getScoreDestination();
         }
 
+        foreach ($destinations as $destination) {
+            if ($destination->getRegionDestination()) {
+                $visibleRegions[] = $destination->getRegionDestination();
+            }
+            if ($destination->getClimatDestination()) {
+                $visibleClimates[] = $destination->getClimatDestination();
+            }
+        }
+
         $countries = array_values(array_unique($countries)); sort($countries);
         $regions   = array_values(array_unique($regions));   sort($regions);
         $climates  = array_values(array_unique($climates));  sort($climates);
+        $visibleRegions = array_values(array_unique($visibleRegions)); sort($visibleRegions);
+        $visibleClimates = array_values(array_unique($visibleClimates)); sort($visibleClimates);
 
         $averageScore = $scoreValues !== [] ? round(array_sum($scoreValues) / count($scoreValues), 1) : null;
 
@@ -100,6 +113,8 @@ class DestinationAdminController extends AbstractController
                 'countries'    => count($countries),
                 'regions'      => count($regions),
                 'climates'     => count($climates),
+                'visibleRegions' => count($visibleRegions),
+                'visibleClimates' => count($visibleClimates),
                 'averageScore' => $averageScore,
             ],
         ]);

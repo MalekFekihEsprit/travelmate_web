@@ -105,7 +105,7 @@
                 <h2 class="toolbar-title">Filtrer & Trier</h2>
                 <p class="toolbar-subtitle">Trouvez votre destination idéale</p>
             </div>
-            <button type="button" id="openMapBtn" class="btn toolbar-map-btn" aria-label="Voir sur la carte">
+            <button type="button" id="openMapBtn" class="btn toolbar-map-btn" aria-label="Voir sur la carte" onclick="openMapOverlay(); return false;">
                 <span class="toolbar-map-btn__icon" aria-hidden="true">🗺️</span>
                 <span>Voir map</span>
             </button>
@@ -276,7 +276,7 @@
 
 <div id="mapOverlay" class="map-overlay" aria-hidden="true">
     <div class="map-overlay__panel" role="dialog" aria-modal="true" aria-label="Carte des destinations">
-        <button type="button" class="map-overlay__close" id="closeMapBtn" aria-label="Fermer la carte">×</button>
+        <button type="button" class="map-overlay__close" id="closeMapBtn" aria-label="Fermer la carte" onclick="closeMapOverlay(); return false;">×</button>
         <div class="map-overlay__header">
             <div>
                 <span class="map-overlay__eyebrow">Carte interactive</span>
@@ -313,8 +313,8 @@ const destinationsMapData = [
             id: {{ destination.idDestination }},
             name: {{ destination.nomDestination|json_encode|raw }},
             country: {{ destination.paysDestination|json_encode|raw }},
-            lat: {{ destination.latitudeDestination }},
-            lng: {{ destination.longitudeDestination }},
+            lat: {{ destination.latitudeDestination|json_encode|raw }},
+            lng: {{ destination.longitudeDestination|json_encode|raw }},
             url: {{ path('app_destination_show', {'id_destination': destination.idDestination})|json_encode|raw }}
         },
         {% endif %}
@@ -339,21 +339,19 @@ function clearMapMarkers() {
 
 function initDestinationsMap() {
     const mapEl = document.getElementById('destinationsMap');
-    console.log('initDestinationsMap called, mapEl:', mapEl);
-    console.log('Map element dimensions:', mapEl?.offsetWidth, 'x', mapEl?.offsetHeight);
-    
+
     if (!mapEl) {
-        console.error('Map element not found');
         return;
     }
 
     if (typeof L === 'undefined') {
-        console.error('Leaflet library not loaded');
         mapEl.innerHTML = '<div style="padding: 2rem; text-align: center; color: #7a5a4a; font-weight: 600;">La carte n\'a pas pu se charger. Veuillez rafraîchir la page.</div>';
         return;
     }
 
-    console.log('Leaflet loaded, creating map...');
+    if (!destinationsMapInstance) {
+        mapEl.innerHTML = '';
+    }
     
     // Create custom marker icon using SVG data URL
     if (!window.customMarkerIcon) {
@@ -379,29 +377,31 @@ function initDestinationsMap() {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
             }).addTo(destinationsMapInstance);
-            
-            console.log('Map instance created successfully');
         } catch (error) {
-            console.error('Error creating map:', error);
             mapEl.innerHTML = '<div style="padding: 2rem; text-align: center; color: #c84c3c;">Erreur lors du chargement de la carte: ' + error.message + '</div>';
             return;
         }
     }
 
     clearMapMarkers();
-
-    console.log('Destinations map data:', destinationsMapData);
     
     if (destinationsMapData.length === 0) {
-        console.log('No destinations with coordinates, showing world map');
         destinationsMapInstance.setView([28.0339, 1.6596], 2);
+        destinationsMapInstance.invalidateSize();
         return;
     }
 
     const bounds = [];
 
     destinationsMapData.forEach(function (item) {
-        const marker = L.marker([item.lat, item.lng], { icon: window.customMarkerIcon }).addTo(destinationsMapInstance);
+        const lat = parseFloat(item.lat);
+        const lng = parseFloat(item.lng);
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+            return;
+        }
+
+        const marker = L.marker([lat, lng], { icon: window.customMarkerIcon }).addTo(destinationsMapInstance);
         marker.bindTooltip(buildDestinationLabel(item), {
             direction: 'top',
             sticky: true,
@@ -413,47 +413,45 @@ function initDestinationsMap() {
         });
 
         destinationsMapMarkers.push(marker);
-        bounds.push([item.lat, item.lng]);
+        bounds.push([lat, lng]);
     });
-
-    console.log('Added ' + bounds.length + ' markers to map');
     
     if (bounds.length === 1) {
         destinationsMapInstance.setView(bounds[0], 6);
     } else if (bounds.length > 0) {
         destinationsMapInstance.fitBounds(bounds, { padding: [40, 40] });
+    } else {
+        destinationsMapInstance.setView([28.0339, 1.6596], 2);
     }
 
-    // Multiple invalidations to ensure rendering
     window.setTimeout(function () {
         destinationsMapInstance.invalidateSize();
-        console.log('Map size invalidated (1)');
     }, 80);
     
     window.setTimeout(function () {
         destinationsMapInstance.invalidateSize();
-        console.log('Map size invalidated (2)');
-    }, 250);
+    }, 260);
 }
 
 function openMapOverlay() {
-    console.log('openMapOverlay called');
     const overlay = document.getElementById('mapOverlay');
     if (!overlay) {
-        console.error('mapOverlay element not found');
         return;
     }
 
     overlay.classList.add('is-open');
     overlay.setAttribute('aria-hidden', 'false');
     document.body.classList.add('is-map-open');
-    document.querySelector('.app-shell')?.classList.add('is-map-blurred');
-    
-    // Wait for overlay to be visible before initializing map
-    console.log('Map overlay opened, scheduling map initialization...');
-    window.setTimeout(function() {
+
+    window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+            initDestinationsMap();
+        });
+    });
+
+    window.setTimeout(function () {
         initDestinationsMap();
-    }, 150);
+    }, 220);
 }
 
 function closeMapOverlay() {
@@ -465,7 +463,6 @@ function closeMapOverlay() {
     overlay.classList.remove('is-open');
     overlay.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('is-map-open');
-    document.querySelector('.app-shell')?.classList.remove('is-map-blurred');
 }
 
 function openDestinationModal(destinationId) {
