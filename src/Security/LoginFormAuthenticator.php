@@ -19,6 +19,11 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge
 use App\Repository\UserRepository;
 use Symfony\Component\Security\Core\Security;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\GeoIpService;
+use App\Service\SecurityAlertService;
+use App\Service\UserTrustScoreService;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Http\SecurityRequestAttributes;
 
 class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 {
@@ -29,7 +34,10 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,        
         private UserRepository $userRepository,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private SecurityAlertService $securityAlertService,
+        private UserTrustScoreService $userTrustScoreService,
+        private GeoIpService $geoIpService
     ) {
     }
 
@@ -72,20 +80,65 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         $user = $token->getUser();
+        $session = $request->getSession();
 
-        // ✅ Update last login date
-        if ($user instanceof \App\Entity\User) {
-            $user->setLastLogin(new \DateTime());
-            $this->entityManager->persist($user);
+        if ($user instanceof User) {
+            $currentIp = $this->geoIpService->getClientIp($request) ?? $request->getClientIp() ?? '';
+            $geo = $this->geoIpService->lookupIp($currentIp);
+
+            $currentCountry = $geo['country_name'] ?? '';
+            $currentCountryCode = $geo['country_code'] ?? '';
+
+            $suspicious = false;
+
+            if ($user->getLastLoginIp() && $currentIp && $user->getLastLoginIp() !== $currentIp) {
+                $suspicious = true;
+            }
+
+            if (
+                $user->getLastLoginCountryCode() &&
+                $currentCountryCode &&
+                $user->getLastLoginCountryCode() !== $currentCountryCode
+            ) {
+                $suspicious = true;
+            }
+
+            if ($suspicious) {
+                $user->setSuspiciousLoginCount($user->getSuspiciousLoginCount() + 1);
+
+                try {
+                    $this->securityAlertService->sendSuspiciousLoginAlert(
+                        $user,
+                        $currentIp,
+                        $currentCountry ?: $currentCountryCode
+                    );
+                } catch (\Throwable $e) {
+                }
+            }
+
+            $user->setFailedLoginAttempts(0);
+
+            if (method_exists($user, 'setLastLogin')) {
+                $user->setLastLogin(new \DateTime());
+            }
+
+            if (method_exists($user, 'setLastLoginIp')) {
+                $user->setLastLoginIp($currentIp ?: null);
+            }
+
+            if (method_exists($user, 'setLastLoginLocation')) {
+                $user->setLastLoginLocation($currentCountry ?: null);
+            }
+
+            $user->setLastLoginCountryCode($currentCountryCode ?: null);
+
+            $user->setTrustScore(
+                $this->userTrustScoreService->calculate($user, $suspicious)
+            );
+
             $this->entityManager->flush();
-        }
 
-        if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
-            return new RedirectResponse($targetPath);
-        }
-
-        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            return new RedirectResponse($this->urlGenerator->generate('app_admin_users_stats'));
+            $session->remove('login_failed_attempts_for_last_user');
         }
 
         return new RedirectResponse($this->urlGenerator->generate('app_home'));
@@ -94,5 +147,61 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
     protected function getLoginUrl(Request $request): string
     {
         return $this->urlGenerator->generate(self::LOGIN_ROUTE);
+    }
+
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
+    {
+        $session = $request->getSession();
+        $email = mb_strtolower(trim((string) $request->request->get('email', '')));
+        $failedCapture = (string) $request->request->get('failed_capture', '');
+
+        if ($email !== '') {
+            $user = $this->userRepository->findOneBy(['email' => $email]);
+
+            if ($user instanceof User) {
+                $attempts = $user->getFailedLoginAttempts() + 1;
+                $user->setFailedLoginAttempts($attempts);
+                $user->setLastFailedLoginAt(new \DateTime());
+
+                $photoFilename = null;
+
+                // Only try to save photo if attempts >= 3 AND we have capture data
+                if ($attempts >= 3 && !empty($failedCapture)) {
+                    $photoFilename = $this->securityAlertService->saveBase64Photo($failedCapture, 'failed-login');
+
+                    if ($photoFilename) {
+                        $user->setSecurityAlertPhoto($photoFilename);
+                    }
+                }
+
+                // Always send alert when attempts >= 3 (with or without photo)
+                if ($attempts >= 3) {
+                    try {
+                        // Pass the photo filename (will be null if no photo was saved)
+                        $this->securityAlertService->sendFailedLoginAlert($user, $photoFilename);
+                    } catch (\Throwable $e) {
+                        // Log the error
+                        error_log('Failed to send login alert: ' . $e->getMessage());
+                    }
+                }
+
+                $user->setTrustScore(
+                    $this->userTrustScoreService->calculate($user, false)
+                );
+
+                $this->entityManager->flush();
+
+                $session->set('login_failed_attempts_for_last_user', $attempts);
+            } else {
+                $session->set('login_failed_attempts_for_last_user', 0);
+            }
+        }
+        // In onAuthenticationFailure, add:
+        error_log('Failed capture data length: ' . strlen($failedCapture));
+        error_log('Failed capture empty? ' . (empty($failedCapture) ? 'YES' : 'NO'));
+        $session->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $exception);
+        $session->set(SecurityRequestAttributes::LAST_USERNAME, $email);
+
+        return new RedirectResponse($this->urlGenerator->generate('app_login'));
     }
 }

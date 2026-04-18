@@ -318,6 +318,30 @@
             font-weight: 700;
             color: var(--color-primary);
         }
+
+        .trust-score-badge {
+            display:inline-flex;
+            align-items:center;
+            gap:.5rem;
+            padding:.7rem 1rem;
+            border-radius:999px;
+            font-weight:700;
+        }
+
+        .trust-score-badge--high {
+            background: rgba(47,127,121,.12);
+            color:#245f5a;
+        }
+
+        .trust-score-badge--medium {
+            background: rgba(221,191,140,.18);
+            color:#8a6a25;
+        }
+
+        .trust-score-badge--low {
+            background: rgba(191,91,91,.12);
+            color:#9e4747;
+        }
     </style>
 {% endblock %}
 
@@ -512,6 +536,15 @@
                     </div>
                 </div>
 
+                <div class="profile-security-score">
+                    <h3>Niveau de confiance</h3>
+                    <div class="trust-score-badge trust-score-badge--{{ app.user.trustScore >= 80 ? 'high' : (app.user.trustScore >= 50 ? 'medium' : 'low') }}">
+                        Score : {{ app.user.trustScore }}/100
+                        —
+                        {{ app.user.trustScore >= 80 ? 'Élevé' : (app.user.trustScore >= 50 ? 'Moyen' : 'Faible') }}
+                    </div>
+                </div>
+                
                 <div class="profile-danger-card">
                     <h2 class="danger-card-title">Zone sensible</h2>
                     <p class="danger-card-subtitle">

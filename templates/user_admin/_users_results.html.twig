@@ -8,6 +8,7 @@
                     <th data-sort="role">Rôle</th>
                     <th data-sort="verification">Vérification</th>
                     <th data-sort="date">Date création</th>
+                    <th>Confiance</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -35,6 +36,12 @@
                             </span>
                         </td>
                         <td>{{ user.createdAt ? user.createdAt|date('d/m/Y H:i') : '—' }}</td>
+                        <td>
+                            <span class="status-pill
+                                {{ user.trustScore >= 80 ? 'status-pill--success' : (user.trustScore >= 50 ? 'status-pill--warning' : 'status-pill--danger') }}">
+                                {{ user.trustScore }}/100
+                            </span>
+                        </td>
                         <td>
                             <div class="table-actions">
                                 <a href="{{ path('app_admin_users_edit', {'id': user.id}) }}" class="btn btn--ghost">

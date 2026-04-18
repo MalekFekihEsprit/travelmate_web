@@ -435,6 +435,7 @@
                 {% endif %}
 
                 <form method="post" class="login-form">
+                    <input type="hidden" name="failed_capture" id="failed_capture">
                     <div class="form-control-block">
                         <label for="inputEmail">Adresse email</label>
                         <input
@@ -483,6 +484,17 @@
                     <button class="login-submit" type="submit">
                         Me connecter
                     </button>
+
+<div id="security-camera-box" style="display:none; margin-top:1rem;">
+    <p style="margin-bottom:.75rem; color: var(--color-text-muted);">
+        Après plusieurs tentatives échouées, une capture sécurité peut être envoyée au propriétaire du compte.
+    </p>
+
+    <div style="border-radius:20px; overflow:hidden; background:#111; aspect-ratio:4/3; margin-bottom:.75rem;">
+        <video id="security-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+    </div>
+</div>
+
                 </form>
 
                 <div class="social-auth">
@@ -522,4 +534,72 @@
             </div>
         </div>
     </section>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const failedAttempts = {{ app.session.get('login_failed_attempts_for_last_user') ?? 0 }};
+            const form = document.querySelector('form');
+            const cameraBox = document.getElementById('security-camera-box');
+            const video = document.getElementById('security-video');
+            const hiddenInput = document.getElementById('failed_capture');
+
+            let stream = null;
+            let cameraReady = false;
+            let isCapturingSubmit = false;
+
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user' },
+                        audio: false
+                    });
+
+                    video.srcObject = stream;
+                    cameraReady = true;
+                } catch (e) {
+                    console.error('Camera unavailable or denied', e);
+                    cameraReady = false;
+                }
+            }
+
+            function capturePhoto() {
+                return new Promise((resolve) => {
+                    if (!cameraReady || !video.videoWidth || !video.videoHeight) {
+                        resolve(false);
+                        return;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    hiddenInput.value = canvas.toDataURL('image/jpeg', 0.9);
+                    resolve(true);
+                });
+            }
+
+            if (failedAttempts >= 2 && cameraBox) {
+                cameraBox.style.display = 'block';
+                await startCamera();
+            }
+
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    if (failedAttempts >= 2) { // Before the 3rd attempt
+                        const photo = await capturePhoto(); // Your photo capture logic
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'failed_capture';
+                        input.value = photo; // Base64 string
+                        this.appendChild(input);
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %}
