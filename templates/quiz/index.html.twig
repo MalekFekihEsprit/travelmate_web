@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+{% block title %}Quiz - Trouvez votre activité{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+.quiz-wrap { padding: 2rem 1rem; max-width: 540px; margin: 0 auto; }
+.quiz-wrap h2 { font-size: 26px; font-weight: 700; margin: 0 0 0.5rem; }
+.quiz-sub { color: #888; font-size: 15px; margin: 0 0 2rem; }
+.section-label { font-size: 12px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 0.75rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1.75rem; }
+.tag { padding: 10px 20px; border-radius: 50px; border: 1.5px solid #ddd; font-size: 14px; cursor: pointer; background: #fff; color: #222; transition: all .15s; user-select: none; }
+.tag:hover { border-color: #999; }
+.tag.selected { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+.btn-submit { width: 100%; padding: 15px; border-radius: 50px; background: #1a1a2e; color: #fff; font-size: 16px; font-weight: 600; border: none; cursor: pointer; margin-top: 1rem; opacity: .35; transition: opacity .2s; }
+.btn-submit.ready { opacity: 1; cursor: pointer; }
+.tag-count { font-size: 13px; color: #999; text-align: right; margin-top: 0.5rem; }
+.alert-error { background: #fee; border: 1px solid #fcc; color: #c00; padding: 10px 16px; border-radius: 8px; margin-bottom: 1rem; font-size: 14px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="quiz-wrap">
+    <h2>Choisissez vos centres d'intérêt</h2>
+    <p class="quiz-sub">Vos recommandations seront personnalisées selon vos choix.</p>
+
+    {% for message in app.flashes('error') %}
+        <div class="alert-error">{{ message }}</div>
+    {% endfor %}
+
+    <form method="post" action="{{ path('app_quiz_results') }}" id="quizForm" data-turbo="false">
+        <input type="hidden" name="intensity" id="val_intensity" value="">
+        <input type="hidden" name="location" id="val_location" value="">
+        <input type="hidden" name="budget" id="val_budget" value="">
+        <input type="hidden" name="category" id="val_category" value="">
+
+        <div class="section-label">Intensité</div>
+        <div class="tags" data-group="intensity">
+            <span class="tag" data-val="calme détente relaxation">Calme</span>
+            <span class="tag" data-val="modéré activité">Modéré</span>
+            <span class="tag" data-val="intense sport adrénaline effort">Intense</span>
+            <span class="tag" data-val="très intense compétition performance">Très intense</span>
+        </div>
+
+        <div class="section-label">Lieu préféré</div>
+        <div class="tags" data-group="location">
+            <span class="tag" data-val="intérieur salle">Intérieur</span>
+            <span class="tag" data-val="extérieur plein air nature">Plein air</span>
+            <span class="tag" data-val="mer plage eau">Mer</span>
+            <span class="tag" data-val="montagne altitude">Montagne</span>
+            <span class="tag" data-val="ville urbain">Ville</span>
+        </div>
+
+        <div class="section-label">Budget</div>
+        <div class="tags" data-group="budget">
+            <span class="tag" data-val="gratuit faible budget">Gratuit</span>
+            <span class="tag" data-val="budget moyen accessible">Moyen</span>
+            <span class="tag" data-val="premium élevé luxe">Premium</span>
+        </div>
+
+        <div class="section-label">Catégorie</div>
+        <div class="tags" data-group="category">
+            <span class="tag" data-val="sport fitness musculation">Sport</span>
+            <span class="tag" data-val="culture art musée exposition">Culture</span>
+            <span class="tag" data-val="gastronomie cuisine restaurant">Gastronomie</span>
+            <span class="tag" data-val="nature randonnée découverte">Nature</span>
+            <span class="tag" data-val="bien-être relaxation spa yoga">Bien-être</span>
+            <span class="tag" data-val="aventure exploration outdoor">Aventure</span>
+        </div>
+
+        <p class="tag-count" id="tagCount">Sélectionnez au moins un tag</p>
+        <button type="submit" class="btn-submit" id="submitBtn" disabled>Voir mes recommandations</button>
+    </form>
+</div>
+
+<script>
+var selected = { intensity: [], location: [], budget: [], category: [] };
+
+function updateHiddenInputs() {
+    document.getElementById('val_intensity').value = selected.intensity.join(' ');
+    document.getElementById('val_location').value = selected.location.join(' ');
+    document.getElementById('val_budget').value = selected.budget.join(' ');
+    document.getElementById('val_category').value = selected.category.join(' ');
+}
+
+function updateUI() {
+    var total = selected.intensity.length + selected.location.length + selected.budget.length + selected.category.length;
+    var countEl = document.getElementById('tagCount');
+    var btn = document.getElementById('submitBtn');
+    countEl.textContent = total > 0 ? total + ' tag(s) sélectionné(s)' : 'Sélectionnez au moins un tag';
+    if (total > 0) {
+        btn.classList.add('ready');
+        btn.disabled = false;
+    } else {
+        btn.classList.remove('ready');
+        btn.disabled = true;
+    }
+    updateHiddenInputs();
+}
+
+var groups = document.querySelectorAll('.tags');
+for (var i = 0; i < groups.length; i++) {
+    (function(group) {
+        var tags = group.querySelectorAll('.tag');
+        for (var j = 0; j < tags.length; j++) {
+            (function(tag) {
+                tag.addEventListener('click', function() {
+                    var g = group.getAttribute('data-group');
+                    var val = tag.getAttribute('data-val');
+                    if (tag.classList.contains('selected')) {
+                        tag.classList.remove('selected');
+                        selected[g] = selected[g].filter(function(v) { return v !== val; });
+                    } else {
+                        tag.classList.add('selected');
+                        selected[g].push(val);
+                    }
+                    updateUI();
+                });
+            })(tags[j]);
+        }
+    })(groups[i]);
+}
+
+document.getElementById('quizForm').addEventListener('submit', function(e) {
+    var total = selected.intensity.length + selected.location.length + selected.budget.length + selected.category.length;
+    if (total === 0) {
+        e.preventDefault();
+        alert('Veuillez sélectionner au moins un tag.');
+        return;
+    }
+    updateHiddenInputs();
+});
+</script>
+{% endblock %}

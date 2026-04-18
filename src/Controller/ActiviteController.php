@@ -21,9 +21,15 @@ class ActiviteController extends AbstractController
 
     #[Route('/activites', name: 'app_activites', methods: ['GET'])]
     public function frontIndex(
+        Request             $request,
         ActiviteRepository  $activiteRepository,
         CategorieRepository $categorieRepository
     ): Response {
+        // Si l'utilisateur est connecté et n'a pas encore fait le quiz → rediriger
+        if ($this->getUser() && !$request->getSession()->get('quiz_completed', false)) {
+            return $this->redirectToRoute('app_quiz');
+        }
+
         return $this->render('activite/index.html.twig', [
             'activites'  => $activiteRepository->findAll(),
             'categories' => $categorieRepository->findAll(),
@@ -70,7 +76,6 @@ class ActiviteController extends AbstractController
                     $this->getParameter('activites_images_directory'),
                     $newFilename
                 );
-                // ✅ CORRECTION : on stocke le chemin complet relatif à /public
                 $activite->setImagePath('uploads/activites/' . $newFilename);
             }
 
@@ -106,7 +111,6 @@ class ActiviteController extends AbstractController
                     $this->getParameter('activites_images_directory'),
                     $newFilename
                 );
-                // ✅ CORRECTION : on stocke le chemin complet relatif à /public
                 $activite->setImagePath('uploads/activites/' . $newFilename);
             }
 

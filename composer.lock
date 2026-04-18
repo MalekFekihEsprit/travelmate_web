@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "adf125844746738790e7342f1b1bf79e",
+    "content-hash": "c9608a4b11e93246eddf05ad1bf567ef",
     "packages": [
         {
             "name": "composer/semver",
@@ -2257,68 +2257,6 @@
             "time": "2024-09-11T13:17:53+00:00"
         },
         {
-            "name": "stripe/stripe-php",
-            "version": "v20.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/stripe/stripe-php.git",
-                "reference": "7338bd140e641b1f9c7cb602e2de971e14db6b3b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/7338bd140e641b1f9c7cb602e2de971e14db6b3b",
-                "reference": "7338bd140e641b1f9c7cb602e2de971e14db6b3b",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "php": ">=7.2.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "3.94.0",
-                "phpstan/phpstan": "^1.2",
-                "phpunit/phpunit": "^5.7 || ^9.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "lib/version_check.php"
-                ],
-                "psr-4": {
-                    "Stripe\\": "lib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Stripe and contributors",
-                    "homepage": "https://github.com/stripe/stripe-php/contributors"
-                }
-            ],
-            "description": "Stripe PHP Library",
-            "homepage": "https://stripe.com/",
-            "keywords": [
-                "api",
-                "payment processing",
-                "stripe"
-            ],
-            "support": {
-                "issues": "https://github.com/stripe/stripe-php/issues",
-                "source": "https://github.com/stripe/stripe-php/tree/v20.0.0"
-            },
-            "time": "2026-03-26T01:57:48+00:00"
-        },
-        {
             "name": "sabberworm/php-css-parser",
             "version": "v9.3.0",
             "source": {
@@ -2397,6 +2335,68 @@
                 "source": "https://github.com/MyIntervals/PHP-CSS-Parser/tree/v9.3.0"
             },
             "time": "2026-03-03T17:31:43+00:00"
+        },
+        {
+            "name": "stripe/stripe-php",
+            "version": "v20.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/stripe/stripe-php.git",
+                "reference": "7338bd140e641b1f9c7cb602e2de971e14db6b3b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/7338bd140e641b1f9c7cb602e2de971e14db6b3b",
+                "reference": "7338bd140e641b1f9c7cb602e2de971e14db6b3b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=7.2.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "3.94.0",
+                "phpstan/phpstan": "^1.2",
+                "phpunit/phpunit": "^5.7 || ^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "lib/version_check.php"
+                ],
+                "psr-4": {
+                    "Stripe\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stripe and contributors",
+                    "homepage": "https://github.com/stripe/stripe-php/contributors"
+                }
+            ],
+            "description": "Stripe PHP Library",
+            "homepage": "https://stripe.com/",
+            "keywords": [
+                "api",
+                "payment processing",
+                "stripe"
+            ],
+            "support": {
+                "issues": "https://github.com/stripe/stripe-php/issues",
+                "source": "https://github.com/stripe/stripe-php/tree/v20.0.0"
+            },
+            "time": "2026-03-26T01:57:48+00:00"
         },
         {
             "name": "symfony/asset",
@@ -4177,16 +4177,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v6.4.34",
+            "version": "v6.4.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "0dc71f52e5d35bb045fd0f82b1a80c027971d551"
+                "reference": "1baea3a592ec5ee1f58de6548a034268d4946db6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/0dc71f52e5d35bb045fd0f82b1a80c027971d551",
-                "reference": "0dc71f52e5d35bb045fd0f82b1a80c027971d551",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/1baea3a592ec5ee1f58de6548a034268d4946db6",
+                "reference": "1baea3a592ec5ee1f58de6548a034268d4946db6",
                 "shasum": ""
             },
             "require": {
@@ -4251,7 +4251,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v6.4.34"
+                "source": "https://github.com/symfony/http-client/tree/v6.4.36"
             },
             "funding": [
                 {
@@ -4271,7 +4271,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-18T07:27:25+00:00"
+            "time": "2026-03-23T20:48:09+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
