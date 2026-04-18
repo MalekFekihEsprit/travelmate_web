@@ -17,6 +17,85 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 class ActiviteController extends AbstractController
 {
     // ════════════════════════════════════════════════════════════════════════
+    //  HELPERS PRIVÉS — IA RECOMMANDATION
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Appelle le script Python ai_recommender.py et retourne
+     * un tableau [ 'activites' => [...], 'scoreMap' => [...] ]
+     * En cas d'échec du script, retourne l'ordre original sans scoreMap.
+     */
+    private function getAiRankedActivities(array $activites): array
+    {
+        // ── 1. Construire le JSON d'entrée pour Python ─────────────────────
+        $data = [];
+        foreach ($activites as $activite) {
+            $avisData = [];
+            foreach ($activite->getAvis() as $avis) {
+                $avisData[] = [
+                    'note'        => $avis->getNote(),
+                    'commentaire' => $avis->getCommentaire(),
+                ];
+            }
+            $data[] = [
+                'id'   => $activite->getId(),
+                'avis' => $avisData,
+            ];
+        }
+
+        // ── 2. Appel du script Python via fichier temporaire ────────────────
+        //    On écrit le JSON dans un fichier temp pour éviter les conflits
+        //    de guillemets sur Windows (escapeshellarg + JSON = problème).
+        $scriptPath = 'C:\\Users\\Admin\\Desktop\\projet sym\\ai_recommender\\ai_recommender.py';
+
+        $tmpFile = tempnam(sys_get_temp_dir(), 'ai_') . '.json';
+        file_put_contents($tmpFile, json_encode($data, JSON_UNESCAPED_UNICODE));
+
+        $cmd = sprintf(
+            'python -X utf8 "%s" --file "%s" 2>NUL',
+            $scriptPath,
+            $tmpFile
+        );
+
+        $output = shell_exec($cmd);
+
+        // Nettoyage du fichier temporaire dans tous les cas
+        @unlink($tmpFile);
+
+        if (!$output) {
+            // Fallback silencieux : ordre original, pas de badges IA
+            return ['activites' => $activites, 'scoreMap' => []];
+        }
+
+        // ── 3. Parser la dernière ligne non-vide ────────────────────────────
+        $lines    = array_filter(array_map('trim', explode("\n", trim($output))));
+        $jsonLine = end($lines);
+        $scores   = json_decode($jsonLine, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($scores)) {
+            return ['activites' => $activites, 'scoreMap' => []];
+        }
+
+        // ── 4. Construire scoreMap indexé par activite_id ──────────────────
+        $scoreMap = [];
+        foreach ($scores as $s) {
+            $scoreMap[$s['activite_id']] = $s;
+        }
+
+        // ── 5. Trier les entités Activite selon l'ordre retourné par l'IA ──
+        $scoreOrder = array_column($scores, 'activite_id');
+        usort($activites, function ($a, $b) use ($scoreOrder) {
+            $posA = array_search($a->getId(), $scoreOrder);
+            $posB = array_search($b->getId(), $scoreOrder);
+            $posA = ($posA === false) ? 9999 : $posA;
+            $posB = ($posB === false) ? 9999 : $posB;
+            return $posA <=> $posB;
+        });
+
+        return ['activites' => $activites, 'scoreMap' => $scoreMap];
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     //  FRONT OFFICE
     // ════════════════════════════════════════════════════════════════════════
 
@@ -30,8 +109,12 @@ class ActiviteController extends AbstractController
             return $this->redirectToRoute('app_quiz');
         }
 
+        $activites = $activiteRepository->findAll();
+        $aiResult  = $this->getAiRankedActivities($activites);
+
         return $this->render('activite/index.html.twig', [
-            'activites'  => $activiteRepository->findAll(),
+            'activites'  => $aiResult['activites'],
+            'scoreMap'   => $aiResult['scoreMap'],
             'categories' => $categorieRepository->findAll(),
         ]);
     }
@@ -84,12 +167,9 @@ class ActiviteController extends AbstractController
             return new JsonResponse(['error' => 'Script Python inaccessible'], 503);
         }
 
-        // Prendre la dernière ligne non vide (le JSON)
         $lines    = array_filter(array_map('trim', explode("\n", trim($output))));
         $jsonLine = end($lines);
-
-        // Décoder le JSON — ensure_ascii=True côté Python donc pas de pb d'encodage
-        $data = json_decode($jsonLine, true);
+        $data     = json_decode($jsonLine, true);
 
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
             return new JsonResponse(['error' => 'Réponse invalide du scraper'], 500);

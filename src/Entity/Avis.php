@@ -28,6 +28,15 @@ class Avis
     public function getCommentaire(): ?string { return $this->commentaire; }
     public function setCommentaire(?string $commentaire): self { $this->commentaire = $commentaire; return $this; }
 
+    /**
+     * true = commentaire contient des gros mots → masqué côté front
+     */
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isFlagged = false;
+
+    public function isFlagged(): bool { return $this->isFlagged; }
+    public function setIsFlagged(bool $isFlagged): self { $this->isFlagged = $isFlagged; return $this; }
+
     #[ORM\Column(name: 'created_at', type: 'datetime', nullable: false)]
     private ?\DateTimeInterface $createdAt = null;
 
@@ -51,5 +60,6 @@ class Avis
     public function __construct()
     {
         $this->createdAt = new \DateTime();
+        $this->isFlagged = false;
     }
 }

@@ -535,6 +535,26 @@
     line-height: 1.7;
 }
 
+/* ══ NOUVEAU : commentaire masqué (gros mots détectés) ══ */
+.avis-card__comment--flagged {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-style: italic;
+    background: rgba(234, 179, 8, 0.06);
+    border: 1px solid rgba(234, 179, 8, 0.25);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 0.9rem;
+    color: #92400e;
+    line-height: 1.5;
+}
+.avis-card__comment--flagged svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #b45309;
+}
+
 /* Empty avis */
 .avis-empty {
     text-align: center;
@@ -1055,9 +1075,9 @@ textarea.form-control { resize: vertical; min-height: 100px; }
             </div>
 
             {% if activite.lieu %}
-                <div class="tm-geo-map js-tm-geo-map" 
-                     data-lat="{{ activite.latitude ?: '' }}" 
-                     data-lng="{{ activite.longitude ?: '' }}" 
+                <div class="tm-geo-map js-tm-geo-map"
+                     data-lat="{{ activite.latitude ?: '' }}"
+                     data-lng="{{ activite.longitude ?: '' }}"
                      data-address="{{ activite.lieu|e('html_attr') }}"
                      data-label="{{ activite.lieu|e('html_attr') }}">
                     <button type="button" class="tm-geo-map-btn js-tm-geo-map-toggle" aria-expanded="false" data-label-show="Voir sur la carte" data-label-hide="Masquer la carte">Voir sur la carte</button>
@@ -1220,9 +1240,24 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                                 <span style="font-size:0.8rem;color:var(--color-text-muted);margin-left:0.25rem">{{ avi.note }}/5</span>
                             </div>
                         </div>
+
+                        {# ══ AFFICHAGE COMMENTAIRE — avec détection gros mots ══ #}
                         {% if avi.commentaire %}
-                            <div class="avis-card__comment" data-translate="true" data-original="{{ avi.commentaire|e('html_attr') }}">{{ avi.commentaire }}</div>
+                            {% if avi.isFlagged %}
+                                <div class="avis-card__comment avis-card__comment--flagged">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                        <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                    <span data-translate="true">Ce commentaire a été masqué car il contient un langage inapproprié.</span>
+                                </div>
+                            {% else %}
+                                <div class="avis-card__comment" data-translate="true" data-original="{{ avi.commentaire|e('html_attr') }}">{{ avi.commentaire }}</div>
+                            {% endif %}
                         {% endif %}
+                        {# ══════════════════════════════════════════════════════ #}
+
                     </div>
                 {% endfor %}
 
@@ -1410,7 +1445,7 @@ document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape')     closeLightbox();
     if (e.key === 'ArrowLeft')  shiftLightbox(-1);
     if (e.key === 'ArrowRight') shiftLightbox(1);
-}); 
+});
 </script>
 
 {# ══════════════════════════════════════════════════════

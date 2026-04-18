@@ -91,6 +91,28 @@
 .hero-stat__label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.6); margin-top: 0.2rem; }
 
 /* ═══════════════════════════════════════════════════
+   BANNIÈRE IA — section vedettes
+═══════════════════════════════════════════════════ */
+.ai-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, rgba(124,58,237,0.07) 0%, rgba(196,111,75,0.07) 100%);
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: var(--radius-xl);
+    padding: 0.9rem 1.4rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+    color: var(--color-text);
+}
+.ai-banner__icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+.ai-banner__text strong { color: #7c3aed; font-weight: 600; }
+.ai-banner__text span   { color: var(--color-text-muted); }
+
+/* ═══════════════════════════════════════════════════
    DESTINATION PICKER
 ═══════════════════════════════════════════════════ */
 .dest-strip {
@@ -223,7 +245,7 @@
     transform: translateY(-1px);
 }
 
-/* Panneau carte (Leaflet + OSM — gratuit) */
+/* Panneau carte */
 .dest-map-panel {
     display: none;
     margin-top: -0.5rem;
@@ -397,12 +419,24 @@
     border-radius: var(--radius-xl); overflow: hidden;
     display: flex; flex-direction: column; text-decoration: none; color: inherit;
     transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+    position: relative;
 }
 .act-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 20px 48px rgba(71,48,35,0.11);
     border-color: rgba(196,111,75,0.25);
 }
+
+/* Carte vedette IA : bordure violette subtile */
+.act-card--vedette {
+    border-color: rgba(124,58,237,0.3);
+    box-shadow: 0 0 0 1px rgba(124,58,237,0.12), 0 4px 20px rgba(124,58,237,0.08);
+}
+.act-card--vedette:hover {
+    border-color: rgba(124,58,237,0.5);
+    box-shadow: 0 20px 48px rgba(124,58,237,0.15);
+}
+
 .act-card__img-wrap { position: relative; height: 210px; overflow: hidden; background: var(--color-surface-soft); }
 .act-card__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
 .act-card:hover .act-card__img { transform: scale(1.06); }
@@ -420,6 +454,15 @@
 .badge { padding: 0.28rem 0.65rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; backdrop-filter: blur(8px); }
 .badge--trending { background: rgba(196,111,75,0.9); color: #fff; }
 .badge--cat { background: rgba(255,253,249,0.92); color: var(--color-primary); border: 1px solid rgba(196,111,75,0.2); }
+
+/* Badge vedette IA */
+.badge--vedette {
+    background: rgba(124,58,237,0.88);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
 
 .act-card__rating {
     position: absolute; bottom: 0.75rem; left: 0.85rem;
@@ -439,6 +482,43 @@
     padding: 0 2px;
 }
 
+/* Résumé IA sous le nom */
+.act-card__ai-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: #7c3aed;
+    background: rgba(124,58,237,0.06);
+    border: 1px solid rgba(124,58,237,0.12);
+    border-radius: 8px;
+    padding: 0.45rem 0.7rem;
+    line-height: 1.4;
+}
+.act-card__ai-summary-icon { flex-shrink: 0; font-size: 0.9rem; margin-top: 0.05rem; }
+
+/* Score IA discret */
+.act-card__ai-score {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+}
+.act-card__ai-score-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.act-card__ai-score-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #7c3aed, #c46f4b);
+    transition: width 0.6s ease;
+}
+
 .act-card__tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 .tag {
     padding: 0.22rem 0.65rem; border-radius: 999px;
@@ -446,10 +526,10 @@
     font-size: 0.72rem; font-weight: 500; color: var(--color-text-muted);
     background: var(--color-surface-soft);
 }
-.tag--facile       { border-color: rgba(47,127,121,0.3); color: var(--color-secondary); background: rgba(47,127,121,0.06); }
+.tag--facile        { border-color: rgba(47,127,121,0.3); color: var(--color-secondary); background: rgba(47,127,121,0.06); }
 .tag--intermediaire { border-color: rgba(180,140,40,0.3); color: #7a5e08; background: rgba(180,140,40,0.07); }
-.tag--difficile    { border-color: rgba(196,111,75,0.3); color: var(--color-primary-dark); background: rgba(196,111,75,0.07); }
-.tag--expert       { border-color: rgba(160,50,50,0.3); color: #8b1a1a; background: rgba(160,50,50,0.07); }
+.tag--difficile     { border-color: rgba(196,111,75,0.3); color: var(--color-primary-dark); background: rgba(196,111,75,0.07); }
+.tag--expert        { border-color: rgba(160,50,50,0.3); color: #8b1a1a; background: rgba(160,50,50,0.07); }
 
 .act-card__footer {
     display: flex; align-items: flex-end; justify-content: space-between; margin-top: auto; padding-top: 0.5rem;
@@ -516,6 +596,22 @@
 ════════════════════════════════════════ #}
 <div id="activites">
 
+    {# ── Bannière IA (uniquement si scoreMap disponible) ── #}
+    {% if scoreMap is defined and scoreMap|length > 0 %}
+        {% set nbVedettes = 0 %}
+        {% for s in scoreMap %}{% if s.recommended %}{% set nbVedettes = nbVedettes + 1 %}{% endif %}{% endfor %}
+        <div class="ai-banner">
+            <span class="ai-banner__icon">✨</span>
+            <div class="ai-banner__text">
+                <strong data-translate="true">Recommandé par l'IA</strong>
+                <span data-translate="true"> — Les activités sont triées par score IA basé sur l'analyse de vos avis.</span>
+                {% if nbVedettes > 0 %}
+                    <span style="color:var(--color-text-muted)"> · <strong style="color:#7c3aed">{{ nbVedettes }} vedette{{ nbVedettes > 1 ? 's' : '' }}</strong> mise{{ nbVedettes > 1 ? 's' : '' }} en avant.</span>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
     {# ── Destination Picker ── #}
     <div class="dest-strip">
         <div class="dest-strip__label-col">
@@ -541,14 +637,14 @@
         </div>
     </div>
 
-    {# Carte interactive : clic = destination + filtre dynamique (OpenStreetMap + Nominatim) #}
+    {# Carte interactive #}
     <div id="destMapPanel" class="dest-map-panel" aria-hidden="true" role="region" aria-label="Carte destination">
         <div class="dest-map-panel__head">
             <span><strong>Carte</strong> — cliquez sur un point pour filtrer les activités à proximité</span>
             <button type="button" class="dest-map-panel__close" id="destMapClose">Fermer</button>
         </div>
         <div id="destMapContainer" class="dest-map-panel__map"></div>
-        <p class="dest-map-panel__hint">Fonds de carte © OpenStreetMap · Adresse via Nominatim (usage raisonnable). Optionnel : renseignez <code>TRAVELMATE_NOMINATIM_EMAIL</code> dans la page pour la politique d’utilisation.</p>
+        <p class="dest-map-panel__hint">Fonds de carte © OpenStreetMap · Adresse via Nominatim</p>
     </div>
 
     {# ── Banner résultat destination ── #}
@@ -562,7 +658,6 @@
     <div class="cat-chips">
         <button class="cat-chip is-active" data-cat="" data-translate="true">Toutes</button>
         {% for cat in categories %}
-            {# Les noms de catégories venant de la BD sont marqués pour traduction #}
             <button class="cat-chip" data-cat="{{ cat.id }}" data-translate="true" data-original="{{ cat.nom }}">{{ cat.nom }}</button>
         {% endfor %}
     </div>
@@ -610,12 +705,16 @@
             </div>
         {% else %}
             {% for activite in activites %}
+                {# Récupérer les infos IA pour cette activité (null si IA indisponible) #}
+                {% set aiInfo  = (scoreMap is defined and scoreMap[activite.id] is defined) ? scoreMap[activite.id] : null %}
+                {% set vedette = aiInfo and aiInfo.recommended %}
+
                 {% set moyenne = activite.moyenneAvis %}
                 {% set nbAvis  = activite.avis|length %}
                 {% set diff    = activite.niveaudifficulte|lower %}
 
                 <a href="{{ path('app_activite_show', {id: activite.id}) }}"
-                   class="act-card"
+                   class="act-card{% if vedette %} act-card--vedette{% endif %}"
                    data-nom="{{ activite.nom|lower }}"
                    data-cat="{{ activite.categorie ? activite.categorie.id : '' }}"
                    data-diff="{{ activite.niveaudifficulte|lower }}"
@@ -634,15 +733,19 @@
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </div>
                         <div class="act-card__img-overlay"></div>
+
                         <div class="act-card__badges">
-                            {% if nbAvis >= 3 and moyenne >= 4 %}
+                            {# Badge vedette IA — priorité maximale, affiché en premier #}
+                            {% if vedette %}
+                                <span class="badge badge--vedette">✨ Vedette IA</span>
+                            {% elseif nbAvis >= 3 and moyenne >= 4 %}
                                 <span class="badge badge--trending" data-translate="true">Populaire</span>
                             {% endif %}
                             {% if activite.categorie %}
-                                {# Catégorie BD : marquée pour traduction #}
                                 <span class="badge badge--cat" data-translate="true" data-original="{{ activite.categorie.nom }}">{{ activite.categorie.nom }}</span>
                             {% endif %}
                         </div>
+
                         {% if nbAvis > 0 %}
                             <div class="act-card__rating">
                                 <span class="star">&#9733;</span>
@@ -653,21 +756,41 @@
                     </div>
 
                     <div class="act-card__body">
-                        {# Nom de l'activité venant de la BD : marqué pour traduction #}
                         <div class="act-card__name" data-translate="true" data-original="{{ activite.nom }}">{{ activite.nom }}</div>
+
                         {% if activite.lieu %}
                             <div class="act-card__location" data-location="{{ activite.lieu|lower }}">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                                {# Lieu BD : marqué pour traduction #}
                                 <span class="location-text" data-translate="true" data-original="{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}">{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}</span>
                             </div>
                         {% endif %}
+
+                        {# Résumé IA — affiché uniquement si l'IA a retourné un résumé #}
+                        {% if aiInfo and aiInfo.ai_summary is defined and aiInfo.ai_summary %}
+                            <div class="act-card__ai-summary">
+                                <span class="act-card__ai-summary-icon">🤖</span>
+                                <span>{{ aiInfo.ai_summary }}</span>
+                            </div>
+                        {% endif %}
+
+                        {# Barre de score IA #}
+                        {% if aiInfo and aiInfo.ai_score is defined %}
+                            {% set scorePct = ((aiInfo.ai_score / 10) * 100)|round %}
+                            <div class="act-card__ai-score">
+                                <span style="white-space:nowrap;font-size:0.7rem">Score IA</span>
+                                <div class="act-card__ai-score-bar">
+                                    <div class="act-card__ai-score-fill" style="width:{{ scorePct }}%"></div>
+                                </div>
+                                <span>{{ aiInfo.ai_score }}/10</span>
+                            </div>
+                        {% endif %}
+
                         <div class="act-card__tags">
-                            {# Niveau de difficulté BD : marqué pour traduction #}
                             <span class="tag tag--{{ diff }}" data-translate="true" data-original="{{ activite.niveaudifficulte }}">{{ activite.niveaudifficulte }}</span>
                             <span class="tag">{{ activite.duree }}h</span>
                             <span class="tag">+{{ activite.agemin }} <span data-translate="true">ans</span></span>
                         </div>
+
                         <div class="act-card__footer">
                             <div>
                                 <div class="act-price-label" data-translate="true">À partir de</div>
@@ -703,7 +826,6 @@
     }
 })();
 </script>
-{# E-mail optionnel pour Nominatim (politique d’usage) — remplissez le vôtre en prod #}
 <script>window.TRAVELMATE_NOMINATIM_EMAIL = '';</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="{{ asset('js/activite-list-filters.js') }}"></script>
