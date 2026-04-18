@@ -6,28 +6,39 @@ use App\Entity\User;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Psr\Log\LoggerInterface;
 
 class SecurityAlertService
 {
     public function __construct(
         private MailerInterface $mailer,
+        private LoggerInterface $logger,
         private KernelInterface $kernel
     ) {
     }
 
     public function saveBase64Photo(?string $base64Image, string $prefix = 'security-alert'): ?string
     {
+        $this->logger->info('SECURITY ALERT DEBUG - saveBase64Photo called', [
+            'has_image' => !empty($base64Image),
+            'starts_with_data_image' => $base64Image ? str_starts_with($base64Image, 'data:image/') : false,
+        ]);
         if (!$base64Image || !str_starts_with($base64Image, 'data:image/')) {
             return null;
         }
 
         if (!preg_match('/^data:image\/(\w+);base64,/', $base64Image, $matches)) {
+            $this->logger->warning('SECURITY ALERT DEBUG - regex did not match base64 image');
             return null;
         }
 
         $extension = strtolower($matches[1]);
         $data = substr($base64Image, strpos($base64Image, ',') + 1);
         $decoded = base64_decode($data);
+        $this->logger->info('SECURITY ALERT DEBUG - decoded image result', [
+            'decoded_ok' => $decoded !== false,
+            'decoded_size' => $decoded !== false ? strlen($decoded) : 0,
+        ]);
 
         if ($decoded === false) {
             return null;
@@ -41,9 +52,26 @@ class SecurityAlertService
         $filename = $prefix . '-' . uniqid() . '.' . $extension;
         $path = $directory . '/' . $filename;
 
+        $this->logger->info('SECURITY ALERT DEBUG - saving file', [
+            'path' => $path,
+        ]);
         file_put_contents($path, $decoded);
-
+        $this->logger->info('SECURITY ALERT DEBUG - file saved', [
+            'filename' => $filename,
+            'exists' => file_exists($path),
+        ]);
         return $filename;
+    }
+
+    public function getSecurityAlertPhotoPath(?string $photoFilename): ?string
+    {
+        if (!$photoFilename) {
+            return null;
+        }
+
+        $fullPath = $this->kernel->getProjectDir() . '/public/uploads/security-alerts/' . $photoFilename;
+
+        return is_file($fullPath) ? $fullPath : null;
     }
 
     public function sendFailedLoginAlert(User $user, ?string $photoFilename = null): void
@@ -58,13 +86,10 @@ class SecurityAlertService
                 <p>Si ce n’était pas vous, nous vous conseillons de changer votre mot de passe immédiatement.</p>
             ");
 
-        if ($photoFilename && file_exists($this->getPhotoPath($photoFilename))) {
-            $email->attach(Swift_Attachment::fromPath($this->getPhotoPath($photoFilename)));
-            $fullPath = $this->kernel->getProjectDir() . '/public/uploads/security-alerts/' . $photoFilename;
+        $fullPath = $this->getSecurityAlertPhotoPath($photoFilename);
 
-            if (is_file($fullPath)) {
-                $email->attachFromPath($fullPath, 'security-alert-photo.jpg');
-            }
+        if ($fullPath) {
+            $email->attachFromPath($fullPath, 'security-alert-photo.jpg');
         }
 
         $this->mailer->send($email);

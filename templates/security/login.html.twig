@@ -434,8 +434,7 @@
                     </div>
                 {% endif %}
 
-                <form method="post" class="login-form">
-                    <input type="hidden" name="failed_capture" id="failed_capture">
+                <form method="post" class="login-form" id="login-form">
                     <div class="form-control-block">
                         <label for="inputEmail">Adresse email</label>
                         <input
@@ -540,16 +539,23 @@
     <script>
         document.addEventListener('DOMContentLoaded', async function () {
             const failedAttempts = {{ app.session.get('login_failed_attempts_for_last_user') ?? 0 }};
-            const form = document.querySelector('form');
+            const form = document.getElementById('login-form');
             const cameraBox = document.getElementById('security-camera-box');
             const video = document.getElementById('security-video');
-            const hiddenInput = document.getElementById('failed_capture');
 
             let stream = null;
             let cameraReady = false;
             let isCapturingSubmit = false;
 
+            console.log('[SECURITY DEBUG] DOM loaded');
+            console.log('[SECURITY DEBUG] failedAttempts =', failedAttempts);
+            console.log('[SECURITY DEBUG] login form found =', !!form);
+            console.log('[SECURITY DEBUG] cameraBox found =', !!cameraBox);
+            console.log('[SECURITY DEBUG] video found =', !!video);
+
             async function startCamera() {
+                console.log('[SECURITY DEBUG] startCamera() called');
+
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: 'user' },
@@ -558,45 +564,98 @@
 
                     video.srcObject = stream;
                     cameraReady = true;
+
+                    console.log('[SECURITY DEBUG] camera started successfully');
+                    console.log('[SECURITY DEBUG] stream =', stream);
+
+                    video.onloadedmetadata = () => {
+                        console.log('[SECURITY DEBUG] video metadata loaded');
+                        console.log('[SECURITY DEBUG] videoWidth =', video.videoWidth);
+                        console.log('[SECURITY DEBUG] videoHeight =', video.videoHeight);
+                    };
                 } catch (e) {
-                    console.error('Camera unavailable or denied', e);
                     cameraReady = false;
+                    console.error('[SECURITY DEBUG] startCamera failed', e);
                 }
             }
 
-            function capturePhoto() {
-                return new Promise((resolve) => {
-                    if (!cameraReady || !video.videoWidth || !video.videoHeight) {
-                        resolve(false);
-                        return;
-                    }
+            async function capturePhotoAndStoreInSession() {
+                console.log('[SECURITY DEBUG] capturePhotoAndStoreInSession() called');
+                console.log('[SECURITY DEBUG] cameraReady =', cameraReady);
 
-                    const canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                if (!cameraReady) {
+                    console.warn('[SECURITY DEBUG] camera not ready');
+                    return false;
+                }
 
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                if (!video.videoWidth || !video.videoHeight) {
+                    console.warn('[SECURITY DEBUG] video dimensions missing');
+                    return false;
+                }
 
-                    hiddenInput.value = canvas.toDataURL('image/jpeg', 0.9);
-                    resolve(true);
-                });
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+                console.log('[SECURITY DEBUG] image captured');
+                console.log('[SECURITY DEBUG] dataUrl length =', dataUrl.length);
+
+                try {
+                    const response = await fetch('{{ path('app_security_capture_failed_login_photo') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            image: dataUrl
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    console.log('[SECURITY DEBUG] capture upload response =', result);
+
+                    return !!result.success;
+                } catch (e) {
+                    console.error('[SECURITY DEBUG] failed to upload capture', e);
+                    return false;
+                }
             }
 
             if (failedAttempts >= 2 && cameraBox) {
+                console.log('[SECURITY DEBUG] showing camera box because failedAttempts >= 2');
                 cameraBox.style.display = 'block';
                 await startCamera();
+            } else {
+                console.log('[SECURITY DEBUG] camera box not shown');
             }
 
             if (form) {
                 form.addEventListener('submit', async function (e) {
-                    if (failedAttempts >= 2) { // Before the 3rd attempt
-                        const photo = await capturePhoto(); // Your photo capture logic
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'failed_capture';
-                        input.value = photo; // Base64 string
-                        this.appendChild(input);
+                    console.log('[SECURITY DEBUG] form submit triggered');
+                    console.log('[SECURITY DEBUG] failedAttempts at submit =', failedAttempts);
+                    console.log('[SECURITY DEBUG] isCapturingSubmit =', isCapturingSubmit);
+
+                    if (failedAttempts >= 2 && !isCapturingSubmit) {
+                        e.preventDefault();
+                        isCapturingSubmit = true;
+
+                        console.log('[SECURITY DEBUG] intercepting submit to capture and upload photo');
+
+                        const stored = await capturePhotoAndStoreInSession();
+
+                        console.log('[SECURITY DEBUG] capture stored in session =', stored);
+                        console.log('[SECURITY DEBUG] submitting REAL login form after capture');
+
+                        HTMLFormElement.prototype.submit.call(form);
+                    } else {
+                        console.log('[SECURITY DEBUG] submit continues normally');
                     }
                 });
             }

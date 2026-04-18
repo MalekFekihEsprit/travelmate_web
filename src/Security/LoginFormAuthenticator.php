@@ -24,6 +24,7 @@ use App\Service\SecurityAlertService;
 use App\Service\UserTrustScoreService;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\SecurityRequestAttributes;
+use Psr\Log\LoggerInterface;
 
 class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 {
@@ -37,6 +38,7 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
         private EntityManagerInterface $entityManager,
         private SecurityAlertService $securityAlertService,
         private UserTrustScoreService $userTrustScoreService,
+        private LoggerInterface $logger,
         private GeoIpService $geoIpService
     ) {
     }
@@ -140,7 +142,8 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 
             $session->remove('login_failed_attempts_for_last_user');
         }
-
+        $session->remove('login_failed_attempts_for_last_user');
+        $session->remove('security_failed_login_photo_filename');
         return new RedirectResponse($this->urlGenerator->generate('app_home'));
     }
 
@@ -151,9 +154,14 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
+        $this->logger->info('LOGIN FAILURE DEBUG - entered onAuthenticationFailure');
         $session = $request->getSession();
         $email = mb_strtolower(trim((string) $request->request->get('email', '')));
-        $failedCapture = (string) $request->request->get('failed_capture', '');
+        $session = $request->getSession();
+        $photoFilenameFromSession = $session->get('security_failed_login_photo_filename');
+        $this->logger->info('LOGIN FAILURE DEBUG - email received', [
+            'email' => $email,
+        ]);
 
         if ($email !== '') {
             $user = $this->userRepository->findOneBy(['email' => $email]);
@@ -163,26 +171,38 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
                 $user->setFailedLoginAttempts($attempts);
                 $user->setLastFailedLoginAt(new \DateTime());
 
+                $this->logger->info('LOGIN FAILURE DEBUG - user lookup result', [
+                    'user_found' => true,
+                ]);
+
+                $this->logger->info('LOGIN FAILURE DEBUG - attempts before save', [
+                    'attempts' => $attempts,
+                ]);
+
                 $photoFilename = null;
 
-                // Only try to save photo if attempts >= 3 AND we have capture data
-                if ($attempts >= 3 && !empty($failedCapture)) {
-                    $photoFilename = $this->securityAlertService->saveBase64Photo($failedCapture, 'failed-login');
+                if ($attempts >= 3) {
+                    $photoFilename = $photoFilenameFromSession;
 
                     if ($photoFilename) {
                         $user->setSecurityAlertPhoto($photoFilename);
                     }
-                }
 
-                // Always send alert when attempts >= 3 (with or without photo)
-                if ($attempts >= 3) {
+                    $this->logger->info('LOGIN FAILURE DEBUG - photo filename from session', [
+                        'photoFilename' => $photoFilename,
+                    ]);
+
                     try {
-                        // Pass the photo filename (will be null if no photo was saved)
                         $this->securityAlertService->sendFailedLoginAlert($user, $photoFilename);
                     } catch (\Throwable $e) {
-                        // Log the error
-                        error_log('Failed to send login alert: ' . $e->getMessage());
+                        $this->logger->error('LOGIN FAILURE DEBUG - failed to send alert email', [
+                            'error' => $e->getMessage(),
+                        ]);
                     }
+                } else {
+                    $this->logger->info('LOGIN FAILURE DEBUG - photo/email skipped because attempts < 3', [
+                        'attempts' => $attempts,
+                    ]);
                 }
 
                 $user->setTrustScore(
@@ -193,13 +213,18 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 
                 $session->set('login_failed_attempts_for_last_user', $attempts);
             } else {
+                $this->logger->info('LOGIN FAILURE DEBUG - user lookup result', [
+                    'user_found' => false,
+                ]);
+
                 $session->set('login_failed_attempts_for_last_user', 0);
             }
         }
-        // In onAuthenticationFailure, add:
-        error_log('Failed capture data length: ' . strlen($failedCapture));
-        error_log('Failed capture empty? ' . (empty($failedCapture) ? 'YES' : 'NO'));
+
         $session->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $exception);
+        $this->logger->info('LOGIN FAILURE DEBUG - sending alert email', [
+            'photoFilename' => $photoFilename,
+        ]);
         $session->set(SecurityRequestAttributes::LAST_USERNAME, $email);
 
         return new RedirectResponse($this->urlGenerator->generate('app_login'));

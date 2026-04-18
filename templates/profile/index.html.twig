@@ -356,6 +356,11 @@
                     <span class="profile-role">
                         {{ user.role == 'ADMIN' ? 'Administrateur' : 'Utilisateur' }}
                     </span>
+                    <div style="margin: 1rem;">
+                        <a href="{{ path('app_profile_face') }}" class="profile-submit profile-submit--ghost" style="text-decoration:none; display:inline-flex; align-items:center;">
+                            Gérer mon visage
+                        </a>
+                    </div>
                 </div>
 
                 <div class="profile-meta">
@@ -500,11 +505,6 @@
                             <p class="security-box__text">
                                 Utilisez un mot de passe fort contenant au moins une lettre et un chiffre.
                             </p>
-                            <div style="margin-top: 1rem;">
-                                <a href="{{ path('app_profile_face') }}" class="profile-submit profile-submit--ghost" style="text-decoration:none; display:inline-flex; align-items:center;">
-                                    Gérer mon visage
-                                </a>
-                            </div>
                             {{ form_start(changePasswordForm, {'attr': {'novalidate': 'novalidate'}}) }}
                                 <div class="profile-form-grid">
                                     <div class="form-control-block full">
@@ -538,10 +538,10 @@
 
                 <div class="profile-security-score">
                     <h3>Niveau de confiance</h3>
-                    <div class="trust-score-badge trust-score-badge--{{ app.user.trustScore >= 80 ? 'high' : (app.user.trustScore >= 50 ? 'medium' : 'low') }}">
-                        Score : {{ app.user.trustScore }}/100
+                    <div class="trust-score-badge trust-score-badge--{{ user.getTrustScore >= 80 ? 'high' : (user.getTrustScore >= 50 ? 'medium' : 'low') }}">
+                        Score : {{ user.getTrustScore }}/100
                         —
-                        {{ app.user.trustScore >= 80 ? 'Élevé' : (app.user.trustScore >= 50 ? 'Moyen' : 'Faible') }}
+                        {{ user.getTrustScore >= 80 ? 'Élevé' : (user.getTrustScore >= 50 ? 'Moyen' : 'Faible') }}
                     </div>
                 </div>
                 
