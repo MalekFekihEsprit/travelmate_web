@@ -30,36 +30,45 @@
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         @media (max-width: 600px) { .form-grid-2 { grid-template-columns: 1fr; } }
 
-        .field-error {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            padding: 0.55rem 0.85rem;
-            background: #fef2f2;
-            border: 1.5px solid #fca5a5;
-            border-radius: 8px;
-            font-size: 0.83rem;
-            color: #b91c1c;
-            font-weight: 600;
-            animation: shake 0.3s ease;
-        }
+        .field-error { display: flex; align-items: flex-start; gap: 0.5rem; margin-top: 0.5rem; padding: 0.55rem 0.85rem; background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 8px; font-size: 0.83rem; color: #b91c1c; font-weight: 600; animation: shake 0.3s ease; }
         .field-error .err-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
         .field-error ul { list-style: none; margin: 0; padding: 0; }
         .field-error ul li + li { margin-top: 0.2rem; }
-        @keyframes shake {
-            0%,100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-        }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 
         .btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
         .flash-success { background: var(--admin-success-soft); border: 1px solid rgba(60,139,114,0.25); color: var(--admin-success); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.25rem; font-size: 0.9rem; }
-
         .img-preview-wrap { width: 100%; aspect-ratio: 16/9; border: 2px dashed var(--admin-border); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; background: var(--admin-bg); margin-bottom: 1rem; overflow: hidden; }
         .img-preview { width: 100%; height: 100%; object-fit: cover; }
         .img-placeholder { text-align: center; color: var(--admin-text-muted); }
         .field-hint { font-size: 0.78rem; color: var(--admin-text-muted); margin-top: 0.3rem; }
+
+        /* ══ Price Advisor ══ */
+        #price-advisor {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 1rem 1.2rem;
+            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+            border: 1.5px solid #6ee7b7;
+            border-radius: 12px;
+            font-size: 0.87rem;
+            color: #065f46;
+        }
+        .pa-header { display:flex; align-items:center; gap:0.5rem; font-weight:700; font-size:0.92rem; margin-bottom:0.75rem; }
+        .pa-spinner { display:inline-block; width:13px; height:13px; border:2px solid #a7f3d0; border-top-color:#059669; border-radius:50%; animation:spin 0.7s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .pa-stats { display:flex; gap:0; margin-bottom:0.6rem; background:#d1fae5; border-radius:8px; overflow:hidden; }
+        .pa-stat { flex:1; display:flex; flex-direction:column; align-items:center; padding:0.5rem 0.3rem; border-right:1px solid #a7f3d0; }
+        .pa-stat:last-child { border-right:none; }
+        .pa-stat-label { font-size:0.68rem; color:#4b7c68; text-transform:uppercase; letter-spacing:0.04em; }
+        .pa-stat-val { font-size:1rem; font-weight:700; color:#064e3b; }
+        .pa-comparison { margin:0.5rem 0; padding:0.45rem 0.8rem; border-radius:7px; font-weight:600; font-size:0.83rem; }
+        .pa-above { background:#fef9c3; color:#92400e; border:1px solid #fde68a; }
+        .pa-below { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+        .pa-ok    { background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; }
+        .pa-examples { margin:0.5rem 0 0; padding-left:1.1rem; font-size:0.8rem; color:#374151; }
+        .pa-examples li { margin-bottom:0.25rem; line-height:1.4; }
+        .pa-footer { margin-top:0.6rem; font-size:0.72rem; color:#9ca3af; border-top:1px solid #a7f3d0; padding-top:0.4rem; }
     </style>
 {% endblock %}
 
@@ -83,7 +92,6 @@
 {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'enctype': 'multipart/form-data'}}) }}
 
 <div class="form-layout">
-    {# ── Colonne principale ── #}
     <div>
         <div class="admin-card">
             <div class="admin-card__header">Informations de l'activité</div>
@@ -93,13 +101,10 @@
                     <label>{{ form_label(form.nom) }} <span class="req">*</span></label>
                     {{ form_widget(form.nom, {'attr': {
                         'class': 'form-control' ~ (form.nom.vars.errors|length > 0 ? ' is-invalid' : ''),
-                        'placeholder': 'Obligatoire — entre 3 et 20 caractères (ex: Randonnée en montagne)'
+                        'placeholder': 'Obligatoire — entre 3 et 20 caractères'
                     }}) }}
                     {% if form.nom.vars.errors|length > 0 %}
-                        <div class="field-error">
-                            <span class="err-icon">✖</span>
-                            <ul>{% for error in form.nom.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                        </div>
+                        <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.nom.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                     {% endif %}
                 </div>
 
@@ -108,13 +113,10 @@
                     {{ form_widget(form.description, {'attr': {
                         'class': 'form-control' ~ (form.description.vars.errors|length > 0 ? ' is-invalid' : ''),
                         'rows': 4,
-                        'placeholder': 'Obligatoire — minimum 15 caractères, décrivez l\'activité'
+                        'placeholder': 'Obligatoire — minimum 15 caractères'
                     }}) }}
                     {% if form.description.vars.errors|length > 0 %}
-                        <div class="field-error">
-                            <span class="err-icon">✖</span>
-                            <ul>{% for error in form.description.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                        </div>
+                        <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.description.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                     {% endif %}
                 </div>
 
@@ -122,13 +124,10 @@
                     <label>{{ form_label(form.lieu) }}</label>
                     {{ form_widget(form.lieu, {'attr': {
                         'class': 'form-control' ~ (form.lieu.vars.errors|length > 0 ? ' is-invalid' : ''),
-                        'placeholder': 'Optionnel — max 150 caractères (ex: Tunis, Ubud...)'
+                        'placeholder': 'Optionnel — ex: Tunis, Hammamet...'
                     }}) }}
                     {% if form.lieu.vars.errors|length > 0 %}
-                        <div class="field-error">
-                            <span class="err-icon">✖</span>
-                            <ul>{% for error in form.lieu.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                        </div>
+                        <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.lieu.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                     {% endif %}
                 </div>
 
@@ -146,26 +145,35 @@
                         <label>{{ form_label(form.budget) }} <span class="req">*</span></label>
                         {{ form_widget(form.budget, {'attr': {
                             'class': 'form-control' ~ (form.budget.vars.errors|length > 0 ? ' is-invalid' : ''),
-                            'placeholder': 'Ce champ est obligatoire'
+                            'placeholder': 'Entrez votre prix en DT',
+                            'autocomplete': 'off'
                         }}) }}
                         {% if form.budget.vars.errors|length > 0 %}
-                            <div class="field-error">
-                                <span class="err-icon">✖</span>
-                                <ul>{% for error in form.budget.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                            </div>
+                            <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.budget.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                         {% endif %}
+
+                        {# ══ PRICE ADVISOR WIDGET ══ #}
+                        <div id="price-advisor">
+                            <div class="pa-header">
+                                <span>📊</span>
+                                <span>Veille tarifaire IA</span>
+                                <span id="pa-loader" style="display:none"><span class="pa-spinner"></span></span>
+                            </div>
+                            <div id="pa-body">
+                                <span style="color:#4b7c68;font-style:italic">Tapez le nom de l'activité pour analyser le marché…</span>
+                            </div>
+                        </div>
+                        {# ══ FIN PRICE ADVISOR ══ #}
                     </div>
+
                     <div class="form-group">
                         <label>{{ form_label(form.duree) }} <span class="req">*</span></label>
                         {{ form_widget(form.duree, {'attr': {
                             'class': 'form-control' ~ (form.duree.vars.errors|length > 0 ? ' is-invalid' : ''),
-                            'placeholder': 'Obligatoire — entre 1 et 48 heures'
+                            'placeholder': 'Entre 1 et 48 heures'
                         }}) }}
                         {% if form.duree.vars.errors|length > 0 %}
-                            <div class="field-error">
-                                <span class="err-icon">✖</span>
-                                <ul>{% for error in form.duree.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                            </div>
+                            <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.duree.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                         {% endif %}
                     </div>
                 </div>
@@ -175,13 +183,10 @@
                         <label>{{ form_label(form.agemin) }} <span class="req">*</span></label>
                         {{ form_widget(form.agemin, {'attr': {
                             'class': 'form-control' ~ (form.agemin.vars.errors|length > 0 ? ' is-invalid' : ''),
-                            'placeholder': 'Obligatoire — entre 0 et 100 ans'
+                            'placeholder': 'Entre 0 et 100 ans'
                         }}) }}
                         {% if form.agemin.vars.errors|length > 0 %}
-                            <div class="field-error">
-                                <span class="err-icon">✖</span>
-                                <ul>{% for error in form.agemin.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                            </div>
+                            <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.agemin.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                         {% endif %}
                     </div>
                     <div class="form-group">
@@ -190,10 +195,7 @@
                             'class': 'form-control' ~ (form.niveaudifficulte.vars.errors|length > 0 ? ' is-invalid' : '')
                         }}) }}
                         {% if form.niveaudifficulte.vars.errors|length > 0 %}
-                            <div class="field-error">
-                                <span class="err-icon">✖</span>
-                                <ul>{% for error in form.niveaudifficulte.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                            </div>
+                            <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.niveaudifficulte.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                         {% endif %}
                     </div>
                 </div>
@@ -202,38 +204,24 @@
         </div>
     </div>
 
-    {# ── Colonne latérale ── #}
     <div>
         <div class="admin-card">
             <div class="admin-card__header">Paramètres</div>
             <div class="admin-card__body">
-
                 <div class="form-group">
                     <label>{{ form_label(form.statut) }} <span class="req">*</span></label>
-                    {{ form_widget(form.statut, {'attr': {
-                        'class': 'form-control' ~ (form.statut.vars.errors|length > 0 ? ' is-invalid' : '')
-                    }}) }}
+                    {{ form_widget(form.statut, {'attr': {'class': 'form-control' ~ (form.statut.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
                     {% if form.statut.vars.errors|length > 0 %}
-                        <div class="field-error">
-                            <span class="err-icon">✖</span>
-                            <ul>{% for error in form.statut.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                        </div>
+                        <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.statut.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                     {% endif %}
                 </div>
-
                 <div class="form-group">
                     <label>{{ form_label(form.categorie) }} <span class="req">*</span></label>
-                    {{ form_widget(form.categorie, {'attr': {
-                        'class': 'form-control' ~ (form.categorie.vars.errors|length > 0 ? ' is-invalid' : '')
-                    }}) }}
+                    {{ form_widget(form.categorie, {'attr': {'class': 'form-control' ~ (form.categorie.vars.errors|length > 0 ? ' is-invalid' : '')}}) }}
                     {% if form.categorie.vars.errors|length > 0 %}
-                        <div class="field-error">
-                            <span class="err-icon">✖</span>
-                            <ul>{% for error in form.categorie.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                        </div>
+                        <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.categorie.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                     {% endif %}
                 </div>
-
             </div>
         </div>
 
@@ -251,10 +239,7 @@
                     <label>{{ form_label(form.imageFile) }}</label>
                     {{ form_widget(form.imageFile, {'attr': {'class': 'form-control', 'accept': 'image/*', 'id': 'imageFile'}}) }}
                     {% if form.imageFile.vars.errors|length > 0 %}
-                        <div class="field-error">
-                            <span class="err-icon">✖</span>
-                            <ul>{% for error in form.imageFile.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
-                        </div>
+                        <div class="field-error"><span class="err-icon">✖</span><ul>{% for error in form.imageFile.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul></div>
                     {% endif %}
                     <div class="field-hint">JPG, PNG ou WEBP — max 5 Mo</div>
                 </div>
@@ -283,21 +268,149 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="{{ asset('js/admin-location-map-picker.js') }}"></script>
 <script>
-    const fileInput = document.getElementById('imageFile');
-    const imgPreview = document.getElementById('imgPreview');
-    const imgPlaceholder = document.getElementById('imgPlaceholder');
-    if (fileInput) {
-        fileInput.addEventListener('change', function () {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    imgPreview.src = e.target.result;
-                    imgPreview.style.display = 'block';
-                    if (imgPlaceholder) imgPlaceholder.style.display = 'none';
-                };
-                reader.readAsDataURL(this.files[0]);
-            }
+/* ── Aperçu image ── */
+(function(){
+    var fi = document.getElementById('imageFile');
+    var ip = document.getElementById('imgPreview');
+    var ph = document.getElementById('imgPlaceholder');
+    if (!fi) return;
+    fi.addEventListener('change', function(){
+        if (this.files && this.files[0]) {
+            var r = new FileReader();
+            r.onload = function(e){ ip.src=e.target.result; ip.style.display='block'; if(ph) ph.style.display='none'; };
+            r.readAsDataURL(this.files[0]);
+        }
+    });
+})();
+
+/* ════════════════════════════════════════════
+   PRICE ADVISOR
+   IDs réels générés par Symfony :
+   - activite_nom
+   - activite_lieu
+   - activite_budget
+════════════════════════════════════════════ */
+(function(){
+    var nomField    = document.getElementById('activite_nom');
+    var lieuField   = document.getElementById('activite_lieu');
+    var budgetField = document.getElementById('activite_budget');
+    var advisor     = document.getElementById('price-advisor');
+    var paBody      = document.getElementById('pa-body');
+    var paLoader    = document.getElementById('pa-loader');
+
+    if (!nomField || !budgetField || !advisor) {
+        console.warn('Price Advisor: champs introuvables', {
+            nom: nomField,
+            budget: budgetField,
+            advisor: advisor
         });
+        return;
     }
+
+    console.log('Price Advisor initialise OK');
+
+    var API_URL      = '{{ path('app_activite_price_advisor') }}';
+    var timer        = null;
+    var lastActivity = '';
+    var lastLocation = '';
+    var cachedData   = null;
+
+    function render(data) {
+        if (!data || data.error || data.count === 0) {
+            paBody.innerHTML = '<span style="color:#64748b">Aucune donnee disponible pour cette activite.</span>';
+            return;
+        }
+
+        var budget = parseFloat(budgetField.value) || 0;
+        var cmpHtml = '';
+
+        if (budget > 0 && data.average) {
+            var diff = budget - data.average;
+            var pct  = Math.abs(diff) / data.average;
+            if (diff > 0 && pct > 0.15) {
+                cmpHtml = '<div class="pa-comparison pa-above">&#9888;&#65039; Votre prix est <strong>' + Math.round(diff) + ' DT AU-DESSUS</strong> de la moyenne &mdash; risque de perdre des clients.</div>';
+            } else if (diff < 0 && pct > 0.15) {
+                cmpHtml = '<div class="pa-comparison pa-below">&#9989; Votre prix est <strong>' + Math.abs(Math.round(diff)) + ' DT EN DESSOUS</strong> de la moyenne &mdash; tres competitif !</div>';
+            } else {
+                cmpHtml = '<div class="pa-comparison pa-ok">&#128077; Votre prix est <strong>dans la fourchette</strong> du marche &mdash; bonne position.</div>';
+            }
+        }
+
+        var exHtml = '';
+        if (data.items && data.items.length) {
+            exHtml = '<ul class="pa-examples">';
+            for (var i = 0; i < data.items.length; i++) {
+                var item = data.items[i];
+                var t = item.title.length > 55 ? item.title.substring(0,55) + '...' : item.title;
+                exHtml += '<li><strong>' + item.price + ' ' + item.currency + '</strong> &mdash; ' + t + ' <em style="color:#9ca3af">(' + item.source + ')</em></li>';
+            }
+            exHtml += '</ul>';
+        }
+
+        paBody.innerHTML =
+            '<div class="pa-stats">' +
+                '<div class="pa-stat"><span class="pa-stat-label">Min</span><span class="pa-stat-val">' + data.min + ' DT</span></div>' +
+                '<div class="pa-stat"><span class="pa-stat-label">Moyenne</span><span class="pa-stat-val">' + data.average + ' DT</span></div>' +
+                '<div class="pa-stat"><span class="pa-stat-label">Max</span><span class="pa-stat-val">' + data.max + ' DT</span></div>' +
+                '<div class="pa-stat"><span class="pa-stat-label">Offres</span><span class="pa-stat-val">' + data.count + '</span></div>' +
+            '</div>' +
+            cmpHtml +
+            exHtml +
+            '<div class="pa-footer">Analyse IA &mdash; donnees indicatives du marche touristique</div>';
+    }
+
+    function fetchPrices(activity, location) {
+        advisor.style.display = 'block';
+        paLoader.style.display = 'inline';
+        paBody.innerHTML = '<span style="color:#4b7c68;font-style:italic">Analyse IA du marche en cours...</span>';
+
+        var url = API_URL + '?activity=' + encodeURIComponent(activity) + '&location=' + encodeURIComponent(location);
+
+        fetch(url)
+            .then(function(resp){
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                return resp.json();
+            })
+            .then(function(data){
+                cachedData = data;
+                render(data);
+            })
+            .catch(function(e){
+                paBody.innerHTML = '<span style="color:#dc2626">Erreur : ' + e.message + '</span>';
+            })
+            .finally(function(){
+                paLoader.style.display = 'none';
+            });
+    }
+
+    function trigger() {
+        var activity = nomField.value.trim();
+        var location = (lieuField && lieuField.value.trim()) ? lieuField.value.trim() : 'Tunis';
+
+        if (activity.length < 3) {
+            advisor.style.display = 'none';
+            cachedData = null;
+            return;
+        }
+
+        /* Budget changé uniquement → recalcul local sans re-appeler l'API */
+        if (activity === lastActivity && location === lastLocation && cachedData) {
+            advisor.style.display = 'block';
+            render(cachedData);
+            return;
+        }
+
+        clearTimeout(timer);
+        timer = setTimeout(function(){
+            lastActivity = activity;
+            lastLocation = location;
+            fetchPrices(activity, location);
+        }, 1200);
+    }
+
+    nomField.addEventListener('input', trigger);
+    budgetField.addEventListener('input', trigger);
+    if (lieuField) lieuField.addEventListener('change', trigger);
+})();
 </script>
 {% endblock %}

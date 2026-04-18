@@ -8,6 +8,7 @@ use App\Repository\ActiviteRepository;
 use App\Repository\CategorieRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -25,7 +26,6 @@ class ActiviteController extends AbstractController
         ActiviteRepository  $activiteRepository,
         CategorieRepository $categorieRepository
     ): Response {
-        // Si l'utilisateur est connecté et n'a pas encore fait le quiz → rediriger
         if ($this->getUser() && !$request->getSession()->get('quiz_completed', false)) {
             return $this->redirectToRoute('app_quiz');
         }
@@ -54,6 +54,48 @@ class ActiviteController extends AbstractController
         return $this->render('admin/activite/index.html.twig', [
             'activites' => $activiteRepository->findAll(),
         ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    //  PRICE ADVISOR — DOIT être avant /new pour éviter conflit de route
+    // ──────────────────────────────────────────────────────────────────────
+    #[Route('/admin/activite/price-advisor', name: 'app_activite_price_advisor', methods: ['GET'])]
+    public function priceAdvisor(Request $request): JsonResponse
+    {
+        $activity = trim($request->query->get('activity', ''));
+        $location = trim($request->query->get('location', 'Tunis'));
+
+        if (mb_strlen($activity) < 3) {
+            return new JsonResponse(['error' => 'Activité trop courte'], 400);
+        }
+
+        $scriptPath = 'C:\\Users\\Admin\\Desktop\\projet sym\\price_scraper\\price_scraper.py';
+
+        $cmd = sprintf(
+            'python -X utf8 "%s" %s %s 2>NUL',
+            $scriptPath,
+            escapeshellarg($activity),
+            escapeshellarg($location)
+        );
+
+        $output = shell_exec($cmd);
+
+        if (!$output) {
+            return new JsonResponse(['error' => 'Script Python inaccessible'], 503);
+        }
+
+        // Prendre la dernière ligne non vide (le JSON)
+        $lines    = array_filter(array_map('trim', explode("\n", trim($output))));
+        $jsonLine = end($lines);
+
+        // Décoder le JSON — ensure_ascii=True côté Python donc pas de pb d'encodage
+        $data = json_decode($jsonLine, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            return new JsonResponse(['error' => 'Réponse invalide du scraper'], 500);
+        }
+
+        return new JsonResponse($data);
     }
 
     #[Route('/admin/activite/new', name: 'app_activite_new', methods: ['GET', 'POST'])]
