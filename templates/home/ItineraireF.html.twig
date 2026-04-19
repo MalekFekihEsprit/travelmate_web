@@ -645,6 +645,48 @@
             border-color: #e74c3c;
         }
 
+        .like-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.2s ease;
+        }
+
+        .like-btn .like-icon {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease, color 0.2s ease;
+            line-height: 1;
+        }
+
+        .like-btn .like-icon i {
+            transition: color 0.2s ease;
+        }
+
+        .like-btn.is-liked .like-icon,
+        .like-btn.is-liked .like-icon i {
+            color: #e74c3c;
+        }
+
+        .like-btn:hover .like-icon {
+            transform: scale(1.25);
+        }
+
+        .like-btn .like-count {
+            font-size: 0.82rem;
+            font-weight: 600;
+            min-width: 1ch;
+        }
+
+        @keyframes likePopAnimation {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+
+        .like-btn.like-pop .like-icon {
+            animation: likePopAnimation 0.4s ease;
+        }
+
         .itineraires-empty {
             padding: 3rem;
             text-align: center;
@@ -949,6 +991,10 @@
                             </div>
 
                             <div class="itineraire-card__actions" data-card-link-ignore>
+                                <button type="button" class="action-btn like-btn" title="J'aime" data-card-link-ignore data-like-toggle="{{ itineraire.id_itineraire }}">
+                                    <span class="like-icon"><i class="fa-regular fa-heart"></i></span>
+                                    <span class="like-count">{{ itineraire.jaime }}</span>
+                                </button>
                                 <button type="button" class="action-btn" title="Générer une vidéo IA" data-card-link-ignore data-video-generate="{{ itineraire.id_itineraire }}">🎬</button>
                                 <a href="{{ path('app_itineraires_edit', {id: itineraire.id_itineraire}) }}" class="action-btn" title="Éditer" data-card-link-ignore>✏️</a>
                                 <form method="POST" action="{{ path('app_itineraires_delete', {id: itineraire.id_itineraire}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet itinéraire ?');" data-card-link-ignore>
@@ -1170,6 +1216,47 @@
             };
 
             bindCardNavigation(document);
+
+            /* ─── Like button handler ─── */
+            document.querySelectorAll('[data-like-toggle]').forEach(function (btn) {
+                if (btn.dataset.likeBound === 'true') return;
+                btn.dataset.likeBound = 'true';
+
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    var itineraireId = btn.getAttribute('data-like-toggle');
+                    var icon = btn.querySelector('.like-icon');
+                    var countEl = btn.querySelector('.like-count');
+                    var isLiked = btn.classList.contains('is-liked');
+                    var action = isLiked ? 'unlike' : 'like';
+
+                    btn.disabled = true;
+
+                    fetch('/itineraires/' + itineraireId + '/' + action, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.status === 'ok') {
+                            countEl.textContent = data.jaime;
+                            if (action === 'like') {
+                                btn.classList.add('is-liked');
+                                icon.innerHTML = '<i class="fa-solid fa-heart"></i>';
+                                btn.classList.add('like-pop');
+                                setTimeout(function () { btn.classList.remove('like-pop'); }, 400);
+                            } else {
+                                btn.classList.remove('is-liked');
+                                icon.innerHTML = '<i class="fa-regular fa-heart"></i>';
+                            }
+                        }
+                    })
+                    .catch(function () {})
+                    .finally(function () { btn.disabled = false; });
+                });
+            });
 
             var form = document.querySelector('[data-itineraires-filter-form]');
             var resultsContainer = document.querySelector('[data-itineraires-results]');

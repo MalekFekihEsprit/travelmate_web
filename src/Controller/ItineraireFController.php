@@ -590,4 +590,32 @@ class ItineraireFController extends AbstractController
         return $candidate;
     }
 
+    #[Route('/{id}/like', name: 'like', methods: ['POST'])]
+    public function like(int $id, ItineraireRepository $repo, EntityManagerInterface $em): Response
+    {
+        $itineraire = $repo->find($id);
+        if (!$itineraire) {
+            return $this->json(['status' => 'error', 'message' => 'Itinéraire introuvable'], 404);
+        }
+
+        $itineraire->incrementJaime();
+        $em->flush();
+
+        return $this->json(['status' => 'ok', 'jaime' => $itineraire->getJaime()]);
+    }
+
+    #[Route('/{id}/unlike', name: 'unlike', methods: ['POST'])]
+    public function unlike(int $id, ItineraireRepository $repo, EntityManagerInterface $em): Response
+    {
+        $itineraire = $repo->find($id);
+        if (!$itineraire) {
+            return $this->json(['status' => 'error', 'message' => 'Itinéraire introuvable'], 404);
+        }
+
+        $itineraire->decrementJaime();
+        $em->flush();
+
+        return $this->json(['status' => 'ok', 'jaime' => $itineraire->getJaime()]);
+    }
+
 }
