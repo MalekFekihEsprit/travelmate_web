@@ -17,17 +17,14 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 class ActiviteController extends AbstractController
 {
     // ════════════════════════════════════════════════════════════════════════
-    //  HELPERS PRIVÉS — IA RECOMMANDATION
+    //  HELPERS PRIVÉS — IA RECOMMANDATION (quiz / scoring)
     // ════════════════════════════════════════════════════════════════════════
 
     /**
-     * Appelle le script Python ai_recommender.py et retourne
-     * un tableau [ 'activites' => [...], 'scoreMap' => [...] ]
-     * En cas d'échec du script, retourne l'ordre original sans scoreMap.
+     * Appelle ai_recommender.py pour le classement IA de la page liste.
      */
     private function getAiRankedActivities(array $activites): array
     {
-        // ── 1. Construire le JSON d'entrée pour Python ─────────────────────
         $data = [];
         foreach ($activites as $activite) {
             $avisData = [];
@@ -43,31 +40,24 @@ class ActiviteController extends AbstractController
             ];
         }
 
-        // ── 2. Appel du script Python via fichier temporaire ────────────────
-        //    On écrit le JSON dans un fichier temp pour éviter les conflits
-        //    de guillemets sur Windows (escapeshellarg + JSON = problème).
-        $scriptPath = 'C:\\Users\\Admin\\Desktop\\projet sym\\ai_recommender\\ai_recommender.py';
+        $scriptPath = 'C:/Users/Admin/Desktop/projet sym/ai_recommender/ai_recommender.py';
 
         $tmpFile = tempnam(sys_get_temp_dir(), 'ai_') . '.json';
         file_put_contents($tmpFile, json_encode($data, JSON_UNESCAPED_UNICODE));
 
         $cmd = sprintf(
-            'python -X utf8 "%s" --file "%s" 2>NUL',
+            'python -X utf8 "%s" --file "%s" 2>&1',
             $scriptPath,
             $tmpFile
         );
 
         $output = shell_exec($cmd);
-
-        // Nettoyage du fichier temporaire dans tous les cas
         @unlink($tmpFile);
 
         if (!$output) {
-            // Fallback silencieux : ordre original, pas de badges IA
             return ['activites' => $activites, 'scoreMap' => []];
         }
 
-        // ── 3. Parser la dernière ligne non-vide ────────────────────────────
         $lines    = array_filter(array_map('trim', explode("\n", trim($output))));
         $jsonLine = end($lines);
         $scores   = json_decode($jsonLine, true);
@@ -76,13 +66,11 @@ class ActiviteController extends AbstractController
             return ['activites' => $activites, 'scoreMap' => []];
         }
 
-        // ── 4. Construire scoreMap indexé par activite_id ──────────────────
         $scoreMap = [];
         foreach ($scores as $s) {
             $scoreMap[$s['activite_id']] = $s;
         }
 
-        // ── 5. Trier les entités Activite selon l'ordre retourné par l'IA ──
         $scoreOrder = array_column($scores, 'activite_id');
         usort($activites, function ($a, $b) use ($scoreOrder) {
             $posA = array_search($a->getId(), $scoreOrder);
@@ -128,6 +116,127 @@ class ActiviteController extends AbstractController
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    //  RECOMMANDATIONS SIMILAIRES — endpoint AJAX appelé depuis show.html.twig
+    // ════════════════════════════════════════════════════════════════════════
+
+    #[Route('/activites/{id}/recommendations', name: 'app_activite_recommendations', methods: ['GET'])]
+    public function getSimilarRecommendations(
+        Activite           $activite,
+        ActiviteRepository $activiteRepository
+    ): JsonResponse {
+        // ── 1. Toutes les activités sauf la courante ───────────────────────
+        $allActivites = $activiteRepository->findAll();
+        $others = array_values(array_filter(
+            $allActivites,
+            fn($a) => $a->getId() !== $activite->getId()
+        ));
+
+        if (empty($others)) {
+            return new JsonResponse([]);
+        }
+
+        // ── 2. Construire le payload JSON pour Python ──────────────────────
+        $currentData = [
+            'id'          => $activite->getId(),
+            'nom'         => $activite->getNom(),
+            'description' => $activite->getDescription(),
+            'categorie'   => $activite->getCategorie()?->getNom() ?? '',
+        ];
+
+        $othersData = [];
+        foreach ($others as $other) {
+            $othersData[] = [
+                'id'          => $other->getId(),
+                'nom'         => $other->getNom(),
+                'description' => $other->getDescription(),
+                'categorie'   => $other->getCategorie()?->getNom() ?? '',
+            ];
+        }
+
+        $inputPayload = [
+            'current' => $currentData,
+            'others'  => $othersData,
+        ];
+
+        // ── 3. Écrire dans un fichier temp et appeler activity_recommender.py
+        $scriptPath = 'C:/Users/Admin/Desktop/projet sym/ai_recommender/activity_recommender.py';
+
+        $tmpFile = tempnam(sys_get_temp_dir(), 'rec_') . '.json';
+        file_put_contents($tmpFile, json_encode($inputPayload, JSON_UNESCAPED_UNICODE));
+
+        // 2>&1 capture stderr+stdout ensemble pour debug, puis on prend la dernière ligne JSON
+        $cmd = sprintf(
+            'python -X utf8 "%s" --file "%s" 2>&1',
+            $scriptPath,
+            $tmpFile
+        );
+
+        $output = shell_exec($cmd);
+        @unlink($tmpFile);
+
+        if (!$output) {
+            return new JsonResponse(['error' => 'Script Python inaccessible'], 503);
+        }
+
+        // ── 4. Parser la dernière ligne non-vide (seule ligne JSON valide) ─
+        $lines = array_filter(array_map('trim', explode("\n", trim($output))));
+        // On cherche la dernière ligne qui commence par [ (JSON array)
+        $jsonLine = '';
+        foreach (array_reverse(array_values($lines)) as $line) {
+            if (str_starts_with($line, '[') || str_starts_with($line, '{')) {
+                $jsonLine = $line;
+                break;
+            }
+        }
+
+        if (!$jsonLine) {
+            return new JsonResponse(['error' => 'Pas de JSON dans la réponse', 'raw' => $output], 500);
+        }
+
+        $scores = json_decode($jsonLine, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($scores)) {
+            return new JsonResponse(['error' => 'Réponse invalide du script', 'raw' => $jsonLine], 500);
+        }
+
+        // ── 5. Hydrater avec les entités Activite ──────────────────────────
+        $activiteMap = [];
+        foreach ($others as $other) {
+            $activiteMap[$other->getId()] = $other;
+        }
+
+        $recommendations = [];
+        foreach ($scores as $score) {
+            $id = $score['activite_id'] ?? null;
+            if (!$id || !isset($activiteMap[$id])) {
+                continue;
+            }
+            $act = $activiteMap[$id];
+
+            $desc = $act->getDescription() ?? '';
+            if (mb_strlen($desc) > 130) {
+                $desc = mb_substr($desc, 0, 130) . '…';
+            }
+
+            $recommendations[] = [
+                'id'          => $act->getId(),
+                'nom'         => $act->getNom(),
+                'description' => $desc,
+                'categorie'   => $act->getCategorie()?->getNom() ?? '',
+                'imagePath'   => $act->getImagePath(),
+                'budget'      => $act->getBudget(),
+                'lieu'        => $act->getLieu(),
+                'duree'       => $act->getDuree(),
+                'score'       => $score['score'],
+                'reason'      => $score['reason'],
+                'url'         => $this->generateUrl('app_activite_show', ['id' => $act->getId()]),
+            ];
+        }
+
+        return new JsonResponse($recommendations);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     //  BACK OFFICE
     // ════════════════════════════════════════════════════════════════════════
 
@@ -140,7 +249,7 @@ class ActiviteController extends AbstractController
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  PRICE ADVISOR — DOIT être avant /new pour éviter conflit de route
+    //  PRICE ADVISOR — doit être avant /new pour éviter conflit de route
     // ──────────────────────────────────────────────────────────────────────
     #[Route('/admin/activite/price-advisor', name: 'app_activite_price_advisor', methods: ['GET'])]
     public function priceAdvisor(Request $request): JsonResponse
@@ -152,10 +261,10 @@ class ActiviteController extends AbstractController
             return new JsonResponse(['error' => 'Activité trop courte'], 400);
         }
 
-        $scriptPath = 'C:\\Users\\Admin\\Desktop\\projet sym\\price_scraper\\price_scraper.py';
+        $scriptPath = 'C:/Users/Admin/Desktop/projet sym/price_scraper/price_scraper.py';
 
         $cmd = sprintf(
-            'python -X utf8 "%s" %s %s 2>NUL',
+            'python -X utf8 "%s" %s %s 2>&1',
             $scriptPath,
             escapeshellarg($activity),
             escapeshellarg($location)

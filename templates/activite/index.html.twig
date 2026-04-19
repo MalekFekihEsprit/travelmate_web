@@ -565,7 +565,7 @@
 <section class="act-hero">
     <div class="act-hero__bg"></div>
     <div class="act-hero__content">
-        <span class="act-hero__eyebrow" data-translate="true">Explorez & Découvrez</span>
+        <span class="act-hero__eyebrow" data-translate="true">Explorez &amp; Découvrez</span>
         <h1 class="act-hero__title" data-translate="true">Des activités pour chaque voyageur</h1>
         <p class="act-hero__desc" data-translate="true">
             Randonnées, sorties nautiques, ateliers culturels —
@@ -715,11 +715,12 @@
 
                 <a href="{{ path('app_activite_show', {id: activite.id}) }}"
                    class="act-card{% if vedette %} act-card--vedette{% endif %}"
-                   data-nom="{{ activite.nom|lower }}"
+                   data-turbo="false"
+                   data-nom="{{ activite.nom|lower|e('html_attr') }}"
                    data-cat="{{ activite.categorie ? activite.categorie.id : '' }}"
-                   data-diff="{{ activite.niveaudifficulte|lower }}"
+                   data-diff="{{ activite.niveaudifficulte|lower|e('html_attr') }}"
                    data-budget="{{ activite.budget }}"
-                   data-lieu="{{ activite.lieu|default('')|lower }}"
+                   data-lieu="{{ activite.lieu|default('')|lower|e('html_attr') }}"
                    data-lat="{{ activite.latitude is not null ? activite.latitude : '' }}"
                    data-lng="{{ activite.longitude is not null ? activite.longitude : '' }}">
 
@@ -742,7 +743,7 @@
                                 <span class="badge badge--trending" data-translate="true">Populaire</span>
                             {% endif %}
                             {% if activite.categorie %}
-                                <span class="badge badge--cat" data-translate="true" data-original="{{ activite.categorie.nom }}">{{ activite.categorie.nom }}</span>
+                                <span class="badge badge--cat" data-translate="true" data-original="{{ activite.categorie.nom|e('html_attr') }}">{{ activite.categorie.nom }}</span>
                             {% endif %}
                         </div>
 
@@ -756,12 +757,12 @@
                     </div>
 
                     <div class="act-card__body">
-                        <div class="act-card__name" data-translate="true" data-original="{{ activite.nom }}">{{ activite.nom }}</div>
+                        <div class="act-card__name" data-translate="true" data-original="{{ activite.nom|e('html_attr') }}">{{ activite.nom }}</div>
 
                         {% if activite.lieu %}
-                            <div class="act-card__location" data-location="{{ activite.lieu|lower }}">
+                            <div class="act-card__location" data-location="{{ activite.lieu|lower|e('html_attr') }}">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                                <span class="location-text" data-translate="true" data-original="{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}">{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}</span>
+                                <span class="location-text" data-translate="true" data-original="{{ (activite.lieu|slice(0,42) ~ (activite.lieu|length > 42 ? '…' : ''))|e('html_attr') }}">{{ activite.lieu|slice(0,42) }}{{ activite.lieu|length > 42 ? '…' : '' }}</span>
                             </div>
                         {% endif %}
 
@@ -786,7 +787,7 @@
                         {% endif %}
 
                         <div class="act-card__tags">
-                            <span class="tag tag--{{ diff }}" data-translate="true" data-original="{{ activite.niveaudifficulte }}">{{ activite.niveaudifficulte }}</span>
+                            <span class="tag tag--{{ diff }}" data-translate="true" data-original="{{ activite.niveaudifficulte|e('html_attr') }}">{{ activite.niveaudifficulte }}</span>
                             <span class="tag">{{ activite.duree }}h</span>
                             <span class="tag">+{{ activite.agemin }} <span data-translate="true">ans</span></span>
                         </div>

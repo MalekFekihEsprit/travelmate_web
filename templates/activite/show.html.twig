@@ -418,7 +418,6 @@
 /* ══════════════════════════════════════════════════════
    PANNEAU AVIS
 ══════════════════════════════════════════════════════ */
-/* Summary bloc style image 2 */
 .rating-summary {
     display: flex;
     gap: 2.5rem;
@@ -488,7 +487,6 @@
 .rbar-fill--primary { background: var(--color-primary); }
 .rbar-pct { width: 32px; text-align: right; color: var(--color-text-muted); flex-shrink: 0; }
 
-/* Séparateur section Avis */
 .avis-section-sep {
     display: flex;
     align-items: center;
@@ -498,7 +496,6 @@
 .avis-section-sep__line { flex: 1; height: 1px; background: var(--color-border); }
 .avis-section-sep__label { font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
 
-/* Carte avis */
 .avis-card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -534,8 +531,6 @@
     color: var(--color-text);
     line-height: 1.7;
 }
-
-/* ══ NOUVEAU : commentaire masqué (gros mots détectés) ══ */
 .avis-card__comment--flagged {
     display: flex;
     align-items: flex-start;
@@ -554,8 +549,6 @@
     margin-top: 2px;
     color: #b45309;
 }
-
-/* Empty avis */
 .avis-empty {
     text-align: center;
     padding: 3rem 1rem;
@@ -567,7 +560,6 @@
 .avis-empty__icon { margin-bottom: 0.75rem; color: var(--color-border); }
 .avis-empty__title { font-weight: 600; color: var(--color-text); margin-bottom: 0.3rem; font-size: 1rem; }
 
-/* Formulaire avis */
 .avis-form {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -610,7 +602,6 @@
 }
 textarea.form-control { resize: vertical; min-height: 100px; }
 
-/* Étoiles interactives */
 .star-picker { display: flex; gap: 0.35rem; flex-direction: row-reverse; justify-content: flex-end; }
 .star-picker input { display: none; }
 .star-picker label {
@@ -660,9 +651,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     font-weight: 600;
 }
 .resa-box__price-unit { font-size: 0.88rem; opacity: 0.7; }
-
 .resa-box__body { padding: 1.5rem 1.75rem; }
-
 .resa-field { margin-bottom: 1rem; }
 .resa-label {
     display: block;
@@ -703,7 +692,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     font-weight: 600;
 }
 .resa-total-amount { font-family: 'Fraunces', serif; font-size: 1.15rem; color: var(--color-primary); }
-
 .btn-resa {
     display: flex;
     align-items: center;
@@ -748,8 +736,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     border-color: rgba(196,111,75,0.25);
     color: var(--color-primary);
 }
-
-/* Garanties */
 .resa-guarantees {
     padding: 1.25rem 1.75rem;
     border-top: 1px solid var(--color-border);
@@ -854,7 +840,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 }
 .weather-widget__placeholder span { font-size: 1.5rem; display: block; margin-bottom: 0.35rem; }
 
-/* Résultat météo */
 .wcard {
     background: var(--color-surface-soft);
     border: 1px solid var(--color-border);
@@ -874,7 +859,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .wcard__temp { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 600; color: var(--color-text); line-height: 1; }
 .wcard__desc { font-size: 0.82rem; color: var(--color-text-muted); margin-top: 0.15rem; text-transform: capitalize; }
 .wcard__minmax { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 0.1rem; }
-
 .wcard__details {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -891,8 +875,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .wcard__detail:nth-last-child(-n+2) { border-bottom: none; }
 .wcard__detail-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-text-muted); margin-bottom: 0.15rem; }
 .wcard__detail-value { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
-
-/* Barre pluie */
 .wcard__rain-bar {
     height: 4px;
     background: var(--color-border);
@@ -906,8 +888,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     border-radius: 999px;
     transition: width 0.5s ease;
 }
-
-/* Alerte météo */
 .wcard__alert {
     display: flex;
     align-items: flex-start;
@@ -920,8 +900,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .wcard__alert--good { color: var(--color-secondary); background: rgba(47,127,121,0.06); }
 .wcard__alert--warn { color: #b45309; background: rgba(180,83,9,0.06); }
 .wcard__alert--bad  { color: #dc2626; background: rgba(220,38,38,0.06); }
-
-/* Loading */
 .weather-loading {
     text-align: center;
     padding: 1.5rem;
@@ -937,8 +915,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     margin: 0 auto 0.5rem;
 }
 @keyframes wspin { to { transform: rotate(360deg); } }
-
-/* Erreur */
 .weather-error-msg {
     display: flex;
     align-items: center;
@@ -949,6 +925,198 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     border-radius: var(--radius-md);
     font-size: 0.82rem;
     color: #dc2626;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION RECOMMANDATIONS SIMILAIRES (IA)
+══════════════════════════════════════════════════════ */
+.similar-section {
+    margin: 3.5rem 0 2rem;
+}
+.similar-section__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+.similar-section__title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.3rem, 2.5vw, 1.75rem);
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.similar-section__subtitle {
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    margin-top: 0.3rem;
+}
+.similar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+@media (max-width: 1024px) { .similar-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 540px)  { .similar-grid { grid-template-columns: 1fr; } }
+
+/* Carte */
+.sim-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+.sim-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(71,48,35,0.10);
+    border-color: rgba(196,111,75,0.35);
+}
+.sim-card__img {
+    height: 170px;
+    overflow: hidden;
+    background: var(--color-surface-soft);
+    flex-shrink: 0;
+    position: relative;
+}
+.sim-card__img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.45s ease;
+    display: block;
+}
+.sim-card:hover .sim-card__img img { transform: scale(1.06); }
+.sim-card__img-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, var(--color-surface-soft), var(--color-border));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.8rem;
+}
+.sim-card__cat-badge {
+    position: absolute;
+    top: 0.65rem; left: 0.65rem;
+    background: rgba(255,253,249,0.92);
+    border: 1px solid rgba(231,220,205,0.8);
+    backdrop-filter: blur(6px);
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+.sim-card__score-badge {
+    position: absolute;
+    top: 0.65rem; right: 0.65rem;
+    background: var(--color-primary);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.sim-card__body {
+    padding: 1rem 1.15rem 1.15rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+.sim-card__name {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.sim-card__reason {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    font-style: italic;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.sim-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--color-border);
+}
+.sim-card__price {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+.sim-card__price-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+.sim-card__arrow {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-text-muted);
+    transition: background 180ms, color 180ms, border-color 180ms;
+    flex-shrink: 0;
+}
+.sim-card:hover .sim-card__arrow {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
+/* Skeleton */
+.sim-skeleton {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    animation: simShimmer 1.4s infinite;
+}
+.sim-skeleton__img  { height: 170px; background: var(--color-surface-soft); }
+.sim-skeleton__body { padding: 1rem 1.15rem 1.15rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.sim-skeleton__line { height: 12px; border-radius: 6px; background: var(--color-border); }
+@keyframes simShimmer { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* Empty / erreur */
+.sim-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-xl);
+}
+.sim-empty__icon { font-size: 2.2rem; margin-bottom: 0.5rem; }
+
+/* Séparateur */
+.similar-divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 3rem 0 0;
 }
 
 </style>
@@ -971,13 +1139,10 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     <span class="breadcrumb__current" data-translate="true" data-original="{{ activite.nom|e('html_attr') }}">{{ activite.nom }}</span>
 </nav>
 
-{# ── Image hero (une seule image depuis imagePath) ────────────────────────── #}
+{# ── Image hero ────────────────────────────────────────────────────────────── #}
 <div class="gallery gallery--single" id="gallery">
-
-    {# Slot unique — grande image pleine largeur #}
     <div class="gallery__item" onclick="openLightbox(0)">
         {% if activite.imagePath %}
-            {# imagePath est déjà "uploads/activites/fichier.ext" (voir ActiviteController) #}
             <img src="{{ asset(activite.imagePath) }}" alt="{{ activite.nom }}" loading="eager">
         {% else %}
             <div class="gallery__placeholder">
@@ -985,8 +1150,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
             </div>
         {% endif %}
     </div>
-
-    {# Bouton "Agrandir" #}
     {% if activite.imagePath %}
         <button type="button" class="gallery__btn-all" onclick="openLightbox(0)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1048,12 +1211,8 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                         {% endif %}
                     {% endfor %}
                 </div>
-                {% if nbAvis > 0 %}
-                    <span class="rating-score">{{ moyenne }}</span>
-                    <span class="rating-count" data-translate="true" data-original="{{ ('(' ~ nbAvis ~ ' avis)')|e('html_attr') }}">({{ nbAvis }} avis)</span>
-                {% else %}
-                    <span class="rating-count" data-translate="true">Pas encore d'avis</span>
-                {% endif %}
+                <span class="rating-score">{{ moyenne }}</span>
+                <span class="rating-count" data-translate="true" data-original="{{ (nbAvis ~ ' avis')|e('html_attr') }}">({{ nbAvis }} avis)</span>
             </div>
 
             {# Meta pills #}
@@ -1089,7 +1248,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
         </div>
 
         {# ── Onglets 100% CSS ── #}
-        {# Les radios DOIVENT être AVANT .tabs et .tab-content pour que ~ fonctionne #}
         <input class="tab-radio" type="radio" name="activite-tab" id="tab-radio-details" checked>
         <input class="tab-radio" type="radio" name="activite-tab" id="tab-radio-tarifs">
         <input class="tab-radio" type="radio" name="activite-tab" id="tab-radio-avis">
@@ -1106,12 +1264,10 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
         {# ══ Panel Détails ══ #}
         <div class="tab-panel" id="tab-details">
-
             <div class="detail-block">
                 <div class="detail-block__label" data-translate="true">À propos de cette activité</div>
                 <p data-translate="true" data-original="{{ activite.description|e('html_attr') }}">{{ activite.description }}</p>
             </div>
-
             <div class="detail-block">
                 <div class="detail-block__label" data-translate="true">Informations pratiques</div>
                 <div class="info-grid">
@@ -1165,7 +1321,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                     <div class="tarif-row__unit" data-translate="true">par personne</div>
                 </div>
             </div>
-
             <div class="tarif-row">
                 <div>
                     <div class="tarif-row__name" data-translate="true">Groupe (2+ personnes)</div>
@@ -1176,7 +1331,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                     <div class="tarif-row__unit" data-translate="true">par personne</div>
                 </div>
             </div>
-
             <div class="tarif-note" data-translate="true">
                 Les prix incluent toutes les taxes applicables. Le paiement s'effectue lors de la confirmation de réservation.
             </div>
@@ -1184,9 +1338,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
         {# ══ Panel Avis ══ #}
         <div class="tab-panel" id="tab-avis">
-
             {% if nbAvis > 0 %}
-                {# Calcul des distributions par note #}
                 {% set dist = {5:0, 4:0, 3:0, 2:0, 1:0} %}
                 {% for avi in activite.avis %}
                     {% set n = avi.note %}
@@ -1240,8 +1392,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                                 <span style="font-size:0.8rem;color:var(--color-text-muted);margin-left:0.25rem">{{ avi.note }}/5</span>
                             </div>
                         </div>
-
-                        {# ══ AFFICHAGE COMMENTAIRE — avec détection gros mots ══ #}
                         {% if avi.commentaire %}
                             {% if avi.isFlagged %}
                                 <div class="avis-card__comment avis-card__comment--flagged">
@@ -1256,8 +1406,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                                 <div class="avis-card__comment" data-translate="true" data-original="{{ avi.commentaire|e('html_attr') }}">{{ avi.commentaire }}</div>
                             {% endif %}
                         {% endif %}
-                        {# ══════════════════════════════════════════════════════ #}
-
                     </div>
                 {% endfor %}
 
@@ -1319,7 +1467,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                     <input type="date" class="resa-input" id="resaDate" min="{{ "now"|date("Y-m-d") }}">
                 </div>
 
-                {# ── Bloc météo — s'affiche quand l'utilisateur choisit une date ── #}
                 <div class="weather-widget" id="weatherWidget">
                     <div class="weather-widget__title">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/></svg>
@@ -1328,7 +1475,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                     <div id="weatherContent">
                         <div class="weather-widget__placeholder">
                             <span>🌤️</span>
-                            <span data-translate="true">Choisissez une date pour voir la météo prévue</span>
+                            <span data-translate="true">Découvrez la météo prévue pour ce jour</span>
                         </div>
                     </div>
                 </div>
@@ -1400,10 +1547,49 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     <div class="chat-fab__tooltip" data-translate="true">Une question ? On vous répond</div>
 </div>
 
-{# Le script météo est injecté directement ici pour garantir l'exécution après le DOM #}
+{# ══════════════════════════════════════════════════════════════════════════
+   SECTION RECOMMANDATIONS IA — "Vous pourriez aussi aimer"
+   Affichée en pleine largeur sous le layout principal
+══════════════════════════════════════════════════════════════════════════ #}
+<hr class="similar-divider">
 
+{# ═══════════════════════════════════════════════════════════════════════════
+   data-turbo-permanent : empêche Turbo de recycler ce nœud lors des
+   navigations, ce qui évitait le crash "Unexpected token &" dans replaceWith
+═══════════════════════════════════════════════════════════════════════════ #}
+<section class="similar-section" id="similarSection" data-turbo-permanent aria-label="Activités similaires">
+    <div class="similar-section__header">
+        <div>
+            <h2 class="similar-section__title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="color:var(--color-primary)">
+                    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="currentColor"/>
+                </svg>
+                <span data-translate="true">Vous pourriez aussi aimer</span>
+            </h2>
+            <p class="similar-section__subtitle" id="similarSubtitle" data-translate="true">
+                Sélection IA basée sur l'esprit de <strong>{{ activite.nom }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="similar-grid" id="similarGrid">
+        {# Skeletons affichés pendant le chargement AJAX #}
+        {% for i in 1..4 %}
+        <div class="sim-skeleton" aria-hidden="true">
+            <div class="sim-skeleton__img"></div>
+            <div class="sim-skeleton__body">
+                <div class="sim-skeleton__line" style="width:75%"></div>
+                <div class="sim-skeleton__line" style="width:55%"></div>
+                <div class="sim-skeleton__line" style="width:40%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+{# Script total réservation + lightbox + recommandations #}
 <script>
-// Calcul total réservation
+// ── Calcul total réservation ──────────────────────────────────────────────
 (function () {
     var prix    = {{ activite.budget }};
     var adultes = document.getElementById('nbAdultes');
@@ -1418,8 +1604,8 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     enfants.addEventListener('input', updateTotal);
 })();
 
-// Lightbox
-var galleryImages = {{ activite.imagePath ? '["' ~ asset(activite.imagePath)|e('js') ~ '"]' : '[]' }};
+// ── Lightbox ─────────────────────────────────────────────────────────────
+var galleryImages = {{ (activite.imagePath ? ('[' ~ asset(activite.imagePath)|json_encode ~ ']') : '[]')|raw }};
 var currentIdx = 0;
 function openLightbox(idx) {
     if (!galleryImages.length) return;
@@ -1446,22 +1632,145 @@ document.addEventListener('keydown', function (e) {
     if (e.key === 'ArrowLeft')  shiftLightbox(-1);
     if (e.key === 'ArrowRight') shiftLightbox(1);
 });
+
+// ── Recommandations IA ────────────────────────────────────────────────────
+// FIX : on écoute turbo:load pour garantir que le DOM est prêt après toute
+//       navigation Turbo, et on utilise createTextNode pour l'échappement
+//       HTML afin d'éviter le crash "Unexpected token &" dans replaceWith.
+(function () {
+    var ACTIVITE_ID = {{ activite.id }};
+    var ACTIVITE_NOM = {{ activite.nom|json_encode|raw }};
+    var ASSET_BASE = {{ asset('')|json_encode|raw }};
+
+    function getCatEmoji(cat) {
+        cat = (cat || '').toLowerCase();
+        if (cat.includes('sport') || cat.includes('extr'))  return '🏄';
+        if (cat.includes('art')   || cat.includes('cultur'))return '🎨';
+        if (cat.includes('natur') || cat.includes('randon'))return '🌿';
+        if (cat.includes('eau')   || cat.includes('plong')) return '🤿';
+        if (cat.includes('gastr') || cat.includes('cuisi')) return '🍽️';
+        if (cat.includes('bien')  || cat.includes('spa'))   return '🧘';
+        if (cat.includes('vol')   || cat.includes('avion')) return '✈️';
+        if (cat.includes('cheval')|| cat.includes('equi'))  return '🐴';
+        return '🎯';
+    }
+
+    // FIX : utilise createTextNode pour un échappement HTML sûr,
+    // sans produire de &amp; littéraux qui cassaient Turbo.
+    function esc(str) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(String(str || '')));
+        return d.innerHTML;
+    }
+
+    function renderCards(recs) {
+        var grid = document.getElementById('similarGrid');
+        var subtitle = document.getElementById('similarSubtitle');
+        if (!grid) return;
+
+        if (!recs || !recs.length) {
+            grid.innerHTML =
+                '<div class="sim-empty">' +
+                    '<div class="sim-empty__icon">🔍</div>' +
+                    '<p>Aucune activité similaire trouvée pour le moment.</p>' +
+                '</div>';
+            return;
+        }
+
+        grid.innerHTML = recs.map(function (rec) {
+            var imgHtml = rec.imagePath
+                ? '<img src="' + ASSET_BASE + esc(rec.imagePath) + '" alt="' + esc(rec.nom) + '" loading="lazy">'
+                : '<div class="sim-card__img-placeholder">' + getCatEmoji(rec.categorie) + '</div>';
+
+            var matchPct = Math.round(rec.score * 10);
+
+            var priceHtml = rec.budget
+                ? '<div><span class="sim-card__price">' + esc(rec.budget) + ' TND</span><br>' +
+                  '<span class="sim-card__price-label">/ pers.</span></div>'
+                : '<span class="sim-card__price-label">Prix sur demande</span>';
+
+            return '<a href="' + esc(rec.url) + '" class="sim-card">' +
+                '<div class="sim-card__img">' +
+                    imgHtml +
+                    '<span class="sim-card__cat-badge">' + esc(rec.categorie || 'Activité') + '</span>' +
+                    '<span class="sim-card__score-badge">' +
+                        '<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>' +
+                        matchPct + '%' +
+                    '</span>' +
+                '</div>' +
+                '<div class="sim-card__body">' +
+                    '<h3 class="sim-card__name">' + esc(rec.nom) + '</h3>' +
+                    (rec.reason ? '<p class="sim-card__reason">✦ ' + esc(rec.reason) + '</p>' : '') +
+                    '<div class="sim-card__footer">' +
+                        priceHtml +
+                        '<div class="sim-card__arrow">' +
+                            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</a>';
+        }).join('');
+
+        if (subtitle && recs.length) {
+            subtitle.innerHTML =
+                'Sélection IA · <strong>' + recs.length + '</strong> activité' +
+                (recs.length > 1 ? 's' : '') +
+                ' dans le même esprit que <strong>' + esc(ACTIVITE_NOM) + '</strong>';
+        }
+    }
+
+    function loadRecommendations() {
+        var grid = document.getElementById('similarGrid');
+        if (!grid) return;
+
+        var apiUrl = '/activites/' + ACTIVITE_ID + '/recommendations';
+
+        fetch(apiUrl)
+            .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function (data) {
+                if (data.error) throw new Error(data.error);
+                renderCards(data);
+            })
+            .catch(function (err) {
+                console.warn('Recommandations IA :', err.message);
+                var grid = document.getElementById('similarGrid');
+                if (grid) {
+                    grid.innerHTML =
+                        '<div class="sim-empty">' +
+                            '<div class="sim-empty__icon">🌐</div>' +
+                            '<p>Recommandations temporairement indisponibles.</p>' +
+                        '</div>';
+                }
+            });
+    }
+
+    // FIX : turbo:load se déclenche après chaque navigation Turbo ET au
+    // chargement initial, ce qui garantit que le DOM est toujours prêt.
+    document.addEventListener('turbo:load', loadRecommendations);
+
+    // Fallback si Turbo n'est pas présent (chargement classique sans Turbo)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof Turbo === 'undefined') loadRecommendations();
+        });
+    } else {
+        if (typeof Turbo === 'undefined') loadRecommendations();
+    }
+})();
 </script>
 
 {# ══════════════════════════════════════════════════════
    MÉTÉO — placé ici (fin de block body, DOM garanti prêt)
-   pour éviter tout problème de timing avec les assets JS
 ══════════════════════════════════════════════════════ #}
 <script>
 (function () {
-    var activiteLocation = '{{ activite.lieu ? activite.lieu|e("js") : "Tunis" }}';
+    var activiteLocation = {{ activite.lieu ? activite.lieu|json_encode : '"Tunis"'|raw }};
 
     function initWeather() {
         var resaDate       = document.getElementById('resaDate');
         var weatherContent = document.getElementById('weatherContent');
 
         if (!resaDate || !weatherContent) {
-            // Retry si le DOM n'est pas encore complet (edge case)
             setTimeout(initWeather, 100);
             return;
         }
@@ -1471,20 +1780,16 @@ document.addEventListener('keydown', function (e) {
             if (!date) {
                 weatherContent.innerHTML =
                     '<div class="weather-widget__placeholder"><span>🌤️</span>' +
-                    '<span>Choisissez une date pour voir la météo prévue</span></div>';
+                    '<span>Découvrez la météo prévue pour ce jour</span></div>';
                 return;
             }
             fetchWeather(date);
         }
 
-        // Écouter 'change' ET 'input' pour compatibilité tous navigateurs + mobile
         resaDate.addEventListener('change', onDateChange);
         resaDate.addEventListener('input',  onDateChange);
 
-        // ✅ FIX PRINCIPAL : déclencher immédiatement si une date est déjà présente
-        if (resaDate.value) {
-            fetchWeather(resaDate.value);
-        }
+        if (resaDate.value) { fetchWeather(resaDate.value); }
 
         function fetchWeather(date) {
             weatherContent.innerHTML =
@@ -1498,14 +1803,8 @@ document.addEventListener('keydown', function (e) {
                       '&location=' + encodeURIComponent(activiteLocation);
 
             fetch(url)
-                .then(function(r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.json();
-                })
-                .then(function(data) {
-                    if (data.error) throw new Error(data.error);
-                    renderWeather(data);
-                })
+                .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(function(data) { if (data.error) throw new Error(data.error); renderWeather(data); })
                 .catch(function(err) {
                     weatherContent.innerHTML =
                         '<div style="padding:0.9rem;background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.15);border-radius:8px;font-size:0.83rem;color:#dc2626">' +
@@ -1520,10 +1819,7 @@ document.addEventListener('keydown', function (e) {
                 weatherContent.innerHTML =
                     '<div class="weather-widget__placeholder" style="background:rgba(196,111,75,0.06);border:1px solid rgba(196,111,75,0.2);border-radius:12px;padding:1.2rem;text-align:center">' +
                         '<span style="font-size:1.8rem;display:block">📅</span>' +
-                        '<span style="display:block;margin-top:0.5rem;font-size:0.88rem;color:var(--color-text-muted)">' +
-                            'Prévisions indisponibles pour cette date.<br>' +
-                            '<small>L\'API météo couvre uniquement les 5 prochains jours.</small>' +
-                        '</span>' +
+                        '<span style="display:block;margin-top:0.5rem;font-size:0.88rem;color:var(--color-text-muted)">Prévisions indisponibles pour cette date.<br><small>L\'API météo couvre uniquement les 5 prochains jours.</small></span>' +
                     '</div>';
                 return;
             }
@@ -1539,23 +1835,13 @@ document.addEventListener('keydown', function (e) {
             var icon      = getWeatherEmoji(mid.icon, mid.description);
 
             var alertClass, alertText;
-            if (maxRain > 70) {
-                alertClass = 'wcard__alert--bad';
-                alertText  = '🌧️ Fortes pluies prévues. Pensez à reporter ou emporter un équipement imperméable.';
-            } else if (maxRain > 40) {
-                alertClass = 'wcard__alert--warn';
-                alertText  = '☔ Risque de pluie. Un parapluie est recommandé.';
-            } else if (maxT > 35) {
-                alertClass = 'wcard__alert--warn';
-                alertText  = '☀️ Températures élevées. Hydratez-vous bien.';
-            } else {
-                alertClass = 'wcard__alert--good';
-                alertText  = ' Bonnes conditions météo prévues pour votre activité.';
-            }
+            if (maxRain > 70)      { alertClass='wcard__alert--bad';  alertText='🌧️ Fortes pluies prévues. Pensez à reporter ou emporter un équipement imperméable.'; }
+            else if (maxRain > 40) { alertClass='wcard__alert--warn'; alertText='☔ Risque de pluie. Un parapluie est recommandé.'; }
+            else if (maxT > 35)    { alertClass='wcard__alert--warn'; alertText='☀️ Températures élevées. Hydratez-vous bien.'; }
+            else                   { alertClass='wcard__alert--good'; alertText=' Bonnes conditions météo prévues pour votre activité.'; }
 
             var mockBadge = (data.mock || data.out_of_range)
-                ? '<span style="font-size:0.7rem;opacity:0.5;margin-left:0.5rem">' +
-                  (data.out_of_range ? '(estimé)' : '(démo)') + '</span>'
+                ? '<span style="font-size:0.7rem;opacity:0.5;margin-left:0.5rem">' + (data.out_of_range ? '(estimé)' : '(démo)') + '</span>'
                 : '';
 
             weatherContent.innerHTML =
@@ -1569,23 +1855,10 @@ document.addEventListener('keydown', function (e) {
                         '</div>' +
                     '</div>' +
                     '<div class="wcard__details">' +
-                        '<div class="wcard__detail">' +
-                            '<span class="wcard__detail-label">Pluie</span>' +
-                            '<span class="wcard__detail-value">' + Math.round(maxRain) + '%</span>' +
-                            '<div class="wcard__rain-bar"><div class="wcard__rain-fill" style="width:' + Math.round(maxRain) + '%"></div></div>' +
-                        '</div>' +
-                        '<div class="wcard__detail">' +
-                            '<span class="wcard__detail-label">Humidité</span>' +
-                            '<span class="wcard__detail-value">' + humidity + '%</span>' +
-                        '</div>' +
-                        '<div class="wcard__detail">' +
-                            '<span class="wcard__detail-label">Vent</span>' +
-                            '<span class="wcard__detail-value">' + windSpeed + ' km/h</span>' +
-                        '</div>' +
-                        '<div class="wcard__detail">' +
-                            '<span class="wcard__detail-label">Prévisions</span>' +
-                            '<span class="wcard__detail-value">' + forecasts.length + ' tranches</span>' +
-                        '</div>' +
+                        '<div class="wcard__detail"><span class="wcard__detail-label">Pluie</span><span class="wcard__detail-value">' + Math.round(maxRain) + '%</span><div class="wcard__rain-bar"><div class="wcard__rain-fill" style="width:' + Math.round(maxRain) + '%"></div></div></div>' +
+                        '<div class="wcard__detail"><span class="wcard__detail-label">Humidité</span><span class="wcard__detail-value">' + humidity + '%</span></div>' +
+                        '<div class="wcard__detail"><span class="wcard__detail-label">Vent</span><span class="wcard__detail-value">' + windSpeed + ' km/h</span></div>' +
+                        '<div class="wcard__detail"><span class="wcard__detail-label">Prévisions</span><span class="wcard__detail-value">' + forecasts.length + ' tranches</span></div>' +
                     '</div>' +
                     '<div class="wcard__alert ' + alertClass + '">' + alertText + '</div>' +
                 '</div>';
@@ -1599,7 +1872,6 @@ document.addEventListener('keydown', function (e) {
         }
     }
 
-    // DOM est déjà prêt ici (script en fin de body), mais on garde le guard
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initWeather);
     } else {
