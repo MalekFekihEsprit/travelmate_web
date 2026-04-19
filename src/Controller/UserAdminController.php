@@ -16,6 +16,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
+use Symfony\UX\Chartjs\Model\Chart;
 
 #[Route('/admin/users')]
 #[IsGranted('ROLE_ADMIN')]
@@ -32,6 +34,12 @@ class UserAdminController extends AbstractController
         }
 
         $users = $userRepository->searchForAdmin($search, $role ?: null);
+
+        if ($request->isXmlHttpRequest()) {
+            return $this->render('user_admin/_users_results.html.twig', [
+                'users' => $users,
+            ]);
+        }
 
         return $this->render('user_admin/index.html.twig', [
             'users' => $users,
@@ -50,7 +58,7 @@ class UserAdminController extends AbstractController
     ): Response {
         $user = new User();
         $user->setRole('USER');
-        $user->setCreatedAt(new \DateTime());
+        $user->setCreated_at(new \DateTime());
         $user->setIsVerified(true);
 
         $form = $this->createForm(AdminUserType::class, $user, ['is_edit' => false]);
@@ -265,12 +273,20 @@ class UserAdminController extends AbstractController
     }
 
     #[Route('/stats', name: 'app_admin_users_stats', methods: ['GET'])]
-    public function stats(UserRepository $userRepository): Response
-    {
-        // Basic role stats
+    public function stats(
+        Request $request,
+        UserRepository $userRepository,
+        ChartBuilderInterface $chartBuilder
+    ): Response {
+        // Allow negative offsets for future weeks? Or just use positive for past
+        $offset = (int) $request->query->get('offset', 0);
+        $isAjax = $request->isXmlHttpRequest() || $request->query->has('ajax');
+        
+        // Core stats
         $totalUsers = $userRepository->countAllUsers();
         $adminCount = $userRepository->countByRole('ADMIN');
         $userCount = $userRepository->countByRole('USER');
+
         $adminPercentage = $totalUsers ? round(($adminCount / $totalUsers) * 100, 1) : 0;
         $userPercentage = $totalUsers ? round(($userCount / $totalUsers) * 100, 1) : 0;
 
@@ -278,63 +294,232 @@ class UserAdminController extends AbstractController
         $verifiedCount = $userRepository->countVerifiedUsers();
         $unverifiedCount = $userRepository->countUnverifiedUsers();
         $verifiedPercentage = $totalUsers ? round(($verifiedCount / $totalUsers) * 100, 1) : 0;
+        $unverifiedPercentage = $totalUsers ? round(($unverifiedCount / $totalUsers) * 100, 1) : 0;
 
-        // Activity stats (requires last_login field)
-        $activeLast30 = $userRepository->countActiveUsersLastDays(30);
+        // Activity stats
+        $activeLast30 = method_exists($userRepository, 'countActiveUsersLastDays')
+            ? $userRepository->countActiveUsersLastDays(30)
+            : 0;
         $activePercentage = $totalUsers ? round(($activeLast30 / $totalUsers) * 100, 1) : 0;
 
-        // Registration trends (last 7 days)
-        $registrationsByDay = $userRepository->getRegistrationsByDay(7);
-        $maxRegistrations = $registrationsByDay ? max($registrationsByDay) : 0;
+        // 7-day navigable window
+        // Calculate date range correctly
+        $endDate = (new \DateTimeImmutable('today'))->modify(sprintf('-%d days', $offset));
+        $startDate = $endDate->modify('-6 days');
+        $registrationsByDay = $userRepository->getRegistrationsWindowByDateRange($startDate, $endDate);
         $avgDailyRegistrations = $registrationsByDay ? round(array_sum($registrationsByDay) / count($registrationsByDay), 1) : 0;
-        $peakDay = $registrationsByDay ? array_keys($registrationsByDay, max($registrationsByDay))[0] : null;
 
-        // Extended trend (last 30 days) – optional for a chart
-        $registrationsLast30 = $userRepository->getRegistrationsByDayExtended(30);
-        $max30 = $registrationsLast30 ? max($registrationsLast30) : 0;
+        $peakDay = null;
+        if (!empty($registrationsByDay)) {
+            $peakValue = max($registrationsByDay);
+            $peakDay = array_keys($registrationsByDay, $peakValue)[0] ?? null;
+        }
 
-        // Growth vs previous period
+        // 30-day current trend
+        $registrationsLast30 = $userRepository->getRegistrationsByDayExtended(30, 0);
+
+        // Growth
         $growth = $userRepository->getRegistrationGrowth();
 
-        // ⭐ NEW: Age statistics
+        // Age stats
         $ageDistribution = $userRepository->getAgeDistribution();
         $averageAge = $userRepository->getAverageAge();
         $youngestAge = $userRepository->getYoungestAge();
         $oldestAge = $userRepository->getOldestAge();
         $birthYears = $userRepository->getUsersByBirthYear();
-        
-        // Calculate total for percentages
         $totalWithAge = array_sum($ageDistribution) - ($ageDistribution['unknown'] ?? 0);
-        
+
+        // Format for display
+        $windowStart = $startDate->format('d/m/Y');
+        $windowEnd = $endDate->format('d/m/Y');
+        $canGoForward = $offset > 0;
+
+        $dailyLabels = array_map(
+            fn(string $date) => (new \DateTimeImmutable($date))->format('d/m'),
+            array_keys($registrationsByDay)
+        );
+        $dailyValues = array_values($registrationsByDay);
+
+        if ($isAjax) {
+            return $this->json([
+                'offset' => $offset,
+                'windowStart' => $windowStart,
+                'windowEnd' => $windowEnd,
+                'labels' => $dailyLabels,
+                'values' => $dailyValues,
+                'canGoForward' => $canGoForward,
+                'avgDailyRegistrations' => $avgDailyRegistrations,
+                'peakDay' => $peakDay ? (new \DateTimeImmutable($peakDay))->format('d/m') : 'N/A',
+            ]);
+        }
+
+        // ===== Static charts =====
+
+        $roleChart = $chartBuilder->createChart(Chart::TYPE_DOUGHNUT);
+        $roleChart->setData([
+            'labels' => ['Administrateurs', 'Utilisateurs'],
+            'datasets' => [[
+                'label' => 'Répartition des rôles',
+                'data' => [$adminCount, $userCount],
+                'backgroundColor' => ['#c46f4b', '#2f7f79'],
+                'borderWidth' => 0,
+            ]],
+        ]);
+        $roleChart->setOptions([
+            'plugins' => ['legend' => ['position' => 'bottom']],
+            'maintainAspectRatio' => false,
+        ]);
+
+        $verificationChart = $chartBuilder->createChart(Chart::TYPE_DOUGHNUT);
+        $verificationChart->setData([
+            'labels' => ['Vérifiés', 'Non vérifiés'],
+            'datasets' => [[
+                'label' => 'Vérification des comptes',
+                'data' => [$verifiedCount, $unverifiedCount],
+                'backgroundColor' => ['#2f7f79', '#ddbf8c'],
+                'borderWidth' => 0,
+            ]],
+        ]);
+        $verificationChart->setOptions([
+            'plugins' => ['legend' => ['position' => 'bottom']],
+            'maintainAspectRatio' => false,
+        ]);
+
+        $trend30Chart = $chartBuilder->createChart(Chart::TYPE_LINE);
+        $trend30Chart->setData([
+            'labels' => array_map(
+                fn(string $date) => (new \DateTimeImmutable($date))->format('d/m'),
+                array_keys($registrationsLast30)
+            ),
+            'datasets' => [[
+                'label' => 'Inscriptions sur 30 jours',
+                'data' => array_values($registrationsLast30),
+                'borderColor' => '#2f7f79',
+                'backgroundColor' => 'rgba(47,127,121,0.12)',
+                'fill' => true,
+                'tension' => 0.35,
+                'pointRadius' => 3,
+            ]],
+        ]);
+        $trend30Chart->setOptions([
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => ['precision' => 0],
+                ],
+            ],
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'bottom',
+                ],
+            ],
+            'maintainAspectRatio' => false,
+        ]);
+
+        $ageLabels = [];
+        $ageValues = [];
+        foreach ($ageDistribution as $range => $count) {
+            if ($range === 'unknown') {
+                continue;
+            }
+
+            $label = match ($range) {
+                'under-18' => 'Moins de 18 ans',
+                default => $range . ' ans',
+            };
+
+            $ageLabels[] = $label;
+            $ageValues[] = $count;
+        }
+
+        $ageDistributionChart = $chartBuilder->createChart(Chart::TYPE_BAR);
+        $ageDistributionChart->setData([
+            'labels' => $ageLabels,
+            'datasets' => [[
+                'label' => 'Utilisateurs par tranche d’âge',
+                'data' => $ageValues,
+                'backgroundColor' => '#ddbf8c',
+                'borderRadius' => 10,
+            ]],
+        ]);
+        $ageDistributionChart->setOptions([
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => ['precision' => 0],
+                ],
+            ],
+            'plugins' => [
+                'legend' => ['display' => false],
+            ],
+            'maintainAspectRatio' => false,
+        ]);
+
+        $birthYearsChart = $chartBuilder->createChart(Chart::TYPE_LINE);
+        $birthYearsChart->setData([
+            'labels' => array_keys($birthYears),
+            'datasets' => [[
+                'label' => 'Utilisateurs par année de naissance',
+                'data' => array_values($birthYears),
+                'borderColor' => '#c46f4b',
+                'backgroundColor' => 'rgba(196,111,75,0.10)',
+                'fill' => true,
+                'tension' => 0.25,
+                'pointRadius' => 3,
+            ]],
+        ]);
+        $birthYearsChart->setOptions([
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => ['precision' => 0],
+                ],
+            ],
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'bottom',
+                ],
+            ],
+            'maintainAspectRatio' => false,
+        ]);
+
         return $this->render('user_admin/stats.html.twig', [
-            // Existing
             'totalUsers' => $totalUsers,
             'adminCount' => $adminCount,
             'userCount' => $userCount,
             'adminPercentage' => $adminPercentage,
             'userPercentage' => $userPercentage,
-            'registrationsByDay' => $registrationsByDay,
-            'maxRegistrations' => $maxRegistrations,
 
-            // New
             'verifiedCount' => $verifiedCount,
             'unverifiedCount' => $unverifiedCount,
             'verifiedPercentage' => $verifiedPercentage,
+            'unverifiedPercentage' => $unverifiedPercentage,
+
             'activeLast30' => $activeLast30,
             'activePercentage' => $activePercentage,
+
             'avgDailyRegistrations' => $avgDailyRegistrations,
             'peakDay' => $peakDay,
-            'registrationsLast30' => $registrationsLast30,
-            'max30' => $max30,
             'growth' => $growth,
 
-            // ⭐ NEW age stats
-            'ageDistribution' => $ageDistribution,
             'averageAge' => $averageAge,
             'youngestAge' => $youngestAge,
             'oldestAge' => $oldestAge,
-            'birthYears' => $birthYears,
             'totalWithAge' => $totalWithAge,
+
+            'offset' => $offset,
+            'windowStart' => $windowStart,
+            'windowEnd' => $windowEnd,
+            'dailyLabels' => $dailyLabels,
+            'dailyValues' => $dailyValues,
+
+            'roleChart' => $roleChart,
+            'verificationChart' => $verificationChart,
+            'trend30Chart' => $trend30Chart,
+            'ageDistributionChart' => $ageDistributionChart,
+            'birthYearsChart' => $birthYearsChart,
         ]);
     }
 }

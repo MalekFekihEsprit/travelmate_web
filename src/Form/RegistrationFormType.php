@@ -68,11 +68,13 @@ class RegistrationFormType extends AbstractType
             ->add('telephone', TelType::class, [
                 'label' => 'Téléphone',
                 'required' => false,
-                'attr' => [
-                    'placeholder' => 'Ex: +216 12 345 678',
-                ],
+                'attr' => ['placeholder' => 'Ex: +216 12 345 678'],
                 'constraints' => [
-                    new Length(max: 255),
+                    new Length(max: 20),
+                    new Regex([
+                        'pattern' => '/^\+[\d\s]+$/',
+                        'message' => 'Please enter a valid phone number with country code (e.g., +216 12 345 678)',
+                    ]),
                 ],
             ])
             ->add('photoUrl', TextType::class, [

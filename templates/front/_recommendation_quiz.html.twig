@@ -1,0 +1,129 @@
+{% block recommendation_quiz_styles %}
+<style>
+    .recommendation-modal__overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.42);z-index:40;}
+    .recommendation-modal__card{max-width:580px;margin:40px auto;padding:18px;border-radius:16px;}
+    .recommendation-modal__card{max-height:76vh;overflow:auto}
+    .recommendation-modal__title{font-family:'Fraunces',serif;font-size:1.25rem;margin-bottom:0.6rem;color:var(--color-primary-dark);}
+    .recommendation-form{display:grid;gap:0.85rem}
+    .recommendation-form .field{display:grid;gap:0.35rem}
+    .recommendation-form label{font-weight:600;color:var(--color-text-muted);font-size:0.95rem}
+    .recommendation-form select,.recommendation-form input{width:100%;min-height:44px;padding:0.6rem 0.75rem;border-radius:14px;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text)}
+    .recommendation-form select:focus,.recommendation-form input:focus{outline:none;box-shadow:0 0 0 6px rgba(196,111,75,0.06);border-color:rgba(196,111,75,0.28)}
+    .recommendation-form .actions{display:flex;gap:10px;margin-top:8px}
+    #recommendation-results{margin-top:12px}
+    #recommendation-results ul{list-style:none;padding-left:0}
+    #recommendation-results li{padding:0.6rem 0;border-bottom:1px dashed var(--color-border);}
+    .recommendation-item__title{font-weight:600;color:var(--color-primary-dark);margin-bottom:0.25rem}
+    .recommendation-item__desc{color:var(--color-text-muted);font-size:0.95rem;margin:0}
+</style>
+{% endblock %}
+
+<div id="recommendation-modal" class="recommendation-modal__overlay">
+    <div class="surface-card recommendation-modal__card">
+        <h3 class="recommendation-modal__title">Quiz - Trouvez votre voyage</h3>
+        <form id="recommendation-quiz-form" class="recommendation-form">
+            <div class="field">
+                <label for="rec-type">Type de voyage:</label>
+                <select id="rec-type" name="type">
+                    <option value="plage">Plage</option>
+                    <option value="rando">Randonnée</option>
+                    <option value="ville">Ville / Culture</option>
+                    <option value="aventure">Aventure</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="rec-budget">Budget approximatif (euros):</label>
+                <input id="rec-budget" name="budget" type="text" placeholder="ex: 500-1000" />
+            </div>
+
+            <div class="field">
+                <label for="rec-duration">Durée (jours):</label>
+                <input id="rec-duration" name="duration" type="number" min="1" max="30" />
+            </div>
+
+            <div class="field">
+                <label for="rec-destination">Pays / destination préférée (requis) :</label>
+                <input id="rec-destination" name="destination" type="text" required aria-required="true" placeholder="ex: France" />
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn--primary">Obtenir recommandations</button>
+                <button id="recommend-cancel" type="button" class="btn btn--ghost">Fermer</button>
+            </div>
+        </form>
+        <div id="recommendation-results"></div>
+    </div>
+</div>
+
+<script>
+(function(){
+    const openBtn = document.getElementById('recommend-btn-front');
+    const modal = document.getElementById('recommendation-modal');
+    const cancel = document.getElementById('recommend-cancel');
+    const form = document.getElementById('recommendation-quiz-form');
+    const results = document.getElementById('recommendation-results');
+
+    if (!openBtn) return;
+
+    openBtn.addEventListener('click', function(){
+        modal.style.display = 'block';
+        results.innerHTML = '';
+    });
+    cancel.addEventListener('click', function(){ modal.style.display = 'none'; });
+
+        form.addEventListener('submit', async function(e){
+        e.preventDefault();
+            // Client-side validation: ensure destination is filled
+            if (!form.checkValidity()) {
+                results.innerHTML = '<div class="muted">Veuillez indiquer une destination.</div>';
+                return;
+            }
+        const data = Object.fromEntries(new FormData(form).entries());
+        const payload = { answers: data };
+
+        results.innerHTML = 'Recherche en cours...';
+
+        try {
+            const resp = await fetch('{{ path('app_recommend_from_quiz') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const body = await resp.json();
+
+            if (!resp.ok) {
+                results.innerHTML = '<div class="muted">Erreur: '+(body.error||'inconnu')+'</div>';
+                return;
+            }
+
+            if (!body.results || body.results.length === 0) {
+                results.innerHTML = '<div>Aucune recommandation trouvée.</div>';
+                return;
+            }
+
+            const list = document.createElement('ul');
+            body.results.forEach(r => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = '/voyages/' + r.id;
+                a.className = 'recommendation-item__title';
+                a.textContent = (r.title || 'Voyage') + (r.destination ? ' — ' + r.destination : '');
+                li.appendChild(a);
+                if (r.description) {
+                    const p = document.createElement('p');
+                    p.className = 'recommendation-item__desc';
+                    p.textContent = r.description;
+                    li.appendChild(p);
+                }
+                list.appendChild(li);
+            });
+            results.innerHTML = '';
+            results.appendChild(list);
+        } catch (err) {
+            results.innerHTML = '<div class="muted">Erreur de connexion: '+err.message+'</div>';
+        }
+    });
+})();
+</script>

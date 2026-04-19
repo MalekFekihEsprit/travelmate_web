@@ -74,6 +74,20 @@ class Activite
     public function getLieu(): ?string { return $this->lieu; }
     public function setLieu(?string $lieu): self { $this->lieu = $lieu; return $this; }
 
+    /** Latitude WGS84 (optionnel) — pour filtre « alentours » précis sur la carte front-office. */
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $latitude = null;
+
+    /** Longitude WGS84 (optionnel). */
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $longitude = null;
+
+    public function getLatitude(): ?float { return $this->latitude; }
+    public function setLatitude(?float $latitude): self { $this->latitude = $latitude; return $this; }
+
+    public function getLongitude(): ?float { return $this->longitude; }
+    public function setLongitude(?float $longitude): self { $this->longitude = $longitude; return $this; }
+
     #[ORM\Column(type: 'integer', nullable: false)]
     #[Assert\NotNull(message: 'L\'âge minimum est obligatoire.')]
     #[Assert\PositiveOrZero(message: 'L\'âge minimum ne peut pas être négatif.')]
@@ -218,5 +232,41 @@ class Activite
     {
         $this->getVoyages()->removeElement($voyage);
         return $this;
+    }
+
+    // ── Réservations ────────────────────────────────────────────────────────────
+
+    #[ORM\OneToMany(mappedBy: 'activite', targetEntity: Reservation::class)]
+    private Collection $reservations;
+
+    /** @return Collection<int, Reservation> */
+    public function getReservations(): Collection
+    {
+        if (!$this->reservations instanceof Collection) $this->reservations = new ArrayCollection();
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): self
+    {
+        if (!$this->getReservations()->contains($reservation)) {
+            $this->getReservations()->add($reservation);
+            $reservation->setActivite($this);
+        }
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): self
+    {
+        if ($this->getReservations()->removeElement($reservation)) {
+            if ($reservation->getActivite() === $this) {
+                $reservation->setActivite(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getReservationCount(): int
+    {
+        return $this->getReservations()->count();
     }
 }

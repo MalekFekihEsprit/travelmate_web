@@ -57,6 +57,34 @@ class Itineraire
         return $this;
     }
 
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $jaime = 0;
+
+    public function getJaime(): int
+    {
+        return $this->jaime;
+    }
+
+    public function setJaime(int $jaime): self
+    {
+        $this->jaime = $jaime;
+        return $this;
+    }
+
+    public function incrementJaime(): self
+    {
+        $this->jaime++;
+        return $this;
+    }
+
+    public function decrementJaime(): self
+    {
+        if ($this->jaime > 0) {
+            $this->jaime--;
+        }
+        return $this;
+    }
+
     #[ORM\ManyToOne(targetEntity: Voyage::class, inversedBy: 'itineraires')]
     #[ORM\JoinColumn(name: 'id_voyage', referencedColumnName: 'id_voyage', onDelete: 'CASCADE')]
     private ?Voyage $voyage = null;

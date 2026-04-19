@@ -1,7 +1,14 @@
 parameters:
     profile_photos_directory: '%kernel.project_dir%/public/uploads/profiles'    
+    face_api_base_url: '%env(FACE_API_BASE_URL)%'
+    face_match_threshold: '%env(float:FACE_MATCH_THRESHOLD)%'
+    ipapi_base_url: '%env(IPAPI_BASE_URL)%'
     activites_images_directory: '%kernel.project_dir%/public/uploads/activites'
     evenements_images_directory: '%kernel.project_dir%/public/uploads/evenements'
+    app.groq.cache_ttl: 86400
+    app.openrouteservice.cache_ttl: 604800
+    app.cerebras.api_key: ''
+    app.cerebras.model: 'llama3.1-8b'
     cities_json_path: '%kernel.project_dir%/data/cities.json'
 
 services:
@@ -15,7 +22,48 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+    App\Controller\WeatherController:
+        arguments:
+            $openWeatherApiKey: '%env(OPENWEATHER_API_KEY)%'
+    App\Service\FaceRecognitionClient:
+        arguments:
+            $faceApiBaseUrl: '%face_api_base_url%'
 
+    App\Service\GeoIpService:
+        arguments:
+            $baseUrl: '%ipapi_base_url%'
+
+    App\Service\GroqCulturalRulesService:
+        arguments:
+            $apiKey: '%env(string:GROQ_API_KEY)%'
+            $model: '%env(string:GROQ_MODEL)%'
+            $cacheDirectory: '%kernel.cache_dir%/groq_cultural_rules'
+            $cacheTtl: '%app.groq.cache_ttl%'
+
+    App\Service\OpenRouteServiceGeocoder:
+        arguments:
+            $apiKey: '%env(string:OPENROUTESERVICE_API_KEY)%'
+            $geocodeUrl: '%env(string:OPENROUTESERVICE_GEOCODE_URL)%'
+            $cacheDirectory: '%kernel.cache_dir%/openrouteservice_geocoder'
+            $cacheTtl: '%app.openrouteservice.cache_ttl%'
+
+    App\Service\WeatherService:
+        arguments:
+            $openWeatherMapApiKey: '%env(string:OPENWEATHERMAP_API_KEY)%'
+
+    App\Service\ReplicateVideoService:
+        arguments:
+            $apiKey: '%env(GROQ_API_KEY)%'
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\StabilityImageService:
+        arguments:
+            $apiKey: '%env(STABILITY_API_KEY)%'
+
+    App\Service\CerebrasItinerarySuggestionService:
+        arguments:
+            $apiKey: '%env(default:app.cerebras.api_key:CEREBRAS_API_KEY)%'
+            $model: '%env(default:app.cerebras.model:CEREBRAS_MODEL)%'
     App\Service\CityCountryLookupService:
         arguments:
             $citiesJsonPath: '%cities_json_path%'

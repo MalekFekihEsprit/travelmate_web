@@ -4,7 +4,24 @@
 
 {% block stylesheets %}
 {{ parent() }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <style>
+.tm-geo-map { margin-top: 0.85rem; }
+.tm-geo-map-btn {
+    appearance: none;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.tm-geo-map-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.tm-geo-map-panel { margin-top: 0.65rem; }
+.tm-geo-map-canvas { height: 240px; border-radius: var(--radius-lg); border: 1px solid var(--color-border); overflow: hidden; }
 
 /* ══════════════════════════════════════════════════════
    BREADCRUMB
@@ -786,22 +803,152 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 }
 .chat-fab:hover .chat-fab__tooltip { opacity: 1; }
 
+/* ══════════════════════════════════════════════════════
+   BLOC MÉTÉO DANS LA SIDEBAR
+══════════════════════════════════════════════════════ */
+.weather-widget {
+    margin-top: 1rem;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1rem;
+}
+.weather-widget__title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.weather-widget__placeholder {
+    text-align: center;
+    padding: 1.25rem 0.5rem;
+    background: var(--color-surface-soft);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+.weather-widget__placeholder span { font-size: 1.5rem; display: block; margin-bottom: 0.35rem; }
+
+/* Résultat météo */
+.wcard {
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+.wcard__top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    background: linear-gradient(135deg, rgba(47,127,121,0.08), rgba(196,111,75,0.06));
+    border-bottom: 1px solid var(--color-border);
+}
+.wcard__icon { font-size: 2.2rem; line-height: 1; flex-shrink: 0; }
+.wcard__main { flex: 1; min-width: 0; }
+.wcard__temp { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 600; color: var(--color-text); line-height: 1; }
+.wcard__desc { font-size: 0.82rem; color: var(--color-text-muted); margin-top: 0.15rem; text-transform: capitalize; }
+.wcard__minmax { font-size: 0.78rem; color: var(--color-text-muted); margin-top: 0.1rem; }
+
+.wcard__details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+.wcard__detail {
+    display: flex;
+    flex-direction: column;
+    padding: 0.6rem 0.9rem;
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+.wcard__detail:nth-child(even) { border-right: none; }
+.wcard__detail:nth-last-child(-n+2) { border-bottom: none; }
+.wcard__detail-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-text-muted); margin-bottom: 0.15rem; }
+.wcard__detail-value { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
+
+/* Barre pluie */
+.wcard__rain-bar {
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 999px;
+    margin-top: 0.25rem;
+    overflow: hidden;
+}
+.wcard__rain-fill {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+}
+
+/* Alerte météo */
+.wcard__alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+.wcard__alert--good { color: var(--color-secondary); background: rgba(47,127,121,0.06); }
+.wcard__alert--warn { color: #b45309; background: rgba(180,83,9,0.06); }
+.wcard__alert--bad  { color: #dc2626; background: rgba(220,38,38,0.06); }
+
+/* Loading */
+.weather-loading {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+.weather-spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: wspin 0.8s linear infinite;
+    margin: 0 auto 0.5rem;
+}
+@keyframes wspin { to { transform: rotate(360deg); } }
+
+/* Erreur */
+.weather-error-msg {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    background: rgba(220,38,38,0.06);
+    border: 1px solid rgba(220,38,38,0.2);
+    border-radius: var(--radius-md);
+    font-size: 0.82rem;
+    color: #dc2626;
+}
+
 </style>
 {% endblock %}
 
 {% block body %}
 
+{% include '_travelmate_mymemory_translate.html.twig' %}
+
 {# ── Breadcrumb ─────────────────────────────────────────────────────────── #}
 <nav class="breadcrumb" aria-label="Fil d'Ariane">
-    <a href="{{ path('app_home') }}">Accueil</a>
+    <a href="{{ path('app_home') }}" data-translate="true">Accueil</a>
     <span class="breadcrumb__sep"></span>
-    <a href="{{ path('app_activites') }}">Activités</a>
+    <a href="{{ path('app_activites') }}" data-translate="true">Activités</a>
     {% if activite.categorie %}
         <span class="breadcrumb__sep"></span>
-        <a href="{{ path('app_categorie_show', {id: activite.categorie.id}) }}">{{ activite.categorie.nom }}</a>
+        <a href="{{ path('app_categorie_show', {id: activite.categorie.id}) }}" data-translate="true" data-original="{{ activite.categorie.nom|e('html_attr') }}">{{ activite.categorie.nom }}</a>
     {% endif %}
     <span class="breadcrumb__sep"></span>
-    <span class="breadcrumb__current">{{ activite.nom }}</span>
+    <span class="breadcrumb__current" data-translate="true" data-original="{{ activite.nom|e('html_attr') }}">{{ activite.nom }}</span>
 </nav>
 
 {# ── Image hero (une seule image depuis imagePath) ────────────────────────── #}
@@ -810,6 +957,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     {# Slot unique — grande image pleine largeur #}
     <div class="gallery__item" onclick="openLightbox(0)">
         {% if activite.imagePath %}
+            {# imagePath est déjà "uploads/activites/fichier.ext" (voir ActiviteController) #}
             <img src="{{ asset(activite.imagePath) }}" alt="{{ activite.nom }}" loading="eager">
         {% else %}
             <div class="gallery__placeholder">
@@ -820,9 +968,9 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
     {# Bouton "Agrandir" #}
     {% if activite.imagePath %}
-        <button class="gallery__btn-all" onclick="openLightbox(0)">
+        <button type="button" class="gallery__btn-all" onclick="openLightbox(0)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Agrandir
+            <span data-translate="true">Agrandir</span>
         </button>
     {% endif %}
 </div>
@@ -854,15 +1002,15 @@ textarea.form-control { resize: vertical; min-height: 100px; }
         <div class="show-header">
             <div class="show-badge-row">
                 {% if activite.categorie %}
-                    <span class="sbadge sbadge--cat">{{ activite.categorie.nom }}</span>
+                    <span class="sbadge sbadge--cat" data-translate="true" data-original="{{ activite.categorie.nom|e('html_attr') }}">{{ activite.categorie.nom }}</span>
                 {% endif %}
                 {% set diff = activite.niveaudifficulte|lower %}
-                <span class="sbadge sbadge--diff-{{ diff }}">{{ activite.niveaudifficulte }}</span>
-                <span class="sbadge sbadge--statut-{{ activite.statut|lower }}">{{ activite.statut|capitalize }}</span>
+                <span class="sbadge sbadge--diff-{{ diff }}" data-translate="true" data-original="{{ activite.niveaudifficulte|e('html_attr') }}">{{ activite.niveaudifficulte }}</span>
+                <span class="sbadge sbadge--statut-{{ activite.statut|lower }}" data-translate="true" data-original="{{ activite.statut|capitalize|e('html_attr') }}">{{ activite.statut|capitalize }}</span>
             </div>
 
             <div class="show-header__top">
-                <h1 class="show-title">{{ activite.nom }}</h1>
+                <h1 class="show-title" data-translate="true" data-original="{{ activite.nom|e('html_attr') }}">{{ activite.nom }}</h1>
             </div>
 
             {# Rating #}
@@ -882,9 +1030,9 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                 </div>
                 {% if nbAvis > 0 %}
                     <span class="rating-score">{{ moyenne }}</span>
-                    <span class="rating-count">({{ nbAvis }} avis)</span>
+                    <span class="rating-count" data-translate="true" data-original="{{ ('(' ~ nbAvis ~ ' avis)')|e('html_attr') }}">({{ nbAvis }} avis)</span>
                 {% else %}
-                    <span class="rating-count">Pas encore d'avis</span>
+                    <span class="rating-count" data-translate="true">Pas encore d'avis</span>
                 {% endif %}
             </div>
 
@@ -893,18 +1041,31 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                 {% if activite.lieu %}
                     <span class="mpill">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
-                        <strong>{{ activite.lieu }}</strong>
+                        <strong data-translate="true" data-original="{{ activite.lieu|e('html_attr') }}">{{ activite.lieu }}</strong>
                     </span>
                 {% endif %}
                 <span class="mpill">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                    <strong>{{ activite.duree }}h</strong> de durée
+                    <span data-translate="true" data-original="{{ (activite.duree ~ 'h de durée')|e('html_attr') }}"><strong>{{ activite.duree }}h</strong> de durée</span>
                 </span>
                 <span class="mpill">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.7"/></svg>
-                    Dès <strong>{{ activite.agemin }} ans</strong>
+                    <span data-translate="true" data-original="{{ ('Dès ' ~ activite.agemin ~ ' ans')|e('html_attr') }}">Dès <strong>{{ activite.agemin }} ans</strong></span>
                 </span>
             </div>
+
+            {% if activite.lieu %}
+                <div class="tm-geo-map js-tm-geo-map" 
+                     data-lat="{{ activite.latitude ?: '' }}" 
+                     data-lng="{{ activite.longitude ?: '' }}" 
+                     data-address="{{ activite.lieu|e('html_attr') }}"
+                     data-label="{{ activite.lieu|e('html_attr') }}">
+                    <button type="button" class="tm-geo-map-btn js-tm-geo-map-toggle" aria-expanded="false" data-label-show="Voir sur la carte" data-label-hide="Masquer la carte">Voir sur la carte</button>
+                    <div class="js-tm-geo-map-panel tm-geo-map-panel" hidden>
+                        <div class="js-tm-geo-map-canvas tm-geo-map-canvas" role="application" aria-label="Carte du lieu"></div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
 
         {# ── Onglets 100% CSS ── #}
@@ -914,10 +1075,10 @@ textarea.form-control { resize: vertical; min-height: 100px; }
         <input class="tab-radio" type="radio" name="activite-tab" id="tab-radio-avis">
 
         <div class="tabs">
-            <label class="tab-label" for="tab-radio-details">Détails</label>
-            <label class="tab-label" for="tab-radio-tarifs">Tarifs</label>
+            <label class="tab-label" for="tab-radio-details"><span data-translate="true">Détails</span></label>
+            <label class="tab-label" for="tab-radio-tarifs"><span data-translate="true">Tarifs</span></label>
             <label class="tab-label" for="tab-radio-avis">
-                Avis{% if nbAvis > 0 %}<span class="tab-badge">{{ nbAvis }}</span>{% endif %}
+                <span data-translate="true">Avis</span>{% if nbAvis > 0 %}<span class="tab-badge">{{ nbAvis }}</span>{% endif %}
             </label>
         </div>
 
@@ -927,45 +1088,45 @@ textarea.form-control { resize: vertical; min-height: 100px; }
         <div class="tab-panel" id="tab-details">
 
             <div class="detail-block">
-                <div class="detail-block__label">À propos de cette activité</div>
-                <p>{{ activite.description }}</p>
+                <div class="detail-block__label" data-translate="true">À propos de cette activité</div>
+                <p data-translate="true" data-original="{{ activite.description|e('html_attr') }}">{{ activite.description }}</p>
             </div>
 
             <div class="detail-block">
-                <div class="detail-block__label">Informations pratiques</div>
+                <div class="detail-block__label" data-translate="true">Informations pratiques</div>
                 <div class="info-grid">
                     <div>
-                        <div class="info-item__label">Catégorie</div>
-                        <div class="info-item__value">{{ activite.categorie ? activite.categorie.nom : '—' }}</div>
+                        <div class="info-item__label" data-translate="true">Catégorie</div>
+                        <div class="info-item__value" data-translate="true" data-original="{{ (activite.categorie ? activite.categorie.nom : '—')|e('html_attr') }}">{{ activite.categorie ? activite.categorie.nom : '—' }}</div>
                     </div>
                     <div>
-                        <div class="info-item__label">Durée</div>
-                        <div class="info-item__value">{{ activite.duree }} heure{{ activite.duree > 1 ? 's' : '' }}</div>
+                        <div class="info-item__label" data-translate="true">Durée</div>
+                        <div class="info-item__value" data-translate="true" data-original="{{ (activite.duree ~ ' heure' ~ (activite.duree > 1 ? 's' : ''))|e('html_attr') }}">{{ activite.duree }} heure{{ activite.duree > 1 ? 's' : '' }}</div>
                     </div>
                     <div>
-                        <div class="info-item__label">Niveau</div>
-                        <div class="info-item__value">{{ activite.niveaudifficulte }}</div>
+                        <div class="info-item__label" data-translate="true">Niveau</div>
+                        <div class="info-item__value" data-translate="true" data-original="{{ activite.niveaudifficulte|e('html_attr') }}">{{ activite.niveaudifficulte }}</div>
                     </div>
                     <div>
-                        <div class="info-item__label">Âge minimum</div>
-                        <div class="info-item__value">{{ activite.agemin }} ans</div>
+                        <div class="info-item__label" data-translate="true">Âge minimum</div>
+                        <div class="info-item__value" data-translate="true" data-original="{{ (activite.agemin ~ ' ans')|e('html_attr') }}">{{ activite.agemin }} ans</div>
                     </div>
                     <div>
-                        <div class="info-item__label">Statut</div>
-                        <div class="info-item__value">{{ activite.statut|capitalize }}</div>
+                        <div class="info-item__label" data-translate="true">Statut</div>
+                        <div class="info-item__value" data-translate="true" data-original="{{ activite.statut|capitalize|e('html_attr') }}">{{ activite.statut|capitalize }}</div>
                     </div>
                     {% if activite.categorie %}
                         <div>
-                            <div class="info-item__label">Type</div>
-                            <div class="info-item__value">{{ activite.categorie.type }}</div>
+                            <div class="info-item__label" data-translate="true">Type</div>
+                            <div class="info-item__value" data-translate="true" data-original="{{ activite.categorie.type|e('html_attr') }}">{{ activite.categorie.type }}</div>
                         </div>
                         <div>
-                            <div class="info-item__label">Saison idéale</div>
-                            <div class="info-item__value">{{ activite.categorie.saison }}</div>
+                            <div class="info-item__label" data-translate="true">Saison idéale</div>
+                            <div class="info-item__value" data-translate="true" data-original="{{ activite.categorie.saison|e('html_attr') }}">{{ activite.categorie.saison }}</div>
                         </div>
                         <div>
-                            <div class="info-item__label">Public cible</div>
-                            <div class="info-item__value">{{ activite.categorie.publiccible }}</div>
+                            <div class="info-item__label" data-translate="true">Public cible</div>
+                            <div class="info-item__value" data-translate="true" data-original="{{ activite.categorie.publiccible|e('html_attr') }}">{{ activite.categorie.publiccible }}</div>
                         </div>
                     {% endif %}
                 </div>
@@ -976,27 +1137,27 @@ textarea.form-control { resize: vertical; min-height: 100px; }
         <div class="tab-panel" id="tab-tarifs">
             <div class="tarif-row">
                 <div>
-                    <div class="tarif-row__name">Tarif standard</div>
-                    <div class="tarif-row__desc">Prix par personne, toutes taxes comprises</div>
+                    <div class="tarif-row__name" data-translate="true">Tarif standard</div>
+                    <div class="tarif-row__desc" data-translate="true">Prix par personne, toutes taxes comprises</div>
                 </div>
                 <div style="text-align:right">
                     <div class="tarif-row__price">{{ activite.budget }} <span class="tarif-row__unit">TND</span></div>
-                    <div class="tarif-row__unit">par personne</div>
+                    <div class="tarif-row__unit" data-translate="true">par personne</div>
                 </div>
             </div>
 
             <div class="tarif-row">
                 <div>
-                    <div class="tarif-row__name">Groupe (2+ personnes)</div>
-                    <div class="tarif-row__desc">Réduction de 10 % par personne supplémentaire</div>
+                    <div class="tarif-row__name" data-translate="true">Groupe (2+ personnes)</div>
+                    <div class="tarif-row__desc" data-translate="true">Réduction de 10 % par personne supplémentaire</div>
                 </div>
                 <div style="text-align:right">
                     <div class="tarif-row__price">{{ (activite.budget * 0.9)|round }} <span class="tarif-row__unit">TND</span></div>
-                    <div class="tarif-row__unit">par personne</div>
+                    <div class="tarif-row__unit" data-translate="true">par personne</div>
                 </div>
             </div>
 
-            <div class="tarif-note">
+            <div class="tarif-note" data-translate="true">
                 Les prix incluent toutes les taxes applicables. Le paiement s'effectue lors de la confirmation de réservation.
             </div>
         </div>
@@ -1016,13 +1177,13 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                     <div class="rating-circle">
                         <span class="rating-circle__num">{{ moyenne }}</span>
                         <span class="rating-circle__denom">/5</span>
-                        <span class="rating-circle__label">{{ moyenne >= 4.5 ? 'Excellent' : (moyenne >= 3.5 ? 'Très bien' : 'Bien') }}</span>
+                        <span class="rating-circle__label" data-translate="true" data-original="{{ (moyenne >= 4.5 ? 'Excellent' : (moyenne >= 3.5 ? 'Très bien' : 'Bien'))|e('html_attr') }}">{{ moyenne >= 4.5 ? 'Excellent' : (moyenne >= 3.5 ? 'Très bien' : 'Bien') }}</span>
                     </div>
                     <div class="rating-bars">
                         {% for star in [5,4,3,2,1] %}
                             {% set pct = nbAvis > 0 ? ((dist[star] / nbAvis) * 100)|round : 0 %}
                             <div class="rbar-row">
-                                <span class="rbar-label">{{ star }} étoile{{ star > 1 ? 's' : '' }}</span>
+                                <span class="rbar-label" data-translate="true" data-original="{{ (star ~ ' étoile' ~ (star > 1 ? 's' : ''))|e('html_attr') }}">{{ star }} étoile{{ star > 1 ? 's' : '' }}</span>
                                 <div class="rbar-track">
                                     <div class="rbar-fill{{ star == 5 ? ' rbar-fill--primary' : '' }}" style="width:{{ pct }}%"></div>
                                 </div>
@@ -1034,7 +1195,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
                 <div class="avis-section-sep">
                     <div class="avis-section-sep__line"></div>
-                    <span class="avis-section-sep__label">Avis</span>
+                    <span class="avis-section-sep__label" data-translate="true">Avis</span>
                     <div class="avis-section-sep__line"></div>
                 </div>
 
@@ -1060,7 +1221,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                             </div>
                         </div>
                         {% if avi.commentaire %}
-                            <div class="avis-card__comment">{{ avi.commentaire }}</div>
+                            <div class="avis-card__comment" data-translate="true" data-original="{{ avi.commentaire|e('html_attr') }}">{{ avi.commentaire }}</div>
                         {% endif %}
                     </div>
                 {% endfor %}
@@ -1070,17 +1231,17 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                     <div class="avis-empty__icon">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
                     </div>
-                    <div class="avis-empty__title">Aucun avis pour l'instant</div>
-                    <p style="font-size:0.88rem">Soyez le premier à partager votre expérience.</p>
+                    <div class="avis-empty__title" data-translate="true">Aucun avis pour l'instant</div>
+                    <p style="font-size:0.88rem" data-translate="true">Soyez le premier à partager votre expérience.</p>
                 </div>
             {% endif %}
 
             {# Formulaire #}
             <div class="avis-form">
-                <div class="avis-form__title">Laisser un avis</div>
+                <div class="avis-form__title" data-translate="true">Laisser un avis</div>
                 <form action="{{ path('app_avis_new', {id: activite.id}) }}" method="POST">
                     <div class="form-group">
-                        <label class="form-label">Votre note</label>
+                        <label class="form-label" data-translate="true">Votre note</label>
                         <div class="star-picker">
                             {% for i in [5,4,3,2,1] %}
                                 <input type="radio" name="note" id="star{{ i }}" value="{{ i }}" {{ i == 5 ? 'checked' : '' }}>
@@ -1089,13 +1250,13 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="commentaire">Votre commentaire (optionnel)</label>
+                        <label class="form-label" for="commentaire" data-translate="true">Votre commentaire (optionnel)</label>
                         <textarea class="form-control" id="commentaire" name="commentaire"
-                                  placeholder="Décrivez votre expérience…" rows="4"></textarea>
+                                  placeholder="Décrivez votre expérience…" rows="4" data-translate="true"></textarea>
                     </div>
                     <button type="submit" class="btn-resa" style="margin-bottom:0">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        Publier mon avis
+                        <span data-translate="true">Publier mon avis</span>
                     </button>
                 </form>
             </div>
@@ -1110,28 +1271,42 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     <aside>
         <div class="resa-box">
             <div class="resa-box__head">
-                <div class="resa-box__head-title">Réserver maintenant</div>
+                <div class="resa-box__head-title" data-translate="true">Réserver maintenant</div>
                 <div class="resa-box__price-row">
                     <span class="resa-box__price-num">{{ activite.budget }}</span>
-                    <span class="resa-box__price-unit">TND / personne</span>
+                    <span class="resa-box__price-unit" data-translate="true">TND / personne</span>
                 </div>
             </div>
 
             <div class="resa-box__body">
                 <div class="resa-field">
-                    <label class="resa-label">Date souhaitée</label>
+                    <label class="resa-label" data-translate="true">Date souhaitée</label>
                     <input type="date" class="resa-input" id="resaDate" min="{{ "now"|date("Y-m-d") }}">
                 </div>
 
+                {# ── Bloc météo — s'affiche quand l'utilisateur choisit une date ── #}
+                <div class="weather-widget" id="weatherWidget">
+                    <div class="weather-widget__title">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/></svg>
+                        <span data-translate="true">Météo ce jour-là</span>
+                    </div>
+                    <div id="weatherContent">
+                        <div class="weather-widget__placeholder">
+                            <span>🌤️</span>
+                            <span data-translate="true">Choisissez une date pour voir la météo prévue</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="resa-field">
-                    <label class="resa-label">Participants</label>
+                    <label class="resa-label" data-translate="true">Participants</label>
                     <div class="resa-persons">
                         <div>
-                            <label style="font-size:0.75rem;color:var(--color-text-muted);display:block;margin-bottom:0.25rem">Adultes</label>
+                            <label style="font-size:0.75rem;color:var(--color-text-muted);display:block;margin-bottom:0.25rem" data-translate="true">Adultes</label>
                             <input type="number" class="resa-input" id="nbAdultes" min="1" value="1">
                         </div>
                         <div>
-                            <label style="font-size:0.75rem;color:var(--color-text-muted);display:block;margin-bottom:0.25rem">Enfants</label>
+                            <label style="font-size:0.75rem;color:var(--color-text-muted);display:block;margin-bottom:0.25rem" data-translate="true">Enfants</label>
                             <input type="number" class="resa-input" id="nbEnfants" min="0" value="0">
                         </div>
                     </div>
@@ -1140,36 +1315,37 @@ textarea.form-control { resize: vertical; min-height: 100px; }
                 <hr class="resa-divider">
 
                 <div class="resa-total-row">
-                    <span style="font-size:0.9rem;color:var(--color-text-muted)">Total estimé</span>
+                    <span style="font-size:0.9rem;color:var(--color-text-muted)" data-translate="true">Total estimé</span>
                     <span class="resa-total-amount" id="resaTotal">{{ activite.budget }} TND</span>
                 </div>
 
-                <button type="button" class="btn-resa" onclick="alert('Fonctionnalité de réservation à venir !')">
-                    Confirmer la réservation
-                </button>
+                <a href="{{ path('app_reservation_new', {id: activite.id}) }}" class="btn-resa">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-translate="true">Réservez maintenant</span>
+                </a>
                 <button type="button" class="btn-help">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7"/><path d="M9 9a3 3 0 115.196 2.066C13.612 11.66 12 12.5 12 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="17" r="0.6" fill="currentColor"/></svg>
-                    Besoin d'aide ?
+                    <span data-translate="true">Besoin d'aide ?</span>
                 </button>
             </div>
 
             <div class="resa-guarantees">
                 <div class="resa-guarantee">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Annulation gratuite sous 24h
+                    <span data-translate="true">Annulation gratuite sous 24h</span>
                 </div>
                 <div class="resa-guarantee">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Confirmation immédiate
+                    <span data-translate="true">Confirmation immédiate</span>
                 </div>
                 <div class="resa-guarantee">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Paiement sécurisé
+                    <span data-translate="true">Paiement sécurisé</span>
                 </div>
                 {% if activite.agemin > 0 %}
                     <div class="resa-guarantee" style="color:var(--color-primary)">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        Âge minimum : {{ activite.agemin }} ans
+                        <span data-translate="true" data-original="{{ ('Âge minimum : ' ~ activite.agemin ~ ' ans')|e('html_attr') }}">Âge minimum : {{ activite.agemin }} ans</span>
                     </div>
                 {% endif %}
             </div>
@@ -1180,14 +1356,16 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
 {# ── Bouton messagerie flottant ─────────────────────────────────────────── #}
 <div class="chat-fab">
-    <button class="chat-fab__btn" aria-label="Contacter le support">
+    <button type="button" class="chat-fab__btn" aria-label="Contacter le support">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span class="chat-fab__dot"></span>
     </button>
-    <div class="chat-fab__tooltip">Une question ? On vous répond</div>
+    <div class="chat-fab__tooltip" data-translate="true">Une question ? On vous répond</div>
 </div>
+
+{# Le script météo est déplacé dans block javascripts ci-dessous pour éviter tout conflit avec weather-forecast.js #}
 
 <script>
 // Calcul total réservation
@@ -1206,7 +1384,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 })();
 
 // Lightbox
-var galleryImages = {{ activite.imagePath ? '["' ~ asset('uploads/activites/' ~ activite.imagePath) ~ '"]' : '[]' }};
+var galleryImages = {{ activite.imagePath ? '["' ~ asset(activite.imagePath)|e('js') ~ '"]' : '[]' }};
 var currentIdx = 0;
 function openLightbox(idx) {
     if (!galleryImages.length) return;
@@ -1232,11 +1410,179 @@ document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape')     closeLightbox();
     if (e.key === 'ArrowLeft')  shiftLightbox(-1);
     if (e.key === 'ArrowRight') shiftLightbox(1);
-});
+}); 
 </script>
 
 {% endblock %}
 
 {% block javascripts %}
 {{ parent() }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{{ asset('js/geocoding-service.js') }}"></script>
+<script src="{{ asset('js/public-geo-map-toggle.js') }}"></script>
+{# NE PAS charger weather-forecast.js ici — la logique météo est gérée ci-dessous #}
+<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
+
+<script>
+// ══════════════════════════════════════════════════════
+// MÉTÉO — connexion datepicker → API /weather/forecast
+// Placé ici (après tous les JS) pour éviter tout conflit
+// ══════════════════════════════════════════════════════
+(function () {
+    var activiteLocation = '{{ activite.lieu ? activite.lieu|e("js") : "Tunis" }}';
+
+    function initWeather() {
+        var resaDate       = document.getElementById('resaDate');
+        var weatherContent = document.getElementById('weatherContent');
+        var weatherTimer   = null;
+
+        if (!resaDate || !weatherContent) return;
+
+        function onDateChange() {
+            var date = resaDate.value;
+            if (!date) {
+                weatherContent.innerHTML = '<div class="weather-widget__placeholder"><span>🌤️</span><span data-translate="true">Choisissez une date pour voir la météo prévue</span></div>';
+                return;
+            }
+            clearTimeout(weatherTimer);
+            weatherTimer = setTimeout(function () { fetchWeather(date); }, 300);
+        }
+
+        // Écouter 'change' ET 'input' pour compatibilité tous navigateurs + mobile
+        resaDate.addEventListener('change', onDateChange);
+        resaDate.addEventListener('input',  onDateChange);
+
+        // Auto-déclencher si une date est déjà présente dans le champ
+        if (resaDate.value) {
+            onDateChange();
+        }
+
+        function fetchWeather(date) {
+            weatherContent.innerHTML = '<div class="weather-loading"><div class="weather-spinner"></div><span>Chargement de la météo…</span></div>';
+
+            var url = '/weather/forecast?date=' + encodeURIComponent(date) + '&location=' + encodeURIComponent(activiteLocation);
+
+            fetch(url)
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function(data) {
+                    if (data.error) throw new Error(data.error);
+                    renderWeather(data);
+                })
+                .catch(function(err) {
+                    weatherContent.innerHTML = '<div class="weather-error-msg">⚠️ Météo indisponible : ' + err.message + '</div>';
+                });
+        }
+
+        function renderWeather(data) {
+            var forecasts = data.forecasts || [];
+            if (!forecasts.length) {
+                weatherContent.innerHTML =
+                    '<div class="weather-widget__placeholder" style="background:rgba(196,111,75,0.06);border:1px solid rgba(196,111,75,0.2);border-radius:12px;padding:1.2rem;text-align:center">' +
+                        '<span style="font-size:1.8rem">📅</span>' +
+                        '<span style="display:block;margin-top:0.5rem;font-size:0.9rem;color:var(--color-text-muted)">' +
+                            'Prévisions indisponibles pour cette date.<br>' +
+                            '<small>L\'API météo couvre uniquement les 5 prochains jours.</small>' +
+                        '</span>' +
+                    '</div>';
+                return;
+            }
+
+            var temps = forecasts.map(function(f){ return f.temperature; });
+            var minT  = Math.min.apply(null, temps);
+            var maxT  = Math.max.apply(null, temps);
+            var avgT  = Math.round(temps.reduce(function(a,b){return a+b;},0) / temps.length);
+            var maxRain = Math.max.apply(null, forecasts.map(function(f){ return f.rain_probability || 0; }));
+            var midForecast = forecasts[Math.floor(forecasts.length / 2)] || forecasts[0];
+            var humidity  = midForecast.humidity || 0;
+            var windSpeed = midForecast.wind_speed || 0;
+
+            var icon = getWeatherEmoji(midForecast.icon, midForecast.description);
+
+            var alertClass, alertText;
+            if (maxRain > 70) {
+                alertClass = 'wcard__alert--bad';
+                alertText  = '🌧️ Fortes pluies prévues. Pensez à reporter ou emporter un équipement imperméable.';
+            } else if (maxRain > 40) {
+                alertClass = 'wcard__alert--warn';
+                alertText  = '☔ Risque de pluie. Un parapluie est recommandé.';
+            } else if (maxT > 35) {
+                alertClass = 'wcard__alert--warn';
+                alertText  = '☀️ Températures élevées. Hydratez-vous bien.';
+            } else {
+                alertClass = 'wcard__alert--good';
+                alertText  = '✅ Bonnes conditions météo prévues pour votre activité.';
+            }
+
+            var mockBadge = (data.mock || data.out_of_range)
+                ? '<span style="font-size:0.7rem;opacity:0.5;margin-left:0.5rem">' + (data.out_of_range ? '(estimé)' : '(démo)') + '</span>'
+                : '';
+
+            weatherContent.innerHTML =
+                '<div class="wcard">' +
+                    '<div class="wcard__top">' +
+                        '<div class="wcard__icon">' + icon + '</div>' +
+                        '<div class="wcard__main">' +
+                            '<div class="wcard__temp">' + avgT + '°C' + mockBadge + '</div>' +
+                            '<div class="wcard__desc">' + midForecast.description + '</div>' +
+                            '<div class="wcard__minmax">' + minT + '° / ' + maxT + '°</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="wcard__details">' +
+                        '<div class="wcard__detail">' +
+                            '<span class="wcard__detail-label">Pluie</span>' +
+                            '<span class="wcard__detail-value">' + maxRain + '%</span>' +
+                            '<div class="wcard__rain-bar"><div class="wcard__rain-fill" style="width:' + maxRain + '%"></div></div>' +
+                        '</div>' +
+                        '<div class="wcard__detail">' +
+                            '<span class="wcard__detail-label">Humidité</span>' +
+                            '<span class="wcard__detail-value">' + humidity + '%</span>' +
+                        '</div>' +
+                        '<div class="wcard__detail">' +
+                            '<span class="wcard__detail-label">Vent</span>' +
+                            '<span class="wcard__detail-value">' + windSpeed + ' km/h</span>' +
+                        '</div>' +
+                        '<div class="wcard__detail">' +
+                            '<span class="wcard__detail-label">Prévisions</span>' +
+                            '<span class="wcard__detail-value">' + forecasts.length + ' tranches</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="wcard__alert ' + alertClass + '">' + alertText + '</div>' +
+                '</div>';
+        }
+
+        function getWeatherEmoji(icon, desc) {
+            desc = (desc || '').toLowerCase();
+            if (!icon) return '🌡️';
+            var code = icon.replace('d','').replace('n','');
+            var map = {'01':'☀️','02':'⛅','03':'☁️','04':'☁️','09':'🌧️','10':'🌦️','11':'⛈️','13':'❄️','50':'🌫️'};
+            return map[code] || '🌡️';
+        }
+    }
+
+    // Garantir que le DOM est prêt
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWeather);
+    } else {
+        initWeather();
+    }
+})();
+</script>
+
+<script>
+(function () {
+    function bootTranslate() {
+        if (window.TravelMateTranslate) {
+            TravelMateTranslate.init({ sourceLang: 'fr' });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootTranslate);
+    } else {
+        bootTranslate();
+    }
+})();
+</script>
 {% endblock %}

@@ -1,8 +1,12 @@
 
 ###> symfony/framework-bundle ###
+/.env
+/.env.dev
+/.env.example
 /.env.local
 /.env.local.php
 /.env.*.local
+/.env.dev
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
@@ -19,5 +23,5 @@
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
-.env
+/public/slides/
 /templates/clean.py

@@ -1,0 +1,133 @@
+{# Styles + barre de chargement + widget langue (MyMemory, sans compte) #}
+<style>
+.lang-switcher {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+.lang-switcher__btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #3b2a20;
+    border: none;
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.lang-switcher__btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 32px rgba(0,0,0,0.28);
+}
+.lang-switcher__panel {
+    display: none;
+    flex-direction: column;
+    gap: 0.35rem;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e0d5c5);
+    border-radius: 14px;
+    padding: 0.65rem 0.75rem;
+    box-shadow: 0 12px 40px rgba(71,48,35,0.14);
+    min-width: 180px;
+}
+.lang-switcher__panel.is-open { display: flex; }
+.lang-switcher__panel-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #8a7060);
+    margin-bottom: 0.2rem;
+    padding: 0 0.25rem;
+}
+.lang-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--color-text, #2a1e14);
+    cursor: pointer;
+    transition: background 0.15s;
+    text-align: left;
+    width: 100%;
+}
+.lang-option:hover { background: rgba(196,111,75,0.08); }
+.lang-option.is-active {
+    background: rgba(196,111,75,0.12);
+    color: var(--color-primary, #c46f4b);
+    font-weight: 600;
+}
+.lang-option__flag { font-size: 1.2rem; flex-shrink: 0; }
+.lang-option__label { flex: 1; }
+.lang-option__check {
+    font-size: 0.75rem;
+    color: var(--color-primary, #c46f4b);
+    display: none;
+}
+.lang-option.is-active .lang-option__check { display: block; }
+.translate-loading-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--color-primary, #c46f4b);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+    z-index: 9999;
+    border-radius: 0 999px 999px 0;
+}
+.translate-loading-bar.is-loading { transform: scaleX(0.7); }
+.translate-loading-bar.is-done    { transform: scaleX(1); transition: transform 0.15s ease; }
+</style>
+<div class="translate-loading-bar" id="translateLoadingBar"></div>
+<div class="lang-switcher" id="langSwitcher">
+    <div class="lang-switcher__panel" id="langPanel">
+        <div class="lang-switcher__panel-title">Langue / Language</div>
+        <button type="button" class="lang-option is-active" data-lang="fr" onclick="setLanguage('fr')">
+            <span class="lang-option__flag">🇫🇷</span>
+            <span class="lang-option__label">Français</span>
+            <span class="lang-option__check">✓</span>
+        </button>
+        <button type="button" class="lang-option" data-lang="en" onclick="setLanguage('en')">
+            <span class="lang-option__flag">🇬🇧</span>
+            <span class="lang-option__label">English</span>
+            <span class="lang-option__check">✓</span>
+        </button>
+        <button type="button" class="lang-option" data-lang="ar" onclick="setLanguage('ar')">
+            <span class="lang-option__flag">🇹🇳</span>
+            <span class="lang-option__label">العربية</span>
+            <span class="lang-option__check">✓</span>
+        </button>
+        <button type="button" class="lang-option" data-lang="de" onclick="setLanguage('de')">
+            <span class="lang-option__flag">🇩🇪</span>
+            <span class="lang-option__label">Deutsch</span>
+            <span class="lang-option__check">✓</span>
+        </button>
+        <button type="button" class="lang-option" data-lang="es" onclick="setLanguage('es')">
+            <span class="lang-option__flag">🇪🇸</span>
+            <span class="lang-option__label">Español</span>
+            <span class="lang-option__check">✓</span>
+        </button>
+        <button type="button" class="lang-option" data-lang="it" onclick="setLanguage('it')">
+            <span class="lang-option__flag">🇮🇹</span>
+            <span class="lang-option__label">Italiano</span>
+            <span class="lang-option__check">✓</span>
+        </button>
+    </div>
+    <button type="button" class="lang-switcher__btn" id="langToggleBtn" title="{{ 'Changer de langue'|e('html_attr') }}" onclick="toggleLangPanel()">🌐</button>
+</div>

@@ -1,0 +1,354 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}{{ voyage.titreVoyage }} | Administration{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-voyage-show-page {
+            display: grid;
+            gap: 1.4rem;
+        }
+
+        .admin-voyage-show-hero,
+        .admin-voyage-show-panel {
+            background: rgba(255, 253, 249, 0.94);
+            border: 1px solid var(--admin-border);
+            border-radius: 26px;
+            box-shadow: 0 18px 38px rgba(64, 46, 36, 0.06);
+        }
+
+        .admin-voyage-show-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+            gap: 1.25rem;
+            padding: 1.5rem;
+            background:
+                radial-gradient(circle at top left, rgba(221, 191, 140, 0.22), transparent 34%),
+                linear-gradient(135deg, rgba(255, 251, 245, 0.98), rgba(245, 236, 225, 0.92));
+        }
+
+        .admin-voyage-show-header {
+            display: grid;
+            gap: 1rem;
+            align-content: start;
+        }
+
+        .admin-voyage-show-eyebrow {
+            color: var(--admin-primary);
+            font-size: 0.86rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .admin-voyage-show-title {
+            margin: 0;
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2rem, 3vw, 2.85rem);
+            line-height: 1.04;
+            color: var(--admin-text);
+        }
+
+        .admin-voyage-show-subtitle {
+            margin: 0;
+            color: var(--admin-text-muted);
+            font-size: 1rem;
+        }
+
+        .admin-voyage-show-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+        }
+
+        .admin-voyage-show-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.12);
+            color: var(--admin-primary-dark);
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .admin-voyage-show-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .admin-voyage-show-qr {
+            display: grid;
+            gap: 1rem;
+            align-content: start;
+            padding: 1.2rem;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(231, 220, 205, 0.78);
+        }
+
+        .admin-voyage-show-qr__frame {
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid rgba(231, 220, 205, 0.88);
+        }
+
+        .admin-voyage-show-qr__frame img {
+            width: min(220px, 100%);
+            height: auto;
+            display: block;
+        }
+
+        .admin-voyage-show-qr__text {
+            color: var(--admin-text-muted);
+            line-height: 1.55;
+        }
+
+        .admin-voyage-show-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .admin-voyage-show-panel {
+            padding: 1.3rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .admin-voyage-show-panel--wide {
+            grid-column: span 2;
+        }
+
+        .admin-voyage-show-panel__title {
+            margin: 0;
+            font-family: 'Fraunces', serif;
+            font-size: 1.35rem;
+            color: var(--admin-text);
+        }
+
+        .admin-voyage-show-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .admin-voyage-show-stat,
+        .admin-voyage-show-item {
+            padding: 1rem;
+            border-radius: 18px;
+            background: rgba(249, 244, 236, 0.92);
+            border: 1px solid rgba(231, 220, 205, 0.72);
+        }
+
+        .admin-voyage-show-stat span {
+            display: block;
+            color: var(--admin-text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .admin-voyage-show-stat strong {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 1rem;
+            color: var(--admin-text);
+        }
+
+        .admin-voyage-show-list {
+            display: grid;
+            gap: 0.8rem;
+        }
+
+        .admin-voyage-show-item__title {
+            display: block;
+            font-weight: 700;
+            color: var(--admin-text);
+        }
+
+        .admin-voyage-show-item__meta {
+            display: block;
+            margin-top: 0.25rem;
+            color: var(--admin-text-muted);
+            line-height: 1.5;
+        }
+
+        .admin-voyage-show-empty {
+            color: var(--admin-text-muted);
+        }
+
+        @media (max-width: 1080px) {
+            .admin-voyage-show-hero,
+            .admin-voyage-show-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-voyage-show-panel--wide {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .admin-voyage-show-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-voyage-show-actions .admin-action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {% set publicUrl = absolute_url(path('app_voyages_show', {'id_voyage': voyage.idVoyage})) %}
+
+    <div class="admin-voyage-show-page">
+        <section class="admin-voyage-show-hero">
+            <div class="admin-voyage-show-header">
+                <span class="admin-voyage-show-eyebrow">Consultation</span>
+                <h1 class="admin-voyage-show-title">{{ voyage.titreVoyage }}</h1>
+                <p class="admin-voyage-show-subtitle">
+                    {% if voyage.destination %}
+                        {{ voyage.destination.nomDestination }}{% if voyage.destination.paysDestination %}, {{ voyage.destination.paysDestination }}{% endif %}
+                    {% else %}
+                        Destination non definie
+                    {% endif %}
+                </p>
+
+                <div class="admin-voyage-show-chips">
+                    <span class="admin-voyage-show-chip">Statut : {{ voyage.statut ?: 'Sans statut' }}</span>
+                    <span class="admin-voyage-show-chip">{{ voyage.activites|length }} activite{% if voyage.activites|length > 1 %}s{% endif %}</span>
+                    <span class="admin-voyage-show-chip">{{ participants|length }} participant{% if participants|length > 1 %}s{% endif %}</span>
+                </div>
+
+                <div class="admin-voyage-show-actions">
+                    <a href="{{ path('app_admin_voyages') }}" class="admin-action-btn admin-action-btn--ghost">Retour a la liste</a>
+                    <a href="{{ path('app_admin_voyages_update', {'id_voyage': voyage.idVoyage}) }}" class="admin-action-btn admin-action-btn--secondary">Modifier</a>
+                    <a href="{{ publicUrl }}" class="admin-action-btn admin-action-btn--primary" target="_blank" rel="noreferrer">Voir la fiche publique</a>
+                </div>
+            </div>
+
+            <aside class="admin-voyage-show-qr">
+                <h2 class="admin-voyage-show-panel__title">QR public</h2>
+                <div class="admin-voyage-show-qr__frame">
+                    <img src="{{ qr_data_uri }}" alt="Code QR du voyage {{ voyage.titreVoyage }}">
+                </div>
+                <p class="admin-voyage-show-qr__text">
+                    Ce QR code est genere localement et contient les informations principales du voyage, sans dependre d'un service externe.
+                </p>
+            </aside>
+        </section>
+
+        <div class="admin-voyage-show-grid">
+            <section class="admin-voyage-show-panel">
+                <h2 class="admin-voyage-show-panel__title">Informations clefs</h2>
+                <div class="admin-voyage-show-stats">
+                    <div class="admin-voyage-show-stat">
+                        <span>Date de debut</span>
+                        <strong>{{ voyage.dateDebut ? voyage.dateDebut|date('d/m/Y') : '-' }}</strong>
+                    </div>
+                    <div class="admin-voyage-show-stat">
+                        <span>Date de fin</span>
+                        <strong>{{ voyage.dateFin ? voyage.dateFin|date('d/m/Y') : '-' }}</strong>
+                    </div>
+                    <div class="admin-voyage-show-stat">
+                        <span>Budget cumule</span>
+                        <strong>{{ budget_total_label }}</strong>
+                    </div>
+                    <div class="admin-voyage-show-stat">
+                        <span>Paiements lies</span>
+                        <strong>{{ voyage.paiements|length }}</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-voyage-show-panel">
+                <h2 class="admin-voyage-show-panel__title">Destination</h2>
+                {% if voyage.destination %}
+                    <div class="admin-voyage-show-stats">
+                        <div class="admin-voyage-show-stat">
+                            <span>Pays</span>
+                            <strong>{{ voyage.destination.paysDestination ?: '-' }}</strong>
+                        </div>
+                        <div class="admin-voyage-show-stat">
+                            <span>Region</span>
+                            <strong>{{ voyage.destination.regionDestination ?: '-' }}</strong>
+                        </div>
+                    </div>
+                    <article class="admin-voyage-show-item">
+                        <span class="admin-voyage-show-item__title">Description</span>
+                        <span class="admin-voyage-show-item__meta">{{ voyage.destination.descriptionDestination ?: 'Aucune description disponible pour cette destination.' }}</span>
+                    </article>
+                {% else %}
+                    <p class="admin-voyage-show-empty">Aucune destination n est associee a ce voyage.</p>
+                {% endif %}
+            </section>
+
+            <section class="admin-voyage-show-panel admin-voyage-show-panel--wide">
+                <h2 class="admin-voyage-show-panel__title">Activites</h2>
+                {% if voyage.activites is not empty %}
+                    <div class="admin-voyage-show-list">
+                        {% for activite in voyage.activites %}
+                            <article class="admin-voyage-show-item">
+                                <span class="admin-voyage-show-item__title">{{ activite.nom }}</span>
+                                <span class="admin-voyage-show-item__meta">
+                                    {% if activite.lieu %}{{ activite.lieu }}{% else %}Lieu non precise{% endif %}
+                                    • Difficulte : {{ activite.niveaudifficulte ?: '-' }}
+                                    • Budget : {{ activite.budget ?: 0 }}
+                                </span>
+                                <span class="admin-voyage-show-item__meta">{{ activite.description }}</span>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="admin-voyage-show-empty">Aucune activite n est rattachee a ce voyage.</p>
+                {% endif %}
+            </section>
+
+            <section class="admin-voyage-show-panel">
+                <h2 class="admin-voyage-show-panel__title">Participants</h2>
+                {% if participants is not empty %}
+                    <div class="admin-voyage-show-list">
+                        {% for participant in participants %}
+                            <article class="admin-voyage-show-item">
+                                <span class="admin-voyage-show-item__title">{{ participant.user.nom ?: '' }} {{ participant.user.prenom ?: '' }}</span>
+                                <span class="admin-voyage-show-item__meta">{{ participant.user.email ?: 'Email non renseigne' }}</span>
+                                <span class="admin-voyage-show-item__meta">Role : {{ participant.roleParticipation }}</span>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="admin-voyage-show-empty">Aucun participant n est associe a ce voyage.</p>
+                {% endif %}
+            </section>
+
+            <section class="admin-voyage-show-panel">
+                <h2 class="admin-voyage-show-panel__title">Budgets</h2>
+                {% if voyage.budgets is not empty %}
+                    <div class="admin-voyage-show-list">
+                        {% for budget in voyage.budgets %}
+                            <article class="admin-voyage-show-item">
+                                <span class="admin-voyage-show-item__title">{{ budget.libelleBudget ?: 'Budget sans libelle' }}</span>
+                                <span class="admin-voyage-show-item__meta">
+                                    {{ budget.montantTotal|number_format(2, ',', ' ') }}{% if budget.deviseBudget %} {{ budget.deviseBudget }}{% endif %}
+                                    • {{ budget.statutBudget ?: 'Statut non precise' }}
+                                </span>
+                                <span class="admin-voyage-show-item__meta">{{ budget.descriptionBudget ?: 'Aucune description budgetaire.' }}</span>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="admin-voyage-show-empty">Aucun budget n est encore defini pour ce voyage.</p>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+{% endblock %}

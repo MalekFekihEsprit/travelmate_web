@@ -1158,6 +1158,8 @@
     </div>
 </div>
 
-{% block javascripts %}{% endblock %}
+{% block javascripts %}
+    {{ importmap('app') }}
+{% endblock %}
 </body>
 </html>

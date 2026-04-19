@@ -299,6 +299,8 @@
 
 {% block body %}
 
+{% include '_travelmate_mymemory_translate.html.twig' %}
+
 {# ── Image mapping catégorie ─────────────────────────────────────────── #}
 {% set imageMap = {
     'randon':   'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&q=80',
@@ -359,7 +361,7 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    Retour aux catégories
+    <span data-translate="true">Retour aux catégories</span>
 </a>
 
 {# ── Hero ────────────────────────────────────────────────────────────── #}
@@ -367,51 +369,51 @@
     <img src="{{ imgUrl }}" alt="{{ categorie.nom }}" class="cshow-hero__img">
     <div class="cshow-hero__overlay"></div>
     <div class="cshow-hero__content">
-        <span class="cshow-hero__type">{{ categorie.type }}</span>
-        <h1 class="cshow-hero__title">{{ categorie.nom }}</h1>
+        <span class="cshow-hero__type" data-translate="true" data-original="{{ categorie.type|e('html_attr') }}">{{ categorie.type }}</span>
+        <h1 class="cshow-hero__title" data-translate="true" data-original="{{ categorie.nom|e('html_attr') }}">{{ categorie.nom }}</h1>
     </div>
 </div>
 
 {# ── Layout : description + sidebar ──────────────────────────────────── #}
 <div class="cshow-layout">
     <div class="cshow-card">
-        <p class="cshow-section-label">À propos de cette catégorie</p>
-        <p class="cshow-desc">{{ categorie.description }}</p>
+        <p class="cshow-section-label" data-translate="true">À propos de cette catégorie</p>
+        <p class="cshow-desc" data-translate="true" data-original="{{ categorie.description|e('html_attr') }}">{{ categorie.description }}</p>
     </div>
 
     <aside class="cshow-sidebar">
         <div class="cshow-info-card cshow-info-card--primary">
-            <p class="cshow-info-card__label">🗓 Saison idéale</p>
-            <p class="cshow-info-card__value">{{ categorie.saison }}</p>
+            <p class="cshow-info-card__label" data-translate="true">🗓 Saison idéale</p>
+            <p class="cshow-info-card__value" data-translate="true" data-original="{{ categorie.saison|e('html_attr') }}">{{ categorie.saison }}</p>
         </div>
         <div class="cshow-info-card cshow-info-card--secondary">
-            <p class="cshow-info-card__label">Niveau d'intensité</p>
-            <p class="cshow-info-card__value">{{ categorie.niveauintensite }}</p>
+            <p class="cshow-info-card__label" data-translate="true">Niveau d'intensité</p>
+            <p class="cshow-info-card__value" data-translate="true" data-original="{{ categorie.niveauintensite|e('html_attr') }}">{{ categorie.niveauintensite }}</p>
         </div>
         <div class="cshow-info-card">
-            <p class="cshow-info-card__label">Public cible</p>
-            <p class="cshow-info-card__value">{{ categorie.publiccible }}</p>
+            <p class="cshow-info-card__label" data-translate="true">Public cible</p>
+            <p class="cshow-info-card__value" data-translate="true" data-original="{{ categorie.publiccible|e('html_attr') }}">{{ categorie.publiccible }}</p>
         </div>
         <div class="cshow-info-card">
-            <p class="cshow-info-card__label">🏷 Type</p>
-            <p class="cshow-info-card__value">{{ categorie.type }}</p>
+            <p class="cshow-info-card__label" data-translate="true">🏷 Type</p>
+            <p class="cshow-info-card__value" data-translate="true" data-original="{{ categorie.type|e('html_attr') }}">{{ categorie.type }}</p>
         </div>
     </aside>
 </div>
 
 {# ── Section activités associées ─────────────────────────────────────── #}
 <div class="act-section-header">
-    <h2 class="act-section-title">Activités dans cette catégorie</h2>
+    <h2 class="act-section-title" data-translate="true">Activités dans cette catégorie</h2>
     {% if categorie.activites is defined %}
-        <span class="act-section-count">{{ categorie.activites|length }} activité{{ categorie.activites|length > 1 ? 's' : '' }}</span>
+        <span class="act-section-count" data-translate="true" data-original="{{ (categorie.activites|length ~ ' activité' ~ (categorie.activites|length > 1 ? 's' : ''))|e('html_attr') }}">{{ categorie.activites|length }} activité{{ categorie.activites|length > 1 ? 's' : '' }}</span>
     {% endif %}
 </div>
 
 {% if categorie.activites is not defined or categorie.activites|length == 0 %}
     <div class="act-empty">
         <div class="act-empty__icon">🏕️</div>
-        <p class="act-empty__title">Aucune activité pour le moment</p>
-        <p>Cette catégorie ne contient pas encore d'activités. Revenez bientôt !</p>
+        <p class="act-empty__title" data-translate="true">Aucune activité pour le moment</p>
+        <p data-translate="true">Cette catégorie ne contient pas encore d'activités. Revenez bientôt !</p>
     </div>
 {% else %}
     <div class="act-grid">
@@ -419,7 +421,7 @@
 
             {# Résolution de l'image : d'abord imagePath, sinon fallback par nom #}
             {% if activite.imagePath is defined and activite.imagePath %}
-                {% set actImgUrl = asset('uploads/activites/' ~ activite.imagePath) %}
+                {% set actImgUrl = asset(activite.imagePath) %}
             {% else %}
                 {% set actNomLower = activite.nom|lower %}
                 {% set actImgUrl = actImageMap['default'] %}
@@ -443,33 +445,33 @@
                         loading="lazy"
                     >
                     <div class="act-card__overlay"></div>
-                    <span class="act-card__badge {{ badgeClass }}">{{ difficulte }}</span>
+                    <span class="act-card__badge {{ badgeClass }}" data-translate="true" data-original="{{ difficulte|e('html_attr') }}">{{ difficulte }}</span>
                     {% if activite.budget is defined and activite.budget %}
                         <span class="act-card__price">{{ activite.budget }} DT</span>
                     {% endif %}
                 </div>
 
                 <div class="act-card__body">
-                    <h3 class="act-card__name">{{ activite.nom }}</h3>
+                    <h3 class="act-card__name" data-translate="true" data-original="{{ activite.nom|e('html_attr') }}">{{ activite.nom }}</h3>
 
                     {% if activite.description is defined and activite.description %}
-                        <p class="act-card__desc">{{ activite.description }}</p>
+                        <p class="act-card__desc" data-translate="true" data-original="{{ activite.description|e('html_attr') }}">{{ activite.description }}</p>
                     {% endif %}
 
                     <div class="act-card__meta">
                         {% if activite.lieu is defined and activite.lieu %}
-                            <span class="act-card__tag"> {{ activite.lieu }}</span>
+                            <span class="act-card__tag" data-translate="true" data-original="{{ activite.lieu|e('html_attr') }}"> {{ activite.lieu }}</span>
                         {% endif %}
                         {% if activite.duree is defined and activite.duree %}
-                            <span class="act-card__tag">⏱ {{ activite.duree }}h</span>
+                            <span class="act-card__tag" data-translate="true" data-original="{{ ('⏱ ' ~ activite.duree ~ 'h')|e('html_attr') }}">⏱ {{ activite.duree }}h</span>
                         {% endif %}
                         {% if activite.agemin is defined and activite.agemin %}
-                            <span class="act-card__tag">{{ activite.agemin }}+ ans</span>
+                            <span class="act-card__tag" data-translate="true" data-original="{{ (activite.agemin ~ '+ ans')|e('html_attr') }}">{{ activite.agemin }}+ ans</span>
                         {% endif %}
                     </div>
 
                     <span class="act-card__cta">
-                        Voir les détails
+                        <span data-translate="true">Voir les détails</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -480,4 +482,23 @@
     </div>
 {% endif %}
 
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
+<script>
+(function () {
+    function bootTranslate() {
+        if (window.TravelMateTranslate) {
+            TravelMateTranslate.init({ sourceLang: 'fr' });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootTranslate);
+    } else {
+        bootTranslate();
+    }
+})();
+</script>
 {% endblock %}

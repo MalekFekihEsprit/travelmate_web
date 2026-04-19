@@ -1,0 +1,56 @@
+{# lat_field, lng_field : FormView — lieu_input_id : id HTML du champ lieu déjà rendu #}
+{% set dlat = default_lat is defined and default_lat is not null ? default_lat : '' %}
+{% set dlng = default_lng is defined and default_lng is not null ? default_lng : '' %}
+<div
+    class="admin-location-map-picker js-admin-map-root"
+    data-lieu-input-id="{{ lieu_input_id }}"
+    data-default-lat="{{ dlat }}"
+    data-default-lng="{{ dlng }}"
+    data-nominatim-email="{{ nominatim_email|default('')|e('html_attr') }}"
+>
+    <p class="field-hint" style="margin-bottom:0.75rem;">
+        Position sur la carte (optionnel) : cliquez pour placer le marqueur. Si le champ « Lieu » est vide, il sera complété automatiquement (ville / lieu proche).
+    </p>
+    <div class="form-grid-2">
+        <div class="form-group">
+            <label>{{ form_label(lat_field) }}</label>
+            {{ form_widget(lat_field, {'attr': {
+                'class': 'form-control js-admin-map-lat' ~ (lat_field.vars.errors|length > 0 ? ' is-invalid' : ''),
+                'step': 'any'
+            }}) }}
+            {% if lat_field.vars.help %}
+                <p class="field-hint">{{ lat_field.vars.help }}</p>
+            {% endif %}
+            {% if lat_field.vars.errors|length > 0 %}
+                <div class="field-error">
+                    <span class="err-icon">✖</span>
+                    <ul>{% for error in lat_field.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                </div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>{{ form_label(lng_field) }}</label>
+            {{ form_widget(lng_field, {'attr': {
+                'class': 'form-control js-admin-map-lng' ~ (lng_field.vars.errors|length > 0 ? ' is-invalid' : ''),
+                'step': 'any'
+            }}) }}
+            {% if lng_field.vars.errors|length > 0 %}
+                <div class="field-error">
+                    <span class="err-icon">✖</span>
+                    <ul>{% for error in lng_field.vars.errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.5rem;">
+        <button type="button" class="btn btn--ghost js-admin-map-toggle" aria-expanded="false">Afficher la carte</button>
+        <button type="button" class="btn btn--ghost js-admin-map-clear-coords">Effacer les coordonnées</button>
+    </div>
+    <div class="js-admin-map-wrap" hidden style="margin-top:0.85rem;">
+        <div class="js-admin-map-canvas admin-map-canvas" role="application" aria-label="Carte — choisir un point"></div>
+    </div>
+</div>
+<style>
+    .admin-map-canvas { height: 280px; border-radius: var(--radius-md); border: 1px solid var(--admin-border); z-index: 1; }
+    .admin-location-map-picker .leaflet-container { font-family: inherit; }
+</style>

@@ -1,0 +1,393 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ voyage.titreVoyage }} | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .voyage-show-page {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .voyage-show-hero,
+        .voyage-show-card,
+        .voyage-show-panel {
+            background: rgba(255, 253, 249, 0.95);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 40px rgba(71, 48, 35, 0.06);
+        }
+
+        .voyage-show-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+            gap: 1.25rem;
+            padding: 1.5rem;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(221, 191, 140, 0.24), transparent 32%),
+                linear-gradient(135deg, rgba(255, 253, 249, 0.98), rgba(243, 234, 223, 0.92));
+        }
+
+        .voyage-show-card {
+            overflow: hidden;
+        }
+
+        .voyage-show-card__media {
+            min-height: 320px;
+            background: linear-gradient(145deg, rgba(196, 111, 75, 0.18), rgba(47, 127, 121, 0.18));
+        }
+
+        .voyage-show-card__media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .voyage-show-card__body {
+            display: grid;
+            gap: 1rem;
+            padding: 1.5rem;
+        }
+
+        .voyage-show-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: var(--color-primary);
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .voyage-show-title {
+            margin: 0;
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2rem, 3vw, 3rem);
+            line-height: 1.05;
+        }
+
+        .voyage-show-subtitle {
+            margin: 0;
+            color: var(--color-text-muted);
+            font-size: 1rem;
+        }
+
+        .voyage-show-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+        }
+
+        .voyage-show-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.45rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.1);
+            color: var(--color-primary-dark);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .voyage-show-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .voyage-show-qr {
+            display: grid;
+            gap: 1rem;
+            align-content: start;
+            padding: 1.4rem;
+            border-radius: calc(var(--radius-xl) - 4px);
+            background: rgba(255, 255, 255, 0.68);
+            border: 1px solid rgba(231, 220, 205, 0.85);
+        }
+
+        .voyage-show-qr__frame {
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            background: #fff;
+            border: 1px solid rgba(231, 220, 205, 0.85);
+        }
+
+        .voyage-show-qr__frame img {
+            width: min(220px, 100%);
+            height: auto;
+            display: block;
+        }
+
+        .voyage-show-qr__text {
+            color: var(--color-text-muted);
+            line-height: 1.55;
+        }
+
+        .voyage-show-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .voyage-show-panel {
+            padding: 1.3rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .voyage-show-panel--wide {
+            grid-column: span 2;
+        }
+
+        .voyage-show-panel__title {
+            margin: 0;
+            font-family: 'Fraunces', serif;
+            font-size: 1.35rem;
+        }
+
+        .voyage-show-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .voyage-show-stat {
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            background: var(--color-surface-soft);
+        }
+
+        .voyage-show-stat span {
+            display: block;
+            color: var(--color-text-muted);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .voyage-show-stat strong {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 1.02rem;
+        }
+
+        .voyage-show-list {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .voyage-show-item {
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            background: var(--color-surface-soft);
+            border: 1px solid rgba(231, 220, 205, 0.7);
+        }
+
+        .voyage-show-item__title {
+            display: block;
+            font-weight: 700;
+        }
+
+        .voyage-show-item__meta {
+            display: block;
+            margin-top: 0.25rem;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+        }
+
+        .voyage-show-empty {
+            color: var(--color-text-muted);
+        }
+
+        @media (max-width: 1080px) {
+            .voyage-show-hero,
+            .voyage-show-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .voyage-show-panel--wide {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .voyage-show-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .voyage-show-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {% set publicUrl = absolute_url(path('app_voyages_show', {'id_voyage': voyage.idVoyage})) %}
+
+    <section class="voyage-show-page">
+        <div class="voyage-show-hero">
+            <article class="voyage-show-card">
+                <div class="voyage-show-card__media">
+                    {% if voyage_image %}
+                        <img src="{{ asset(voyage_image) }}" alt="Illustration du voyage {{ voyage.titreVoyage }}">
+                    {% endif %}
+                </div>
+
+                <div class="voyage-show-card__body">
+                    <span class="voyage-show-eyebrow">Fiche voyage</span>
+                    <h1 class="voyage-show-title">{{ voyage.titreVoyage }}</h1>
+                    <p class="voyage-show-subtitle">
+                        {% if voyage.destination %}
+                            {{ voyage.destination.nomDestination }}{% if voyage.destination.paysDestination %}, {{ voyage.destination.paysDestination }}{% endif %}
+                        {% else %}
+                            Destination non definie
+                        {% endif %}
+                    </p>
+
+                    <div class="voyage-show-chips">
+                        <span class="voyage-show-chip">{{ voyage.statut ?: 'Sans statut' }}</span>
+                        <span class="voyage-show-chip">{{ voyage.activites|length }} activite{% if voyage.activites|length > 1 %}s{% endif %}</span>
+                        <span class="voyage-show-chip">{{ participants|length }} participant{% if participants|length > 1 %}s{% endif %}</span>
+                    </div>
+
+                    <div class="voyage-show-actions">
+                        <a href="{{ path('app_voyages') }}" class="btn btn--ghost">Retour a la liste</a>
+                        <a href="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="btn btn--secondary">Participants</a>
+                        <a href="{{ path('app_voyages_edit', {'id_voyage': voyage.idVoyage}) }}" class="btn btn--primary">Modifier</a>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="voyage-show-qr">
+                <h2 class="voyage-show-panel__title">Code QR</h2>
+                <div class="voyage-show-qr__frame">
+                    <img src="{{ qr_data_uri }}" alt="Code QR du voyage {{ voyage.titreVoyage }}">
+                </div>
+                <p class="voyage-show-qr__text">
+                    Scannez ce code pour lire les informations du voyage, meme sans connexion internet ni acces au meme reseau.
+                </p>
+                <a href="{{ publicUrl }}" class="btn btn--ghost">Ouvrir le lien public</a>
+            </aside>
+        </div>
+
+        <div class="voyage-show-grid">
+            <section class="voyage-show-panel">
+                <h2 class="voyage-show-panel__title">Informations clefs</h2>
+                <div class="voyage-show-stats">
+                    <div class="voyage-show-stat">
+                        <span>Date de debut</span>
+                        <strong>{{ voyage.dateDebut ? voyage.dateDebut|date('d/m/Y') : '-' }}</strong>
+                    </div>
+                    <div class="voyage-show-stat">
+                        <span>Date de fin</span>
+                        <strong>{{ voyage.dateFin ? voyage.dateFin|date('d/m/Y') : '-' }}</strong>
+                    </div>
+                    <div class="voyage-show-stat">
+                        <span>Budget cumule</span>
+                        <strong>{{ budget_total_label }}</strong>
+                    </div>
+                    <div class="voyage-show-stat">
+                        <span>Destination</span>
+                        <strong>
+                            {% if voyage.destination %}
+                                {{ voyage.destination.nomDestination }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="voyage-show-panel">
+                <h2 class="voyage-show-panel__title">Destination</h2>
+                {% if voyage.destination %}
+                    <div class="voyage-show-stats">
+                        <div class="voyage-show-stat">
+                            <span>Pays</span>
+                            <strong>{{ voyage.destination.paysDestination ?: '-' }}</strong>
+                        </div>
+                        <div class="voyage-show-stat">
+                            <span>Region</span>
+                            <strong>{{ voyage.destination.regionDestination ?: '-' }}</strong>
+                        </div>
+                    </div>
+                    <div class="voyage-show-item">
+                        <span class="voyage-show-item__title">Description</span>
+                        <span class="voyage-show-item__meta">{{ voyage.destination.descriptionDestination ?: 'Aucune description disponible pour cette destination.' }}</span>
+                    </div>
+                {% else %}
+                    <p class="voyage-show-empty">Aucune destination n est associee a ce voyage.</p>
+                {% endif %}
+            </section>
+
+            <section class="voyage-show-panel voyage-show-panel--wide">
+                <h2 class="voyage-show-panel__title">Activites liees</h2>
+                {% if voyage.activites is not empty %}
+                    <div class="voyage-show-list">
+                        {% for activite in voyage.activites %}
+                            <article class="voyage-show-item">
+                                <span class="voyage-show-item__title">{{ activite.nom }}</span>
+                                <span class="voyage-show-item__meta">
+                                    {% if activite.lieu %}{{ activite.lieu }}{% else %}Lieu non precise{% endif %}
+                                    • Difficulté : {{ activite.niveaudifficulte ?: '-' }}
+                                    • Budget : {{ activite.budget ?: 0 }}
+                                </span>
+                                <span class="voyage-show-item__meta">{{ activite.description }}</span>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="voyage-show-empty">Aucune activite n est encore rattachee a ce voyage.</p>
+                {% endif %}
+            </section>
+
+            <section class="voyage-show-panel">
+                <h2 class="voyage-show-panel__title">Participants</h2>
+                {% if participants is not empty %}
+                    <div class="voyage-show-list">
+                        {% for participant in participants %}
+                            <article class="voyage-show-item">
+                                <span class="voyage-show-item__title">
+                                    {{ participant.user.nom ?: '' }} {{ participant.user.prenom ?: '' }}
+                                </span>
+                                <span class="voyage-show-item__meta">{{ participant.user.email ?: 'Email non renseigne' }}</span>
+                                <span class="voyage-show-item__meta">Role : {{ participant.roleParticipation }}</span>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="voyage-show-empty">Aucun participant n est encore associe a ce voyage.</p>
+                {% endif %}
+            </section>
+
+            <section class="voyage-show-panel">
+                <h2 class="voyage-show-panel__title">Budgets</h2>
+                {% if voyage.budgets is not empty %}
+                    <div class="voyage-show-list">
+                        {% for budget in voyage.budgets %}
+                            <article class="voyage-show-item">
+                                <span class="voyage-show-item__title">{{ budget.libelleBudget ?: 'Budget sans libelle' }}</span>
+                                <span class="voyage-show-item__meta">
+                                    {{ budget.montantTotal|number_format(2, ',', ' ') }}{% if budget.deviseBudget %} {{ budget.deviseBudget }}{% endif %}
+                                    • {{ budget.statutBudget ?: 'Statut non precise' }}
+                                </span>
+                                <span class="voyage-show-item__meta">{{ budget.descriptionBudget ?: 'Aucune description budgetaire.' }}</span>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="voyage-show-empty">Aucun budget n est encore defini pour ce voyage.</p>
+                {% endif %}
+            </section>
+        </div>
+    </section>
+{% endblock %}

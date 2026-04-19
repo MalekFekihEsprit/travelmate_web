@@ -475,6 +475,10 @@
                     <p class="participants-card__text">Renseignez l'email d'un utilisateur deja present dans votre base pour l'associer a ce voyage.</p>
                 </div>
 
+                <div class="participants-note">
+                    Un email de confirmation est envoye automatiquement apres l'ajout ou la mise a jour du role depuis ce formulaire.
+                </div>
+
                 <form method="post" action="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="participants-form">
                     <input type="hidden" name="_token" value="{{ csrf_token('add_participant_' ~ voyage.idVoyage) }}">
 
@@ -529,6 +533,9 @@
                                 <form id="participant-role-form-{{ participation.user.id }}" method="post" action="{{ path('app_voyages_participants_update', {'id_voyage': voyage.idVoyage, 'userId': participation.user.id}) }}" class="participants-role-form">
                                     <input type="hidden" name="_token" value="{{ csrf_token('update_participant_' ~ voyage.idVoyage ~ '_' ~ participation.user.id) }}">
                                     <select name="role_participation" class="participants-select" aria-label="Role de {{ participation.user.prenom }} {{ participation.user.nom }}">
+                                        {% if participation.roleParticipation not in role_options %}
+                                            <option value="{{ participation.roleParticipation }}" selected>{{ participation.roleParticipation }} (actuel)</option>
+                                        {% endif %}
                                         {% for role in role_options %}
                                             <option value="{{ role }}" {{ role == participation.roleParticipation ? 'selected' : '' }}>{{ role }}</option>
                                         {% endfor %}

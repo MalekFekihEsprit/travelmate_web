@@ -70,7 +70,8 @@ class ActiviteController extends AbstractController
                     $this->getParameter('activites_images_directory'),
                     $newFilename
                 );
-                $activite->setImagePath($newFilename);
+                // ✅ CORRECTION : on stocke le chemin complet relatif à /public
+                $activite->setImagePath('uploads/activites/' . $newFilename);
             }
 
             $entityManager->persist($activite);
@@ -105,7 +106,8 @@ class ActiviteController extends AbstractController
                     $this->getParameter('activites_images_directory'),
                     $newFilename
                 );
-                $activite->setImagePath($newFilename);
+                // ✅ CORRECTION : on stocke le chemin complet relatif à /public
+                $activite->setImagePath('uploads/activites/' . $newFilename);
             }
 
             $entityManager->flush();

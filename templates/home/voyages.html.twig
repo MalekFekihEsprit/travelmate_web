@@ -125,6 +125,60 @@
             gap: 1.35rem;
         }
 
+        .voyages-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.4rem;
+        }
+
+        .voyages-pagination__info {
+            color: var(--color-text-muted);
+            font-size: 0.92rem;
+        }
+
+        .voyages-pagination__pages {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .voyages-pagination__link,
+        .voyages-pagination__current {
+            min-width: 44px;
+            height: 44px;
+            padding: 0 0.95rem;
+            border-radius: 14px;
+            border: 1px solid var(--color-border);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .voyages-pagination__link {
+            background: rgba(255, 253, 249, 0.94);
+            color: var(--color-text);
+            text-decoration: none;
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+        }
+
+        .voyages-pagination__link:hover {
+            transform: translateY(-1px);
+            background: rgba(196, 111, 75, 0.08);
+            border-color: rgba(168, 90, 57, 0.22);
+        }
+
+        .voyages-pagination__current {
+            background: rgba(47, 127, 121, 0.12);
+            color: var(--color-secondary);
+            border-color: rgba(47, 127, 121, 0.22);
+        }
+
         .voyages-toolbar {
             display: grid;
             gap: 1rem;
@@ -386,6 +440,17 @@
             border-color: rgba(214, 169, 91, 0.34);
         }
 
+        .voyage-action--view {
+            background: rgba(109, 138, 150, 0.12);
+            color: #38545f;
+            border-color: rgba(109, 138, 150, 0.24);
+        }
+
+        .voyage-action--view:hover {
+            background: rgba(109, 138, 150, 0.2);
+            border-color: rgba(109, 138, 150, 0.34);
+        }
+
         .voyage-action--delete {
             background: rgba(196, 111, 75, 0.08);
             color: var(--color-primary-dark);
@@ -548,6 +613,15 @@
 
 {% block body %}
     <section class="voyages-page">
+        {% set pagination_query_base = {
+            search: filters.search,
+            statut: filters.statut,
+            destination: filters.destination,
+            sort: filters.sort
+        } %}
+        {% set page_start = results_count > 0 ? ((current_page - 1) * per_page) + 1 : 0 %}
+        {% set page_end = results_count > 0 ? page_start + page_items_count - 1 : 0 %}
+
         <div class="voyages-hero">
             <div class="voyages-hero__content">
                 <span class="voyages-hero__eyebrow">VOYAGES</span>
@@ -558,6 +632,7 @@
 
                 <div class="voyages-hero__actions">
                     <a href="{{ path('app_voyages_new') }}" class="btn btn--primary">Ajouter un voyage</a>
+                    <button id="recommend-btn-front" class="btn btn--ghost" type="button">Trouver un voyage (AI)</button>
                 </div>
 
                 <div class="voyages-hero__stats">
@@ -574,17 +649,48 @@
                 {% endif %}
             </div>
         </div>
-
+        
+        {# Include front recommendation quiz modal (client opens modal -> server calls recommender) #}
+        {% include 'front/_recommendation_quiz.html.twig' %}
         <div class="voyages-toolbar">
-            <form method="get" action="{{ path('app_voyages') }}" class="voyages-filter-form">
+            <div class="voyages-toolbar__top">
+                <div>
+                    <div class="voyages-toolbar__title">Catalogue des voyages</div>
+                    <div class="voyages-toolbar__meta">
+                        {% if results_count > 0 %}
+                            Affichage de {{ page_start }} a {{ page_end }} sur {{ results_count }} voyage{% if results_count > 1 %}s{% endif %}
+                        {% else %}
+                            Aucun voyage a afficher pour le moment
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <form
+                method="get"
+                action="{{ path('app_voyages') }}"
+                class="voyages-filter-form"
+                data-controller="voyage-filters"
+                data-voyage-filters-delay-value="400"
+                data-action="submit->voyage-filters#clearPendingSubmit"
+            >
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-search">Recherche</label>
-                    <input id="voyage-search" type="search" name="search" value="{{ filters.search }}" class="voyages-filter-input" placeholder="Titre, destination ou pays">
+                    <input
+                        id="voyage-search"
+                        type="search"
+                        name="search"
+                        value="{{ filters.search }}"
+                        class="voyages-filter-input"
+                        placeholder="Titre, destination ou pays"
+                        data-voyage-filters-target="search"
+                        data-action="input->voyage-filters#queueSubmit search->voyage-filters#submitNow"
+                    >
                 </div>
 
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-statut">Statut</label>
-                    <select id="voyage-statut" name="statut" class="voyages-filter-input">
+                    <select id="voyage-statut" name="statut" class="voyages-filter-input" data-action="change->voyage-filters#submitNow">
                         <option value="">Tous les statuts</option>
                         {% for status in status_options %}
                             <option value="{{ status }}" {{ filters.statut == status ? 'selected' : '' }}>{{ status }}</option>
@@ -594,7 +700,7 @@
 
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-destination">Destination</label>
-                    <select id="voyage-destination" name="destination" class="voyages-filter-input">
+                    <select id="voyage-destination" name="destination" class="voyages-filter-input" data-action="change->voyage-filters#submitNow">
                         <option value="">Toutes les destinations</option>
                         {% for destination in destinations %}
                             <option value="{{ destination.idDestination }}" {{ filters.destination == destination.idDestination ? 'selected' : '' }}>
@@ -606,7 +712,7 @@
 
                 <div class="voyages-filter-field">
                     <label class="voyages-filter-label" for="voyage-sort">Tri</label>
-                    <select id="voyage-sort" name="sort" class="voyages-filter-input">
+                    <select id="voyage-sort" name="sort" class="voyages-filter-input" data-action="change->voyage-filters#submitNow">
                         {% for sortKey, sortLabel in sort_options %}
                             <option value="{{ sortKey }}" {{ filters.sort == sortKey ? 'selected' : '' }}>{{ sortLabel }}</option>
                         {% endfor %}
@@ -614,7 +720,6 @@
                 </div>
 
                 <div class="voyages-filter-actions">
-                    <button type="submit" class="btn btn--primary">Appliquer</button>
                     {% if has_active_filters %}
                         <a href="{{ path('app_voyages') }}" class="btn btn--ghost">Reinitialiser</a>
                     {% endif %}
@@ -639,6 +744,8 @@
                 </div>
             {% endif %}
         </div>
+
+        
 
         {% set successFlashes = app.flashes('success') %}
         {% set warningFlashes = app.flashes('warning') %}
@@ -715,6 +822,23 @@
                             </div>
 
                             <div class="voyage-card__actions">
+                                <a href="{{ path('app_voyages_show', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--view" aria-label="Consulter les informations du voyage {{ voyage.titreVoyage }}" title="Consulter">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M2.5 12C4.6 7.8 8.1 5.5 12 5.5C15.9 5.5 19.4 7.8 21.5 12C19.4 16.2 15.9 18.5 12 18.5C8.1 18.5 4.6 16.2 2.5 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                        <path d="M12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z" stroke="currentColor" stroke-width="1.8"/>
+                                    </svg>
+                                    <span class="sr-only">Consulter</span>
+                                </a>
+
+                                <button type="button" class="voyage-action voyage-action--info" data-destination-name="{% if voyage.destination %}{{ voyage.destination.nomDestination }}{% endif %}" data-destination-country="{% if voyage.destination and voyage.destination.paysDestination %}{{ voyage.destination.paysDestination }}{% endif %}" aria-label="Infos sur la destination {{ voyage.titreVoyage }}" title="Infos">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M12 8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M11 11h2v5h-2z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span class="sr-only">Infos destination</span>
+                                </button>
+
                                 <a href="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--participants" aria-label="Gerer les participants du voyage {{ voyage.titreVoyage }}" title="Participants">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                         <path d="M16 21V19.5C16 18.1193 14.8807 17 13.5 17H7.5C6.11929 17 5 18.1193 5 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -751,6 +875,32 @@
                     </article>
                 {% endfor %}
             </div>
+
+            {% if total_pages > 1 %}
+                <nav class="voyages-pagination" aria-label="Pagination des voyages">
+                    <div class="voyages-pagination__info">Page {{ current_page }} sur {{ total_pages }}</div>
+
+                    <div class="voyages-pagination__pages">
+                        {% if current_page > 1 %}
+                            <a href="{{ path('app_voyages', pagination_query_base|merge({page: current_page - 1})) }}" class="voyages-pagination__link" aria-label="Page precedente">Prec.</a>
+                        {% endif %}
+
+                        {% for page_number in 1..total_pages %}
+                            {% if page_number == current_page %}
+                                <span class="voyages-pagination__current" aria-current="page">{{ page_number }}</span>
+                            {% elseif page_number == 1 or page_number == total_pages or (page_number >= current_page - 1 and page_number <= current_page + 1) %}
+                                <a href="{{ path('app_voyages', pagination_query_base|merge({page: page_number})) }}" class="voyages-pagination__link" aria-label="Aller a la page {{ page_number }}">{{ page_number }}</a>
+                            {% elseif page_number == current_page - 2 or page_number == current_page + 2 %}
+                                <span class="voyages-pagination__info">...</span>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if current_page < total_pages %}
+                            <a href="{{ path('app_voyages', pagination_query_base|merge({page: current_page + 1})) }}" class="voyages-pagination__link" aria-label="Page suivante">Suiv.</a>
+                        {% endif %}
+                    </div>
+                </nav>
+            {% endif %}
         {% else %}
             <div class="voyages-empty">
                 <h2>Aucun voyage enregistre</h2>
@@ -822,4 +972,115 @@
             });
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function showUnsplashModal(data, name, country) {
+                var overlay = document.createElement('div');
+                overlay.className = 'unsplash-overlay';
+
+                var box = document.createElement('div');
+                box.className = 'unsplash-box';
+
+                var heroImg = data.image_regular || data.image_small || '';
+                var title = name || (data.description || 'Informations sur la destination');
+
+                var html = '';
+                html += '<div class="unsplash-hero">';
+                if (heroImg) {
+                    html += '<img src="' + heroImg + '" alt="' + (title.replace(/"/g,'') ) + '" class="unsplash-hero-img">';
+                }
+                html += '<div class="unsplash-hero-caption">';
+                html += '<div class="unsplash-hero-credit">' + (data.photographer ? '📷 ' + data.photographer + ' via Unsplash' : '') + '</div>';
+                html += '<h2 class="unsplash-title">' + (country ? country : title) + '</h2>';
+                html += '<p class="unsplash-sub">Informations sur la destination</p>';
+                html += '</div></div>';
+
+                html += '<div class="unsplash-body">';
+                if (data.country) {
+                    var c = data.country;
+                    html += '<div class="unsplash-info-list">';
+                    html += '<div class="unsplash-info"><strong>Pays officiel</strong><div>' + (c.name_official || '') + '</div></div>';
+                    html += '<div class="unsplash-info"><strong>Capitale</strong><div>' + (c.capital || '-') + '</div></div>';
+                    html += '<div class="unsplash-info"><strong>Population</strong><div>' + (c.population ? (Number(c.population).toLocaleString()) : '-') + '</div></div>';
+                    html += '<div class="unsplash-info"><strong>Continent</strong><div>' + ((c.continents && c.continents[0]) ? c.continents[0] : (c.region || '-')) + '</div></div>';
+                    html += '<div class="unsplash-info"><strong>Région</strong><div>' + (c.subregion || '-') + '</div></div>';
+                    if (c.languages && c.languages.length) {
+                        html += '<div class="unsplash-info"><strong>Langues</strong><div>' + c.languages.join(', ') + '</div></div>';
+                    }
+                    if (c.currencies && c.currencies.length) {
+                        html += '<div class="unsplash-info"><strong>Devises</strong><div>' + c.currencies.join(', ') + '</div></div>';
+                    }
+                    if (c.timezones && c.timezones.length) {
+                        html += '<div class="unsplash-info"><strong>Fuseau horaire</strong><div>' + (c.timezones[0] || '-') + '</div></div>';
+                    }
+                    html += '</div>';
+                    if (c.flags) {
+                        html += '<div style="margin-top:12px;display:flex;align-items:center;gap:10px;"><img src="' + c.flags + '" alt="Drapeau" style="height:46px;border-radius:4px;"> <div>Drapeau</div></div>';
+                    }
+                } else {
+                    html += '<div style="padding:12px 6px;color:#444;">Aucune information pays trouvée.</div>';
+                }
+
+                if (data.location) {
+                    html += '<div style="margin-top:12px;color:#666;">Lieu: ' + data.location + '</div>';
+                }
+                if (data.unsplash_link) html += '<div style="margin-top:10px;"><a href="' + data.unsplash_link + '" target="_blank" rel="noopener">Voir sur Unsplash</a></div>';
+                html += '</div>';
+
+                box.innerHTML = html;
+
+                var closeBtn = document.createElement('button');
+                closeBtn.className = 'unsplash-close';
+                closeBtn.textContent = '✕';
+                closeBtn.addEventListener('click', function () { overlay.remove(); });
+
+                box.appendChild(closeBtn);
+                overlay.appendChild(box);
+                document.body.appendChild(overlay);
+
+                var style = document.createElement('style');
+                style.textContent = '\n.unsplash-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);z-index:2200;padding:20px;}\n.unsplash-box{position:relative;width:100%;max-width:900px;background:#0b1220;color:#e6eef6;border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(2,6,23,0.6);max-height:90vh;display:flex;flex-direction:column;}\n.unsplash-hero{position:relative;flex:0 0 auto;}\n.unsplash-hero-img{width:100%;height:260px;object-fit:cover;display:block;}\n.unsplash-hero-caption{padding:18px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));}\n.unsplash-hero-credit{font-size:0.9rem;color:#9fb0c8;margin-bottom:6px;display:flex;align-items:center;gap:8px;}\n.unsplash-title{margin:0;color:#ffb86b;font-size:1.45rem;}\n.unsplash-sub{margin:6px 0 0 0;color:#a6b0bd;}\n.unsplash-body{padding:16px 18px;border-top:1px solid rgba(255,255,255,0.03);flex:1 1 auto;overflow:auto;}\n.unsplash-info-list{display:grid;grid-template-columns:1fr;gap:12px;}\n.unsplash-info{background:rgba(255,255,255,0.02);padding:14px;border-radius:10px;}\n.unsplash-info strong{display:block;color:#cbd5e1;margin-bottom:6px;font-weight:700;}\n.unsplash-close{position:absolute;top:10px;right:10px;border:0;background:transparent;color:#e6eef6;font-size:1.15rem;cursor:pointer;padding:8px;border-radius:8px;}\n.unsplash-body a{color:#ffd58a;text-decoration:underline;}\n@media (max-width:720px){.unsplash-hero-img{height:160px}.unsplash-box{max-width:100%;border-radius:8px;padding:0}}\n';
+                document.head.appendChild(style);
+            }
+
+            var infoButtons = document.querySelectorAll('.voyage-action--info');
+            infoButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var name = btn.dataset.destinationName || '';
+                    var country = btn.dataset.destinationCountry || '';
+                    var q = name + (country ? (', ' + country) : '');
+                    if (!name && !country) {
+                        alert('Destination non definie pour ce voyage');
+                        return;
+                    }
+
+                    btn.setAttribute('aria-busy', 'true');
+                    var url = '/_unsplash/info?q=' + encodeURIComponent(q);
+                    if (country) url += '&country=' + encodeURIComponent(country);
+
+                    fetch(url)
+                        .then(function (res) { return res.json().then(function (json) { return { ok: res.ok, status: res.status, json: json }; }); })
+                        .then(function (result) {
+                            btn.removeAttribute('aria-busy');
+                            if (!result.ok) {
+                                alert('Erreur lors de la recuperation des informations');
+                                return;
+                            }
+
+                            if (!result.json.found) {
+                                alert('Aucune image trouvee pour "' + q + '"');
+                                return;
+                            }
+
+                            showUnsplashModal(result.json, name, country);
+                        })
+                        .catch(function () {
+                            btn.removeAttribute('aria-busy');
+                            alert('Erreur reseau lors de la requete Unsplash');
+                        });
+                });
+            });
+        });
+    </script>
+
 {% endblock %}

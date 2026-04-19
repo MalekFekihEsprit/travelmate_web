@@ -89,7 +89,7 @@ final class ParticipationBackController extends AbstractController
             voyage: $voyage,
             participations: $participationRepository->findBackOfficeParticipations($voyage, $filters),
             filters: $filters,
-            roleOptions: Participation::getAvailableRoles(),
+            roleOptions: Participation::getSelectableRoles(),
             lastEmail: $lastEmail,
             lastRole: $defaultRole
         );
@@ -133,7 +133,15 @@ final class ParticipationBackController extends AbstractController
             return $this->redirectToRoute('app_admin_participations', $redirectParameters);
         }
 
-        $participation->setRoleParticipation($this->sanitizeRole((string) $request->request->get('role_participation', Participation::DEFAULT_ROLE)));
+        $role = trim((string) $request->request->get('role_participation', Participation::DEFAULT_ROLE));
+
+        if (!Participation::isSelectableRole($role) && $role !== $participation->getRoleParticipation()) {
+            $this->addFlash('error', 'La valeur du role selectionne est invalide.');
+
+            return $this->redirectToRoute('app_admin_participations', $redirectParameters);
+        }
+
+        $participation->setRoleParticipation($role);
         $entityManager->flush();
         $this->markActionHandled($request, $scope);
 
@@ -251,7 +259,7 @@ final class ParticipationBackController extends AbstractController
 
     private function sanitizeRole(string $role): string
     {
-        return in_array($role, Participation::getAvailableRoles(), true) ? $role : Participation::DEFAULT_ROLE;
+        return Participation::isSelectableRole($role) ? $role : Participation::DEFAULT_ROLE;
     }
 
     /**
