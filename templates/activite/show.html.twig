@@ -1605,7 +1605,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 })();
 
 // ── Lightbox ─────────────────────────────────────────────────────────────
-var galleryImages = {{ (activite.imagePath ? ('[' ~ asset(activite.imagePath)|json_encode ~ ']') : '[]')|raw }};
+var galleryImages = {{ (activite.imagePath ? [activite.imagePath] : [])|json_encode(15)|raw }};
 var currentIdx = 0;
 function openLightbox(idx) {
     if (!galleryImages.length) return;
@@ -1639,8 +1639,8 @@ document.addEventListener('keydown', function (e) {
 //       HTML afin d'éviter le crash "Unexpected token &" dans replaceWith.
 (function () {
     var ACTIVITE_ID = {{ activite.id }};
-    var ACTIVITE_NOM = {{ activite.nom|json_encode|raw }};
-    var ASSET_BASE = {{ asset('')|json_encode|raw }};
+    var ACTIVITE_NOM = {{ activite.nom|json_encode(15)|raw }};
+    var ASSET_BASE = {{ asset('')|json_encode(15)|raw }};
 
     function getCatEmoji(cat) {
         cat = (cat || '').toLowerCase();
@@ -1764,7 +1764,7 @@ document.addEventListener('keydown', function (e) {
 ══════════════════════════════════════════════════════ #}
 <script>
 (function () {
-    var activiteLocation = {{ activite.lieu ? activite.lieu|json_encode : '"Tunis"'|raw }};
+    var activiteLocation = {{ (activite.lieu ? activite.lieu : 'Tunis')|json_encode(15)|raw }};
 
     function initWeather() {
         var resaDate       = document.getElementById('resaDate');
@@ -1872,10 +1872,17 @@ document.addEventListener('keydown', function (e) {
         }
     }
 
+    // ✅ CORRECTION : écouter turbo:load pour la météo (comme les recommandations IA)
+    // Sans ça, la météo ne s'initialise pas lors des navigations Turbo
+    document.addEventListener('turbo:load', initWeather);
+
+    // Fallback si Turbo n'est pas présent (chargement classique sans Turbo)
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initWeather);
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof Turbo === 'undefined') initWeather();
+        });
     } else {
-        initWeather();
+        if (typeof Turbo === 'undefined') initWeather();
     }
 })();
 </script>

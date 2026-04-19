@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Evenement;
 use App\Form\EvenementType;
 use App\Repository\EvenementRepository;
+use App\Service\TicketmasterService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,10 +20,22 @@ class EvenementController extends AbstractController
     // ════════════════════════════════════════════════════════════════════════
 
     #[Route('/evenements', name: 'app_evenements', methods: ['GET'])]
-    public function frontIndex(EvenementRepository $evenementRepository): Response
-    {
+    public function frontIndex(
+        EvenementRepository $evenementRepository,
+        TicketmasterService $ticketmaster,
+        Request             $request
+    ): Response {
+        $destination    = trim($request->query->get('destination', ''));
+        $externalEvents = [];
+
+        if ($destination !== '') {
+            $externalEvents = $ticketmaster->fetchEventsByDestination($destination, 12);
+        }
+
         return $this->render('evenement/index.html.twig', [
-            'evenements' => $evenementRepository->findAll(),
+            'evenements'     => $evenementRepository->findAll(),
+            'externalEvents' => $externalEvents,
+            'destination'    => $destination,
         ]);
     }
 

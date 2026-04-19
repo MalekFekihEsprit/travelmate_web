@@ -16,6 +16,10 @@
 .btn-submit.ready { opacity: 1; cursor: pointer; }
 .tag-count { font-size: 13px; color: #999; text-align: right; margin-top: 0.5rem; }
 .alert-error { background: #fee; border: 1px solid #fcc; color: #c00; padding: 10px 16px; border-radius: 8px; margin-bottom: 1rem; font-size: 14px; }
+.btn-actions { display: flex; gap: 12px; margin-top: 1rem; }
+.btn-actions .btn-submit { margin-top: 0; flex: 1; }
+.btn-skip { flex: 0 0 auto; padding: 15px 24px; border-radius: 50px; background: transparent; color: #888; font-size: 15px; font-weight: 500; border: 1.5px solid #ddd; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-skip:hover { border-color: #999; color: #444; }
 </style>
 {% endblock %}
 
@@ -69,7 +73,10 @@
         </div>
 
         <p class="tag-count" id="tagCount">Sélectionnez au moins un tag</p>
-        <button type="submit" class="btn-submit" id="submitBtn" disabled>Voir mes recommandations</button>
+        <div class="btn-actions">
+            <button type="submit" class="btn-submit" id="submitBtn" disabled>Voir mes recommandations</button>
+            <a href="{{ path('app_quiz_skip') }}" class="btn-skip">Passer ›</a>
+        </div>
     </form>
 </div>
 

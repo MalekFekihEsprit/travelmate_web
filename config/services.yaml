@@ -40,6 +40,10 @@ services:
         arguments:
             $aiServiceUrl: '%env(AI_SERVICE_URL)%'
 
+    App\Service\TicketmasterService:
+        arguments:
+            $apiKey: '%env(TICKETMASTER_API_KEY)%'       
+
     App\EventListener\QuizRedirectListener:
         arguments:
             $router: '@router'

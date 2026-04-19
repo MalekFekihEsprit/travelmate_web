@@ -89,6 +89,13 @@ class QuizController extends AbstractController
         return $this->redirectToRoute('app_quiz');
     }
 
+    #[Route('/quiz/skip', name: 'app_quiz_skip')]
+    public function skip(Request $request): Response
+    {
+        $request->getSession()->set('quiz_completed', true);
+        return $this->redirectToRoute('app_activites');
+    }
+
     private function buildUserProfile(Request $request): string
     {
         $intensity = $request->request->get('intensity', '');

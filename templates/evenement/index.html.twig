@@ -218,37 +218,38 @@
     inset: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%);
 }
-
 .eve-card__badge {
     position: absolute;
-    top: 1rem;
-    left: 1rem;
-    padding: 0.3rem 0.75rem;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.25rem 0.65rem;
     border-radius: 999px;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     background: var(--color-primary);
     color: #fff;
 }
 .eve-card__badge--full {
-    background: #e53e3e;
+    background: rgba(0,0,0,0.45);
+    color: rgba(255,255,255,0.75);
 }
-
 .eve-card__date-badge {
     position: absolute;
-    bottom: 1rem;
-    right: 1rem;
+    bottom: 0.75rem;
+    right: 0.75rem;
     background: rgba(255,255,255,0.95);
     border-radius: var(--radius-md);
-    padding: 0.4rem 0.7rem;
+    padding: 0.35rem 0.6rem;
     text-align: center;
-    line-height: 1.2;
-    min-width: 48px;
+    min-width: 42px;
 }
 .eve-card__date-day {
     font-family: 'Fraunces', serif;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 700;
+    line-height: 1;
     color: var(--color-primary);
 }
 .eve-card__date-month {
@@ -256,21 +257,21 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--color-text-muted);
+    margin-top: 0.1rem;
 }
-
 .eve-card__body {
-    padding: 1.25rem 1.5rem 1.5rem;
-    flex: 1;
+    padding: 1.1rem 1.25rem 1.25rem;
     display: flex;
     flex-direction: column;
+    flex: 1;
     gap: 0.5rem;
 }
 .eve-card__title {
     font-family: 'Fraunces', serif;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
+    line-height: 1.25;
     color: var(--color-text);
-    line-height: 1.3;
 }
 .eve-card__meta {
     display: flex;
@@ -280,7 +281,7 @@
 .eve-card__meta-item {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.35rem;
     font-size: 0.84rem;
     color: var(--color-text-muted);
 }
@@ -332,6 +333,70 @@
     color: var(--color-text);
 }
 
+/* ═══════════════════════════════════════════════════
+   SECTION SÉPARATRICE
+═══════════════════════════════════════════════════ */
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 3rem 0 2rem;
+}
+.section-divider__line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+.section-divider__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════
+   DESTINATION SEARCH BOX
+═══════════════════════════════════════════════════ */
+.dest-search-box {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.75rem 2rem;
+    margin-bottom: 2rem;
+}
+.dest-search-box__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.4rem;
+}
+.dest-search-box__sub {
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.1rem;
+}
+.dest-search-box__form {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.dest-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(196,111,75,0.1);
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+}
+
 </style>
 {% endblock %}
 
@@ -365,7 +430,7 @@
     </div>
 </section>
 
-{# ═══════ SECTION ═══════ #}
+{# ═══════ ÉVÉNEMENTS LOCAUX (admin) ═══════ #}
 <div id="evenements">
 
     <div class="search-bar">
@@ -457,6 +522,159 @@
     </div>
 </div>
 
+{# ═══════ SÉPARATEUR ═══════ #}
+<div class="section-divider">
+    <div class="section-divider__line"></div>
+    <span class="section-divider__label" data-translate="true">Événements par destination</span>
+    <div class="section-divider__line"></div>
+</div>
+
+{# ═══════ ÉVÉNEMENTS EXTERNES (Ticketmaster) ═══════ #}
+<section id="external-events">
+
+    <div class="dest-search-box">
+        <div class="dest-search-box__title" data-translate="true">Découvrez les événements dans votre destination</div>
+        <p class="dest-search-box__sub" data-translate="true">
+            Festivals, concerts, expositions — entrez une ville pour voir ce qui s'y passe prochainement.
+        </p>
+        <form method="GET" action="{{ path('app_evenements') }}#external-events" class="dest-search-box__form">
+            <div class="search-field" style="max-width:320px;">
+                <span class="search-field__icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                </span>
+                <input
+                    type="text"
+                    name="destination"
+                    class="search-field__input"
+                    value="{{ destination }}"
+                    placeholder="Paris, London, New York…"
+                    autocomplete="off"
+                >
+            </div>
+            <button type="submit" class="btn-join" style="padding:.7rem 1.4rem;font-size:.9rem;" data-translate="true">
+                Découvrir des événements 
+            </button>
+            {% if destination %}
+                <a href="{{ path('app_evenements') }}#external-events"
+                   style="font-size:.85rem;color:var(--color-text-muted);text-decoration:none;padding:.5rem;"
+                   data-translate="true">
+                    ✕ Effacer
+                </a>
+            {% endif %}
+        </form>
+        {% if destination %}
+            <div class="dest-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                {{ destination }}
+            </div>
+        {% endif %}
+    </div>
+
+    {% if destination %}
+
+        <p class="results-count">
+            <strong>{{ externalEvents|length }}</strong>
+            <span data-translate="true">événement(s) trouvé(s) pour</span>
+            « <strong>{{ destination }}</strong> »
+            <span style="font-size:.8rem;margin-left:.5rem;opacity:.6;">— via Ticketmaster</span>
+        </p>
+
+        {% if externalEvents is empty %}
+            <div class="eve-empty" style="padding:2.5rem 0;text-align:left;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style="color:var(--color-border)">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                </svg>
+                <div class="eve-empty__title" data-translate="true">Aucun événement trouvé pour « {{ destination }} »</div>
+                <p style="margin-top:.4rem;" data-translate="true">
+                    Essayez avec le nom de la ville en anglais (ex: "Paris", "London", "Rome").
+                </p>
+            </div>
+        {% else %}
+            <div class="eve-grid">
+                {% for ev in externalEvents %}
+                    <a href="{{ ev.url }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="eve-card"
+                       data-titre="{{ ev.titre|lower }}">
+
+                        <div class="eve-card__img-wrap">
+                            {% if ev.image %}
+                                <img src="{{ ev.image }}"
+                                     alt="{{ ev.titre }}"
+                                     class="eve-card__img"
+                                     loading="lazy"
+                                     onerror="this.parentNode.innerHTML='<div class=\'eve-card__img-placeholder\'><svg width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\'><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\' stroke=\'currentColor\' stroke-width=\'1.2\'/></svg></div>'">
+                            {% else %}
+                                <div class="eve-card__img-placeholder">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div class="eve-card__overlay"></div>
+
+                            <span class="eve-card__badge" style="background:var(--color-accent);" data-translate="true">
+                                {{ ev.categorie }}
+                            </span>
+
+                            {% if ev.date %}
+                                <div class="eve-card__date-badge">
+                                    <div class="eve-card__date-day">{{ ev.date|date('d') }}</div>
+                                    <div class="eve-card__date-month">{{ ev.date|date('M') }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="eve-card__body">
+                            <div class="eve-card__title">{{ ev.titre }}</div>
+                            <div class="eve-card__meta">
+                                <div class="eve-card__meta-item">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                    </svg>
+                                    <span>{{ ev.lieu }}{% if ev.ville %}, {{ ev.ville }}{% endif %}</span>
+                                </div>
+                                {% if ev.heure and ev.heure != '00:00' %}
+                                    <div class="eve-card__meta-item">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                        {{ ev.heure }}
+                                    </div>
+                                {% endif %}
+                                {% if ev.date %}
+                                    <div class="eve-card__meta-item">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                        {{ ev.date|date('d/m/Y') }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="eve-card__footer">
+                                <span style="font-size:.75rem;color:var(--color-text-muted);display:flex;align-items:center;gap:.3rem;">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><polyline points="15 3 21 3 21 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                    Ticketmaster
+                                </span>
+                                <span class="btn-join" data-translate="true">Voir billets →</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    {% endif %}
+
+</section>
+
 {% endblock %}
 
 {% block javascripts %}
@@ -479,7 +697,7 @@
 <script>
 (function() {
     const searchInput = document.getElementById('searchInput');
-    const cards       = document.querySelectorAll('.eve-card[data-titre]');
+    const cards       = document.querySelectorAll('#eveGrid .eve-card[data-titre]');
     const countEl     = document.getElementById('countNum');
 
     function filter() {
@@ -493,7 +711,7 @@
         if (countEl) countEl.textContent = visible;
     }
 
-    searchInput.addEventListener('input', filter);
+    if (searchInput) searchInput.addEventListener('input', filter);
 
     document.querySelector('a[href="#evenements"]')?.addEventListener('click', e => {
         e.preventDefault();
