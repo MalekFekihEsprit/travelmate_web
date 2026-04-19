@@ -9,7 +9,7 @@ parameters:
     evenements_images_directory: '%kernel.project_dir%/public/uploads/evenements'
 
 services:
-    # default configuration for services in *this* file
+    # //default configuration for services in *this* file
     _defaults:
         autowire: true
         autoconfigure: true
