@@ -2,7 +2,7 @@
     "controllers": {
         "@symfony/ux-chartjs": {
             "chart": {
-                "enabled": true,
+                "enabled": false,
                 "fetch": "eager"
             }
         },

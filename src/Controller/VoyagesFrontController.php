@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Itineraire;
 use App\Entity\Participation;
 use App\Entity\User;
 use App\Entity\Voyage;
@@ -156,7 +155,7 @@ class VoyagesFrontController extends AbstractController
             $entityManager->persist($voyage);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Le voyage a ete ajoute.');
+            $this->addFlash('success', 'Le voyage a ete ajoute avec succes.');
 
             return $this->redirectToRoute('app_voyages');
         }
@@ -171,7 +170,6 @@ class VoyagesFrontController extends AbstractController
             'form_nonce' => $formNonce !== '' ? $formNonce : $this->createFormNonce($request, $formScope),
         ]);
     }
-
 
     #[Route('/voyages/{id_voyage}/modifier', name: 'app_voyages_edit', requirements: ['id_voyage' => '\\d+'], methods: ['GET', 'POST'])]
     public function edit(
@@ -630,5 +628,4 @@ class VoyagesFrontController extends AbstractController
             }
         }
     }
-
 }

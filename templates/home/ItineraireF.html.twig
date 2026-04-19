@@ -1106,7 +1106,7 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('turbo:load', function () {
             var bindCultureCardToggle = function () {
                 var cultureCard = document.querySelector('[data-culture-card]');
                 var toggleButton = document.querySelector('[data-culture-toggle]');
@@ -1298,7 +1298,10 @@
 
     {# ── Cinematic Video Player JS ── #}
     <script>
-    (function () {
+    document.addEventListener('turbo:load', function () {
+        if (document.__videoPlayerInitialized) return;
+        document.__videoPlayerInitialized = true;
+
         /* ─── State ─── */
         let slides = [];
         let blobUrls = {};  // cache: slide index -> blob URL or src
@@ -1664,6 +1667,7 @@
             const el = document.getElementById('errorMsg');
             el.textContent = msg;
             el.style.display = 'block';
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         /* ─── Event listeners ─── */
@@ -1744,6 +1748,7 @@
             // Reset
             document.getElementById('errorMsg').style.display = 'none';
             document.getElementById('loadingMsg').style.display = 'block';
+            document.getElementById('loadingMsg').scrollIntoView({ behavior: 'smooth', block: 'center' });
             btn.disabled = true;
 
             fetch('/itineraires/' + itineraireId + '/generate-video', {
@@ -1751,6 +1756,9 @@
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
                 .then(function (r) {
+                    if (r.redirected || r.status === 401 || r.status === 403) {
+                        throw new Error('Vous devez être connecté pour générer une vidéo.');
+                    }
                     return r.json().then(function (data) {
                         return data;
                     }).catch(function () {
@@ -1774,7 +1782,10 @@
                     btn.disabled = false;
                 });
         });
-    })();
+    });
 
+    document.addEventListener('turbo:before-cache', function () {
+        document.__videoPlayerInitialized = false;
+    });
     </script>
 {% endblock %}

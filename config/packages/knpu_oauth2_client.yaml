@@ -1,32 +1,3 @@
 knpu_oauth2_client:
     clients:
-        google_main:
-            type: google
-            client_id: '%env(OAUTH_GOOGLE_CLIENT_ID)%'
-            client_secret: '%env(OAUTH_GOOGLE_CLIENT_SECRET)%'
-            redirect_route: connect_google_check
-            redirect_params: {}
-            use_state: true
-
-        github_main:
-            type: github
-            client_id: '%env(OAUTH_GITHUB_CLIENT_ID)%'
-            client_secret: '%env(OAUTH_GITHUB_CLIENT_SECRET)%'
-            redirect_route: connect_github_check
-            redirect_params: {}
-            use_state: true
-
-        facebook_main:
-            type: facebook
-            client_id: '%env(OAUTH_FACEBOOK_CLIENT_ID)%'
-            client_secret: '%env(OAUTH_FACEBOOK_CLIENT_SECRET)%'
-            redirect_route: connect_facebook_check
-            redirect_params: {}
-            use_state: true
-            graph_api_version: 'v18.0'
-        microsoft_main:
-            type: microsoft
-            client_id: '%env(OAUTH_MICROSOFT_CLIENT_ID)%'
-            client_secret: '%env(OAUTH_MICROSOFT_CLIENT_SECRET)%'
-            redirect_route: connect_microsoft_check
-            redirect_params: {}
+        # configure your clients as described here: https://github.com/knpuniversity/oauth2-client-bundle#configuration
