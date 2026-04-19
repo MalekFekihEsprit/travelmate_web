@@ -682,6 +682,15 @@
             font-size: 1.45rem;
             color: var(--color-text);
             margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .weather-emoji {
+            font-size: 1.6rem;
+            line-height: 1;
+            cursor: default;
         }
 
         .timeline-content__meta {
@@ -1104,7 +1113,12 @@
                             <div class="timeline-content__header">
                                 <div>
                                     <p class="timeline-content__eyebrow">{{ timelineDay.weekday_short }} · Jour {{ timelineDay.number }}</p>
-                                    <h3 class="timeline-content__title">{{ timelineDay.full_label }}</h3>
+                                    <h3 class="timeline-content__title">
+                                        {{ timelineDay.full_label }}
+                                        {% if weatherEmojis[timelineDay.number] is defined %}
+                                            <span class="weather-emoji" title="Météo prévue">{{ weatherEmojis[timelineDay.number] }}</span>
+                                        {% endif %}
+                                    </h3>
                                     <p class="timeline-content__meta">
                                         {{ timelineDay.count }} étape{% if timelineDay.count > 1 %}s{% endif %} planifiée{% if timelineDay.count > 1 %}s{% endif %}
                                     </p>

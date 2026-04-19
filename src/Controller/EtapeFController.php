@@ -7,6 +7,7 @@ use App\Entity\Itineraire;
 use App\Repository\EtapeRepository;
 use App\Repository\ItineraireRepository;
 use App\Service\OpenRouteServiceGeocoder;
+use App\Service\WeatherService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
@@ -81,6 +82,49 @@ class EtapeFController extends AbstractController
         $days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
         return $days[(int) $date->format('w')];
+    }
+
+    private function fetchWeatherEmojis(Itineraire $itineraire, array $timelineDays, ?WeatherService $weatherService): array
+    {
+        if (!$weatherService) {
+            return [];
+        }
+
+        $voyage = $itineraire->getVoyage();
+        $destination = $voyage?->getDestination();
+        $lat = $destination?->getLatitude_destination();
+        $lon = $destination?->getLongitude_destination();
+
+        if (!$lat || !$lon) {
+            return [];
+        }
+
+        $baseDate = $voyage->getDate_debut()
+            ? \DateTimeImmutable::createFromInterface($voyage->getDate_debut())->setTime(0, 0)
+            : null;
+
+        if (!$baseDate) {
+            return [];
+        }
+
+        $dates = [];
+        foreach ($timelineDays as $day) {
+            $dates[] = $baseDate->modify(sprintf('+%d days', $day['number'] - 1));
+        }
+
+        $emojis = $weatherService->getWeatherEmojisForDates($lat, $lon, $dates);
+
+        // Re-key by day number
+        $result = [];
+        foreach ($timelineDays as $day) {
+            $date = $baseDate->modify(sprintf('+%d days', $day['number'] - 1));
+            $dateKey = $date->format('Y-m-d');
+            if (isset($emojis[$dateKey])) {
+                $result[$day['number']] = $emojis[$dateKey];
+            }
+        }
+
+        return $result;
     }
 
     private static function getMonthShortFr(\DateTimeInterface $date): string
@@ -225,7 +269,8 @@ class EtapeFController extends AbstractController
         Itineraire $itineraire,
         int $jour,
         Request $request,
-        EtapeRepository $etapeRepository
+        EtapeRepository $etapeRepository,
+        ?WeatherService $weatherService = null
     ): array {
         $totalDays = self::getTotalDays($itineraire);
         if ($jour < 1 || $jour > $totalDays) {
@@ -324,6 +369,7 @@ class EtapeFController extends AbstractController
             'search_q' => $searchValue,
             'sort' => $sort,
             'sort_label' => self::getSortLabel($sort),
+            'weatherEmojis' => $this->fetchWeatherEmojis($itineraire, $timelineDays, $weatherService),
         ];
     }
 
@@ -333,7 +379,8 @@ class EtapeFController extends AbstractController
         int $jour,
         Request $request,
         ItineraireRepository $itineraireRepository,
-        EtapeRepository $etapeRepository
+        EtapeRepository $etapeRepository,
+        WeatherService $weatherService
     ): Response {
         $itineraire = $itineraireRepository->find($itineraireId);
         
@@ -345,7 +392,8 @@ class EtapeFController extends AbstractController
             $itineraire,
             $jour,
             $request,
-            $etapeRepository
+            $etapeRepository,
+            $weatherService
         ));
     }
 

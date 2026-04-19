@@ -54,6 +54,10 @@ services:
             $cacheDirectory: '%kernel.cache_dir%/openrouteservice_geocoder'
             $cacheTtl: '%app.openrouteservice.cache_ttl%'
 
+    App\Service\WeatherService:
+        arguments:
+            $openWeatherMapApiKey: '%env(string:OPENWEATHERMAP_API_KEY)%'
+
     App\Service\ReplicateVideoService:
         arguments:
             $apiKey: '%env(GROQ_API_KEY)%'
