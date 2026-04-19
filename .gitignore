@@ -23,4 +23,5 @@
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
+/public/slides/
 /templates/clean.py

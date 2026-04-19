@@ -10,6 +10,10 @@ parameters:
     ipapi_base_url: '%env(IPAPI_BASE_URL)%'
     activites_images_directory: '%kernel.project_dir%/public/uploads/activites'
     evenements_images_directory: '%kernel.project_dir%/public/uploads/evenements'
+    app.groq.cache_ttl: 86400
+    app.openrouteservice.cache_ttl: 604800
+    app.cerebras.api_key: ''
+    app.cerebras.model: 'llama3.1-8b'
 
 services:
     # default configuration for services in *this* file
@@ -35,5 +39,33 @@ services:
     App\Service\GeoIpService:
         arguments:
             $baseUrl: '%ipapi_base_url%'
+
+    App\Service\GroqCulturalRulesService:
+        arguments:
+            $apiKey: '%env(string:GROQ_API_KEY)%'
+            $model: '%env(string:GROQ_MODEL)%'
+            $cacheDirectory: '%kernel.cache_dir%/groq_cultural_rules'
+            $cacheTtl: '%app.groq.cache_ttl%'
+
+    App\Service\OpenRouteServiceGeocoder:
+        arguments:
+            $apiKey: '%env(string:OPENROUTESERVICE_API_KEY)%'
+            $geocodeUrl: '%env(string:OPENROUTESERVICE_GEOCODE_URL)%'
+            $cacheDirectory: '%kernel.cache_dir%/openrouteservice_geocoder'
+            $cacheTtl: '%app.openrouteservice.cache_ttl%'
+
+    App\Service\ReplicateVideoService:
+        arguments:
+            $apiKey: '%env(GROQ_API_KEY)%'
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\StabilityImageService:
+        arguments:
+            $apiKey: '%env(STABILITY_API_KEY)%'
+
+    App\Service\CerebrasItinerarySuggestionService:
+        arguments:
+            $apiKey: '%env(default:app.cerebras.api_key:CEREBRAS_API_KEY)%'
+            $model: '%env(default:app.cerebras.model:CEREBRAS_MODEL)%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

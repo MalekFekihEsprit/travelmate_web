@@ -269,7 +269,7 @@
 
         .voyage-card {
             display: grid;
-            grid-template-rows: 220px auto;
+            grid-template-rows: 220px auto auto;
             overflow: hidden;
             transition: transform var(--transition-base), box-shadow var(--transition-base);
             cursor: pointer;
@@ -283,6 +283,14 @@
         .voyage-card__body {
             position: relative;
             z-index: 2;
+        }
+
+        .voyage-card__link {
+            grid-row: 1 / 3;
+            display: grid;
+            grid-template-rows: 220px auto;
+            text-decoration: none;
+            color: inherit;
         }
 
         .voyage-card__media {
@@ -783,94 +791,79 @@
             <div class="voyages-grid">
                 {% for voyage in voyages %}
                     {% set voyageImage = voyage_images[voyage.idVoyage] ?? hero_image %}
-                    <article class="voyage-card" data-voyage-url="{{ path('app_itineraires_index', {'voyageId': voyage.id_voyage}) }}">
-                        <div class="voyage-card__media">
-                            {% if voyageImage %}
-                                <img src="{{ asset(voyageImage) }}" alt="Illustration du voyage {{ voyage.titreVoyage }}" class="voyage-card__image">
-                            {% endif %}
+                    <article class="voyage-card">
+                        <a href="{{ path('app_itineraires_index', {'voyageId': voyage.idVoyage}) }}" class="voyage-card__link">
+                            <div class="voyage-card__media">
+                                {% if voyageImage %}
+                                    <img src="{{ asset(voyageImage) }}" alt="Illustration du voyage {{ voyage.titreVoyage }}" class="voyage-card__image">
+                                {% endif %}
 
-                            <div class="voyage-card__top">
-                                <span class="voyage-card__status">{{ voyage.statut }}</span>
-                                <h2 class="voyage-card__title">{{ voyage.titreVoyage }}</h2>
-                                <p class="voyage-card__destination">
-                                    {% if voyage.destination %}
-                                        {{ voyage.destination.nomDestination }}
-                                        {% if voyage.destination.paysDestination %}
-                                            , {{ voyage.destination.paysDestination }}
+                                <div class="voyage-card__top">
+                                    <span class="voyage-card__status">{{ voyage.statut }}</span>
+                                    <h2 class="voyage-card__title">{{ voyage.titreVoyage }}</h2>
+                                    <p class="voyage-card__destination">
+                                        {% if voyage.destination %}
+                                            {{ voyage.destination.nomDestination }}
+                                            {% if voyage.destination.paysDestination %}
+                                                , {{ voyage.destination.paysDestination }}
+                                            {% endif %}
+                                        {% else %}
+                                            Destination non definie
                                         {% endif %}
-                                    {% else %}
-                                        Destination non definie
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="voyage-card__body">
-                            <div class="voyage-card__headline">
-                                <div class="voyage-card__meta">Organisation personnelle et collaborative</div>
-                            </div>
-
-                            <div class="voyage-card__details">
-                                <div class="voyage-card__detail">
-                                    <span class="voyage-card__detail-label">Date de debut</span>
-                                    <span class="voyage-card__detail-value">{{ voyage.dateDebut ? voyage.dateDebut|date('d/m/Y') : '-' }}</span>
-                                </div>
-                                <div class="voyage-card__detail">
-                                    <span class="voyage-card__detail-label">Date de fin</span>
-                                    <span class="voyage-card__detail-value">{{ voyage.dateFin ? voyage.dateFin|date('d/m/Y') : '-' }}</span>
+                                    </p>
                                 </div>
                             </div>
 
-                            <div class="voyage-card__actions">
-                                <a href="{{ path('app_voyages_show', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--view" aria-label="Consulter les informations du voyage {{ voyage.titreVoyage }}" title="Consulter">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="M2.5 12C4.6 7.8 8.1 5.5 12 5.5C15.9 5.5 19.4 7.8 21.5 12C19.4 16.2 15.9 18.5 12 18.5C8.1 18.5 4.6 16.2 2.5 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                                        <path d="M12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z" stroke="currentColor" stroke-width="1.8"/>
-                                    </svg>
-                                    <span class="sr-only">Consulter</span>
-                                </a>
+                            <div class="voyage-card__body">
+                                <div class="voyage-card__headline">
+                                    <div class="voyage-card__meta">Organisation personnelle et collaborative</div>
+                                </div>
 
-                                <button type="button" class="voyage-action voyage-action--info" data-destination-name="{% if voyage.destination %}{{ voyage.destination.nomDestination }}{% endif %}" data-destination-country="{% if voyage.destination and voyage.destination.paysDestination %}{{ voyage.destination.paysDestination }}{% endif %}" aria-label="Infos sur la destination {{ voyage.titreVoyage }}" title="Infos">
+                                <div class="voyage-card__details">
+                                    <div class="voyage-card__detail">
+                                        <span class="voyage-card__detail-label">Date de debut</span>
+                                        <span class="voyage-card__detail-value">{{ voyage.dateDebut ? voyage.dateDebut|date('d/m/Y') : '-' }}</span>
+                                    </div>
+                                    <div class="voyage-card__detail">
+                                        <span class="voyage-card__detail-label">Date de fin</span>
+                                        <span class="voyage-card__detail-value">{{ voyage.dateFin ? voyage.dateFin|date('d/m/Y') : '-' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <div class="voyage-card__actions">
+                            <a href="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--participants" aria-label="Gerer les participants du voyage {{ voyage.titreVoyage }}" title="Participants">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M16 21V19.5C16 18.1193 14.8807 17 13.5 17H7.5C6.11929 17 5 18.1193 5 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10.5 13C12.433 13 14 11.433 14 9.5C14 7.567 12.433 6 10.5 6C8.567 6 7 7.567 7 9.5C7 11.433 8.567 13 10.5 13Z" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="M18 8.5C19.1046 8.5 20 9.39543 20 10.5C20 11.6046 19.1046 12.5 18 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <path d="M18.5 17C19.8807 17 21 18.1193 21 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                <span class="sr-only">Participants</span>
+                            </a>
+
+                            <a href="{{ path('app_voyages_edit', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--edit" aria-label="Modifier le voyage {{ voyage.titreVoyage }}" title="Modifier">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M13.5 8.5L16.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span class="sr-only">Modifier</span>
+                            </a>
+
+                            <form method="post" action="{{ path('app_voyages_delete', {'id_voyage': voyage.idVoyage}) }}" class="voyage-delete-form" onsubmit="return confirm('Supprimer ce voyage ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_voyage_' ~ voyage.idVoyage) }}">
+                                <button type="submit" class="voyage-action voyage-action--delete" aria-label="Supprimer le voyage {{ voyage.titreVoyage }}" title="Supprimer">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M12 8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M11 11h2v5h-2z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M4 7H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M9 7V5.5C9 4.67157 9.67157 4 10.5 4H13.5C14.3284 4 15 4.67157 15 5.5V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M7 7L7.8 18.2C7.87717 19.2804 8.77596 20.1191 9.85909 20.1191H14.1409C15.224 20.1191 16.1228 19.2804 16.2 18.2L17 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M10 11V16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        <path d="M14 11V16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                     </svg>
-                                    <span class="sr-only">Infos destination</span>
+                                    <span class="sr-only">Supprimer</span>
                                 </button>
-
-                                <a href="{{ path('app_voyages_participants', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--participants" aria-label="Gerer les participants du voyage {{ voyage.titreVoyage }}" title="Participants">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="M16 21V19.5C16 18.1193 14.8807 17 13.5 17H7.5C6.11929 17 5 18.1193 5 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M10.5 13C12.433 13 14 11.433 14 9.5C14 7.567 12.433 6 10.5 6C8.567 6 7 7.567 7 9.5C7 11.433 8.567 13 10.5 13Z" stroke="currentColor" stroke-width="1.8"/>
-                                        <path d="M18 8.5C19.1046 8.5 20 9.39543 20 10.5C20 11.6046 19.1046 12.5 18 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                        <path d="M18.5 17C19.8807 17 21 18.1193 21 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                    </svg>
-                                    <span class="sr-only">Participants</span>
-                                </a>
-
-                                <a href="{{ path('app_voyages_edit', {'id_voyage': voyage.idVoyage}) }}" class="voyage-action voyage-action--edit" aria-label="Modifier le voyage {{ voyage.titreVoyage }}" title="Modifier">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M13.5 8.5L16.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <span class="sr-only">Modifier</span>
-                                </a>
-
-                                <form method="post" action="{{ path('app_voyages_delete', {'id_voyage': voyage.idVoyage}) }}" class="voyage-delete-form" onsubmit="return confirm('Supprimer ce voyage ?');">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_voyage_' ~ voyage.idVoyage) }}">
-                                    <button type="submit" class="voyage-action voyage-action--delete" aria-label="Supprimer le voyage {{ voyage.titreVoyage }}" title="Supprimer">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M4 7H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                            <path d="M9 7V5.5C9 4.67157 9.67157 4 10.5 4H13.5C14.3284 4 15 4.67157 15 5.5V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                            <path d="M7 7L7.8 18.2C7.87717 19.2804 8.77596 20.1191 9.85909 20.1191H14.1409C15.224 20.1191 16.1228 19.2804 16.2 18.2L17 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                            <path d="M10 11V16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                            <path d="M14 11V16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                        </svg>
-                                        <span class="sr-only">Supprimer</span>
-                                    </button>
-                                </form>
-                            </div>
+                            </form>
                         </div>
                     </article>
                 {% endfor %}

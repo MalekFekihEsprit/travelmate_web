@@ -76,12 +76,24 @@
             {# Actions à droite #}
             <div class="navbar-actions">
                 {# Notifications #}
-                <button class="icon-button" type="button" aria-label="Notifications">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M15 18H9M17 8C17 5.23858 14.7614 3 12 3C9.23858 3 7 5.23858 7 8V10.7639C7 11.4233 6.87041 12.0763 6.61803 12.6851L5.16568 16.1894C4.75614 17.1774 5.48244 18.25 6.55104 18.25H17.449C18.5176 18.25 19.2439 17.1774 18.8343 16.1894L17.382 12.6851C17.1296 12.0763 17 11.4233 17 10.7639V8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span class="icon-button__badge">3</span>
-                </button>
+                <div class="notif-bell-wrapper" style="position:relative;">
+                    <button class="icon-button" type="button" id="notifBellBtn" aria-label="Notifications">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M15 18H9M17 8C17 5.23858 14.7614 3 12 3C9.23858 3 7 5.23858 7 8V10.7639C7 11.4233 6.87041 12.0763 6.61803 12.6851L5.16568 16.1894C4.75614 17.1774 5.48244 18.25 6.55104 18.25H17.449C18.5176 18.25 19.2439 17.1774 18.8343 16.1894L17.382 12.6851C17.1296 12.0763 17 11.4233 17 10.7639V8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="icon-button__badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+
+                    <div id="notifDropdown" style="display:none; position:absolute; top:calc(100% + 10px); right:0; width:350px; max-height:400px; background:#fff; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.18); z-index:9999; overflow:hidden; border:1px solid rgba(0,0,0,0.07);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #f0f0f0;">
+                            <span style="font-weight:600; font-size:0.9rem; color:#222;">Rappels de voyage</span>
+                            <button id="notifDismissAllBtn" type="button" style="background:none; border:none; color:#c46f4b; font-size:0.78rem; cursor:pointer; padding:0;">Tout ignorer</button>
+                        </div>
+                        <div id="notifList" style="overflow-y:auto; max-height:320px;">
+                            <p style="text-align:center; color:#aaa; padding:24px; margin:0; font-size:0.85rem;">Aucun rappel</p>
+                        </div>
+                    </div>
+                </div>
 
                 {# Profil #}
                 <div class="profile-menu">
@@ -289,5 +301,106 @@
         </div>
     </footer>
 </div>
+
+{% block javascripts %}{% endblock %}
+
+<script>
+(function () {
+    var bellBtn      = document.getElementById('notifBellBtn');
+    var badge        = document.getElementById('notifBadge');
+    var dropdown     = document.getElementById('notifDropdown');
+    var notifList    = document.getElementById('notifList');
+    var dismissAllBtn= document.getElementById('notifDismissAllBtn');
+    if (!bellBtn) return;
+
+    var open = false;
+
+    bellBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        open = !open;
+        dropdown.style.display = open ? 'block' : 'none';
+        if (open) loadNotifications();
+    });
+
+    document.addEventListener('click', function (e) {
+        if (open && !dropdown.contains(e.target)) {
+            open = false;
+            dropdown.style.display = 'none';
+        }
+    });
+
+    function loadNotifications() {
+        fetch('/api/notifications/upcoming', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                setBadge(data.count);
+                renderList(data.notifications || []);
+            })
+            .catch(function () {});
+    }
+
+    function setBadge(n) {
+        if (n > 0) {
+            badge.textContent = n > 99 ? '99+' : String(n);
+            badge.style.display = '';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function renderList(items) {
+        if (items.length === 0) {
+            notifList.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;margin:0;font-size:0.85rem;">Aucun rappel</p>';
+            return;
+        }
+        var html = '';
+        items.forEach(function (n) {
+            html += '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-bottom:1px solid #f7f7f7;">';
+            html += '<div style="flex-shrink:0;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#c46f4b,#e8a87c);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🧳</div>';
+            html += '<div style="flex:1;min-width:0;">';
+            html += '<p style="margin:0 0 3px;font-size:0.84rem;color:#333;line-height:1.4;">' + escHtml(n.message) + '</p>';
+            if (n.destination) html += '<span style="font-size:0.75rem;color:#888;">' + escHtml(n.destination) + '</span>';
+            html += '</div>';
+            html += '<button data-vid="' + n.voyage_id + '" title="Ignorer" style="flex-shrink:0;background:none;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:2px 4px;line-height:1;">&times;</button>';
+            html += '</div>';
+        });
+        notifList.innerHTML = html;
+
+        notifList.querySelectorAll('[data-vid]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var vid = btn.getAttribute('data-vid');
+                fetch('/api/notifications/' + vid + '/dismiss', { method: 'POST', credentials: 'same-origin' })
+                    .then(function () { loadNotifications(); });
+            });
+        });
+    }
+
+    dismissAllBtn.addEventListener('click', function () {
+        fetch('/api/notifications/dismiss-all', { method: 'POST', credentials: 'same-origin' })
+            .then(function () { loadNotifications(); });
+    });
+
+    function escHtml(s) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(s || ''));
+        return d.innerHTML;
+    }
+
+    // Initial badge load (no dropdown)
+    fetch('/api/notifications/upcoming', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { setBadge(d.count); })
+        .catch(function () {});
+
+    // Refresh every 60s
+    setInterval(function () {
+        fetch('/api/notifications/upcoming', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) { setBadge(d.count); if (open) renderList(d.notifications || []); })
+            .catch(function () {});
+    }, 60000);
+})();
+</script>
 </body>
 </html>

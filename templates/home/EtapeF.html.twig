@@ -1,209 +1,24 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Jour {{ jour }} - {{ itineraire.nom_itineraire }} | TravelMate{% endblock %}
+{% block title %}{{ activeTimelineDay ? activeTimelineDay.full_label : 'Jour ' ~ jour }} - {{ itineraire.nom_itineraire }} | TravelMate{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
     <style>
         .etapes-page {
             display: grid;
             gap: 1.75rem;
         }
 
-        .etapes-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.5rem;
-            background: rgba(255, 253, 249, 0.94);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
-        }
-
-        .etapes-header__left {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .etapes-header__back {
-            display: inline-block;
-            padding: 0.75rem 1.25rem;
-            background: var(--color-secondary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-            font-size: 0.95rem;
-        }
-
-        .etapes-header__back:hover {
-            background: var(--color-secondary-dark);
-            transform: translateY(-2px);
-        }
-
-        .etapes-header__day-number {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--color-primary);
-            color: white;
-            border-radius: var(--radius-lg);
-            font-family: 'Fraunces', serif;
-            font-size: 1.75rem;
-            font-weight: 700;
-        }
-
-        .etapes-header__info {
-            display: grid;
-            gap: 0.25rem;
-        }
-
-        .etapes-header__title {
-            font-family: 'Fraunces', serif;
-            font-size: 1.75rem;
-            color: var(--color-text);
-            margin: 0;
-        }
-
-        .etapes-header__subtitle {
-            color: var(--color-text-muted);
-            font-size: 0.95rem;
-            margin: 0;
-        }
-
-        .etapes-header__actions {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .btn-action {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.25rem;
-            border: none;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            font-size: 0.9rem;
-            text-decoration: none;
-        }
-
-        .btn-action.primary {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .btn-action.primary:hover {
-            background: var(--color-primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(196, 111, 75, 0.25);
-        }
-
-        .etapes-list {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .etape-card {
-            padding: 1.5rem;
-            background: rgba(255, 253, 249, 0.94);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
-            transition: all var(--transition-base);
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 1.5rem;
-            align-items: start;
-        }
-
-        .etape-card:hover {
-            border-color: rgba(196, 111, 75, 0.3);
-            box-shadow: 0 12px 24px rgba(71, 48, 35, 0.08);
-            transform: translateY(-2px);
-        }
-
-        .etape-card__content {
-            display: grid;
-            gap: 0.75rem;
-        }
-
-        .etape-card__time {
-            font-family: 'Fraunces', serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--color-primary);
-        }
-
-        .etape-card__description {
-            color: var(--color-text-muted);
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .etape-card__actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            border-radius: var(--radius-md);
-            background: rgba(196, 111, 75, 0.1);
-            color: var(--color-primary);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            font-size: 1.1rem;
-        }
-
-        .action-btn:hover {
-            background: rgba(196, 111, 75, 0.2);
-            transform: scale(1.05);
-        }
-
-        .etapes-empty {
-            text-align: center;
-            padding: 3rem 2rem;
-            background: rgba(255, 253, 249, 0.94);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-xl);
-        }
-
-        .etapes-empty__icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .etapes-empty__title {
-            font-family: 'Fraunces', serif;
-            font-size: 1.35rem;
-            color: var(--color-text);
-            margin-bottom: 0.5rem;
-        }
-
-        .etapes-empty__text {
-            color: var(--color-text-muted);
-            margin-bottom: 1.5rem;
-        }
-
         .alert {
             padding: 1rem 1.25rem;
             border-radius: var(--radius-md);
-            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -221,24 +36,432 @@
             color: #e74c3c;
         }
 
-        .etapes-toolbar {
-            padding: 1.25rem 1.35rem;
-            background: rgba(255, 253, 249, 0.94);
+        .etapes-hero {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+            gap: 1.5rem;
+            padding: 2rem;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(47, 127, 121, 0.2), transparent 28%),
+                linear-gradient(135deg, rgba(255, 253, 249, 0.98), rgba(239, 246, 244, 0.92));
+            border: 1px solid rgba(231, 220, 205, 0.68);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 18px 36px rgba(71, 48, 35, 0.06);
+        }
+
+        .etapes-hero__content {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 0.95rem;
+            max-width: 780px;
+        }
+
+        .etapes-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--color-secondary);
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .etapes-hero__title {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.15rem, 3vw, 3.35rem);
+            line-height: 1.04;
+            color: var(--color-text);
+        }
+
+        .etapes-hero__subtitle {
+            color: var(--color-text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            max-width: 60ch;
+        }
+
+        .etapes-hero__meta {
+            display: flex;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .etapes-hero__pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid rgba(231, 220, 205, 0.9);
+            color: var(--color-text-muted);
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+
+        .etapes-hero__pill--accent {
+            background: rgba(196, 111, 75, 0.12);
+            border-color: rgba(196, 111, 75, 0.18);
+            color: var(--color-primary-dark);
+        }
+
+        .etapes-hero__stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 160px));
+            gap: 0.8rem;
+            margin-top: 0.35rem;
+        }
+
+        .etapes-stat {
+            padding: 0.9rem;
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(231, 220, 205, 0.95);
+        }
+
+        .etapes-stat strong {
+            display: block;
+            font-family: 'Fraunces', serif;
+            font-size: 1.55rem;
+            color: var(--color-text);
+        }
+
+        .etapes-stat span {
+            color: var(--color-text-muted);
+            font-size: 0.82rem;
+        }
+
+        .etapes-hero__actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+
+        .etapes-hero__actions .btn {
+            width: 100%;
+        }
+
+        .etapes-export-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 0.2rem;
+            padding: 1rem 1.15rem;
+            color: #fff;
+            background: linear-gradient(135deg, #1f6d67, #2f7f79);
+            border: 1px solid rgba(31, 109, 103, 0.38);
+            box-shadow: 0 16px 28px rgba(31, 109, 103, 0.2);
+        }
+
+        .etapes-export-btn:hover,
+        .etapes-export-btn:focus-visible {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 34px rgba(31, 109, 103, 0.24);
+        }
+
+        .etapes-export-btn span {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .etapes-export-btn small {
+            color: rgba(255, 255, 255, 0.84);
+            font-size: 0.8rem;
+        }
+
+        .etapes-board {
+            padding: 1.5rem;
+            background: rgba(255, 253, 249, 0.95);
             border: 1px solid var(--color-border);
             border-radius: var(--radius-xl);
-            box-shadow: 0 2px 8px rgba(71, 48, 35, 0.04);
+            box-shadow: 0 14px 28px rgba(71, 48, 35, 0.05);
         }
 
-        .etapes-toolbar__title {
-            font-family: 'Fraunces', serif;
-            font-size: 1.15rem;
-            color: var(--color-text);
-            margin: 0 0 1rem;
-        }
-
-        .etapes-filter-row {
+        .etapes-map {
+            position: relative;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at top right, rgba(214, 132, 91, 0.2), transparent 30%),
+                radial-gradient(circle at bottom left, rgba(237, 189, 122, 0.2), transparent 25%),
+                linear-gradient(135deg, rgba(255, 248, 241, 0.99), rgba(252, 241, 232, 0.98));
+            border: 1px solid rgba(230, 204, 181, 0.94);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 16px 34px rgba(126, 78, 52, 0.08);
+        }
+
+        .etapes-map::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 4px;
+            background: linear-gradient(90deg, #c46f4b, #e2a15d);
+        }
+
+        .etapes-map__toggle {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 1rem;
+            align-items: center;
+            width: 100%;
+            padding: 1.15rem 1.35rem;
+            background: transparent;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .etapes-map__toggle:hover,
+        .etapes-map__toggle:focus-visible {
+            background: rgba(255, 255, 255, 0.4);
+            outline: none;
+        }
+
+        .etapes-map__header {
+            display: flex;
+            align-items: center;
+            gap: 0.95rem;
+        }
+
+        .etapes-map__icon {
+            width: 52px;
+            height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(196, 111, 75, 0.15), rgba(255, 255, 255, 0.95));
+            border: 1px solid rgba(196, 111, 75, 0.18);
+            color: #c46f4b;
+            font-size: 1.45rem;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+            flex-shrink: 0;
+        }
+
+        .etapes-map__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 0.3rem;
+            color: #c46f4b;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .etapes-map__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.35rem;
+            color: var(--color-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .etapes-map__text {
+            color: var(--color-text-muted);
+            max-width: 66ch;
+            line-height: 1.65;
+            font-size: 0.95rem;
+        }
+
+        .etapes-map__actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .etapes-map__status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.55rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(230, 204, 181, 0.95);
+            color: #c46f4b;
+            font-size: 0.82rem;
+            font-weight: 700;
+            box-shadow: 0 8px 18px rgba(126, 78, 52, 0.06);
+        }
+
+        .etapes-map__status.is-warning {
+            background: rgba(196, 111, 75, 0.14);
+            border-color: rgba(196, 111, 75, 0.2);
+            color: #9a593f;
+        }
+
+        .etapes-map__chevron {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(230, 204, 181, 0.95);
+            color: #c46f4b;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 18px rgba(126, 78, 52, 0.06);
+            transition: transform var(--transition-fast), background var(--transition-fast);
+        }
+
+        .etapes-map.is-open .etapes-map__chevron {
+            transform: rotate(180deg);
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        .etapes-map__content {
+            display: none;
+            padding: 0 1.35rem 1.35rem;
+        }
+
+        .etapes-map.is-open .etapes-map__content {
+            display: block;
+        }
+
+        .etapes-map__layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .etapes-map__canvas {
+            min-height: 560px;
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(230, 204, 181, 0.92);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.66), 0 14px 24px rgba(126, 78, 52, 0.08);
+        }
+
+        .etapes-map__sidebar {
+            display: grid;
+            gap: 1rem;
+            align-content: start;
+        }
+
+        .etapes-map__panel {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(230, 204, 181, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 12px 20px rgba(126, 78, 52, 0.05);
+        }
+
+        .etapes-map__panel-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.05rem;
+            color: var(--color-text);
+            margin-bottom: 0.75rem;
+        }
+
+        .etapes-map__day-list,
+        .etapes-map__city-list,
+        .etapes-map__address-list {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .etapes-map__day-option {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.55rem 0.65rem;
+            border-radius: var(--radius-md);
+            background: rgba(255, 249, 243, 0.96);
+            border: 1px solid rgba(234, 214, 196, 0.95);
+        }
+
+        .etapes-map__day-option input {
+            width: 18px;
+            height: 18px;
+            accent-color: #c46f4b;
+            flex-shrink: 0;
+        }
+
+        .etapes-map__day-option strong {
+            color: var(--color-text);
+            font-size: 0.95rem;
+        }
+
+        .etapes-map__day-option span {
+            color: var(--color-text-muted);
+            font-size: 0.86rem;
+        }
+
+        .etapes-map__city-item,
+        .etapes-map__address-item {
+            padding: 0.7rem 0.8rem;
+            border-radius: var(--radius-md);
+            background: rgba(255, 249, 243, 0.96);
+            border: 1px solid rgba(234, 214, 196, 0.95);
+        }
+
+        .etapes-map__city-item {
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .etapes-map__address-item strong {
+            display: block;
+            color: var(--color-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .etapes-map__address-item span {
+            display: block;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+
+        .etapes-map__empty {
+            color: var(--color-text-muted);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .etapes-map__marker {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            background: #4f46e5;
+            border: 3px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.3);
+        }
+
+        .etapes-filters {
+            display: grid;
+            gap: 1rem;
+            padding: 1.3rem 1.35rem;
+            background: rgba(255, 253, 249, 0.95);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 14px 28px rgba(71, 48, 35, 0.05);
+        }
+
+        .etapes-filters__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.2rem;
+            color: var(--color-text);
+        }
+
+        .etapes-filters__row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 1rem;
             align-items: end;
         }
@@ -246,15 +469,15 @@
         .etapes-filter-group {
             display: flex;
             flex-direction: column;
-            gap: 0.45rem;
+            gap: 0.5rem;
         }
 
         .etapes-filter-group label {
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: var(--color-text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
         }
 
         .etapes-filter-group input,
@@ -265,6 +488,7 @@
             background: var(--color-surface);
             color: var(--color-text);
             font-size: 0.95rem;
+            transition: all var(--transition-fast);
         }
 
         .etapes-filter-group input:focus,
@@ -274,60 +498,399 @@
             box-shadow: 0 0 0 3px rgba(196, 111, 75, 0.1);
         }
 
-        .etapes-filter-actions {
+        .etapes-board__header {
             display: flex;
-            gap: 0.5rem;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.35rem;
+        }
+
+        .etapes-board__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.55rem;
+            color: var(--color-text);
+            margin-bottom: 0.35rem;
+        }
+
+        .etapes-board__text {
+            color: var(--color-text-muted);
+            max-width: 64ch;
+            line-height: 1.6;
+        }
+
+        .etapes-board__legend {
+            display: flex;
+            gap: 0.7rem;
             flex-wrap: wrap;
         }
 
-        .btn-etape-filter {
-            padding: 0.65rem 1.2rem;
-            background: var(--color-primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-etape-reset {
-            padding: 0.65rem 1rem;
-            background: transparent;
-            color: var(--color-text-muted);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            text-decoration: none;
-            font-weight: 500;
+        .etapes-legend {
             display: inline-flex;
             align-items: center;
+            gap: 0.45rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(243, 234, 223, 0.72);
+            color: var(--color-text-muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .etapes-legend__dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(47, 127, 121, 0.4);
+        }
+
+        .etapes-legend__dot.is-active {
+            background: var(--color-primary);
+        }
+
+        .etapes-timeline {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .timeline-row {
+            display: grid;
+            grid-template-columns: 112px minmax(0, 1fr);
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        .timeline-row__rail {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.7rem;
+            min-height: 92px;
+            padding-bottom: 0.6rem;
+        }
+
+        .timeline-row:not(:last-child) .timeline-row__rail::after {
+            content: '';
+            position: absolute;
+            top: 74px;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            background: linear-gradient(180deg, rgba(47, 127, 121, 0.55), rgba(47, 127, 121, 0.16));
+        }
+
+        .timeline-marker {
+            position: relative;
+            z-index: 1;
+            width: 74px;
+            height: 74px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.12rem;
+            border-radius: 50%;
+            background: rgba(47, 127, 121, 0.08);
+            border: 2px solid rgba(47, 127, 121, 0.34);
+            color: var(--color-secondary);
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
+        }
+
+        .timeline-row.is-selected .timeline-marker,
+        .timeline-marker:hover,
+        .timeline-marker:focus-visible {
+            background: var(--color-primary);
+            border-color: rgba(196, 111, 75, 0.78);
+            color: white;
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 18px 34px rgba(196, 111, 75, 0.22);
+            outline: none;
+        }
+
+        .timeline-marker__day {
+            font-family: 'Fraunces', serif;
+            font-size: 1.7rem;
+            line-height: 1;
+        }
+
+        .timeline-marker__month {
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .timeline-row__label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .timeline-row.is-selected .timeline-row__label {
+            color: var(--color-primary-dark);
+        }
+
+        .timeline-content {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            pointer-events: none;
+            transform: translateY(-8px);
+            transition: max-height 280ms ease, opacity 180ms ease, transform 180ms ease, padding 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+            padding: 0 1.35rem;
+            border: 1px solid transparent;
+            border-radius: var(--radius-xl);
+            background: linear-gradient(180deg, rgba(255, 253, 249, 0.98), rgba(247, 242, 234, 0.94));
+        }
+
+        .timeline-row.is-selected .timeline-content {
+            opacity: 1;
+            max-height: 5000px;
+            pointer-events: auto;
+            transform: none;
+            padding: 1.25rem 1.35rem;
+            border-color: rgba(231, 220, 205, 0.95);
+            box-shadow: 0 18px 34px rgba(71, 48, 35, 0.06);
+        }
+
+        .timeline-content__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-content__eyebrow {
+            color: var(--color-secondary);
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+
+        .timeline-content__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.45rem;
+            color: var(--color-text);
+            margin-bottom: 0.2rem;
+        }
+
+        .timeline-content__meta {
+            color: var(--color-text-muted);
+            font-size: 0.92rem;
+        }
+
+        .timeline-content__actions {
+            display: flex;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+
+        .timeline-steps {
+            display: grid;
+            gap: 0.9rem;
+        }
+
+        .timeline-step {
+            display: grid;
+            grid-template-columns: 96px minmax(0, 1fr) auto;
+            gap: 1rem;
+            align-items: start;
+            padding-top: 1rem;
+            border-top: 1px dashed rgba(196, 111, 75, 0.18);
+        }
+
+        .timeline-step:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .timeline-step__time {
+            width: fit-content;
+            min-width: 86px;
+            padding: 0.6rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(47, 127, 121, 0.12);
+            color: var(--color-secondary);
+            font-family: 'Fraunces', serif;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .timeline-step__body {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .timeline-step__description {
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .timeline-step__activity {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            width: fit-content;
+            padding: 0.42rem 0.78rem;
+            border-radius: 999px;
+            background: rgba(196, 111, 75, 0.12);
+            color: var(--color-primary);
+            font-weight: 600;
+            font-size: 0.82rem;
+        }
+
+        .timeline-step__actions {
+            display: flex;
+            gap: 0.45rem;
+            align-items: flex-start;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 1.05rem;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-muted);
+        }
+
+        .action-btn:hover {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .action-btn.danger:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .timeline-empty {
+            display: grid;
+            gap: 0.9rem;
+            padding-top: 0.2rem;
+        }
+
+        .timeline-empty__card {
+            padding: 1.15rem 1.2rem;
+            border-radius: var(--radius-lg);
+            border: 1px dashed rgba(47, 127, 121, 0.32);
+            background: rgba(47, 127, 121, 0.05);
+        }
+
+        .timeline-empty__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.15rem;
+            color: var(--color-text);
+            margin-bottom: 0.35rem;
+        }
+
+        .timeline-empty__text {
+            color: var(--color-text-muted);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1024px) {
+            .etapes-hero {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 768px) {
-            .etapes-header {
-                flex-direction: column;
-                gap: 1.5rem;
+            .etapes-page {
+                gap: 1.35rem;
+            }
+
+            .etapes-hero {
+                padding: 1.35rem;
+            }
+
+            .etapes-map__toggle {
+                grid-template-columns: 1fr;
+                padding: 1rem 1rem 0.95rem;
+            }
+
+            .etapes-map__header {
                 align-items: flex-start;
             }
 
-            .etapes-header__left {
-                width: 100%;
+            .etapes-map__actions {
+                justify-content: flex-start;
             }
 
-            .etapes-header__actions {
-                width: 100%;
-                flex-wrap: wrap;
+            .etapes-map__content {
+                padding: 0 1rem 1rem;
             }
 
-            .btn-action {
-                flex: 1;
-                min-width: 120px;
-            }
-
-            .etape-card {
+            .etapes-map__layout {
                 grid-template-columns: 1fr;
             }
 
-            .etape-card__actions {
+            .etapes-map__canvas {
+                min-height: 420px;
+            }
+
+            .etapes-hero__title {
+                font-size: 1.9rem;
+            }
+
+            .etapes-hero__stats {
+                grid-template-columns: 1fr;
+            }
+
+            .etapes-board {
+                padding: 1.1rem;
+            }
+
+            .etapes-filters {
+                padding: 1.1rem;
+            }
+
+            .timeline-row {
+                grid-template-columns: 82px minmax(0, 1fr);
+                gap: 0.9rem;
+            }
+
+            .timeline-marker {
+                width: 62px;
+                height: 62px;
+            }
+
+            .timeline-marker__day {
+                font-size: 1.38rem;
+            }
+
+            .timeline-row:not(:last-child) .timeline-row__rail::after {
+                top: 62px;
+            }
+
+            .timeline-row.is-selected .timeline-content {
+                padding: 1rem;
+            }
+
+            .timeline-step {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline-step__actions {
                 justify-content: flex-start;
             }
         }
@@ -336,7 +899,6 @@
 
 {% block body %}
     <div class="etapes-page">
-        <!-- Messages Flash -->
         {% for message in app.flashes('success') %}
             <div class="alert alert-success">
                 <span>✓</span>
@@ -351,34 +913,79 @@
             </div>
         {% endfor %}
 
-        <!-- Header avec navigation -->
-        <div class="etapes-header">
-            <div class="etapes-header__left">
-                <a href="{{ path('app_itineraires_index', {voyageId: itineraire.voyage.id_voyage}) }}" class="etapes-header__back">
-                    ← Afficher la carte
-                </a>
-                
-                <div class="etapes-header__day-number">{{ jour }}</div>
-                
-                <div class="etapes-header__info">
-                    <h1 class="etapes-header__title">Jour {{ jour }}</h1>
-                    <p class="etapes-header__subtitle">{{ itineraire.nom_itineraire }}</p>
+        <section class="etapes-hero">
+            <div class="etapes-hero__content">
+                <div class="etapes-hero__eyebrow">
+                    📌 Page étapes
+                </div>
+
+                <h1 class="etapes-hero__title">{{ itineraire.nom_itineraire }}</h1>
+
+                <p class="etapes-hero__subtitle">
+                    {% if itineraire.voyage and itineraire.voyage.destination %}
+                        {{ itineraire.voyage.destination.nom_destination }} ·
+                    {% endif %}
+                    {{ activeTimelineDay ? activeTimelineDay.full_label : 'Jour ' ~ jour }}
+                </p>
+
+                <div class="etapes-hero__meta">
+                    <span class="etapes-hero__pill">Jour actif : {{ jour }}</span>
+                    <span class="etapes-hero__pill">
+                        {{ activeTimelineDay ? activeTimelineDay.count : 0 }} étape{% if activeTimelineDay and activeTimelineDay.count > 1 %}s{% endif %}
+                    </span>
+                    <span class="etapes-hero__pill etapes-hero__pill--accent">Survole un cercle pour voir son contenu</span>
+                </div>
+
+                <div class="etapes-hero__stats">
+                    <div class="etapes-stat">
+                        <strong>{{ totalDays }}</strong>
+                        <span>Jours du voyage</span>
+                    </div>
+                    <div class="etapes-stat">
+                        <strong>{{ plannedDays }}</strong>
+                        <span>Jours planifiés</span>
+                    </div>
+                    <div class="etapes-stat">
+                        <strong>{{ totalEtapes }}</strong>
+                        <span>Étapes au total</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="etapes-header__actions">
-                <a href="{{ path('app_etapes_create', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="btn-action primary">
-                    + Ajouter une étape
+            <div class="etapes-hero__actions">
+                <a href="{{ path('app_etapes_export_pdf', {itineraireId: itineraire.id_itineraire, jour: jour, q: search_q ?: null, sort: sort ?: null}) }}" class="btn etapes-export-btn" target="_blank" rel="noopener">
+                    <span>Exporter en PDF</span>
+                    <small>Toutes les étapes visibles avec leurs détails</small>
+                </a>
+                <a href="{{ itineraire.voyage ? path('app_itineraires_index', {voyageId: itineraire.voyage.id_voyage}) : path('app_voyages') }}" class="btn btn--secondary">
+                    ← Retour aux itinéraires
                 </a>
             </div>
-        </div>
+        </section>
 
-        <section class="etapes-toolbar" aria-label="Recherche et tri des étapes">
-            <h2 class="etapes-toolbar__title">Recherche et tri</h2>
-            <form method="get" action="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="etapes-filter-row">
+        <section class="etapes-filters" aria-label="Recherche et tri des étapes">
+            <h2 class="etapes-filters__title">Recherche et tri</h2>
+            <form
+                method="get"
+                action="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: jour}) }}"
+                class="etapes-filters__row"
+                data-etapes-filter-form
+                data-current-day="{{ jour }}"
+                data-route-template="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: '__JOUR__'}) }}"
+            >
+                <div class="etapes-filter-group">
+                    <label for="etape-day">Jour</label>
+                    <select id="etape-day" data-etapes-day-select>
+                        {% for timelineDay in timelineDays %}
+                            <option value="{{ timelineDay.number }}" {% if timelineDay.number == jour %}selected{% endif %}>
+                                Jour {{ timelineDay.number }} · {{ timelineDay.full_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="etapes-filter-group">
                     <label for="etape-q">Recherche</label>
-                    <input type="search" id="etape-q" name="q" value="{{ search_q }}" placeholder="Description ou activité…" autocomplete="off">
+                    <input type="search" id="etape-q" name="q" value="{{ search_q }}" placeholder="Description ou activité..." autocomplete="off">
                 </div>
                 <div class="etapes-filter-group">
                     <label for="etape-sort">Tri</label>
@@ -389,54 +996,489 @@
                         <option value="alpha_desc" {% if sort == 'alpha_desc' %}selected{% endif %}>Description Z → A</option>
                     </select>
                 </div>
-                <div class="etapes-filter-actions">
-                    <button type="submit" class="btn-etape-filter">Appliquer</button>
-                    <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="btn-etape-reset">Réinitialiser</a>
-                </div>
             </form>
         </section>
 
-        <!-- Liste des étapes -->
-        {% if etapes|length > 0 %}
-            <div class="etapes-list">
-                {% for etape in etapes %}
-                    <div class="etape-card">
-                        <div class="etape-card__content">
-                            {% if etape.heure %}
-                                <div class="etape-card__time">
-                                    ⏰ {{ etape.heure|date('H:i') }}
-                                </div>
-                            {% endif %}
-                            <p class="etape-card__description">
-                                {{ etape.description_etape }}
-                            </p>
-                            {% if etape.activite %}
-                                <div style="color: var(--color-primary); font-weight: 500; font-size: 0.9rem;">
-                                    🎯 {{ etape.activite.nom }}
-                                </div>
-                            {% endif %}
+        <section
+            class="etapes-map"
+            aria-label="Carte des activités de l'itinéraire"
+            data-etapes-map
+            data-map-endpoint="{{ path('app_etapes_map_data', {itineraireId: itineraire.id_itineraire}) }}"
+            data-current-day="{{ jour }}"
+            data-default-lat="{{ itineraire.voyage and itineraire.voyage.destination and itineraire.voyage.destination.latitude_destination is not null ? itineraire.voyage.destination.latitude_destination : 48.8566 }}"
+            data-default-lng="{{ itineraire.voyage and itineraire.voyage.destination and itineraire.voyage.destination.longitude_destination is not null ? itineraire.voyage.destination.longitude_destination : 2.3522 }}"
+        >
+            <button type="button" class="etapes-map__toggle" data-map-toggle aria-expanded="false" aria-controls="etapes-map-content">
+                <div class="etapes-map__header">
+                    <div class="etapes-map__icon" aria-hidden="true">🗺️</div>
+                    <div>
+                        <div class="etapes-map__eyebrow">Carte interactive</div>
+                        <h2 class="etapes-map__title">Explorer les activités sur la carte</h2>
+                        <p class="etapes-map__text">
+                            Appuie ici pour afficher la carte, puis choisis un ou plusieurs jours pour voir les adresses des activités.
+                        </p>
+                    </div>
+                </div>
+                <div class="etapes-map__actions">
+                    <div class="etapes-map__status" data-map-status>Clique pour afficher la carte</div>
+                    <span class="etapes-map__chevron" aria-hidden="true">⌃</span>
+                </div>
+            </button>
+
+            <div class="etapes-map__content" id="etapes-map-content" data-map-content>
+                <div class="etapes-map__layout">
+                    <div class="etapes-map__canvas" data-map-canvas></div>
+
+                    <aside class="etapes-map__sidebar">
+                        <section class="etapes-map__panel">
+                            <h3 class="etapes-map__panel-title">Jours de l'itinéraire</h3>
+                            <div class="etapes-map__day-list">
+                                {% for timelineDay in timelineDays %}
+                                    <label class="etapes-map__day-option">
+                                        <input
+                                            type="checkbox"
+                                            value="{{ timelineDay.number }}"
+                                            data-map-day-input
+                                            {% if timelineDay.number == jour %}checked{% endif %}
+                                        >
+                                        <div>
+                                            <strong>Jour {{ timelineDay.number }}</strong>
+                                            <span>{{ timelineDay.full_label }}</span>
+                                        </div>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <section class="etapes-map__panel">
+                            <h3 class="etapes-map__panel-title">Villes</h3>
+                            <div class="etapes-map__city-list" data-map-cities>
+                                <div class="etapes-map__empty">Les villes des activités sélectionnées apparaîtront ici.</div>
+                            </div>
+                        </section>
+
+                        <section class="etapes-map__panel">
+                            <h3 class="etapes-map__panel-title">Adresses des activités</h3>
+                            <div class="etapes-map__address-list" data-map-addresses>
+                                <div class="etapes-map__empty">Les adresses géocodées seront listées ici.</div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <section class="etapes-board">
+            <div class="etapes-board__header">
+                <div>
+                    <h2 class="etapes-board__title">Timeline du voyage</h2>
+                    <p class="etapes-board__text">
+                        Clique sur un cercle pour garder ce jour actif. Le survol montre immédiatement les étapes du jour correspondant.
+                    </p>
+                </div>
+
+                <div class="etapes-board__legend">
+                    <span class="etapes-legend">
+                        <span class="etapes-legend__dot is-active"></span>
+                        Jour actif
+                    </span>
+                    <span class="etapes-legend">
+                        <span class="etapes-legend__dot"></span>
+                        Jour disponible
+                    </span>
+                </div>
+            </div>
+
+            <div class="etapes-timeline" data-timeline data-active-day="{{ jour }}">
+                {% for timelineDay in timelineDays %}
+                    <article class="timeline-row {% if timelineDay.number == jour %}is-selected{% endif %}" data-timeline-row data-day="{{ timelineDay.number }}">
+                        <div class="timeline-row__rail">
+                            <a href="{{ path('app_etapes_jour', {itineraireId: itineraire.id_itineraire, jour: timelineDay.number, q: search_q ?: null, sort: sort ?: null}) }}" class="timeline-marker" data-timeline-marker {% if timelineDay.number == jour %}aria-current="page"{% endif %}>
+                                <span class="timeline-marker__day">{{ timelineDay.calendar_day }}</span>
+                                <span class="timeline-marker__month">{{ timelineDay.month_label }}</span>
+                            </a>
+                            <span class="timeline-row__label">Jour {{ timelineDay.number }}</span>
                         </div>
 
-                        <div class="etape-card__actions">
-                            <a href="{{ path('app_etapes_edit', {id: etape.id_etape}) }}" class="action-btn" title="Éditer">✏️</a>
-                            <form method="POST" action="{{ path('app_etapes_delete', {id: etape.id_etape}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette étape?');">
-                                <button type="submit" class="action-btn" title="Supprimer" style="background: rgba(231, 76, 60, 0.1); color: #e74c3c;">🗑️</button>
-                            </form>
+                        <div class="timeline-content">
+                            <div class="timeline-content__header">
+                                <div>
+                                    <p class="timeline-content__eyebrow">{{ timelineDay.weekday_short }} · Jour {{ timelineDay.number }}</p>
+                                    <h3 class="timeline-content__title">{{ timelineDay.full_label }}</h3>
+                                    <p class="timeline-content__meta">
+                                        {{ timelineDay.count }} étape{% if timelineDay.count > 1 %}s{% endif %} planifiée{% if timelineDay.count > 1 %}s{% endif %}
+                                    </p>
+                                </div>
+
+                                <div class="timeline-content__actions">
+                                    <a href="{{ path('app_etapes_create', {itineraireId: itineraire.id_itineraire, jour: timelineDay.number}) }}" class="btn btn--secondary">
+                                        + Ajouter une étape
+                                    </a>
+                                </div>
+                            </div>
+
+                            {% if timelineDay.etapes|length > 0 %}
+                                <div class="timeline-steps">
+                                    {% for etape in timelineDay.etapes %}
+                                        <article class="timeline-step">
+                                            <div class="timeline-step__time">
+                                                {{ etape.heure ? etape.heure|date('H:i') : '--:--' }}
+                                            </div>
+
+                                            <div class="timeline-step__body">
+                                                <p class="timeline-step__description">
+                                                    {{ etape.description_etape }}
+                                                </p>
+                                                {% if etape.activite %}
+                                                    <span class="timeline-step__activity">🎯 {{ etape.activite.nom }}</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="timeline-step__actions">
+                                                <a href="{{ path('app_etapes_edit', {id: etape.id_etape}) }}" class="action-btn" title="Éditer">✏️</a>
+                                                <form method="POST" action="{{ path('app_etapes_delete', {id: etape.id_etape}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette étape ?');">
+                                                    <button type="submit" class="action-btn danger" title="Supprimer">🗑️</button>
+                                                </form>
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="timeline-empty">
+                                    <div class="timeline-empty__card">
+                                        <h4 class="timeline-empty__title">Aucune étape prévue</h4>
+                                        <p class="timeline-empty__text">
+                                            Ce jour est encore vide. Ajoute une étape pour remplir la timeline.
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
-                    </div>
+                    </article>
                 {% endfor %}
             </div>
-        {% else %}
-            <div class="etapes-empty">
-                <div class="etapes-empty__icon">📋</div>
-                <h3 class="etapes-empty__title">Aucune étape pour ce jour</h3>
-                <p class="etapes-empty__text">
-                    Planifiez vos activités pour le jour {{ jour }}!
-                </p>
-                <a href="{{ path('app_etapes_create', {itineraireId: itineraire.id_itineraire, jour: jour}) }}" class="btn btn--primary">
-                    + Ajouter une étape
-                </a>
-            </div>
-        {% endif %}
+        </section>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var filterForm = document.querySelector('[data-etapes-filter-form]');
+            if (filterForm) {
+                var daySelect = filterForm.querySelector('[data-etapes-day-select]');
+                var searchInput = filterForm.querySelector('[name="q"]');
+                var sortSelect = filterForm.querySelector('[name="sort"]');
+                var routeTemplate = filterForm.dataset.routeTemplate || '';
+                var currentDay = filterForm.dataset.currentDay || '';
+                var debounceTimer = null;
+
+                var updateFormAction = function () {
+                    if (!routeTemplate) {
+                        return;
+                    }
+
+                    var selectedDay = daySelect && daySelect.value ? daySelect.value : currentDay;
+                    filterForm.action = routeTemplate.replace('__JOUR__', selectedDay);
+                };
+
+                var submitFilters = function () {
+                    updateFormAction();
+                    filterForm.requestSubmit();
+                };
+
+                updateFormAction();
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', function () {
+                        window.clearTimeout(debounceTimer);
+                        debounceTimer = window.setTimeout(submitFilters, 250);
+                    });
+                }
+
+                if (sortSelect) {
+                    sortSelect.addEventListener('change', submitFilters);
+                }
+
+                if (daySelect) {
+                    daySelect.addEventListener('change', submitFilters);
+                }
+
+                filterForm.addEventListener('submit', updateFormAction);
+            }
+
+            var mapSection = document.querySelector('[data-etapes-map]');
+            if (mapSection && window.L) {
+                var toggleButton = mapSection.querySelector('[data-map-toggle]');
+                var mapCanvas = mapSection.querySelector('[data-map-canvas]');
+                var statusElement = mapSection.querySelector('[data-map-status]');
+                var cityList = mapSection.querySelector('[data-map-cities]');
+                var addressList = mapSection.querySelector('[data-map-addresses]');
+                var dayInputs = Array.prototype.slice.call(mapSection.querySelectorAll('[data-map-day-input]'));
+                var endpoint = mapSection.dataset.mapEndpoint || '';
+                var currentDayForMap = mapSection.dataset.currentDay || '1';
+                var defaultLat = parseFloat(mapSection.dataset.defaultLat || '48.8566');
+                var defaultLng = parseFloat(mapSection.dataset.defaultLng || '2.3522');
+                var map = null;
+                var markersLayer = null;
+                var hasLoadedMapData = false;
+
+                var colorPalette = ['#4f46e5', '#0f766e', '#c2410c', '#b45309', '#9333ea', '#2563eb', '#047857'];
+
+                var ensureMap = function () {
+                    if (map) {
+                        return;
+                    }
+
+                    map = L.map(mapCanvas, {
+                        zoomControl: true,
+                        scrollWheelZoom: true
+                    }).setView([defaultLat, defaultLng], 11);
+                    markersLayer = L.layerGroup().addTo(map);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+                };
+
+                var setStatus = function (message, tone) {
+                    if (!statusElement) {
+                        return;
+                    }
+
+                    statusElement.textContent = message;
+                    statusElement.classList.toggle('is-warning', tone === 'warning');
+                };
+
+                var renderEmptyList = function (container, message) {
+                    if (!container) {
+                        return;
+                    }
+
+                    container.innerHTML = '<div class="etapes-map__empty">' + message + '</div>';
+                };
+
+                var getSelectedDays = function () {
+                    return dayInputs
+                        .filter(function (input) {
+                            return input.checked;
+                        })
+                        .map(function (input) {
+                            return input.value;
+                        });
+                };
+
+                var renderCities = function (cities) {
+                    if (!cityList) {
+                        return;
+                    }
+
+                    if (!cities || cities.length === 0) {
+                        renderEmptyList(cityList, 'Aucune ville détectée pour la sélection courante.');
+                        return;
+                    }
+
+                    cityList.innerHTML = cities.map(function (city) {
+                        return '<div class="etapes-map__city-item">' + city + '</div>';
+                    }).join('');
+                };
+
+                var renderAddresses = function (markers) {
+                    if (!addressList) {
+                        return;
+                    }
+
+                    if (!markers || markers.length === 0) {
+                        renderEmptyList(addressList, 'Aucune adresse à afficher pour les jours choisis.');
+                        return;
+                    }
+
+                    addressList.innerHTML = markers.map(function (marker) {
+                        var cityLine = marker.city ? ' · ' + marker.city : '';
+                        return [
+                            '<div class="etapes-map__address-item">',
+                            '<strong>Jour ' + marker.day + ' · ' + marker.time + ' · ' + marker.activity + '</strong>',
+                            '<span>' + marker.address + cityLine + '</span>',
+                            '</div>'
+                        ].join('');
+                    }).join('');
+                };
+
+                var renderMarkers = function (markers) {
+                    ensureMap();
+                    markersLayer.clearLayers();
+
+                    if (!markers || markers.length === 0) {
+                        map.setView([defaultLat, defaultLng], 11);
+                        return;
+                    }
+
+                    var bounds = [];
+                    markers.forEach(function (marker) {
+                        var color = colorPalette[(marker.day - 1) % colorPalette.length];
+                        var markerLayer = L.circleMarker([marker.lat, marker.lng], {
+                            radius: 9,
+                            color: '#ffffff',
+                            weight: 2,
+                            fillColor: color,
+                            fillOpacity: 0.95
+                        });
+
+                        markerLayer.bindPopup([
+                            '<strong>Jour ' + marker.day + ' · ' + marker.activity + '</strong><br>',
+                            marker.dayLabel + '<br>',
+                            marker.time + ' · ' + marker.address,
+                            marker.description ? '<br><em>' + marker.description + '</em>' : ''
+                        ].join(''));
+
+                        markerLayer.addTo(markersLayer);
+                        bounds.push([marker.lat, marker.lng]);
+                    });
+
+                    if (bounds.length === 1) {
+                        map.setView(bounds[0], 13);
+                    } else {
+                        map.fitBounds(bounds, { padding: [30, 30] });
+                    }
+                };
+
+                var fetchMapData = function () {
+                    ensureMap();
+
+                    if (!endpoint) {
+                        setStatus('La source de données de la carte est introuvable.', 'warning');
+                        return;
+                    }
+
+                    var selectedDays = getSelectedDays();
+                    if (selectedDays.length === 0) {
+                        markersLayer.clearLayers();
+                        renderCities([]);
+                        renderAddresses([]);
+                        setStatus('Sélectionne au moins un jour pour afficher la carte.', 'warning');
+                        map.setView([defaultLat, defaultLng], 11);
+                        return;
+                    }
+
+                    var url = new URL(endpoint, window.location.origin);
+                    var searchParams = new URLSearchParams(window.location.search);
+
+                    selectedDays.forEach(function (dayValue) {
+                        url.searchParams.append('days[]', dayValue);
+                    });
+
+                    if (searchParams.has('q')) {
+                        url.searchParams.set('q', searchParams.get('q'));
+                    }
+
+                    if (searchParams.has('sort')) {
+                        url.searchParams.set('sort', searchParams.get('sort'));
+                    }
+
+                    url.searchParams.set('jour', currentDayForMap);
+                    setStatus('Chargement des activités géolocalisées…');
+
+                    fetch(url.toString(), {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                        .then(function (response) {
+                            if (!response.ok) {
+                                throw new Error('HTTP ' + response.status);
+                            }
+
+                            return response.json();
+                        })
+                        .then(function (payload) {
+                            renderMarkers(payload.markers || []);
+                            renderCities(payload.cities || []);
+                            renderAddresses(payload.markers || []);
+                            hasLoadedMapData = true;
+
+                            if (payload.status === 'ready') {
+                                setStatus(payload.message || 'Carte mise à jour.');
+                            } else {
+                                setStatus(payload.message || 'La carte ne peut pas être alimentée pour le moment.', 'warning');
+                            }
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                            markersLayer.clearLayers();
+                            renderCities([]);
+                            renderAddresses([]);
+                            setStatus('Impossible de charger les adresses sur la carte.', 'warning');
+                            map.setView([defaultLat, defaultLng], 11);
+                        });
+                };
+
+                dayInputs.forEach(function (input) {
+                    input.addEventListener('change', fetchMapData);
+                });
+
+                if (toggleButton) {
+                    toggleButton.addEventListener('click', function () {
+                        var isOpen = mapSection.classList.toggle('is-open');
+                        toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                        if (isOpen) {
+                            ensureMap();
+                            window.setTimeout(function () {
+                                map.invalidateSize();
+
+                                if (!hasLoadedMapData) {
+                                    fetchMapData();
+                                }
+                            }, 120);
+                        }
+                    });
+                }
+            }
+
+            var timeline = document.querySelector('[data-timeline]');
+            if (!timeline) {
+                return;
+            }
+
+            var rows = Array.prototype.slice.call(timeline.querySelectorAll('[data-timeline-row]'));
+            var persistedDay = timeline.dataset.activeDay || '';
+
+            var selectDay = function (day) {
+                rows.forEach(function (row) {
+                    row.classList.toggle('is-selected', row.dataset.day === day);
+                });
+            };
+
+            selectDay(persistedDay);
+
+            rows.forEach(function (row) {
+                var marker = row.querySelector('[data-timeline-marker]');
+                if (marker) {
+                    marker.addEventListener('mouseenter', function () {
+                        selectDay(row.dataset.day);
+                    });
+                }
+
+                row.addEventListener('focusin', function () {
+                    selectDay(row.dataset.day);
+                });
+            });
+
+            timeline.addEventListener('mouseleave', function () {
+                selectDay(persistedDay);
+            });
+
+            timeline.addEventListener('focusout', function (event) {
+                if (!event.relatedTarget || !timeline.contains(event.relatedTarget)) {
+                    selectDay(persistedDay);
+                }
+            });
+        });
+    </script>
 {% endblock %}
