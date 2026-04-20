@@ -17,7 +17,20 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 class ActiviteController extends AbstractController
 {
     // ════════════════════════════════════════════════════════════════════════
-    //  HELPERS PRIVÉS — IA RECOMMANDATION (quiz / scoring)
+    //  CHEMINS — centralisés ici pour faciliter la maintenance
+    // ════════════════════════════════════════════════════════════════════════
+
+    /** Python du venv ai_service (contient openai, etc.) */
+    private const PYTHON_VENV = 'C:/Users/Admin/Desktop/projet sym/ai_service/venv/Scripts/python.exe';
+
+    /** Scripts Python */
+    private const SCRIPT_AVIS_ANALYSER       = 'C:/Users/Admin/Desktop/projet sym/ai_service/avis_analyser.py';
+    private const SCRIPT_AI_RECOMMENDER      = 'C:/Users/Admin/Desktop/projet sym/ai_recommender/ai_recommender.py';
+    private const SCRIPT_SIMILAR_RECOMMENDER = 'C:/Users/Admin/Desktop/projet sym/ai_recommender/activity_recommender.py';
+    private const SCRIPT_PRICE_SCRAPER       = 'C:/Users/Admin/Desktop/projet sym/price_scraper/price_scraper.py';
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  HELPER PRIVÉ — IA RECOMMANDATION (quiz / scoring)
     // ════════════════════════════════════════════════════════════════════════
 
     /**
@@ -40,14 +53,13 @@ class ActiviteController extends AbstractController
             ];
         }
 
-        $scriptPath = 'C:/Users/Admin/Desktop/projet sym/ai_recommender/ai_recommender.py';
-
         $tmpFile = tempnam(sys_get_temp_dir(), 'ai_') . '.json';
         file_put_contents($tmpFile, json_encode($data, JSON_UNESCAPED_UNICODE));
 
         $cmd = sprintf(
-            'python -X utf8 "%s" --file "%s" 2>&1',
-            $scriptPath,
+            '"%s" -X utf8 "%s" --file "%s" 2>&1',
+            self::PYTHON_VENV,
+            self::SCRIPT_AI_RECOMMENDER,
             $tmpFile
         );
 
@@ -81,6 +93,101 @@ class ActiviteController extends AbstractController
         });
 
         return ['activites' => $activites, 'scoreMap' => $scoreMap];
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  HELPER PRIVÉ — IA ANALYSE DES AVIS (backoffice)
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Appelle avis_analyser.py (Grok) pour générer un feedback IA des avis
+     * d'une activité, à destination de l'admin dans le backoffice.
+     *
+     * Retourne toujours un tableau. En cas d'erreur, la clé '_error' est
+     * présente pour affichage dans le twig de diagnostic.
+     */
+    private function getAvisFeedback(Activite $activite): array
+    {
+        // ── 1. Collecter les avis non flagués ─────────────────────────────
+        $avisData = [];
+        foreach ($activite->getAvis() as $avis) {
+            if ($avis->isFlagged()) {
+                continue;
+            }
+            $avisData[] = [
+                'note'        => $avis->getNote(),
+                'commentaire' => $avis->getCommentaire(),
+            ];
+        }
+
+        // ── 2. Vérifications préalables ───────────────────────────────────
+        if (!file_exists(self::PYTHON_VENV)) {
+            return [
+                '_error' => "Python venv introuvable :\n" . self::PYTHON_VENV
+                          . "\nVérifiez que le venv existe dans ai_service/venv/Scripts/",
+            ];
+        }
+
+        if (!file_exists(self::SCRIPT_AVIS_ANALYSER)) {
+            return [
+                '_error' => "Script introuvable :\n" . self::SCRIPT_AVIS_ANALYSER,
+            ];
+        }
+
+        // ── 3. Écrire le payload JSON dans un fichier temporaire ──────────
+        $payload = [
+            'activite' => $activite->getNom(),
+            'avis'     => $avisData,
+        ];
+
+        $tmpFile = tempnam(sys_get_temp_dir(), 'avis_') . '.json';
+        if (file_put_contents($tmpFile, json_encode($payload, JSON_UNESCAPED_UNICODE)) === false) {
+            return ['_error' => "Impossible d'écrire le fichier temporaire JSON."];
+        }
+
+        // ── 4. Exécuter le script via le Python du venv ───────────────────
+        $cmd = sprintf(
+            '"%s" -X utf8 "%s" --file "%s" 2>&1',
+            self::PYTHON_VENV,
+            self::SCRIPT_AVIS_ANALYSER,
+            $tmpFile
+        );
+
+        $output = shell_exec($cmd);
+        @unlink($tmpFile);
+
+        // ── 5. Vérifier la sortie ─────────────────────────────────────────
+        if ($output === null) {
+            return [
+                '_error' => "shell_exec() a retourné null.\n"
+                          . "Vérifiez que shell_exec est activé dans php.ini (pas dans disable_functions).",
+            ];
+        }
+
+        if (trim($output) === '') {
+            return [
+                '_error' => "Le script Python n'a produit aucune sortie.\n"
+                          . "Commande : $cmd",
+            ];
+        }
+
+        // ── 6. Chercher la dernière ligne JSON valide (objet) ─────────────
+        $lines = array_values(array_filter(array_map('trim', explode("\n", $output))));
+
+        foreach (array_reverse($lines) as $line) {
+            if (str_starts_with($line, '{')) {
+                $result = json_decode($line, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($result)) {
+                    return $result; // ✅ Succès
+                }
+            }
+        }
+
+        // ── 7. Aucun JSON trouvé → retourner la sortie brute pour debug ───
+        return [
+            '_error' => 'Aucun JSON valide trouvé dans la sortie du script.',
+            '_raw'   => implode("\n", array_slice($lines, 0, 30)),
+        ];
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -159,15 +266,13 @@ class ActiviteController extends AbstractController
         ];
 
         // ── 3. Écrire dans un fichier temp et appeler activity_recommender.py
-        $scriptPath = 'C:/Users/Admin/Desktop/projet sym/ai_recommender/activity_recommender.py';
-
         $tmpFile = tempnam(sys_get_temp_dir(), 'rec_') . '.json';
         file_put_contents($tmpFile, json_encode($inputPayload, JSON_UNESCAPED_UNICODE));
 
-        // 2>&1 capture stderr+stdout ensemble pour debug, puis on prend la dernière ligne JSON
         $cmd = sprintf(
-            'python -X utf8 "%s" --file "%s" 2>&1',
-            $scriptPath,
+            '"%s" -X utf8 "%s" --file "%s" 2>&1',
+            self::PYTHON_VENV,
+            self::SCRIPT_SIMILAR_RECOMMENDER,
             $tmpFile
         );
 
@@ -179,8 +284,7 @@ class ActiviteController extends AbstractController
         }
 
         // ── 4. Parser la dernière ligne non-vide (seule ligne JSON valide) ─
-        $lines = array_filter(array_map('trim', explode("\n", trim($output))));
-        // On cherche la dernière ligne qui commence par [ (JSON array)
+        $lines    = array_filter(array_map('trim', explode("\n", trim($output))));
         $jsonLine = '';
         foreach (array_reverse(array_values($lines)) as $line) {
             if (str_starts_with($line, '[') || str_starts_with($line, '{')) {
@@ -249,7 +353,7 @@ class ActiviteController extends AbstractController
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  PRICE ADVISOR — doit être avant /new pour éviter conflit de route
+    //  PRICE ADVISOR — doit être avant /{id} pour éviter conflit de route
     // ──────────────────────────────────────────────────────────────────────
     #[Route('/admin/activite/price-advisor', name: 'app_activite_price_advisor', methods: ['GET'])]
     public function priceAdvisor(Request $request): JsonResponse
@@ -261,11 +365,14 @@ class ActiviteController extends AbstractController
             return new JsonResponse(['error' => 'Activité trop courte'], 400);
         }
 
-        $scriptPath = 'C:/Users/Admin/Desktop/projet sym/price_scraper/price_scraper.py';
+        if (!file_exists(self::SCRIPT_PRICE_SCRAPER)) {
+            return new JsonResponse(['error' => 'Script price_scraper introuvable'], 503);
+        }
 
         $cmd = sprintf(
-            'python -X utf8 "%s" %s %s 2>&1',
-            $scriptPath,
+            '"%s" -X utf8 "%s" %s %s 2>&1',
+            self::PYTHON_VENV,
+            self::SCRIPT_PRICE_SCRAPER,
             escapeshellarg($activity),
             escapeshellarg($location)
         );
@@ -287,6 +394,31 @@ class ActiviteController extends AbstractController
         return new JsonResponse($data);
     }
 
+    // ──────────────────────────────────────────────────────────────────────
+    //  SHOW ADMIN — Détail activité + feedback IA des avis (Grok)
+    //  ⚠️  Doit rester AVANT /new pour éviter le conflit de route /{id}
+    // ──────────────────────────────────────────────────────────────────────
+    #[Route('/admin/activite/{id}', name: 'app_activite_show_admin', methods: ['GET'])]
+    public function showAdmin(Activite $activite): Response
+    {
+        $feedback    = $this->getAvisFeedback($activite);
+        $totalAvis   = count($activite->getAvis());
+        $flaggedAvis = array_filter(
+            $activite->getAvis()->toArray(),
+            fn($a) => $a->isFlagged()
+        );
+
+        return $this->render('admin/activite/show.html.twig', [
+            'activite'     => $activite,
+            'feedback'     => $feedback,
+            'totalAvis'    => $totalAvis,
+            'flaggedCount' => count($flaggedAvis),
+        ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    //  NEW
+    // ──────────────────────────────────────────────────────────────────────
     #[Route('/admin/activite/new', name: 'app_activite_new', methods: ['GET', 'POST'])]
     public function new(
         Request                $request,
@@ -322,6 +454,9 @@ class ActiviteController extends AbstractController
         ]);
     }
 
+    // ──────────────────────────────────────────────────────────────────────
+    //  EDIT
+    // ──────────────────────────────────────────────────────────────────────
     #[Route('/admin/activite/{id}/edit', name: 'app_activite_edit', methods: ['GET', 'POST'])]
     public function edit(
         Request                $request,
@@ -356,9 +491,15 @@ class ActiviteController extends AbstractController
         ]);
     }
 
+    // ──────────────────────────────────────────────────────────────────────
+    //  DELETE
+    // ──────────────────────────────────────────────────────────────────────
     #[Route('/admin/activite/{id}/delete', name: 'app_activite_delete', methods: ['POST'])]
-    public function delete(Request $request, Activite $activite, EntityManagerInterface $entityManager): Response
-    {
+    public function delete(
+        Request                $request,
+        Activite               $activite,
+        EntityManagerInterface $entityManager
+    ): Response {
         if ($this->isCsrfTokenValid('delete' . $activite->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($activite);
             $entityManager->flush();

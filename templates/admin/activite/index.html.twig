@@ -171,19 +171,29 @@
             text-decoration: none;
         }
         .btn-icon:hover { background: var(--admin-bg); color: var(--admin-primary); border-color: var(--admin-primary); }
-        .btn-icon--danger:hover { color: var(--admin-danger); border-color: var(--admin-danger); background: var(--admin-danger-soft); }
 
-        .empty-state {
-            padding: 3rem 1.5rem;
-            text-align: center;
-            color: var(--admin-text-muted);
+        /* ── Bouton IA Grok ── */
+        .btn-icon--ai {
+            border-color: rgba(99, 102, 241, 0.35);
+            color: #6366f1;
+            background: rgba(99, 102, 241, 0.06);
         }
-        .empty-state__icon { font-size: 3rem; margin-bottom: 0.75rem; }
-        .empty-state__title { font-weight: 600; color: var(--admin-text); margin-bottom: 0.35rem; }
+        .btn-icon--ai:hover {
+            background: rgba(99, 102, 241, 0.14);
+            border-color: #6366f1;
+            color: #4f46e5;
+        }
+
+        .btn-icon--danger { color: var(--admin-danger); }
+        .btn-icon--danger:hover { background: var(--admin-danger-soft); border-color: var(--admin-danger); color: var(--admin-danger); }
+
+        .empty-state { text-align: center; padding: 3rem 1rem; }
+        .empty-state__icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .empty-state__title { font-weight: 600; font-size: 1rem; margin-bottom: 0.35rem; }
 
         .flash-success {
             background: var(--admin-success-soft);
-            border: 1px solid rgba(60,139,114,0.25);
+            border: 1px solid rgba(47,127,121,0.25);
             color: var(--admin-success);
             border-radius: var(--radius-md);
             padding: 0.85rem 1.25rem;
@@ -329,14 +339,29 @@
                             </td>
                             <td>
                                 <div class="actions-cell">
+                                    {# ── Voir page front ── #}
                                     <a href="{{ path('app_activite_show', {id: activite.id}) }}"
-                                       class="btn-icon" title="Voir" target="_blank">
+                                       class="btn-icon" title="Voir côté visiteur" target="_blank">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
                                     </a>
+
+                                    {# ── Analyse IA Grok des avis ── #}
+                                    <a href="{{ path('app_activite_show_admin', {id: activite.id}) }}"
+                                       class="btn-icon btn-icon--ai"
+                                       title="Analyse IA des avis (Grok)">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                                            <path d="M12 2a10 10 0 100 20A10 10 0 0012 2z" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                    </a>
+
+                                    {# ── Modifier ── #}
                                     <a href="{{ path('app_activite_edit', {id: activite.id}) }}"
                                        class="btn-icon" title="Modifier">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                                     </a>
+
+                                    {# ── Supprimer ── #}
                                     <form method="post" action="{{ path('app_activite_delete', {id: activite.id}) }}"
                                           onsubmit="return confirm('Supprimer « {{ activite.nom }} » ? Cette action est irréversible.')">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ activite.id) }}">

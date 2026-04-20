@@ -1,0 +1,629 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}{{ activite.nom }} — Analyse IA — Admin TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* ── Layout ── */
+        .show-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media (max-width: 900px) {
+            .show-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .page-header__title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+        .page-header__sub {
+            font-size: 0.88rem;
+            color: var(--admin-text-muted);
+            margin-top: 0.2rem;
+        }
+        .page-header__actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+        /* ── Cards ── */
+        .admin-card {
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+        .admin-card__header {
+            padding: 1.1rem 1.4rem;
+            border-bottom: 1px solid var(--admin-border);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .admin-card__title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--admin-text);
+        }
+        .admin-card__body { padding: 1.4rem; }
+
+        /* ── Activity image ── */
+        .act-cover {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--admin-border);
+            background: var(--admin-bg);
+        }
+        .act-cover-placeholder {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--admin-border);
+            background: var(--admin-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        /* ── Info rows ── */
+        .info-list { list-style: none; margin: 0; padding: 0; }
+        .info-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid rgba(231,220,205,0.5);
+            font-size: 0.9rem;
+            gap: 0.5rem;
+        }
+        .info-list li:last-child { border-bottom: none; }
+        .info-list__label { color: var(--admin-text-muted); flex-shrink: 0; }
+        .info-list__value { font-weight: 600; color: var(--admin-text); text-align: right; }
+
+        /* ── Pills ── */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.22rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .pill--active     { background: var(--admin-success-soft); color: var(--admin-success); }
+        .pill--inactive   { background: var(--admin-surface-alt);  color: var(--admin-text-muted); }
+        .pill--attente    { background: var(--admin-warning-soft);  color: var(--admin-warning); }
+        .pill--facile     { background: rgba(47,127,121,0.1);       color: var(--admin-secondary); }
+        .pill--moyen      { background: var(--admin-warning-soft);  color: var(--admin-warning); }
+        .pill--difficile  { background: rgba(196,111,75,0.12);      color: var(--admin-primary-dark); }
+        .pill--expert     { background: var(--admin-danger-soft);   color: var(--admin-danger); }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .stat-card {
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-card__num {
+            font-family: 'Fraunces', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+            line-height: 1;
+        }
+        .stat-card__label {
+            font-size: 0.75rem;
+            color: var(--admin-text-muted);
+            margin-top: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── AI Feedback card ── */
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.2rem 0.6rem;
+            background: linear-gradient(135deg, rgba(196,111,75,0.12), rgba(47,127,121,0.10));
+            border: 1px solid var(--admin-border);
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--admin-primary);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .tendance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.82rem;
+        }
+        .tendance--positive { background: var(--admin-success-soft); color: var(--admin-success); }
+        .tendance--neutre   { background: var(--admin-surface-alt);  color: var(--admin-text-muted); }
+        .tendance--negative { background: var(--admin-danger-soft);  color: var(--admin-danger); }
+
+        .resume-box {
+            background: var(--admin-bg);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.2rem;
+            font-size: 0.92rem;
+            color: var(--admin-text);
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+            font-style: italic;
+        }
+
+        .points-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        @media (max-width: 600px) { .points-grid { grid-template-columns: 1fr; } }
+
+        .points-block {
+            background: var(--admin-bg);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.2rem;
+        }
+        .points-block__title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.65rem;
+        }
+        .points-block--pos .points-block__title { color: var(--admin-success); }
+        .points-block--neg .points-block__title { color: var(--admin-danger); }
+
+        .points-list { list-style: none; margin: 0; padding: 0; }
+        .points-list li {
+            font-size: 0.88rem;
+            color: var(--admin-text);
+            padding: 0.3rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        .points-list__dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            margin-top: 0.42em;
+            flex-shrink: 0;
+        }
+        .points-block--pos .points-list__dot { background: var(--admin-success); }
+        .points-block--neg .points-list__dot { background: var(--admin-danger); }
+
+        .recommandation-box {
+            background: linear-gradient(135deg, rgba(196,111,75,0.07), rgba(47,127,121,0.06));
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.2rem;
+            display: flex;
+            gap: 0.8rem;
+            align-items: flex-start;
+        }
+        .recommandation-box__icon { font-size: 1.3rem; flex-shrink: 0; }
+        .recommandation-box__text {
+            font-size: 0.9rem;
+            color: var(--admin-text);
+            line-height: 1.55;
+        }
+        .recommandation-box__label {
+            font-size: 0.73rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--admin-primary);
+            margin-bottom: 0.3rem;
+        }
+
+        /* ── Debug / erreur ── */
+        .debug-box {
+            background: #fff8f0;
+            border: 1px solid #f59e0b;
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.2rem;
+        }
+        .debug-box__title {
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: #b45309;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .debug-box__msg {
+            font-size: 0.85rem;
+            color: #92400e;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+        }
+
+        /* ── No feedback ── */
+        .no-feedback {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--admin-text-muted);
+        }
+        .no-feedback__icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .no-feedback__title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--admin-text);
+            margin-bottom: 0.4rem;
+        }
+
+        /* ── Avis list ── */
+        .avis-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(231,220,205,0.6);
+        }
+        .avis-item:last-child { border-bottom: none; }
+        .avis-item__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .avis-item__stars { color: #f59e0b; letter-spacing: 0.05em; font-size: 0.9rem; }
+        .avis-item__date  { font-size: 0.78rem; color: var(--admin-text-muted); }
+        .avis-item__text  { font-size: 0.88rem; color: var(--admin-text); line-height: 1.55; }
+        .avis-item__flag  {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.18rem 0.55rem;
+            background: var(--admin-danger-soft);
+            color: var(--admin-danger);
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.6rem 1.1rem;
+            border-radius: var(--radius-sm);
+            font: inherit; font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; text-decoration: none; border: none;
+            transition: opacity .15s;
+        }
+        .btn:hover { opacity: .85; }
+        .btn--primary  { background: var(--admin-primary); color: #fff; }
+        .btn--outline  {
+            background: var(--admin-surface);
+            color: var(--admin-text);
+            border: 1px solid var(--admin-border);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+{# ── Breadcrumb / Header ─────────────────────────────────────────────── #}
+<div class="page-header">
+    <div>
+        <div class="page-header__title">{{ activite.nom }}</div>
+        <div class="page-header__sub">
+            Détail &amp; analyse IA des avis —
+            {% if activite.categorie %}{{ activite.categorie.nom }}{% else %}Sans catégorie{% endif %}
+        </div>
+    </div>
+    <div class="page-header__actions">
+        <a href="{{ path('app_activite_index') }}" class="btn btn--outline">← Retour à la liste</a>
+        <a href="{{ path('app_activite_edit', {id: activite.id}) }}" class="btn btn--primary">Modifier</a>
+    </div>
+</div>
+
+{# ── Stats bar ───────────────────────────────────────────────────────── #}
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-card__num">{{ totalAvis }}</div>
+        <div class="stat-card__label">Avis total</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__num" style="color:var(--admin-success)">{{ totalAvis - flaggedCount }}</div>
+        <div class="stat-card__label">Avis visibles</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__num" style="color:var(--admin-danger)">{{ flaggedCount }}</div>
+        <div class="stat-card__label">Signalés</div>
+    </div>
+</div>
+
+{# ── Main grid ───────────────────────────────────────────────────────── #}
+<div class="show-grid">
+
+    {# ══ Colonne gauche : infos activité ══════════════════════════════════ #}
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+        {# Cover image #}
+        {% if activite.imagePath %}
+            <img src="{{ asset(activite.imagePath|replace({'\\\\': '/'})) }}"
+                 alt="{{ activite.nom }}" class="act-cover"
+                 onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+            <div class="act-cover-placeholder" style="display:none">🌄</div>
+        {% else %}
+            <div class="act-cover-placeholder">🌄</div>
+        {% endif %}
+
+        {# Info card #}
+        <div class="admin-card">
+            <div class="admin-card__header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <span class="admin-card__title">Informations</span>
+            </div>
+            <div class="admin-card__body" style="padding:0 1.4rem">
+                <ul class="info-list">
+                    <li>
+                        <span class="info-list__label"> Lieu</span>
+                        <span class="info-list__value">{{ activite.lieu ?: '—' }}</span>
+                    </li>
+                    <li>
+                        <span class="info-list__label"> Budget</span>
+                        <span class="info-list__value">{{ activite.budget }} TND</span>
+                    </li>
+                    <li>
+                        <span class="info-list__label"> Durée</span>
+                        <span class="info-list__value">{{ activite.duree }}h</span>
+                    </li>
+                    <li>
+                        <span class="info-list__label"> Difficulté</span>
+                        <span class="info-list__value">
+                            {% set diff = activite.niveaudifficulte|lower %}
+                            <span class="pill pill--{{ diff }}">{{ activite.niveaudifficulte }}</span>
+                        </span>
+                    </li>
+                    <li>
+                        <span class="info-list__label"> Statut</span>
+                        <span class="info-list__value">
+                            {% set s = activite.statut|lower %}
+                            <span class="pill pill--{{ s == 'en attente' ? 'attente' : s }}">{{ activite.statut }}</span>
+                        </span>
+                    </li>
+                    {% if activite.avis|length > 0 %}
+                    <li>
+                        <span class="info-list__label"> Note moyenne</span>
+                        <span class="info-list__value" style="color:#f59e0b">
+                            {{ activite.moyenneAvis }} / 5
+                        </span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        {# Description card #}
+        {% if activite.description %}
+        <div class="admin-card">
+            <div class="admin-card__header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.8"/>
+                    <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.8"/>
+                    <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="1.8"/>
+                    <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+                <span class="admin-card__title">Description</span>
+            </div>
+            <div class="admin-card__body">
+                <p style="font-size:0.9rem;color:var(--admin-text);line-height:1.65;margin:0">
+                    {{ activite.description }}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>{# end left column #}
+
+    {# ══ Colonne droite : AI feedback + liste des avis ════════════════════ #}
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+        {# ── AI Feedback card ── #}
+        <div class="admin-card">
+            <div class="admin-card__header" style="justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:0.6rem">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2a10 10 0 100 20A10 10 0 0012 2z" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M8 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="admin-card__title">Analyse IA des avis</span>
+                </div>
+                <span class="ai-badge">✦ Powered by AI</span>
+            </div>
+
+            <div class="admin-card__body">
+
+                {# ── CAS 1 : erreur retournée par le controller (clé _error) ── #}
+                {% if feedback._error is defined %}
+                    <div class="debug-box" style="margin-bottom:1rem">
+                        <div class="debug-box__title">⚠️ Diagnostic — erreur détectée</div>
+                        <pre class="debug-box__msg">{{ feedback._error }}</pre>
+                        {% if feedback._raw is defined %}
+                            <hr style="border:none;border-top:1px solid #fde68a;margin:0.75rem 0">
+                            <div class="debug-box__title">Sortie brute du script Python</div>
+                            <pre class="debug-box__msg">{{ feedback._raw }}</pre>
+                        {% endif %}
+                    </div>
+                    <div class="no-feedback">
+                        <div class="no-feedback__icon">🔧</div>
+                        <div class="no-feedback__title">Analyse indisponible</div>
+                        <p style="font-size:0.88rem;margin:0;color:var(--admin-text-muted)">
+                            Lisez le message de diagnostic ci-dessus pour corriger le problème.
+                        </p>
+                    </div>
+
+                {# ── CAS 2 : feedback vide (tableau vide) ── #}
+                {% elseif feedback is empty %}
+                    <div class="no-feedback">
+                        <div class="no-feedback__icon"></div>
+                        <div class="no-feedback__title">Analyse indisponible</div>
+                        <p style="font-size:0.88rem;margin:0;color:var(--admin-text-muted)">
+                            {% if totalAvis == 0 %}
+                                Cette activité n'a encore aucun avis.
+                            {% else %}
+                                Le script n'a retourné aucune donnée. Vérifiez que Python est accessible depuis le serveur web.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                {# ── CAS 3 : feedback OK ── #}
+                {% else %}
+
+                    {# Tendance + note moyenne #}
+                    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
+                        {% set tendance = feedback.tendance|default('neutre') %}
+                        <span class="tendance-badge tendance--{{ tendance }}">
+                            {% if tendance == 'positive' %}📈 Tendance positive
+                            {% elseif tendance == 'negative' %}📉 Tendance négative
+                            {% else %} Tendance neutre
+                            {% endif %}
+                        </span>
+                        {% if feedback.note_moyenne is defined %}
+                            <span style="font-size:1rem;font-weight:700;color:#f59e0b">
+                                ★ {{ feedback.note_moyenne|number_format(1) }} / 5
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {# Résumé #}
+                    {% if feedback.resume is defined %}
+                        <div class="resume-box">"{{ feedback.resume }}"</div>
+                    {% endif %}
+
+                    {# Points positifs / négatifs #}
+                    <div class="points-grid">
+                        <div class="points-block points-block--pos">
+                            <div class="points-block__title">Points positifs</div>
+                            {% if feedback.points_positifs|default([])|length > 0 %}
+                                <ul class="points-list">
+                                    {% for pt in feedback.points_positifs %}
+                                        <li><span class="points-list__dot"></span>{{ pt }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p style="font-size:0.82rem;color:var(--admin-text-muted);margin:0">Aucun point identifié.</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="points-block points-block--neg">
+                            <div class="points-block__title">Points à améliorer</div>
+                            {% if feedback.points_negatifs|default([])|length > 0 %}
+                                <ul class="points-list">
+                                    {% for pt in feedback.points_negatifs %}
+                                        <li><span class="points-list__dot"></span>{{ pt }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p style="font-size:0.82rem;color:var(--admin-text-muted);margin:0">Aucun point négatif identifié.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# Recommandation #}
+                    {% if feedback.recommandation is defined %}
+                        <div class="recommandation-box">
+                            <div class="recommandation-box__icon">💡</div>
+                            <div>
+                                <div class="recommandation-box__label">Recommandation</div>
+                                <div class="recommandation-box__text">{{ feedback.recommandation }}</div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                {% endif %}{# end feedback cases #}
+
+            </div>
+        </div>{# end AI card #}
+
+        {# ── Avis list card ── #}
+        <div class="admin-card">
+            <div class="admin-card__header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+                <span class="admin-card__title">Avis des utilisateurs ({{ totalAvis }})</span>
+            </div>
+
+            <div class="admin-card__body" style="padding:0 1.4rem">
+                {% if activite.avis|length == 0 %}
+                    <div style="text-align:center;padding:2rem 0;color:var(--admin-text-muted);font-size:0.88rem">
+                        Aucun avis pour le moment.
+                    </div>
+                {% else %}
+                    {% for avis in activite.avis %}
+                        <div class="avis-item">
+                            <div class="avis-item__header">
+                                <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+                                    <span class="avis-item__stars">
+                                        {% for i in 1..5 %}{{ i <= avis.note ? '★' : '☆' }}{% endfor %}
+                                    </span>
+                                    <span style="font-weight:600;font-size:0.88rem;color:var(--admin-text)">
+                                        {{ avis.user ? (avis.user.nom ?? avis.user.email) : 'Anonyme' }}
+                                    </span>
+                                    {% if avis.isFlagged %}
+                                        <span class="avis-item__flag">🚩 Signalé</span>
+                                    {% endif %}
+                                </div>
+                                <span class="avis-item__date">
+                                    {{ avis.createdAt ? avis.createdAt|date('d/m/Y') : '' }}
+                                </span>
+                            </div>
+                            {% if avis.commentaire %}
+                                <p class="avis-item__text" style="{{ avis.isFlagged ? 'opacity:.5;font-style:italic;' : '' }}">
+                                    {{ avis.commentaire }}
+                                </p>
+                            {% else %}
+                                <p class="avis-item__text" style="color:var(--admin-text-muted);font-style:italic">
+                                    (aucun commentaire)
+                                </p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>{# end avis card #}
+
+    </div>{# end right column #}
+
+</div>{# end show-grid #}
+
+{% endblock %}
