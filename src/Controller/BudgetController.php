@@ -386,9 +386,6 @@ class BudgetController extends AbstractController
         }
     }
 
-    /**
-     * Inflation basée sur la devise du budget
-     */
     #[Route('/{id}/ai/inflation-by-currency', name: 'app_budget_ai_inflation_currency', methods: ['GET'])]
     public function aiInflationByCurrency(Budget $budget, InflationService $inflation): JsonResponse
     {

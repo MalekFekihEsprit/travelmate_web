@@ -18,7 +18,6 @@
     display:flex; align-items:center; gap:.45rem;
     background:var(--color-bg); border:1px solid var(--color-border);
     border-radius:999px; padding:.48rem 1rem; min-width:240px;
-    transition:border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .search-field:focus-within { border-color:rgba(196,111,75,.45); box-shadow:0 0 0 3px rgba(196,111,75,.1); }
 .search-field__input { border:none; outline:none; background:transparent; font:inherit; font-size:.88rem; color:var(--color-text); width:100%; }
@@ -26,7 +25,6 @@
 .search-clear {
     background:none; border:none; cursor:pointer; color:var(--color-text-muted);
     font-size:1rem; line-height:1; padding:0; display:none; flex-shrink:0;
-    transition:color .15s;
 }
 .search-clear:hover { color:var(--color-primary); }
 .search-clear.visible { display:block; }
@@ -36,27 +34,49 @@
     background:var(--color-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e6258' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right .75rem center;
     border:1px solid var(--color-border); border-radius:999px;
     padding:.48rem 2.2rem .48rem 1rem; font:inherit; font-size:.86rem;
-    color:var(--color-text); cursor:pointer; transition:border-color var(--transition-fast);
+    color:var(--color-text); cursor:pointer;
 }
 .filter-select:focus { outline:none; border-color:rgba(196,111,75,.45); }
 
-.chip-group { display:flex; flex-wrap:wrap; gap:.35rem; align-items:center; }
-.chip-label { font-size:.78rem; color:var(--color-text-muted); font-weight:600; white-space:nowrap; }
-.chip {
-    padding:.34rem .8rem; border-radius:999px; font-size:.78rem; font-weight:600;
-    border:1.5px solid var(--color-border); background:var(--color-bg);
-    color:var(--color-text-muted); cursor:pointer; transition:all var(--transition-fast);
+.filter-group { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--color-bg); padding: .3rem .8rem; border-radius: 999px; border: 1px solid var(--color-border); }
+.filter-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: .05em; }
+
+/* Style pour le select voyage */
+.voyage-select {
+    padding: .25rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    outline: none;
 }
-.chip:hover { border-color:var(--color-primary); color:var(--color-primary); }
-.chip.active { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
-.chip--over.active { background:#b91c1c; border-color:#b91c1c; }
-.chip--ok.active   { background:#047857; border-color:#047857; }
+.voyage-select:focus {
+    border-color: var(--color-primary);
+}
+.voyage-select:hover {
+    border-color: var(--color-primary);
+}
+
+.filter-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+.chip {
+    padding: .25rem .7rem; border-radius: 999px; font-size: .75rem; font-weight: 600;
+    border: 1.5px solid var(--color-border); background: var(--color-bg);
+    color: var(--color-text-muted); cursor: pointer; transition: all .15s;
+}
+.chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.chip.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.chip--over.active { background: #b91c1c; border-color: #b91c1c; }
+.chip--ok.active   { background: #047857; border-color: #047857; }
 
 .btn-export {
     display:inline-flex; align-items:center; gap:.4rem;
     padding:.46rem .95rem; border-radius:999px; font-size:.82rem; font-weight:600;
     border:1.5px solid var(--color-border); background:var(--color-surface);
-    color:var(--color-text-muted); cursor:pointer; transition:all var(--transition-fast);
+    color:var(--color-text-muted); cursor:pointer;
 }
 .btn-export:hover { border-color:var(--color-primary); color:var(--color-primary); background:var(--color-hover); }
 
@@ -65,7 +85,7 @@
     display:none; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.65rem;
     padding:.75rem 1.15rem; margin-bottom:1rem;
     background:rgba(196,111,75,.08); border:1.5px solid rgba(196,111,75,.3);
-    border-radius:var(--radius-lg); animation:slideDown .2s ease;
+    border-radius:var(--radius-lg);
 }
 .selection-bar.visible { display:flex; }
 .selection-bar__info { display:flex; align-items:center; gap:.7rem; font-size:.88rem; font-weight:600; color:var(--color-primary-dark); }
@@ -77,14 +97,13 @@
 .btn-sel {
     display:inline-flex; align-items:center; gap:.35rem;
     padding:.42rem .9rem; border-radius:999px; font-size:.82rem; font-weight:600;
-    border:1.5px solid; cursor:pointer; transition:all .18s; font-family:inherit;
+    border:1.5px solid; cursor:pointer;
 }
 .btn-sel--cancel { border-color:var(--color-border); background:var(--color-bg); color:var(--color-text-muted); }
 .btn-sel--cancel:hover { border-color:var(--color-primary); color:var(--color-primary); }
 .btn-sel--delete { border-color:#dc2626; background:#fee2e2; color:#b91c1c; }
 .btn-sel--delete:hover { background:#dc2626; color:#fff; }
 .btn-sel--select-all { border-color:var(--color-border); background:var(--color-bg); color:var(--color-text-muted); font-size:.78rem; }
-.btn-sel--select-all:hover { border-color:var(--color-primary); color:var(--color-primary); }
 
 /* ── SUMMARY BAR ─────────────────────── */
 .summary-bar { display:grid; grid-template-columns:repeat(auto-fit, minmax(155px,1fr)); gap:.85rem; margin-bottom:1.75rem; }
@@ -100,38 +119,36 @@
 }
 
 /* ── LAYOUT WITH DETAIL PANEL ────────── */
-.budget-layout { display:grid; grid-template-columns:1fr; gap:1.5rem; transition:grid-template-columns .3s ease; }
+.budget-layout { display:grid; grid-template-columns:1fr; gap:1.5rem; }
 .budget-layout.with-detail { grid-template-columns:1fr 340px; }
 
 /* ── GRID ────────────────────────────── */
 .act-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:1.25rem; }
-.budget-layout.with-detail .act-grid { grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); }
 
 /* ── CARD ────────────────────────────── */
 .act-card {
     display:flex; flex-direction:column;
     background:var(--color-surface); border:1px solid var(--color-border);
     border-radius:var(--radius-lg); overflow:hidden;
-    transition:transform var(--transition-base), box-shadow var(--transition-base), border-color .18s;
+    transition:transform .2s, box-shadow .2s;
     cursor:pointer; position:relative;
 }
 .act-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px var(--color-shadow); }
-.act-card.selected { border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(196,111,75,.18); transform:none; }
+.act-card.selected { border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(196,111,75,.18); }
 .act-card.active-detail { border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(196,111,75,.25); }
 
-/* Selection checkbox overlay */
 .card-checkbox-wrap {
     position:absolute; top:.6rem; left:.6rem; z-index:10;
-    opacity:0; transition:opacity .18s; pointer-events:none;
+    opacity:0; transition:opacity .18s;
 }
 .act-card:hover .card-checkbox-wrap,
 .act-card.selected .card-checkbox-wrap,
-.select-mode .card-checkbox-wrap { opacity:1; pointer-events:auto; }
+.select-mode .card-checkbox-wrap { opacity:1; }
 .card-checkbox {
     width:20px; height:20px; border-radius:5px;
     border:2px solid var(--color-primary); background:#fff;
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer; transition:all .15s;
+    cursor:pointer;
     box-shadow:0 1px 4px rgba(0,0,0,.15);
 }
 .act-card.selected .card-checkbox { background:var(--color-primary); }
@@ -140,18 +157,18 @@
 
 .act-card__img-wrap {
     position:relative; height:110px;
-    background:linear-gradient(135deg, var(--color-surface-soft) 0%, rgba(221,191,140,.3) 100%);
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    background:linear-gradient(135deg, #f5ede3 0%, rgba(221,191,140,.3) 100%);
+    display:flex; align-items:center; justify-content:center;
 }
-.act-card__img-placeholder { font-size:2.2rem; line-height:1; }
-.act-card__badges { position:absolute; top:.55rem; right:.55rem; display:flex; gap:.3rem; flex-wrap:wrap; z-index:2; }
-.act-card__body { flex:1; display:flex; flex-direction:column; gap:.35rem; padding:.9rem 1rem 1rem; }
-.act-card__name { font-weight:700; font-size:.97rem; color:var(--color-text); line-height:1.3; }
+.act-card__img-placeholder { font-size:2.2rem; }
+.act-card__badges { position:absolute; top:.55rem; right:.55rem; display:flex; gap:.3rem; }
+.act-card__body { flex:1; padding:.9rem 1rem 1rem; }
+.act-card__name { font-weight:700; font-size:.97rem; color:var(--color-text); }
 .act-card__location { font-size:.8rem; color:var(--color-text-muted); }
-.act-card__tags { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.1rem; }
+.act-card__tags { display:flex; flex-wrap:wrap; gap:.3rem; margin:.3rem 0; }
 
-.budget-progress { margin-top:.35rem; height:5px; border-radius:99px; background:var(--color-surface-soft); overflow:hidden; }
-.budget-progress__fill { height:100%; border-radius:99px; background:var(--color-secondary); transition:width .4s ease; }
+.budget-progress { margin-top:.35rem; height:5px; border-radius:99px; background:#e5e7eb; overflow:hidden; }
+.budget-progress__fill { height:100%; border-radius:99px; background:var(--color-secondary); }
 .budget-progress__fill--over { background:#dc2626; }
 
 .act-card__footer {
@@ -159,243 +176,157 @@
     border-top:1px solid var(--color-border);
     display:flex; align-items:flex-end; justify-content:space-between; gap:.5rem;
 }
-.act-price-label { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--color-text-muted); margin-bottom:.1rem; }
+.act-price-label { font-size:.68rem; text-transform:uppercase; color:var(--color-text-muted); }
 .act-price-value { font-family:'Fraunces',serif; font-size:1.05rem; font-weight:600; color:var(--color-primary); }
 
-.act-card__actions { display:flex; align-items:center; gap:.4rem; flex-shrink:0; }
+.act-card__actions { display:flex; align-items:center; gap:.4rem; }
 .act-card__btn {
     width:32px; height:32px; border-radius:50%;
     display:inline-flex; align-items:center; justify-content:center;
     font-size:.85rem; text-decoration:none; border:1.5px solid var(--color-border);
-    background:var(--color-bg); cursor:pointer; transition:all .18s; flex-shrink:0;
+    background:var(--color-bg); cursor:pointer;
 }
 .act-card__btn--view   { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
-.act-card__btn--view:hover { background:var(--color-primary-dark); transform:scale(1.08); }
 .act-card__btn--edit:hover   { border-color:var(--color-primary); background:rgba(196,111,75,.1); }
 .act-card__btn--delete:hover { border-color:#dc2626; background:#fee2e2; }
 
-/* badges & tags */
-.badge { display:inline-flex; align-items:center; padding:.18rem .55rem; border-radius:999px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-.badge--cat      { background:rgba(255,253,249,.92); color:var(--color-primary-dark); border:1px solid rgba(196,111,75,.2); }
+.badge { display:inline-flex; padding:.18rem .55rem; border-radius:999px; font-size:.68rem; font-weight:700; }
+.badge--cat { background:rgba(255,253,249,.92); color:var(--color-primary-dark); border:1px solid rgba(196,111,75,.2); }
 .badge--trending { background:#fde8e8; color:#b91c1c; }
-.tag { display:inline-flex; align-items:center; padding:.2rem .55rem; border-radius:999px; font-size:.72rem; background:var(--color-surface-soft); color:var(--color-text-muted); border:1px solid var(--color-border); }
-.tag--facile    { background:#d1fae5; color:#065f46; border-color:#a7f3d0; }
-.tag--difficile { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+.tag { padding:.2rem .55rem; border-radius:999px; font-size:.72rem; background:#f3f4f6; color:#6b7280; border:1px solid #e5e7eb; }
+.tag--facile    { background:#d1fae5; color:#065f46; }
+.tag--difficile { background:#fee2e2; color:#991b1b; }
 
-/* empty states */
 .empty-state { grid-column:1/-1; text-align:center; padding:4rem 1rem; color:var(--color-text-muted); }
-.empty-state__icon  { font-size:3rem; margin-bottom:1rem; }
-.empty-state__title { font-size:1.1rem; font-weight:700; color:var(--color-text); margin-bottom:.5rem; }
 
 /* hero */
 .act-hero {
-    position:relative; border-radius:var(--radius-xl); overflow:hidden;
+    border-radius:var(--radius-xl); overflow:hidden;
     min-height:200px; display:flex; align-items:stretch; margin-bottom:1.75rem;
     background:linear-gradient(135deg, #3b2a1a 0%, var(--color-primary) 100%);
 }
-.act-hero__bg { position:absolute; inset:0; background-size:cover; background-position:center; opacity:.22; }
-.act-hero__content { position:relative; flex:1; padding:1.8rem 2rem; color:#fff; display:flex; flex-direction:column; justify-content:center; gap:.45rem; }
-.act-hero__eyebrow { font-size:.76rem; letter-spacing:.12em; text-transform:uppercase; opacity:.7; font-weight:500; }
-.act-hero__title { font-family:'Fraunces',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:600; line-height:1.15; letter-spacing:-.02em; margin:0; }
-.act-hero__desc { opacity:.8; font-size:.9rem; max-width:52ch; }
-.act-hero__actions { margin-top:.4rem; }
+.act-hero__content { flex:1; padding:1.8rem 2rem; color:#fff; }
+.act-hero__title { font-family:'Fraunces',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:600; }
 .btn-hero-primary {
     display:inline-flex; align-items:center; gap:.4rem;
     padding:.55rem 1.25rem; background:#fff; color:var(--color-primary-dark);
-    border-radius:999px; font-weight:700; font-size:.88rem; text-decoration:none;
-    transition:opacity var(--transition-fast), transform var(--transition-fast);
+    border-radius:999px; font-weight:700; text-decoration:none;
 }
-.btn-hero-primary:hover { opacity:.88; transform:translateY(-1px); }
 .act-hero__stats {
-    position:relative; display:flex; flex-direction:column;
+    display:flex; flex-direction:column;
     justify-content:center; align-items:center;
     padding:1.5rem 2.5rem; color:#fff;
-    border-left:1px solid rgba(255,255,255,.15); gap:.4rem;
+    border-left:1px solid rgba(255,255,255,.15);
 }
-.hero-stat__num   { font-family:'Fraunces',serif; font-size:2.6rem; font-weight:600; line-height:1; }
-.hero-stat__label { font-size:.76rem; text-transform:uppercase; letter-spacing:.1em; opacity:.65; }
+.hero-stat__num   { font-family:'Fraunces',serif; font-size:2.6rem; font-weight:600; }
+.hero-stat__label { font-size:.76rem; text-transform:uppercase; opacity:.65; }
 
-/* ══ DETAIL PANEL ══════════════════════ */
+/* detail panel */
 .detail-panel {
     display:none;
     background:var(--color-surface); border:1px solid var(--color-border);
     border-radius:var(--radius-lg); overflow:hidden;
     position:sticky; top:1.5rem; max-height:85vh; overflow-y:auto;
-    animation:slideInRight .25s ease;
 }
 .detail-panel.visible { display:block; }
-@keyframes slideInRight { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
 
 .dp-header {
     display:flex; align-items:center; justify-content:space-between;
     padding:1rem 1.25rem; background:linear-gradient(135deg,#3b2a1a,var(--color-primary));
-    color:#fff; position:sticky; top:0; z-index:5;
+    color:#fff;
 }
-.dp-header__title { font-family:'Fraunces',serif; font-size:1rem; font-weight:600; line-height:1.3; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .dp-close {
     width:28px; height:28px; border-radius:50%;
     border:1.5px solid rgba(255,255,255,.4); background:rgba(255,255,255,.1);
-    cursor:pointer; font-size:.9rem; color:#fff;
-    display:flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0;
+    cursor:pointer;
 }
-.dp-close:hover { background:rgba(255,255,255,.22); }
-
-.dp-progress-wrap { padding:.85rem 1.15rem; border-bottom:1px solid var(--color-border); background:var(--color-bg); }
-.dp-progress-labels { display:flex; justify-content:space-between; font-size:.72rem; color:var(--color-text-muted); margin-bottom:.4rem; font-weight:600; }
-.dp-progress-track { height:6px; background:var(--color-surface-soft); border-radius:99px; overflow:hidden; }
-.dp-progress-fill { height:100%; border-radius:99px; background:var(--color-primary); transition:width .5s ease; }
+.dp-progress-wrap { padding:.85rem 1.15rem; border-bottom:1px solid var(--color-border); }
+.dp-progress-track { height:6px; background:#e5e7eb; border-radius:99px; overflow:hidden; }
+.dp-progress-fill { height:100%; border-radius:99px; background:var(--color-primary); }
 .dp-progress-fill--over { background:#dc2626; }
-.dp-progress-fill--warn { background:#d97706; }
 
-.dp-stats { display:grid; grid-template-columns:1fr 1fr; gap:0; border-bottom:1px solid var(--color-border); }
+.dp-stats { display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--color-border); }
 .dp-stat { padding:.75rem 1rem; border-right:1px solid var(--color-border); }
-.dp-stat:nth-child(2n) { border-right:none; }
-.dp-stat__label { font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; color:var(--color-text-muted); font-weight:600; margin-bottom:.18rem; }
-.dp-stat__value { font-family:'Fraunces',serif; font-size:.95rem; font-weight:600; color:var(--color-text); }
-.dp-stat__value--primary { color:var(--color-primary); }
-.dp-stat__value--danger  { color:#dc2626; }
-.dp-stat__value--success { color:#059669; }
+.dp-stat:last-child { border-right:none; }
+.dp-stat__label { font-size:.62rem; text-transform:uppercase; color:var(--color-text-muted); }
+.dp-stat__value { font-family:'Fraunces',serif; font-size:.95rem; font-weight:600; }
 
-.dp-depenses-header {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:.7rem 1.15rem; background:var(--color-bg); border-bottom:1px solid var(--color-border);
-}
-.dp-depenses-title { font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700; color:var(--color-primary); display:flex; align-items:center; gap:.4rem; }
-.dp-badge { background:rgba(196,111,75,.12); color:var(--color-primary); font-size:.65rem; font-weight:700; padding:.12rem .45rem; border-radius:999px; }
-
-.dp-dep-list { list-style:none; margin:0; padding:0; }
+.dp-dep-list { list-style:none; margin:0; padding:0; max-height: 300px; overflow-y: auto; }
 .dp-dep-item {
     display:flex; align-items:center; gap:.65rem;
     padding:.7rem 1.15rem; border-bottom:1px solid var(--color-border);
-    transition:background .15s;
 }
-.dp-dep-item:last-child { border-bottom:none; }
-.dp-dep-item:hover { background:var(--color-hover); }
 .dp-dep-icon {
     width:32px; height:32px; border-radius:8px;
     display:flex; align-items:center; justify-content:center;
-    font-size:.9rem; flex-shrink:0;
+    background:#f3f4f6;
 }
-.dp-dep-body { flex:1; min-width:0; }
-.dp-dep-label { font-size:.82rem; font-weight:600; color:var(--color-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.dp-dep-meta  { font-size:.7rem; color:var(--color-text-muted); margin-top:.1rem; }
-.dp-dep-amount { font-family:'Fraunces',serif; font-size:.88rem; font-weight:600; color:var(--color-text); white-space:nowrap; flex-shrink:0; }
+.dp-dep-label { font-size:.82rem; font-weight:600; }
+.dp-dep-meta  { font-size:.7rem; color:var(--color-text-muted); }
+.dp-dep-amount { font-family:'Fraunces',serif; font-size:.88rem; font-weight:600; white-space:nowrap; }
 
-.dp-empty { padding:2rem 1.15rem; text-align:center; color:var(--color-text-muted); font-size:.85rem; }
-
-.dp-actions {
-    padding:.85rem 1.15rem; display:flex; flex-direction:column; gap:.45rem;
-    border-top:1px solid var(--color-border); background:var(--color-bg);
-}
+.dp-actions { padding:.85rem 1.15rem; display:flex; flex-direction:column; gap:.45rem; border-top:1px solid var(--color-border); }
 .dp-btn {
     display:flex; align-items:center; gap:.55rem;
     padding:.6rem .95rem; border-radius:var(--radius-md);
     font-size:.84rem; font-weight:600; text-decoration:none;
-    border:none; cursor:pointer; transition:all .18s;
-    width:100%; text-align:left; font-family:inherit;
+    cursor:pointer;
 }
 .dp-btn--view   { background:var(--color-primary); color:#fff; }
-.dp-btn--view:hover { opacity:.88; }
 .dp-btn--edit   { background:rgba(196,111,75,.1); color:var(--color-primary-dark); border:1.5px solid rgba(196,111,75,.2); }
-.dp-btn--edit:hover { background:rgba(196,111,75,.18); }
 .dp-btn--delete { background:rgba(220,38,38,.07); color:#b91c1c; border:1.5px solid rgba(220,38,38,.18); }
-.dp-btn--delete:hover { background:rgba(220,38,38,.13); }
 
-/* ══ PAGINATION ══════════════════════════════════════════════ */
+/* pagination */
 .pagination-wrap {
     display: flex; align-items: center; justify-content: center;
     gap: .5rem; margin-top: 2rem; padding: 1.25rem;
     background: var(--color-surface); border: 1px solid var(--color-border);
     border-radius: var(--radius-lg); flex-wrap: wrap;
 }
-.pag-info { font-size: .82rem; color: var(--color-text-muted); margin: 0 .75rem; white-space: nowrap; }
 .pag-btn {
     min-width: 36px; height: 36px; padding: 0 .6rem;
-    display: inline-flex; align-items: center; justify-content: center;
     border-radius: var(--radius-md); border: 1.5px solid var(--color-border);
     background: var(--color-bg); color: var(--color-text-muted);
     font-size: .85rem; font-weight: 600; cursor: pointer;
-    transition: all .18s; font-family: inherit;
 }
-.pag-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); background: rgba(196,111,75,.08); }
-.pag-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); box-shadow: 0 2px 8px rgba(196,111,75,.35); }
+.pag-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 .pag-btn:disabled { opacity: .35; cursor: not-allowed; }
-.pag-ellipsis { color: var(--color-text-muted); padding: 0 .3rem; font-size: .85rem; }
 
-/* ── BULK DELETE MODAL ───────────────── */
+/* modal */
 .modal-overlay {
     position:fixed; inset:0; background:rgba(0,0,0,.45);
     backdrop-filter:blur(3px); z-index:1000;
     display:none; align-items:center; justify-content:center; padding:1rem;
 }
-.modal-overlay.open { display:flex; animation:fadeIn .2s ease; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal-overlay.open { display:flex; }
 .modal {
     background:var(--color-surface); border-radius:var(--radius-xl);
     border:1px solid var(--color-border);
-    box-shadow:0 24px 64px rgba(0,0,0,.25);
     width:100%; max-width:440px;
-    animation:slideUp .25s ease;
 }
-@keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
 .modal__header {
     display:flex; align-items:center; justify-content:space-between;
     padding:1.1rem 1.5rem; border-bottom:1px solid var(--color-border);
 }
-.modal__title { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:600; color:var(--color-text); }
 .modal__close {
     width:30px; height:30px; border-radius:50%; border:1.5px solid var(--color-border);
-    background:var(--color-bg); cursor:pointer; font-size:.9rem; color:var(--color-text-muted);
-    display:flex; align-items:center; justify-content:center; transition:all .15s;
+    background:var(--color-bg); cursor:pointer;
 }
-.modal__close:hover { border-color:#dc2626; color:#dc2626; background:#fee2e2; }
-.modal__body { padding:1.5rem; }
+.modal__body { padding:1.5rem; text-align:center; }
 .modal__footer {
     display:flex; align-items:center; justify-content:flex-end; gap:.65rem;
-    padding:1rem 1.5rem; border-top:1px solid var(--color-border); background:var(--color-bg);
-    border-radius:0 0 var(--radius-xl) var(--radius-xl);
+    padding:1rem 1.5rem; border-top:1px solid var(--color-border);
 }
 .btn-modal-cancel {
     padding:.52rem 1.15rem; border-radius:999px; font-size:.86rem; font-weight:600;
     border:1.5px solid var(--color-border); background:var(--color-surface);
-    color:var(--color-text-muted); cursor:pointer; transition:all .18s; font-family:inherit;
+    cursor:pointer;
 }
-.btn-modal-cancel:hover { border-color:var(--color-primary); color:var(--color-primary); }
 .btn-modal-submit--danger {
     padding:.56rem 1.4rem; border-radius:999px; font-size:.88rem; font-weight:700;
     background:linear-gradient(135deg,#dc2626,#b91c1c); color:#fff;
-    border:none; cursor:pointer; box-shadow:0 4px 14px rgba(220,38,38,.3);
-    transition:opacity .18s; font-family:inherit;
+    border:none; cursor:pointer;
 }
-.btn-modal-submit--danger:hover { opacity:.88; }
-
-/* print */
-@media print {
-    .toolbar, .act-hero, .app-navbar, .site-footer,
-    .act-card__actions, .results-meta, .pagination-wrap,
-    .selection-bar, .detail-panel { display:none !important; }
-    body { background:#fff !important; }
-    .act-grid { grid-template-columns:repeat(3,1fr) !important; gap:.5rem !important; }
-    .act-card { break-inside:avoid; box-shadow:none; }
-    .summary-bar { grid-template-columns:repeat(4,1fr); }
-    .app-main { padding-top:0 !important; }
-    .budget-layout { grid-template-columns:1fr !important; }
-}
-
-/* responsive */
-@media(max-width:900px) {
-    .budget-layout.with-detail { grid-template-columns:1fr; }
-    .detail-panel { position:relative; top:0; max-height:none; }
-}
-@media(max-width:700px) {
-    .act-hero { flex-direction:column; }
-    .act-hero__stats { flex-direction:row; border-left:none; border-top:1px solid rgba(255,255,255,.15); padding:1rem 1.5rem; justify-content:flex-start; gap:2rem; }
-    .act-grid { grid-template-columns:1fr; }
-    .toolbar  { flex-direction:column; align-items:stretch; }
-    .toolbar__left, .toolbar__right { width:100%; }
-}
-
-@keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
 </style>
 {% endblock %}
 
@@ -403,12 +334,12 @@
 
 {# Flash messages #}
 {% for msg in app.flashes('success') %}
-    <div style="display:flex;align-items:center;gap:.65rem;padding:.8rem 1.15rem;border-radius:var(--radius-md);font-size:.88rem;font-weight:600;margin-bottom:1rem;background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;animation:slideDown .25s ease">
+    <div style="background:#d1fae5;color:#065f46;padding:.8rem 1.15rem;border-radius:var(--radius-md);margin-bottom:1rem;">
         ✅ {{ msg }}
     </div>
 {% endfor %}
 
-{# ══ PRE-COMPUTE ════════════════════════ #}
+{# PRE-COMPUTE #}
 {% set grandTotal = 0 %}
 {% set grandSpent = 0 %}
 {% set countOver  = 0 %}
@@ -420,68 +351,80 @@
     {% if tot > budget.montantTotal %}{% set countOver = countOver + 1 %}{% endif %}
 {% endfor %}
 
-{# ══ HERO ════════════════════════════════ #}
+{# HERO #}
 <section class="act-hero">
-    <div class="act-hero__bg" style="background-image:url('{{ asset('uploads/budget/hero.jpg') }}')"></div>
     <div class="act-hero__content">
-        <span class="act-hero__eyebrow">Gestion financière</span>
+        <span style="font-size:.76rem;text-transform:uppercase;opacity:.7;">Gestion financière</span>
         <h1 class="act-hero__title">Gérez vos budgets de voyage</h1>
-        <p class="act-hero__desc">Suivez vos dépenses, contrôlez vos coûts et profitez de vos voyages sans stress financier.</p>
-        <div class="act-hero__actions">
+        <p style="opacity:.8;">Suivez vos dépenses, contrôlez vos coûts et profitez de vos voyages sans stress financier.</p>
+        <div style="margin-top:.4rem;">
             <a href="{{ path('app_budget_new') }}" class="btn-hero-primary">+ Nouveau budget</a>
         </div>
     </div>
     <div class="act-hero__stats">
-        <div class="hero-stat">
-            <div class="hero-stat__num">{{ budgets|length }}</div>
-            <div class="hero-stat__label">Budgets</div>
-        </div>
+        <div class="hero-stat__num">{{ budgets|length }}</div>
+        <div class="hero-stat__label">Budgets</div>
     </div>
 </section>
 
-{# ══ SUMMARY BAR ══════════════════════════ #}
+{# SUMMARY BAR #}
 <div class="summary-bar">
     <div class="summary-card">
         <div class="summary-card__label">Budget total</div>
-        <div class="summary-card__value">{{ grandTotal }}</div>
+        <div class="summary-card__value">{{ grandTotal|number_format(2, ',', ' ') }}</div>
         <div class="summary-card__sub">toutes devises</div>
     </div>
     <div class="summary-card">
         <div class="summary-card__label">Total dépensé</div>
-        <div class="summary-card__value" style="color:var(--color-text)">{{ grandSpent }}</div>
+        <div class="summary-card__value" style="color:var(--color-text)">{{ grandSpent|number_format(2, ',', ' ') }}</div>
         <div class="summary-card__sub">sur tous les budgets</div>
     </div>
     <div class="summary-card">
         <div class="summary-card__label">Restant estimé</div>
-        <div class="summary-card__value" style="color:var(--color-secondary)">{{ grandTotal - grandSpent }}</div>
+        <div class="summary-card__value" style="color:var(--color-secondary)">{{ (grandTotal - grandSpent)|number_format(2, ',', ' ') }}</div>
         <div class="summary-card__sub">solde global</div>
     </div>
     <div class="summary-card">
         <div class="summary-card__label">Budgets dépassés</div>
-        <div class="summary-card__value" style="color:{% if countOver > 0 %}#dc2626{% else %}var(--color-secondary){% endif %}">
-            {{ countOver }}
-        </div>
+        <div class="summary-card__value" style="color:{% if countOver > 0 %}#dc2626{% else %}var(--color-secondary){% endif %}">{{ countOver }}</div>
         <div class="summary-card__sub">sur {{ budgets|length }} budgets</div>
     </div>
 </div>
 
-{# ══ TOOLBAR ══════════════════════════════ #}
+{# TOOLBAR with FILTERS #}
 <div class="toolbar">
     <div class="toolbar__left">
+        <!-- Search -->
         <div class="search-field">
             <span>🔍</span>
             <input type="search" id="searchInput" class="search-field__input" placeholder="Nom, voyage, devise…" autocomplete="off">
-            <button class="search-clear" id="searchClear" title="Effacer la recherche">✕</button>
+            <button class="search-clear" id="searchClear">✕</button>
         </div>
-        <div class="chip-group" id="deviseFilter">
-            <span class="chip-label">Devise :</span>
-            <button class="chip active" data-devise="all">Toutes</button>
+
+        <!-- Voyage Filter - DROPDOWN (liste déroulante) -->
+        <div class="filter-group">
+            <span class="filter-label">Voyage :</span>
+            <select id="voyageSelect" class="voyage-select">
+                <option value="all">Tous les voyages</option>
+            </select>
         </div>
-        <div class="chip-group" id="statutFilter">
-            <span class="chip-label">Statut :</span>
-            <button class="chip active"     data-statut="all">Tous</button>
-            <button class="chip chip--ok"   data-statut="ok">✔ Contrôlé</button>
-            <button class="chip chip--over" data-statut="over">⚠ Dépassé</button>
+
+        <!-- Devise Filter (multi-select chips) -->
+        <div class="filter-group">
+            <span class="filter-label">Devise :</span>
+            <div class="filter-chips" id="deviseChipsContainer">
+                <button class="chip active" data-devise="all">Toutes</button>
+            </div>
+        </div>
+
+        <!-- Statut Filter (multi-select chips) -->
+        <div class="filter-group">
+            <span class="filter-label">Statut :</span>
+            <div class="filter-chips" id="statutChipsContainer">
+                <button class="chip active" data-statut="all">Tous</button>
+                <button class="chip chip--ok" data-statut="ok">✔ Contrôlé</button>
+                <button class="chip chip--over" data-statut="over">⚠ Dépassé</button>
+            </div>
         </div>
     </div>
     <div class="toolbar__right">
@@ -496,17 +439,11 @@
             <option value="depenses-desc">Nb dépenses ↓</option>
             <option value="depenses-asc">Nb dépenses ↑</option>
         </select>
-        <button class="btn-export" id="toggleView" title="Changer la vue">
-            <svg id="viewIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-            </svg>
-            Vue
-        
+        <button class="btn-export" id="resetFiltersBtn">⟳ Réinitialiser</button>
     </div>
 </div>
 
-{# ══ SELECTION BAR ══ #}
+{# SELECTION BAR #}
 <div class="selection-bar" id="selectionBar">
     <div class="selection-bar__info">
         <span class="selection-bar__count" id="selCount">0</span>
@@ -524,174 +461,135 @@
     <span id="activeFiltersLabel" style="color:var(--color-primary);font-weight:600"></span>
 </div>
 
-{# ══ LAYOUT: GRID + DETAIL PANEL ═══════ #}
+{# GRID + DETAIL PANEL #}
 <div class="budget-layout" id="budgetLayout">
-
-    {# ══ GRID ══════════════════════════════════ #}
     <div>
         <div class="act-grid" id="budgetGrid">
+            {% for budget in budgets %}
+                {% set totalDepense = 0 %}
+                {% for dep in budget.depenses %}
+                    {% set totalDepense = totalDepense + dep.montantDepense %}
+                {% endfor %}
+                {% set restant = budget.montantTotal - totalDepense %}
+                {% set isOver  = restant < 0 %}
+                {% set pct     = budget.montantTotal > 0 ? ((totalDepense / budget.montantTotal) * 100)|round(0) : 0 %}
 
-        {% for budget in budgets %}
-            {% set totalDepense = 0 %}
-            {% for dep in budget.depenses %}
-                {% set totalDepense = totalDepense + dep.montantDepense %}
-            {% endfor %}
-            {% set restant = budget.montantTotal - totalDepense %}
-            {% set isOver  = restant < 0 %}
-            {% set pct     = budget.montantTotal > 0 ? ((totalDepense / budget.montantTotal) * 100)|round(0) : 0 %}
+                {% set depsJson = [] %}
+                {% for d in budget.depenses %}
+                    {% set depsJson = depsJson|merge([{
+                        label: d.libelleDepense,
+                        montant: d.montantDepense,
+                        devise: d.deviseDepense ?? budget.deviseBudget ?? 'TND',
+                        categorie: d.categorieDepense,
+                        date: d.dateCreation|date('d/m/Y')
+                    }]) %}
+                {% endfor %}
 
-            {# Build depenses JSON for detail panel #}
-            {% set depsJson = [] %}
-            {% for d in budget.depenses %}
-                {% set depsJson = depsJson|merge([{
-                    label: d.libelleDepense,
-                    montant: d.montantDepense,
-                    devise: d.deviseDepense ?? budget.deviseBudget ?? 'TND',
-                    categorie: d.categorieDepense,
-                    date: d.dateCreation|date('d/m/Y')
-                }]) %}
-            {% endfor %}
+                <div class="act-card"
+                     data-id="{{ budget.idBudget }}"
+                     data-name="{{ budget.libelleBudget|lower }}"
+                     data-voyage="{{ budget.voyage ? budget.voyage.titreVoyage|lower : '' }}"
+                     data-voyage-id="{{ budget.voyage ? budget.voyage.idVoyage : '' }}"
+                     data-voyage-title="{{ budget.voyage ? budget.voyage.titreVoyage|e('html_attr') : '' }}"
+                     data-devise="{{ budget.deviseBudget ?? 'TND' }}"
+                     data-statut="{{ isOver ? 'over' : 'ok' }}"
+                     data-montant="{{ budget.montantTotal }}"
+                     data-depenses="{{ budget.depenses|length }}"
+                     data-restant="{{ restant }}"
+                     data-pct="{{ pct }}"
+                     data-libelle="{{ budget.libelleBudget|e('html_attr') }}"
+                     data-total-depense="{{ totalDepense }}"
+                     data-is-over="{{ isOver ? '1' : '0' }}"
+                     data-url-show="{{ path('app_budget_show', {id: budget.idBudget}) }}"
+                     data-url-edit="{{ path('app_budget_edit', {id: budget.idBudget}) }}"
+                     data-url-delete="{{ path('app_budget_delete', {id: budget.idBudget}) }}"
+                     data-csrf-delete="{{ csrf_token('delete' ~ budget.idBudget) }}"
+                     data-deps="{{ depsJson|json_encode|e('html_attr') }}"
+                     onclick="handleCardClick(event, this)">
 
-            <div class="act-card"
-                 data-id="{{ budget.idBudget }}"
-                 data-name="{{ budget.libelleBudget|lower }}"
-                 data-voyage="{{ budget.voyage ? budget.voyage.titreVoyage|lower : '' }}"
-                 data-devise="{{ budget.deviseBudget ?? 'TND' }}"
-                 data-statut="{{ isOver ? 'over' : 'ok' }}"
-                 data-montant="{{ budget.montantTotal }}"
-                 data-depenses="{{ budget.depenses|length }}"
-                 data-restant="{{ restant }}"
-                 data-pct="{{ pct }}"
-                 data-libelle="{{ budget.libelleBudget|e('html_attr') }}"
-                 data-description="{{ budget.descriptionBudget|e('html_attr') }}"
-                 data-voyage-title="{{ budget.voyage ? budget.voyage.titreVoyage|e('html_attr') : '' }}"
-                 data-statut-budget="{{ budget.statutBudget ?? 'actif' }}"
-                 data-total-depense="{{ totalDepense }}"
-                 data-is-over="{{ isOver ? '1' : '0' }}"
-                 data-url-show="{{ path('app_budget_show', {id: budget.idBudget}) }}"
-                 data-url-edit="{{ path('app_budget_edit', {id: budget.idBudget}) }}"
-                 data-url-delete="{{ path('app_budget_delete', {id: budget.idBudget}) }}"
-                 data-csrf-delete="{{ csrf_token('delete' ~ budget.idBudget) }}"
-                 data-deps="{{ depsJson|json_encode|e('html_attr') }}"
-                 onclick="handleCardClick(event, this)">
-
-                {# Selection checkbox #}
-                <div class="card-checkbox-wrap">
-                    <div class="card-checkbox" title="Sélectionner"></div>
-                </div>
-
-                <div class="act-card__img-wrap">
-                    <div class="act-card__img-placeholder">💰</div>
-                    <div class="act-card__badges">
-                        <span class="badge badge--cat">{{ budget.deviseBudget ?? 'TND' }}</span>
-                        {% if isOver %}<span class="badge badge--trending">Dépassé</span>{% endif %}
-                    </div>
-                </div>
-
-                <div class="act-card__body">
-                    <div class="act-card__name">{{ budget.libelleBudget }}</div>
-                    {% if budget.voyage %}
-                        <div class="act-card__location">📍 {{ budget.voyage.titreVoyage }}</div>
-                    {% endif %}
-                    <div class="act-card__tags">
-                        <span class="tag">{{ budget.depenses|length }} dépenses</span>
-                        <span class="tag {{ isOver ? 'tag--difficile' : 'tag--facile' }}">
-                            {{ isOver ? '⚠ Dépassé' : '✔ Contrôlé' }}
-                        </span>
-                    </div>
-                    <div class="budget-progress" title="{{ pct }}% consommé">
-                        <div class="budget-progress__fill {{ isOver ? 'budget-progress__fill--over' : '' }}"
-                             style="width:{{ pct > 100 ? 100 : pct }}%"></div>
-                    </div>
-                    <div style="font-size:.7rem;color:var(--color-text-muted);text-align:right;margin-top:.1rem">
-                        {{ pct }}% consommé
+                    <div class="card-checkbox-wrap">
+                        <div class="card-checkbox"></div>
                     </div>
 
-                    <div class="act-card__footer">
-                        <div>
-                            <div class="act-price-label">Budget total</div>
-                            <div class="act-price-value">{{ budget.montantTotal }} {{ budget.deviseBudget ?? 'TND' }}</div>
-                            <div style="font-size:.78rem;color:var(--color-text-muted)">Dépensé : {{ totalDepense }}</div>
-                            <div style="font-size:.82rem;font-weight:600;color:{{ isOver ? '#dc2626' : 'var(--color-secondary)' }}">
-                                {{ isOver ? '↑ Excès : ' ~ restant|abs : '↓ Restant : ' ~ restant }}
+                    <div class="act-card__img-wrap">
+                        <div class="act-card__img-placeholder">💰</div>
+                        <div class="act-card__badges">
+                            <span class="badge badge--cat">{{ budget.deviseBudget ?? 'TND' }}</span>
+                            {% if isOver %}<span class="badge badge--trending">Dépassé</span>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="act-card__body">
+                        <div class="act-card__name">{{ budget.libelleBudget }}</div>
+                        {% if budget.voyage %}
+                            <div class="act-card__location">📍 {{ budget.voyage.titreVoyage }}</div>
+                        {% endif %}
+                        <div class="act-card__tags">
+                            <span class="tag">{{ budget.depenses|length }} dépenses</span>
+                            <span class="tag {{ isOver ? 'tag--difficile' : 'tag--facile' }}">
+                                {{ isOver ? '⚠ Dépassé' : '✔ Contrôlé' }}
+                            </span>
+                        </div>
+                        <div class="budget-progress">
+                            <div class="budget-progress__fill {{ isOver ? 'budget-progress__fill--over' : '' }}" style="width:{{ pct > 100 ? 100 : pct }}%"></div>
+                        </div>
+                        <div style="font-size:.7rem;color:var(--color-text-muted);text-align:right;">{{ pct }}% consommé</div>
+
+                        <div class="act-card__footer">
+                            <div>
+                                <div class="act-price-label">Budget total</div>
+                                <div class="act-price-value">{{ budget.montantTotal|number_format(2, ',', ' ') }} {{ budget.deviseBudget ?? 'TND' }}</div>
+                                <div style="font-size:.78rem;">Dépensé : {{ totalDepense|number_format(2, ',', ' ') }}</div>
+                                <div style="font-size:.82rem;font-weight:600;color:{{ isOver ? '#dc2626' : '#059669' }}">
+                                    {{ isOver ? '↑ Excès : ' ~ restant|abs|number_format(2, ',', ' ') : '↓ Restant : ' ~ restant|number_format(2, ',', ' ') }}
+                                </div>
+                            </div>
+                            <div class="act-card__actions" onclick="event.stopPropagation()">
+                                <a href="{{ path('app_budget_show', {id: budget.idBudget}) }}" class="act-card__btn act-card__btn--view">→</a>
+                                <a href="{{ path('app_budget_edit', {id: budget.idBudget}) }}" class="act-card__btn act-card__btn--edit">✏️</a>
+                                <button class="act-card__btn act-card__btn--delete" onclick="confirmDeleteOne(this)">🗑️</button>
                             </div>
                         </div>
-                        <div class="act-card__actions" onclick="event.stopPropagation()">
-                            <a href="{{ path('app_budget_show', {id: budget.idBudget}) }}"
-                               class="act-card__btn act-card__btn--view" title="Voir le détail">→</a>
-                            <a href="{{ path('app_budget_edit', {id: budget.idBudget}) }}"
-                               class="act-card__btn act-card__btn--edit" title="Modifier">✏️</a>
-                            <button class="act-card__btn act-card__btn--delete"
-                                    title="Supprimer"
-                                    onclick="confirmDeleteOne(this)">🗑️</button>
-                        </div>
                     </div>
                 </div>
-            </div>
-
-        {% else %}
-            <div class="empty-state">
-                <div class="empty-state__icon">💸</div>
-                <div class="empty-state__title">Aucun budget pour l'instant</div>
-                <p>Créez votre premier budget pour commencer à suivre vos dépenses.</p>
-            </div>
-        {% endfor %}
-
+            {% else %}
+                <div class="empty-state">
+                    <div style="font-size:3rem;">💸</div>
+                    <div style="font-weight:700;">Aucun budget pour l'instant</div>
+                    <p>Créez votre premier budget pour commencer à suivre vos dépenses.</p>
+                </div>
+            {% endfor %}
         </div>
 
-        <div id="noResults" style="display:none;text-align:center;padding:3rem 1rem;color:var(--color-text-muted)">
-            <div style="font-size:2.5rem;margin-bottom:.75rem">🔍</div>
-            <div style="font-weight:700;font-size:1rem;color:var(--color-text);margin-bottom:.35rem">Aucun résultat</div>
+        <div id="noResults" style="display:none;text-align:center;padding:3rem 1rem;">
+            <div style="font-size:2.5rem;">🔍</div>
+            <div style="font-weight:700;">Aucun résultat</div>
             <p>Essayez de modifier vos filtres ou votre recherche.</p>
         </div>
 
         <div class="pagination-wrap" id="paginationWrap"></div>
     </div>
 
-    {# ══ DETAIL PANEL ══ #}
+    <!-- Detail Panel -->
     <div class="detail-panel" id="detailPanel">
         <div class="dp-header">
             <span class="dp-header__title" id="dp-title">—</span>
-            <button class="dp-close" onclick="closeDetailPanel()" title="Fermer">✕</button>
+            <button class="dp-close" onclick="closeDetailPanel()">✕</button>
         </div>
         <div class="dp-progress-wrap">
-            <div class="dp-progress-labels">
-                <span>0</span>
-                <span id="dp-pct-label">0%</span>
-                <span id="dp-montant-label">—</span>
-            </div>
             <div class="dp-progress-track">
                 <div class="dp-progress-fill" id="dp-progress-fill" style="width:0%"></div>
             </div>
         </div>
         <div class="dp-stats">
-            <div class="dp-stat">
-                <div class="dp-stat__label">Budget alloué</div>
-                <div class="dp-stat__value dp-stat__value--primary" id="dp-montant-total">—</div>
-            </div>
-            <div class="dp-stat">
-                <div class="dp-stat__label">Total dépensé</div>
-                <div class="dp-stat__value" id="dp-depense-total">—</div>
-            </div>
-            <div class="dp-stat">
-                <div class="dp-stat__label">Restant / Excès</div>
-                <div class="dp-stat__value" id="dp-restant">—</div>
-            </div>
-            <div class="dp-stat">
-                <div class="dp-stat__label">Nb dépenses</div>
-                <div class="dp-stat__value" id="dp-nb-dep">—</div>
-            </div>
-        </div>
-        <div class="dp-depenses-header">
-            <span class="dp-depenses-title">
-                📋 Dépenses
-                <span class="dp-badge" id="dp-dep-count">0</span>
-            </span>
+            <div class="dp-stat"><div class="dp-stat__label">Budget alloué</div><div class="dp-stat__value" id="dp-montant-total">—</div></div>
+            <div class="dp-stat"><div class="dp-stat__label">Total dépensé</div><div class="dp-stat__value" id="dp-depense-total">—</div></div>
+            <div class="dp-stat"><div class="dp-stat__label">Restant</div><div class="dp-stat__value" id="dp-restant">—</div></div>
+            <div class="dp-stat"><div class="dp-stat__label">Nb dépenses</div><div class="dp-stat__value" id="dp-nb-dep">—</div></div>
         </div>
         <ul class="dp-dep-list" id="dp-dep-list"></ul>
         <div class="dp-actions" id="dp-actions"></div>
     </div>
-
 </div>
 
 {# Hidden forms #}
@@ -700,23 +598,15 @@
     <input type="hidden" name="_method" value="DELETE">
 </form>
 
-{# ══ BULK DELETE MODAL ══ #}
+{# Bulk delete modal #}
 <div class="modal-overlay" id="modal-bulk-delete" onclick="if(event.target===this)closeBulkModal()">
     <div class="modal">
-        <div class="modal__header">
-            <span class="modal__title">🗑️ Suppression groupée</span>
-            <button class="modal__close" onclick="closeBulkModal()">✕</button>
-        </div>
-        <div class="modal__body" style="text-align:center;padding:1.5rem">
-            <div style="font-size:2.5rem;margin-bottom:.75rem">⚠️</div>
-            <div style="font-weight:700;font-size:1rem;color:var(--color-text);margin-bottom:.6rem">
-                Confirmer la suppression
-            </div>
-            <p style="color:var(--color-text-muted);font-size:.88rem;margin:0 0 1rem">
-                Vous êtes sur le point de supprimer <strong id="bulk-count" style="color:#dc2626"></strong> budget(s) et toutes leurs dépenses associées.
-                <br><strong>Cette action est irréversible.</strong>
-            </p>
-            <div id="bulk-names" style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:.75rem 1rem;text-align:left;font-size:.82rem;color:var(--color-text-muted);max-height:120px;overflow-y:auto;"></div>
+        <div class="modal__header"><span class="modal__title">🗑️ Suppression groupée</span><button class="modal__close" onclick="closeBulkModal()">✕</button></div>
+        <div class="modal__body">
+            <div style="font-size:2.5rem;">⚠️</div>
+            <div style="font-weight:700;">Confirmer la suppression</div>
+            <p>Supprimer <strong id="bulk-count" style="color:#dc2626"></strong> budget(s) ?<br>Cette action est irréversible.</p>
+            <div id="bulk-names" style="background:#f3f4f6;border-radius:8px;padding:.75rem;text-align:left;font-size:.82rem;max-height:120px;overflow-y:auto;"></div>
         </div>
         <div class="modal__footer">
             <button class="btn-modal-cancel" onclick="closeBulkModal()">Annuler</button>
@@ -728,194 +618,383 @@
 {% endblock %}
 
 {% block javascripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
-/* ════════════════════════════════════════════════════════
-   STATE
-════════════════════════════════════════════════════════ */
+/* ============================================================
+   CORE FILTERING - VOYAGE EN LISTE DEROULANTE
+   ============================================================ */
+
 const PER_PAGE = 6;
-const state = {
-    search: '', devises: new Set(['all']),
-    statut: 'all', sort: 'default', view: 'grid',
+
+// Filter state
+let state = {
+    search: '',
+    selectedVoyage: 'all',  // Pour le select (un seul voyage à la fois)
+    devises: new Set(['all']),
+    statuts: new Set(['all']),
+    sort: 'default',
     page: 1
 };
 
-const grid         = document.getElementById('budgetGrid');
-const noResults    = document.getElementById('noResults');
-const resultsCount = document.getElementById('resultsCount');
-const activeFilLbl = document.getElementById('activeFiltersLabel');
-const pagWrap      = document.getElementById('paginationWrap');
-const layout       = document.getElementById('budgetLayout');
-const detailPanel  = document.getElementById('detailPanel');
-const selBar       = document.getElementById('selectionBar');
-const allCards     = Array.from(document.querySelectorAll('.act-card'));
+let allCards = [];
+let activeDetailCard = null;
+let selectedIds = new Set();
+let selectMode = false;
 
-/* ════════════════════════════════════════════════════════
-   SEARCH — DYNAMIC (instant filtering)
-════════════════════════════════════════════════════════ */
-const searchInput = document.getElementById('searchInput');
-const searchClear = document.getElementById('searchClear');
+// Helper: refresh card list from DOM
+function refreshCards() {
+    allCards = Array.from(document.querySelectorAll('.act-card'));
+}
 
-searchInput.addEventListener('input', e => {
-    state.search = e.target.value;
-    searchClear.classList.toggle('visible', state.search.length > 0);
-    resetAndApply();
-});
-searchClear.addEventListener('click', () => {
-    searchInput.value = '';
-    state.search = '';
-    searchClear.classList.remove('visible');
-    searchInput.focus();
-    resetAndApply();
-});
+// ============================================================
+// VOYAGE FILTER - Liste déroulante (SELECT)
+// ============================================================
+function populateVoyageSelect() {
+    const select = document.getElementById('voyageSelect');
+    if (!select) return;
 
-/* ── Build devise chips ─────────────────────────── */
-(function() {
-    const deviseFilter = document.getElementById('deviseFilter');
-    const devises = [...new Set(allCards.map(c => c.dataset.devise))].sort();
-    devises.forEach(d => {
-        const b = document.createElement('button');
-        b.className = 'chip'; b.dataset.devise = d; b.textContent = d;
-        deviseFilter.appendChild(b);
+    // Garder l'option "Tous les voyages"
+    select.innerHTML = '<option value="all">Tous les voyages</option>';
+
+    // Collecter les voyages uniques depuis les cartes
+    const voyagesMap = new Map();
+    allCards.forEach(card => {
+        const voyageId = card.dataset.voyageId;
+        const voyageTitle = card.dataset.voyageTitle;
+        if (voyageId && voyageTitle && !voyagesMap.has(voyageId)) {
+            voyagesMap.set(voyageId, voyageTitle);
+        }
     });
-})();
 
-/* ════════════════════════════════════════════════════════
-   CORE: filter → sort → paginate → render
-════════════════════════════════════════════════════════ */
-function applyAll() {
+    // Trier et ajouter les options
+    const sorted = Array.from(voyagesMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+    for (const [id, title] of sorted) {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = title;
+        select.appendChild(option);
+    }
+
+    // Écouter le changement de sélection
+    select.addEventListener('change', (e) => {
+        state.selectedVoyage = e.target.value;
+        state.page = 1;
+        applyAllFilters();
+    });
+}
+
+// ============================================================
+// DEVISE FILTERS - Multi-select chips
+// ============================================================
+function populateDeviseFilters() {
+    const container = document.getElementById('deviseChipsContainer');
+    if (!container) return;
+
+    // Garder seulement "Toutes" au début
+    container.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'chip active';
+    allBtn.dataset.devise = 'all';
+    allBtn.textContent = 'Toutes';
+    container.appendChild(allBtn);
+
+    // Collecter les devises uniques
+    const devisesSet = new Set();
+    allCards.forEach(card => {
+        const devise = card.dataset.devise;
+        if (devise) devisesSet.add(devise);
+    });
+
+    // Ajouter les chips
+    const sorted = Array.from(devisesSet).sort();
+    for (const devise of sorted) {
+        const chip = document.createElement('button');
+        chip.className = 'chip';
+        chip.dataset.devise = devise;
+        chip.textContent = devise;
+        container.appendChild(chip);
+    }
+
+    // Attacher les événements click
+    document.querySelectorAll('#deviseChipsContainer .chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const value = chip.dataset.devise;
+            if (value === 'all') {
+                state.devises.clear();
+                state.devises.add('all');
+                document.querySelectorAll('#deviseChipsContainer .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            } else {
+                state.devises.delete('all');
+                if (state.devises.has(value)) {
+                    state.devises.delete(value);
+                    chip.classList.remove('active');
+                } else {
+                    state.devises.add(value);
+                    chip.classList.add('active');
+                }
+                if (state.devises.size === 0) {
+                    state.devises.add('all');
+                    const allChip = document.querySelector('#deviseChipsContainer .chip[data-devise="all"]');
+                    if (allChip) allChip.classList.add('active');
+                } else {
+                    const allChip = document.querySelector('#deviseChipsContainer .chip[data-devise="all"]');
+                    if (allChip) allChip.classList.remove('active');
+                }
+            }
+            state.page = 1;
+            applyAllFilters();
+        });
+    });
+}
+
+// ============================================================
+// STATUT FILTERS - Multi-select chips
+// ============================================================
+function initStatutFilters() {
+    document.querySelectorAll('#statutChipsContainer .chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const value = chip.dataset.statut;
+            if (value === 'all') {
+                state.statuts.clear();
+                state.statuts.add('all');
+                document.querySelectorAll('#statutChipsContainer .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            } else {
+                state.statuts.delete('all');
+                if (state.statuts.has(value)) {
+                    state.statuts.delete(value);
+                    chip.classList.remove('active');
+                } else {
+                    state.statuts.add(value);
+                    chip.classList.add('active');
+                }
+                if (state.statuts.size === 0) {
+                    state.statuts.add('all');
+                    const allChip = document.querySelector('#statutChipsContainer .chip[data-statut="all"]');
+                    if (allChip) allChip.classList.add('active');
+                } else {
+                    const allChip = document.querySelector('#statutChipsContainer .chip[data-statut="all"]');
+                    if (allChip) allChip.classList.remove('active');
+                }
+            }
+            state.page = 1;
+            applyAllFilters();
+        });
+    });
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+        state.search = e.target.value;
+        searchClear.classList.toggle('visible', state.search.length > 0);
+        state.page = 1;
+        applyAllFilters();
+    });
+
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        state.search = '';
+        searchClear.classList.remove('visible');
+        state.page = 1;
+        applyAllFilters();
+    });
+}
+
+// ============================================================
+// SORT
+// ============================================================
+function initSort() {
+    const sortSelect = document.getElementById('sortSelect');
+    if (!sortSelect) return;
+    sortSelect.addEventListener('change', (e) => {
+        state.sort = e.target.value;
+        state.page = 1;
+        applyAllFilters();
+    });
+}
+
+// ============================================================
+// RESET ALL FILTERS
+// ============================================================
+function initResetButton() {
+    const resetBtn = document.getElementById('resetFiltersBtn');
+    if (!resetBtn) return;
+    resetBtn.addEventListener('click', () => {
+        // Reset state
+        state.search = '';
+        state.selectedVoyage = 'all';
+        state.devises.clear();
+        state.devises.add('all');
+        state.statuts.clear();
+        state.statuts.add('all');
+        state.sort = 'default';
+        state.page = 1;
+
+        // Reset UI
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.value = '';
+        const searchClear = document.getElementById('searchClear');
+        if (searchClear) searchClear.classList.remove('visible');
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) sortSelect.value = 'default';
+        const voyageSelect = document.getElementById('voyageSelect');
+        if (voyageSelect) voyageSelect.value = 'all';
+
+        // Reset devise chips
+        document.querySelectorAll('#deviseChipsContainer .chip').forEach(c => {
+            c.classList.remove('active');
+            if (c.dataset.devise === 'all') c.classList.add('active');
+        });
+
+        // Reset statut chips
+        document.querySelectorAll('#statutChipsContainer .chip').forEach(c => {
+            c.classList.remove('active');
+            if (c.dataset.statut === 'all') c.classList.add('active');
+        });
+
+        applyAllFilters();
+    });
+}
+
+// ============================================================
+// CORE FILTER & PAGINATION
+// ============================================================
+function applyAllFilters() {
     const q = state.search.toLowerCase().trim();
 
-    let visible = allCards.filter(c => {
-        const txt = !q || c.dataset.name.includes(q) || c.dataset.voyage.includes(q) || c.dataset.devise.toLowerCase().includes(q);
-        const dev = state.devises.has('all') || state.devises.has(c.dataset.devise);
-        const sta = state.statut === 'all' || c.dataset.statut === state.statut;
-        return txt && dev && sta;
+    let visible = allCards.filter(card => {
+        // Text search
+        const textMatch = !q ||
+            card.dataset.name.includes(q) ||
+            (card.dataset.voyage && card.dataset.voyage.includes(q)) ||
+            card.dataset.devise.toLowerCase().includes(q);
+
+        // Voyage filter (select - une seule valeur)
+        let voyageMatch = state.selectedVoyage === 'all';
+        if (!voyageMatch && card.dataset.voyageId) {
+            voyageMatch = state.selectedVoyage === card.dataset.voyageId;
+        }
+
+        // Devise filter
+        let deviseMatch = state.devises.has('all') || state.devises.has(card.dataset.devise);
+
+        // Statut filter
+        let statutMatch = state.statuts.has('all') || state.statuts.has(card.dataset.statut);
+
+        return textMatch && voyageMatch && deviseMatch && statutMatch;
     });
 
-    visible = [...visible].sort((a, b) => {
+    // Sort
+    visible.sort((a, b) => {
         switch (state.sort) {
-            case 'name-asc':      return a.dataset.name.localeCompare(b.dataset.name);
-            case 'name-desc':     return b.dataset.name.localeCompare(a.dataset.name);
-            case 'montant-asc':   return +a.dataset.montant  - +b.dataset.montant;
-            case 'montant-desc':  return +b.dataset.montant  - +a.dataset.montant;
-            case 'depenses-asc':  return +a.dataset.depenses - +b.dataset.depenses;
-            case 'depenses-desc': return +b.dataset.depenses - +a.dataset.depenses;
-            case 'restant-asc':   return +a.dataset.restant  - +b.dataset.restant;
-            case 'restant-desc':  return +b.dataset.restant  - +a.dataset.restant;
+            case 'name-asc': return a.dataset.name.localeCompare(b.dataset.name);
+            case 'name-desc': return b.dataset.name.localeCompare(a.dataset.name);
+            case 'montant-asc': return parseFloat(a.dataset.montant) - parseFloat(b.dataset.montant);
+            case 'montant-desc': return parseFloat(b.dataset.montant) - parseFloat(a.dataset.montant);
+            case 'depenses-asc': return parseInt(a.dataset.depenses) - parseInt(b.dataset.depenses);
+            case 'depenses-desc': return parseInt(b.dataset.depenses) - parseInt(a.dataset.depenses);
+            case 'restant-asc': return parseFloat(a.dataset.restant) - parseFloat(b.dataset.restant);
+            case 'restant-desc': return parseFloat(b.dataset.restant) - parseFloat(a.dataset.restant);
             default: return 0;
         }
     });
 
+    // Pagination
     const totalPages = Math.max(1, Math.ceil(visible.length / PER_PAGE));
     if (state.page > totalPages) state.page = totalPages;
 
     const start = (state.page - 1) * PER_PAGE;
     const pageItems = visible.slice(start, start + PER_PAGE);
 
-    allCards.forEach(c => { c.style.display = 'none'; });
-    pageItems.forEach(c => { c.style.display = ''; grid.appendChild(c); });
+    // Hide all, show page items
+    allCards.forEach(c => c.style.display = 'none');
+    pageItems.forEach(c => c.style.display = '');
 
+    // Update results count
     const from = visible.length === 0 ? 0 : start + 1;
-    const to   = Math.min(start + PER_PAGE, visible.length);
-    resultsCount.innerHTML = visible.length === 0
-        ? `<strong>0</strong> résultat`
-        : `<strong>${from}–${to}</strong> sur <strong>${visible.length}</strong> budget(s)`;
+    const to = Math.min(start + PER_PAGE, visible.length);
+    const resultsSpan = document.getElementById('resultsCount');
+    if (resultsSpan) {
+        resultsSpan.innerHTML = visible.length === 0
+            ? `<strong>0</strong> résultat`
+            : `<strong>${from}–${to}</strong> sur <strong>${visible.length}</strong> budget(s)`;
+    }
 
+    // Update active filters label
     const parts = [];
     if (q) parts.push(`🔍 "${q}"`);
-    if (!state.devises.has('all')) parts.push([...state.devises].join(', '));
-    if (state.statut !== 'all') parts.push(state.statut === 'over' ? '⚠ Dépassés' : '✔ Contrôlés');
+    if (state.selectedVoyage !== 'all') {
+        const select = document.getElementById('voyageSelect');
+        const selectedText = select?.options[select.selectedIndex]?.textContent || state.selectedVoyage;
+        parts.push(`Voyage: ${selectedText}`);
+    }
+    if (!state.devises.has('all')) parts.push(`Devise: ${[...state.devises].join(', ')}`);
+    if (!state.statuts.has('all')) parts.push(`Statut: ${[...state.statuts].map(s => s === 'ok' ? 'Contrôlé' : 'Dépassé').join(', ')}`);
     if (state.sort !== 'default') parts.push('Trié');
-    activeFilLbl.textContent = parts.length ? '— ' + parts.join(' · ') : '';
+    const activeLabel = document.getElementById('activeFiltersLabel');
+    if (activeLabel) activeLabel.textContent = parts.length ? '— ' + parts.join(' · ') : '';
 
-    noResults.style.display  = visible.length === 0 ? 'block' : 'none';
-    pagWrap.style.display    = visible.length <= PER_PAGE ? 'none' : 'flex';
+    // Show/hide no results
+    const noResultsDiv = document.getElementById('noResults');
+    if (noResultsDiv) noResultsDiv.style.display = visible.length === 0 ? 'block' : 'none';
 
-    renderPagination(totalPages);
+    // Show/hide pagination
+    const pagWrap = document.getElementById('paginationWrap');
+    if (pagWrap) {
+        if (visible.length <= PER_PAGE) {
+            pagWrap.style.display = 'none';
+        } else {
+            pagWrap.style.display = 'flex';
+            renderPagination(totalPages);
+        }
+    }
 }
 
 function renderPagination(total) {
-    if (total <= 1) { pagWrap.innerHTML = ''; return; }
+    const pagWrap = document.getElementById('paginationWrap');
+    if (!pagWrap) return;
+    if (total <= 1) {
+        pagWrap.innerHTML = '';
+        return;
+    }
     let html = '';
     html += `<button class="pag-btn" onclick="goPage(${state.page - 1})" ${state.page === 1 ? 'disabled' : ''}>‹ Préc.</button>`;
-    buildPageRange(state.page, total).forEach(p => {
-        if (p === '…') html += `<span class="pag-ellipsis">…</span>`;
-        else html += `<button class="pag-btn ${p === state.page ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
-    });
+    for (let i = 1; i <= total; i++) {
+        if (i === state.page) {
+            html += `<button class="pag-btn active">${i}</button>`;
+        } else if (i === 1 || i === total || (i >= state.page - 2 && i <= state.page + 2)) {
+            html += `<button class="pag-btn" onclick="goPage(${i})">${i}</button>`;
+        } else if (i === state.page - 3 || i === state.page + 3) {
+            html += `<span class="pag-ellipsis">…</span>`;
+        }
+    }
     html += `<button class="pag-btn" onclick="goPage(${state.page + 1})" ${state.page === total ? 'disabled' : ''}>Suiv. ›</button>`;
     html += `<span class="pag-info">Page ${state.page} / ${total}</span>`;
     pagWrap.innerHTML = html;
 }
 
-function buildPageRange(current, total) {
-    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
-    const pages = [];
-    if (current <= 4) {
-        for (let i = 1; i <= 5; i++) pages.push(i);
-        pages.push('…'); pages.push(total);
-    } else if (current >= total - 3) {
-        pages.push(1); pages.push('…');
-        for (let i = total - 4; i <= total; i++) pages.push(i);
-    } else {
-        pages.push(1); pages.push('…');
-        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
-        pages.push('…'); pages.push(total);
-    }
-    return pages;
+function goPage(page) {
+    state.page = page;
+    applyAllFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function goPage(p) { state.page = p; applyAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-function resetAndApply() { state.page = 1; applyAll(); }
-
-/* ── Filters ───────────────────────────────────────── */
-document.getElementById('deviseFilter').addEventListener('click', e => {
-    const btn = e.target.closest('.chip[data-devise]');
-    if (!btn) return;
-    const d = btn.dataset.devise;
-    if (d === 'all') { state.devises.clear(); state.devises.add('all'); }
-    else {
-        state.devises.delete('all');
-        state.devises.has(d) ? state.devises.delete(d) : state.devises.add(d);
-        if (!state.devises.size) state.devises.add('all');
-    }
-    document.querySelectorAll('#deviseFilter .chip').forEach(c => c.classList.toggle('active', state.devises.has(c.dataset.devise)));
-    resetAndApply();
-});
-
-document.getElementById('statutFilter').addEventListener('click', e => {
-    const btn = e.target.closest('.chip[data-statut]');
-    if (!btn) return;
-    state.statut = btn.dataset.statut;
-    document.querySelectorAll('#statutFilter .chip').forEach(c => c.classList.toggle('active', c.dataset.statut === state.statut));
-    resetAndApply();
-});
-
-document.getElementById('sortSelect').addEventListener('change', e => { state.sort = e.target.value; resetAndApply(); });
-
-document.getElementById('toggleView').addEventListener('click', () => {
-    state.view = state.view === 'grid' ? 'list' : 'grid';
-    grid.style.gridTemplateColumns = state.view === 'list' ? '1fr' : '';
-    document.getElementById('viewIcon').innerHTML = state.view === 'list'
-        ? `<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>`
-        : `<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>`;
-});
-
-/* ════════════════════════════════════════════════════════
-   DETAIL PANEL
-════════════════════════════════════════════════════════ */
-let activeDetailCard = null;
-
+// ============================================================
+// DETAIL PANEL
+// ============================================================
 const CAT_ICON = {
     'hébergement':'🏨','hebergement':'🏨','transport':'✈️',
     'restauration':'🍽️','nourriture':'🍽️','loisirs':'🎭',
     'activité':'🎭','achats':'🛍️','shopping':'🛍️','santé':'💊','sante':'💊'
-};
-const CAT_COLOR = {
-    'hébergement':'#fef3c7','hebergement':'#fef3c7','transport':'#dbeafe',
-    'restauration':'#d1fae5','nourriture':'#d1fae5','loisirs':'#ede9fe',
-    'activité':'#ede9fe','achats':'#fce7f3','shopping':'#fce7f3','santé':'#fee2e2','sante':'#fee2e2'
 };
 
 function openDetailPanel(card) {
@@ -923,35 +1002,24 @@ function openDetailPanel(card) {
     activeDetailCard = card;
     card.classList.add('active-detail');
 
-    const devise     = card.dataset.devise;
-    const montant    = parseFloat(card.dataset.montant);
-    const depensed   = parseFloat(card.dataset.totalDepense);
-    const restant    = parseFloat(card.dataset.restant);
-    const isOver     = card.dataset.isOver === '1';
-    const pct        = Math.min(parseInt(card.dataset.pct), 100);
-    const deps       = JSON.parse(card.dataset.deps || '[]');
+    const devise = card.dataset.devise;
+    const montant = parseFloat(card.dataset.montant);
+    const depensed = parseFloat(card.dataset.totalDepense);
+    const restant = parseFloat(card.dataset.restant);
+    const isOver = card.dataset.isOver === '1';
+    const pct = Math.min(parseInt(card.dataset.pct), 100);
+    const deps = JSON.parse(card.dataset.deps || '[]');
 
     document.getElementById('dp-title').textContent = card.dataset.libelle;
-    document.getElementById('dp-pct-label').textContent = isOver
-        ? `⚠ Dépassé de ${Math.abs(restant).toLocaleString('fr-FR')} ${devise}`
-        : `${card.dataset.pct}% consommé`;
-    document.getElementById('dp-montant-label').textContent = `${montant.toLocaleString('fr-FR')} ${devise}`;
+    document.getElementById('dp-montant-total').textContent = `${montant.toLocaleString('fr-FR')} ${devise}`;
+    document.getElementById('dp-depense-total').textContent = `${depensed.toLocaleString('fr-FR')} ${devise}`;
+    document.getElementById('dp-restant').textContent = (isOver ? '- ' : '+ ') + Math.abs(restant).toLocaleString('fr-FR') + ' ' + devise;
+    document.getElementById('dp-nb-dep').textContent = deps.length;
 
     const fill = document.getElementById('dp-progress-fill');
     fill.style.width = pct + '%';
-    fill.className = 'dp-progress-fill' + (isOver ? ' dp-progress-fill--over' : (parseInt(card.dataset.pct) > 75 ? ' dp-progress-fill--warn' : ''));
+    fill.className = 'dp-progress-fill' + (isOver ? ' dp-progress-fill--over' : '');
 
-    document.getElementById('dp-montant-total').textContent = `${montant.toLocaleString('fr-FR')} ${devise}`;
-    document.getElementById('dp-depense-total').textContent = `${depensed.toLocaleString('fr-FR')} ${devise}`;
-
-    const restEl = document.getElementById('dp-restant');
-    restEl.textContent = (isOver ? '- ' : '+ ') + Math.abs(restant).toLocaleString('fr-FR') + ' ' + devise;
-    restEl.className = 'dp-stat__value ' + (isOver ? 'dp-stat__value--danger' : 'dp-stat__value--success');
-
-    document.getElementById('dp-nb-dep').textContent = deps.length;
-    document.getElementById('dp-dep-count').textContent = deps.length;
-
-    // Render depenses list
     const list = document.getElementById('dp-dep-list');
     if (deps.length === 0) {
         list.innerHTML = '<li class="dp-empty">📭 Aucune dépense enregistrée</li>';
@@ -959,56 +1027,49 @@ function openDetailPanel(card) {
         list.innerHTML = deps.map(d => {
             const cat = (d.categorie || '').toLowerCase();
             const icon = CAT_ICON[cat] || '💸';
-            const bg   = CAT_COLOR[cat] || 'var(--color-surface-soft)';
             return `<li class="dp-dep-item">
-                <div class="dp-dep-icon" style="background:${bg}">${icon}</div>
-                <div class="dp-dep-body">
-                    <div class="dp-dep-label">${escHtml(d.label)}</div>
-                    <div class="dp-dep-meta">${escHtml(d.categorie)} · ${escHtml(d.date)}</div>
+                <div class="dp-dep-icon">${icon}</div>
+                <div style="flex:1">
+                    <div class="dp-dep-label">${escapeHtml(d.label)}</div>
+                    <div class="dp-dep-meta">${escapeHtml(d.categorie)} · ${escapeHtml(d.date)}</div>
                 </div>
-                <div class="dp-dep-amount">${parseFloat(d.montant).toLocaleString('fr-FR',{minimumFractionDigits:2})} <small style="font-weight:400;color:var(--color-text-muted)">${escHtml(d.devise)}</small></div>
+                <div class="dp-dep-amount">${parseFloat(d.montant).toLocaleString('fr-FR')} <small>${escapeHtml(d.devise)}</small></div>
             </li>`;
         }).join('');
     }
 
-    // Actions
     document.getElementById('dp-actions').innerHTML = `
-        <a href="${card.dataset.urlShow}" class="dp-btn dp-btn--view">
-            <span>→</span> Voir le détail complet
-        </a>
-        <a href="${card.dataset.urlEdit}" class="dp-btn dp-btn--edit">
-            <span>✏️</span> Modifier le budget
-        </a>
-        <button class="dp-btn dp-btn--delete" onclick="confirmDeleteOneByCard(document.querySelector('.act-card.active-detail'))">
-            <span>🗑️</span> Supprimer ce budget
-        </button>
+        <a href="${card.dataset.urlShow}" class="dp-btn dp-btn--view">→ Voir le détail complet</a>
+        <a href="${card.dataset.urlEdit}" class="dp-btn dp-btn--edit">✏️ Modifier le budget</a>
+        <button class="dp-btn dp-btn--delete" onclick="confirmDeleteOneByCard(document.querySelector('.act-card.active-detail'))">🗑️ Supprimer ce budget</button>
     `;
 
-    layout.classList.add('with-detail');
-    detailPanel.classList.add('visible');
+    document.getElementById('budgetLayout').classList.add('with-detail');
+    document.getElementById('detailPanel').classList.add('visible');
 }
 
 function closeDetailPanel() {
     if (activeDetailCard) activeDetailCard.classList.remove('active-detail');
     activeDetailCard = null;
-    layout.classList.remove('with-detail');
-    detailPanel.classList.remove('visible');
+    document.getElementById('budgetLayout').classList.remove('with-detail');
+    document.getElementById('detailPanel').classList.remove('visible');
 }
 
-function escHtml(str) {
+function escapeHtml(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-/* ════════════════════════════════════════════════════════
-   MULTI-SELECTION
-════════════════════════════════════════════════════════ */
-let selectedIds = new Set();
-let selectMode  = false;
+// ============================================================
+// SELECTION & BULK DELETE
+// ============================================================
+function updateSelCount() {
+    document.getElementById('selCount').textContent = selectedIds.size;
+}
 
 function toggleSelectMode(on) {
     selectMode = on;
-    grid.classList.toggle('select-mode', on);
-    selBar.classList.toggle('visible', on);
+    document.getElementById('budgetGrid').classList.toggle('select-mode', on);
+    document.getElementById('selectionBar').classList.toggle('visible', on);
     if (!on) {
         selectedIds.clear();
         allCards.forEach(c => c.classList.remove('selected'));
@@ -1029,31 +1090,22 @@ function toggleCardSelection(card) {
         toggleSelectMode(false);
     } else {
         selectMode = true;
-        selBar.classList.add('visible');
+        document.getElementById('selectionBar').classList.add('visible');
         updateSelCount();
     }
 }
 
-function updateSelCount() {
-    document.getElementById('selCount').textContent = selectedIds.size;
-}
-
 function handleCardClick(e, card) {
-    // If clicking inside action buttons — let them handle it
     if (e.target.closest('.act-card__actions')) return;
-
-    // If click on checkbox or in select mode — toggle selection
     if (e.target.closest('.card-checkbox-wrap') || selectMode) {
         toggleCardSelection(card);
         return;
     }
-
-    // Otherwise open detail panel
     openDetailPanel(card);
 }
 
-document.getElementById('btnCancelSel').addEventListener('click', () => toggleSelectMode(false));
-document.getElementById('btnSelectAll').addEventListener('click', () => {
+document.getElementById('btnCancelSel')?.addEventListener('click', () => toggleSelectMode(false));
+document.getElementById('btnSelectAll')?.addEventListener('click', () => {
     const visible = allCards.filter(c => c.style.display !== 'none');
     const allSelected = visible.every(c => selectedIds.has(c.dataset.id));
     if (allSelected) {
@@ -1062,16 +1114,16 @@ document.getElementById('btnSelectAll').addEventListener('click', () => {
     } else {
         visible.forEach(c => { selectedIds.add(c.dataset.id); c.classList.add('selected'); });
         selectMode = true;
-        selBar.classList.add('visible');
+        document.getElementById('selectionBar').classList.add('visible');
+        updateSelCount();
     }
-    updateSelCount();
 });
 
-document.getElementById('btnDeleteSel').addEventListener('click', () => {
+document.getElementById('btnDeleteSel')?.addEventListener('click', () => {
     if (selectedIds.size === 0) return;
     const names = [...selectedIds].map(id => {
         const c = document.querySelector(`.act-card[data-id="${id}"]`);
-        return c ? escHtml(c.dataset.libelle) : id;
+        return c ? escapeHtml(c.dataset.libelle) : id;
     });
     document.getElementById('bulk-count').textContent = selectedIds.size;
     document.getElementById('bulk-names').innerHTML = names.map(n => `<div>• ${n}</div>`).join('');
@@ -1091,7 +1143,6 @@ async function executeBulkDelete() {
         const form = document.getElementById('form-budget-delete');
         form.action = card.dataset.urlDelete;
         document.getElementById('budget-delete-token').value = card.dataset.csrfDelete;
-        // Submit via fetch
         const fd = new FormData(form);
         try {
             await fetch(form.action, { method: 'POST', body: fd });
@@ -1099,15 +1150,14 @@ async function executeBulkDelete() {
         card.remove();
     }
     toggleSelectMode(false);
-    // Reload to refresh server state
     window.location.reload();
 }
 
-/* ── Single card delete ─────────────────────── */
 function confirmDeleteOne(btn) {
     const card = btn.closest('.act-card');
     confirmDeleteOneByCard(card);
 }
+
 function confirmDeleteOneByCard(card) {
     if (!card) return;
     if (!confirm(`Supprimer le budget "${card.dataset.libelle}" et toutes ses dépenses ?`)) return;
@@ -1117,531 +1167,18 @@ function confirmDeleteOneByCard(card) {
     form.submit();
 }
 
-/* ════════════════════════════════════════════════════════
-   EXPORT EXCEL PROFESSIONNEL — Version HTML stylée
-════════════════════════════════════════════════════════ */
-
-document.getElementById('exportCsv').addEventListener('click', () => {
-    const vis = allCards.filter(c => c.style.display !== 'none');
-    
-    // Calcul des statistiques
-    const totalMontant = vis.reduce((sum, c) => sum + parseFloat(c.dataset.montant), 0);
-    const totalDepense = vis.reduce((sum, c) => sum + parseFloat(c.dataset.totalDepense || 0), 0);
-    const totalRestant = vis.reduce((sum, c) => sum + parseFloat(c.dataset.restant), 0);
-    const nbOver = vis.filter(c => c.dataset.statut === 'over').length;
-    const nbOk = vis.length - nbOver;
-    const dateStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-    const timeStr = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-    // Génération du HTML stylé
-    const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Rapport des Budgets - TravelMate</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-                font-family: 'Segoe UI', 'Calibri', 'Arial', sans-serif;
-                padding: 40px;
-                background: #fff;
-            }
-            .report-container {
-                max-width: 1400px;
-                margin: 0 auto;
-            }
-            
-            /* Header */
-            .header {
-                background: linear-gradient(135deg, #3b2a1a 0%, #c46f4b 100%);
-                padding: 40px;
-                border-radius: 16px;
-                margin-bottom: 30px;
-                color: white;
-                position: relative;
-            }
-            .header h1 {
-                font-size: 32px;
-                margin-bottom: 8px;
-                letter-spacing: -0.5px;
-            }
-            .header h2 {
-                font-size: 18px;
-                font-weight: 400;
-                opacity: 0.9;
-                margin-bottom: 20px;
-            }
-            .header-date {
-                font-size: 12px;
-                opacity: 0.7;
-                margin-top: 15px;
-            }
-            
-            /* Stats Cards */
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 20px;
-                margin-bottom: 30px;
-            }
-            .stat-card {
-                background: #f8f9fa;
-                border-radius: 12px;
-                padding: 20px;
-                border-left: 4px solid #c46f4b;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            }
-            .stat-card .label {
-                font-size: 12px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: #6c757d;
-                margin-bottom: 8px;
-            }
-            .stat-card .value {
-                font-size: 28px;
-                font-weight: bold;
-                color: #2c3e50;
-            }
-            .stat-card .sub {
-                font-size: 11px;
-                color: #6c757d;
-                margin-top: 5px;
-            }
-            .stat-card.over .value { color: #dc2626; }
-            .stat-card.ok .value { color: #059669; }
-            
-            /* Section Titles */
-            .section-title {
-                font-size: 18px;
-                font-weight: 600;
-                color: #3b2a1a;
-                margin: 30px 0 15px 0;
-                padding-bottom: 8px;
-                border-bottom: 3px solid #c46f4b;
-                display: inline-block;
-            }
-            
-            /* Table */
-            .budget-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 20px 0;
-                font-size: 13px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            }
-            .budget-table th {
-                background: #3b2a1a;
-                color: white;
-                padding: 12px 10px;
-                text-align: left;
-                font-weight: 600;
-                font-size: 12px;
-                letter-spacing: 0.5px;
-            }
-            .budget-table td {
-                padding: 10px;
-                border-bottom: 1px solid #e9ecef;
-            }
-            .budget-table tr:hover {
-                background: #fef9f5;
-            }
-            .budget-table tr:last-child td {
-                border-bottom: none;
-            }
-            
-            /* Status badges */
-            .status-badge {
-                display: inline-block;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 11px;
-                font-weight: 600;
-                text-align: center;
-            }
-            .status-over {
-                background: #fee2e2;
-                color: #dc2626;
-            }
-            .status-ok {
-                background: #d1fae5;
-                color: #059669;
-            }
-            
-            /* Progress bar */
-            .progress-bar {
-                width: 100px;
-                height: 6px;
-                background: #e9ecef;
-                border-radius: 3px;
-                overflow: hidden;
-            }
-            .progress-fill {
-                height: 100%;
-                border-radius: 3px;
-                transition: width 0.3s;
-            }
-            .progress-fill.normal { background: #c46f4b; }
-            .progress-fill.warning { background: #f59e0b; }
-            .progress-fill.danger { background: #dc2626; }
-            
-            /* Amount formatting */
-            .amount {
-                font-weight: 600;
-                font-family: monospace;
-            }
-            .amount-positive { color: #059669; }
-            .amount-negative { color: #dc2626; }
-            
-            /* Footer */
-            .footer {
-                margin-top: 40px;
-                padding-top: 20px;
-                border-top: 2px solid #e9ecef;
-                font-size: 11px;
-                color: #6c757d;
-                text-align: center;
-            }
-            
-            /* Summary table */
-            .summary-table {
-                width: 50%;
-                background: #f8f9fa;
-                border-radius: 12px;
-                margin: 20px 0;
-            }
-            .summary-table td {
-                padding: 12px 15px;
-                border-bottom: 1px solid #e9ecef;
-            }
-            .summary-table td:first-child {
-                font-weight: 600;
-                color: #3b2a1a;
-            }
-            .summary-table tr:last-child td {
-                border-bottom: none;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="report-container">
-            
-            <!-- Header -->
-            <div class="header">
-                <h1>✦ TravelMate</h1>
-                <h2>Rapport des Budgets de Voyage</h2>
-                <div class="header-date">Généré le ${dateStr} à ${timeStr}</div>
-            </div>
-            
-            <!-- Stats Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="label">Budgets analysés</div>
-                    <div class="value">${vis.length}</div>
-                    <div class="sub">budget(s) au total</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">Budget total alloué</div>
-                    <div class="value">${totalMontant.toLocaleString('fr-FR')}</div>
-                    <div class="sub">toutes devises confondues</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">Total dépensé</div>
-                    <div class="value">${totalDepense.toLocaleString('fr-FR')}</div>
-                    <div class="sub">dépenses enregistrées</div>
-                </div>
-                <div class="stat-card ${nbOver > 0 ? 'over' : 'ok'}">
-                    <div class="label">Budgets dépassés</div>
-                    <div class="value">${nbOver} / ${vis.length}</div>
-                    <div class="sub">${((nbOver/vis.length)*100).toFixed(1)}% des budgets</div>
-                </div>
-            </div>
-            
-            <!-- Résumé Financier -->
-            <div class="section-title">📊 Résumé Financier</div>
-            <table class="summary-table">
-                <tr><td style="width: 200px;">Budget total alloué</td><td><strong>${totalMontant.toLocaleString('fr-FR')}</strong> (multi-devises)</td></tr>
-                <tr><td>Total dépensé</td><td><strong>${totalDepense.toLocaleString('fr-FR')}</strong></td></tr>
-                <tr><td>Solde global</td><td class="${totalRestant >= 0 ? 'amount-positive' : 'amount-negative'}"><strong>${totalRestant >= 0 ? '+' : '-'} ${Math.abs(totalRestant).toLocaleString('fr-FR')}</strong></td></tr>
-                <tr><td>Taux de consommation</td><td><strong>${((totalDepense/totalMontant)*100).toFixed(1)}%</strong></td></tr>
-            </table>
-            
-            <!-- Tableau détaillé -->
-            <div class="section-title">📋 Détail des Budgets</div>
-            <table class="budget-table">
-                <thead>
-                    <tr><th>#</th><th>Budget</th><th>Voyage associé</th><th>Devise</th><th>Budget total</th><th>Total dépensé</th><th>Solde</th><th>Consommation</th><th>Nb dépenses</th><th>Statut</th></tr>
-                </thead>
-                <tbody>
-                    ${vis.map((c, i) => {
-                        const montant = parseFloat(c.dataset.montant);
-                        const depensed = parseFloat(c.dataset.totalDepense || 0);
-                        const restant = parseFloat(c.dataset.restant);
-                        const pct = parseFloat(c.dataset.pct || 0);
-                        const isOver = c.dataset.statut === 'over';
-                        const progressClass = pct >= 100 ? 'danger' : (pct >= 75 ? 'warning' : 'normal');
-                        
-                        return `<tr>
-                            <td>${i+1}</td>
-                            <td><strong>${c.dataset.libelle}</strong></td>
-                            <td>${c.dataset.voyageTitle || '—'}</td>
-                            <td>${c.dataset.devise}</td>
-                            <td class="amount">${montant.toLocaleString('fr-FR')}</td>
-                            <td class="amount">${depensed.toLocaleString('fr-FR')}</td>
-                            <td class="amount ${restant >= 0 ? 'amount-positive' : 'amount-negative'}">${restant >= 0 ? '+' : '-'} ${Math.abs(restant).toLocaleString('fr-FR')}</td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill ${progressClass}" style="width: ${Math.min(pct, 100)}%"></div>
-                                    </div>
-                                    <span style="font-size: 11px;">${pct.toFixed(1)}%</span>
-                                </div>
-                            </td>
-                            <td>${c.dataset.depenses}</td>
-                            <td><span class="status-badge ${isOver ? 'status-over' : 'status-ok'}">${isOver ? '⚠ DÉPASSÉ' : '✓ CONTRÔLÉ'}</span></td>
-                        </tr>`;
-                    }).join('')}
-                </tbody>
-            </table>
-            
-            <!-- Notes -->
-            <div class="footer">
-                <p>📌 Document généré automatiquement par TravelMate</p>
-                <p>• Les montants sont exprimés dans la devise indiquée pour chaque budget</p>
-                <p>• Un budget est considéré "Dépassé" lorsque les dépenses excèdent le budget alloué</p>
-                <p>• Le solde positif indique un reste à dépenser, négatif un dépassement</p>
-                <br>
-                <p>© ${new Date().getFullYear()} TravelMate - Tous droits réservés</p>
-            </div>
-            
-        </div>
-    </body>
-    </html>
-    `;
-
-    // Création du blob et téléchargement
-    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.download = `rapport_budgets_travelmate_${new Date().toISOString().slice(0, 10)}.xls`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+// ============================================================
+// INITIALIZATION
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    refreshCards();
+    populateVoyageSelect();    // Liste déroulante pour les voyages
+    populateDeviseFilters();   // Chips pour les devises
+    initStatutFilters();       // Chips pour les statuts
+    initSearch();
+    initSort();
+    initResetButton();
+    applyAllFilters();
 });
-
-/* ════════════════════════════════════════════════════════
-   EXPORT PDF — Enhanced Design
-════════════════════════════════════════════════════════ */
-document.getElementById('exportPdf').addEventListener('click', () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
-    const vis = allCards.filter(c => c.style.display !== 'none');
-    const pageW = 297;
-    const today = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-
-    /* ── Cover Header ── */
-    // Gradient header band
-    doc.setFillColor(59, 42, 26);
-    doc.rect(0, 0, pageW, 28, 'F');
-    doc.setFillColor(196, 111, 75);
-    doc.rect(0, 18, pageW, 10, 'F');
-
-    // Logo area
-    doc.setFillColor(255, 255, 255, 0.15);
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18); doc.setFont('helvetica', 'bold');
-    doc.text('✦ TravelMate', 14, 12);
-    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-    doc.text('Rapport de Budgets de Voyage', 14, 22);
-    doc.setFontSize(8); doc.setTextColor(255, 230, 200);
-    doc.text(`Généré le ${today}`, pageW - 14, 22, { align: 'right' });
-
-    /* ── Summary Section ── */
-    const sumMontant  = vis.reduce((s,c) => s + parseFloat(c.dataset.montant), 0);
-    const sumDepense  = vis.reduce((s,c) => s + parseFloat(c.dataset.totalDepense || 0), 0);
-    const sumRestant  = vis.reduce((s,c) => s + parseFloat(c.dataset.restant), 0);
-    const nbOver      = vis.filter(c => c.dataset.statut === 'over').length;
-    const nbOk        = vis.length - nbOver;
-
-    // Stats cards
-    const statY = 35;
-    const statW = 60, statH = 16, statGap = 6;
-    const stats = [
-        { label: 'Budgets analysés', value: String(vis.length), color: [196,111,75] },
-        { label: 'Montant total alloué', value: sumMontant.toLocaleString('fr-FR') + ' (multi-devises)', color: [59,130,246] },
-        { label: 'Total dépensé', value: sumDepense.toLocaleString('fr-FR'), color: [107,114,128] },
-        { label: 'Budgets dépassés', value: String(nbOver) + ' / ' + vis.length, color: nbOver > 0 ? [185,28,28] : [4,120,87] },
-    ];
-    stats.forEach((s, i) => {
-        const x = 14 + i * (statW + statGap);
-        doc.setFillColor(...s.color);
-        doc.roundedRect(x, statY, statW, statH, 2, 2, 'F');
-        doc.setTextColor(255,255,255);
-        doc.setFontSize(7); doc.setFont('helvetica','normal');
-        doc.text(s.label, x + 4, statY + 5.5);
-        doc.setFontSize(10); doc.setFont('helvetica','bold');
-        doc.text(s.value, x + 4, statY + 12);
-    });
-
-    /* ── Table ── */
-    doc.autoTable({
-        startY: statY + statH + 8,
-        head: [['#', 'Nom du budget', 'Voyage', 'Devise', 'Alloué', 'Dépensé', 'Restant', '% Consommé', 'Statut']],
-        body: vis.map((c, i) => {
-            const montant  = parseFloat(c.dataset.montant);
-            const depensed = parseFloat(c.dataset.totalDepense || 0);
-            const restant  = parseFloat(c.dataset.restant);
-            const pct      = parseInt(c.dataset.pct || 0);
-            return [
-                String(i + 1),
-                c.dataset.libelle,
-                c.dataset.voyageTitle || '—',
-                c.dataset.devise,
-                montant.toLocaleString('fr-FR'),
-                depensed.toLocaleString('fr-FR'),
-                Math.abs(restant).toLocaleString('fr-FR'),
-                pct + '%',
-                c.dataset.statut === 'over' ? 'Dépassé' : 'Contrôlé'
-            ];
-        }),
-        headStyles: {
-            fillColor: [59, 42, 26], textColor: [255, 230, 200],
-            fontStyle: 'bold', fontSize: 8.5, cellPadding: 4
-        },
-        bodyStyles: { fontSize: 8, textColor: [40, 40, 40], cellPadding: 3.5 },
-        alternateRowStyles: { fillColor: [252, 248, 243] },
-        columnStyles: {
-            0: { cellWidth: 8,  halign: 'center' },
-            1: { cellWidth: 62 },
-            2: { cellWidth: 40 },
-            3: { cellWidth: 18, halign: 'center' },
-            4: { cellWidth: 28, halign: 'right' },
-            5: { cellWidth: 28, halign: 'right' },
-            6: { cellWidth: 28, halign: 'right' },
-            7: { cellWidth: 20, halign: 'center' },
-            8: { cellWidth: 24, halign: 'center' }
-        },
-        didParseCell(data) {
-            if (data.section === 'body') {
-                // Statut column coloring
-                if (data.column.index === 8) {
-                    if (data.cell.raw === 'Dépassé') {
-                        data.cell.styles.textColor = [185, 28, 28];
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.fillColor = [254, 226, 226];
-                    } else {
-                        data.cell.styles.textColor = [4, 120, 87];
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.fillColor = [209, 250, 229];
-                    }
-                }
-                // Restant column — red if over
-                if (data.column.index === 6) {
-                    const rowIdx = data.row.index;
-                    const card = vis.filter(c => c.style.display !== 'none')[rowIdx];
-                    if (card && card.dataset.statut === 'over') {
-                        data.cell.styles.textColor = [185, 28, 28];
-                        data.cell.styles.fontStyle = 'bold';
-                    }
-                }
-                // % column — color based on value
-                if (data.column.index === 7) {
-                    const pct = parseInt(data.cell.raw);
-                    if (pct >= 100) data.cell.styles.textColor = [185, 28, 28];
-                    else if (pct >= 75) data.cell.styles.textColor = [217, 119, 6];
-                    else data.cell.styles.textColor = [4, 120, 87];
-                    data.cell.styles.fontStyle = 'bold';
-                }
-            }
-        },
-        margin: { left: 14, right: 14 },
-        tableLineColor: [220, 210, 200],
-        tableLineWidth: 0.3,
-    });
-
-    /* ── Footer on each page ── */
-    const n = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= n; i++) {
-        doc.setPage(i);
-        doc.setFillColor(245, 237, 227);
-        doc.rect(0, 197, pageW, 8, 'F');
-        doc.setFontSize(7); doc.setFont('helvetica','normal');
-        doc.setTextColor(160, 140, 120);
-        doc.text('TravelMate — Rapport confidentiel', 14, 202);
-        doc.text(`Page ${i} / ${n}`, pageW - 14, 202, { align: 'right' });
-    }
-
-    doc.save(`budgets_travelmate_${new Date().toISOString().slice(0,10)}.pdf`);
-});
-
-/* Initial render */
-applyAll();
-
-/* ════════════════════════════════════════════════════════
-   TOAST NOTIFICATION — flying message bottom-right
-════════════════════════════════════════════════════════ */
-(function () {
-    function showToast(message) {
-        let container = document.getElementById('toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toast-container';
-            container.style.cssText = [
-                'position:fixed',
-                'bottom:1.5rem',
-                'right:1.5rem',
-                'z-index:9999',
-                'display:flex',
-                'flex-direction:column',
-                'gap:.5rem',
-                'pointer-events:none'
-            ].join(';');
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = [
-            'background:#3b2a1a',
-            'color:#fff',
-            'padding:.75rem 1.1rem',
-            'border-radius:8px',
-            'font-size:.85rem',
-            'max-width:320px',
-            'line-height:1.5',
-            'opacity:0',
-            'transform:translateY(10px)',
-            'transition:opacity .25s ease, transform .25s ease'
-        ].join(';');
-
-        container.appendChild(toast);
-
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateY(0)';
-        }));
-
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(10px)';
-            toast.addEventListener('transitionend', () => toast.remove(), { once: true });
-        }, 4000);
-    }
-
-    const _fetch = window.fetch;
-    window.fetch = async function (...args) {
-        const res = await _fetch(...args);
-        const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url ?? '');
-        if (url.includes('/ai/notification')) {
-            res.clone().json().then(data => {
-                if (data?.message) showToast(data.message);
-            }).catch(() => {});
-        }
-        return res;
-    };
-})();
 </script>
 {% endblock %}
