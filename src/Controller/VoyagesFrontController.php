@@ -3,12 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Participation;
+use App\Entity\DestinationVoyageNotification;
 use App\Entity\User;
 use App\Entity\Voyage;
 use App\Form\VoyageType;
 use App\Repository\ActiviteRepository;
 use App\Repository\BudgetRepository;
 use App\Repository\DestinationRepository;
+use App\Repository\FavoriteDestinationRepository;
 use App\Repository\ParticipationRepository;
 use App\Repository\UserRepository;
 use App\Repository\VoyageRepository;
@@ -132,7 +134,8 @@ class VoyagesFrontController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         DestinationRepository $destinationRepository,
-        ActiviteRepository $activiteRepository
+        ActiviteRepository $activiteRepository,
+        FavoriteDestinationRepository $favoriteDestinationRepository,
     ): Response {
         $formScope = 'voyage_new';
         $voyage = new Voyage();
@@ -153,6 +156,30 @@ class VoyagesFrontController extends AbstractController
             }
 
             $entityManager->persist($voyage);
+
+            // Notify users who favorited this destination that a new voyage was created.
+            $favoriteUsers = [];
+            if ($voyage->getDestination() !== null) {
+                $favorites = $favoriteDestinationRepository->findByDestination($voyage->getDestination());
+
+                foreach ($favorites as $favorite) {
+                    $favoriteUser = $favorite->getUser();
+                    $favoriteUserId = $favoriteUser?->getId();
+
+                    if ($favoriteUser === null || $favoriteUserId === null || isset($favoriteUsers[$favoriteUserId])) {
+                        continue;
+                    }
+
+                    $favoriteUsers[$favoriteUserId] = true;
+
+                    $entityManager->persist(
+                        (new DestinationVoyageNotification())
+                            ->setUser($favoriteUser)
+                            ->setVoyage($voyage)
+                    );
+                }
+            }
+
             $entityManager->flush();
 
             $this->addFlash('success', 'Le voyage a ete ajoute avec succes.');

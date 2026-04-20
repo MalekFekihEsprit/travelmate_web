@@ -5,12 +5,14 @@ namespace App\Entity;
 use App\Repository\HebergementRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[Vich\Uploadable]
 #[ORM\Entity(repositoryClass: HebergementRepository::class)]
 #[ORM\Table(name: 'hebergement')]
+#[UniqueEntity(fields: ['nomHebergement'], message: 'Un hebergement avec ce nom existe deja.', errorPath: 'nomHebergement')]
 class Hebergement
 {
     #[ORM\Id]

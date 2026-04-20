@@ -138,6 +138,7 @@ class DestinationAdminController extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $em,
+        DestinationRepository $destinationRepository,
         UserRepository $userRepository,
         RestCountriesService $restCountriesService,
         CityCountryLookupService $lookupService,
@@ -151,6 +152,17 @@ class DestinationAdminController extends AbstractController
 
         if ($form->isSubmitted()) {
             $this->applyLocationValidation($form, $destination, $lookupService);
+
+            $duplicateDestination = $this->findDuplicateByNormalizedName(
+                $destinationRepository,
+                (string) $destination->getNom_destination(),
+            );
+
+            if ($duplicateDestination !== null) {
+                $message = 'Une destination avec ce nom existe deja.';
+                $form->get('nom_destination')->addError(new FormError($message));
+                $form->addError(new FormError($message));
+            }
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -216,6 +228,7 @@ class DestinationAdminController extends AbstractController
         Request $request,
         Destination $destination,
         EntityManagerInterface $em,
+        DestinationRepository $destinationRepository,
         RestCountriesService $restCountriesService,
         CityCountryLookupService $lookupService,
     ): Response {
@@ -226,6 +239,18 @@ class DestinationAdminController extends AbstractController
 
         if ($form->isSubmitted()) {
             $this->applyLocationValidation($form, $destination, $lookupService);
+
+            $duplicateDestination = $this->findDuplicateByNormalizedName(
+                $destinationRepository,
+                (string) $destination->getNom_destination(),
+                $destination->getIdDestination(),
+            );
+
+            if ($duplicateDestination !== null) {
+                $message = 'Une destination avec ce nom existe deja.';
+                $form->get('nom_destination')->addError(new FormError($message));
+                $form->addError(new FormError($message));
+            }
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -326,5 +351,30 @@ class DestinationAdminController extends AbstractController
         if ($city !== '' && $country !== '' && !$lookupService->isValidCityForCountry($city, $country)) {
             $form->get('nom_destination')->addError(new FormError('Cette ville ne correspond pas au pays sélectionné dans la base locale.'));
         }
+    }
+
+    private function findDuplicateByNormalizedName(DestinationRepository $destinationRepository, string $name, ?int $excludeId = null): ?Destination
+    {
+        $duplicate = $destinationRepository->findDuplicateByName($name, $excludeId);
+        if ($duplicate !== null) {
+            return $duplicate;
+        }
+
+        $normalizedName = mb_strtolower(trim($name));
+        if ($normalizedName === '') {
+            return null;
+        }
+
+        foreach ($destinationRepository->findAll() as $candidate) {
+            if ($excludeId !== null && $candidate->getIdDestination() === $excludeId) {
+                continue;
+            }
+
+            if (mb_strtolower(trim((string) $candidate->getNom_destination())) === $normalizedName) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 }

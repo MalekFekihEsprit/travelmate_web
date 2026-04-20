@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 use App\Repository\DestinationRepository;
@@ -14,6 +15,7 @@ use App\Repository\DestinationRepository;
 #[Vich\Uploadable]
 #[ORM\Entity(repositoryClass: DestinationRepository::class)]
 #[ORM\Table(name: 'destination')]
+#[UniqueEntity(fields: ['nom_destination'], message: 'Une destination avec ce nom existe deja.', errorPath: 'nom_destination')]
 class Destination
 {
     #[ORM\Id]

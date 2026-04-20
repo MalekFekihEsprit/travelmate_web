@@ -178,6 +178,16 @@
         margin-bottom: 1.5rem;
     }
 
+    .server-error-banner {
+        padding: 0.9rem 1rem;
+        border: 1px solid #e63946;
+        border-radius: 8px;
+        background: rgba(230, 57, 70, 0.08);
+        color: #a41f2a;
+        font-size: 0.9rem;
+        margin-bottom: 0.85rem;
+    }
+
     .admin-form ul.form-error-list {
         list-style: none;
         padding: 0;
@@ -266,6 +276,28 @@
     }
 }) }}
 
+{% set formAlertMessage = null %}
+{% for error in form.nom_destination.vars.errors %}
+    {% if formAlertMessage is null %}
+        {% set formAlertMessage = error.message %}
+    {% endif %}
+{% endfor %}
+{% for error in form.vars.errors %}
+    {% if formAlertMessage is null %}
+        {% set formAlertMessage = error.message %}
+    {% endif %}
+{% endfor %}
+
+<div class="admin-form__group admin-form__group--full form-group-error">
+    {% if form.vars.submitted and not form.vars.valid %}
+        <div class="server-error-banner">Veuillez corriger les erreurs du formulaire.</div>
+    {% endif %}
+    {% if formAlertMessage is not null %}
+        <div class="server-error-banner">{{ formAlertMessage }}</div>
+    {% endif %}
+    {{ form_errors(form) }}
+</div>
+
 <div class="admin-form__grid">
 
     {# Pays #}
@@ -282,7 +314,14 @@
                     'data-error-pattern': 'Le pays ne doit contenir que des lettres'
                 }
             }) }}
-            <div class="field-error" data-error-for="pays_destination"></div>
+            {% set paysHasErrors = form.pays_destination.vars.errors|length > 0 %}
+            <div class="field-error {{ paysHasErrors ? 'show' : '' }}" data-error-for="pays_destination">
+                {% if paysHasErrors %}
+                    {% for error in form.pays_destination.vars.errors %}
+                        {{ error.message }}{% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -301,7 +340,14 @@
                     'data-error-pattern': 'Le nom ne doit contenir que des lettres'
                 }
             }) }}
-            <div class="field-error" data-error-for="nom_destination"></div>
+            {% set nomHasErrors = form.nom_destination.vars.errors|length > 0 %}
+            <div class="field-error {{ nomHasErrors ? 'show' : '' }}" data-error-for="nom_destination">
+                {% if nomHasErrors %}
+                    {% for error in form.nom_destination.vars.errors %}
+                        {{ error.message }}{% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -695,3 +741,11 @@ document.querySelector('.admin-form')?.addEventListener('input', function(e) {
 aiGenerateButton?.addEventListener('click', generateDescriptionWithAi);
 seasonButton?.addEventListener('click', suggestIdealSeason);
 </script>
+
+{% if formAlertMessage is not null %}
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+    window.alert({{ formAlertMessage|json_encode|raw }});
+});
+</script>
+{% endif %}

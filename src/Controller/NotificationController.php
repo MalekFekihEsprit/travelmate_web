@@ -2,111 +2,85 @@
 
 namespace App\Controller;
 
-use App\Repository\VoyageRepository;
+use App\Entity\User;
+use App\Repository\DestinationVoyageNotificationRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 class NotificationController extends AbstractController
 {
-    private const SESSION_KEY = 'trip_dismissed_ids';
-
-    /**
-     * Returns upcoming voyages (starting in 2 days) that the user hasn't dismissed yet.
-     * No DB table required — uses the existing voyage table + PHP session.
-     */
     #[Route('/api/notifications/upcoming', name: 'api_notifications_upcoming', methods: ['GET'])]
     public function upcoming(
-        Request $request,
-        VoyageRepository $voyageRepository,
+        DestinationVoyageNotificationRepository $notificationRepository,
     ): JsonResponse {
-        $session    = $request->getSession();
-        $dismissed  = $session->get(self::SESSION_KEY, []);
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json([
+                'count' => 0,
+                'notifications' => [],
+            ]);
+        }
 
-        $voyages = $voyageRepository->findVoyagesStartingInDays(2);
+        $notifications = $notificationRepository->findActiveByUser($user);
 
-        $notifications = [];
-        foreach ($voyages as $voyage) {
-            $id = $voyage->getId_voyage();
-            if (in_array($id, $dismissed, true)) {
+        $items = [];
+        foreach ($notifications as $notification) {
+            $voyage = $notification->getVoyage();
+            if ($voyage === null) {
                 continue;
             }
-            $dateDebut   = $voyage->getDate_debut();
+
             $destination = $voyage->getDestination();
+            $destinationName = $destination?->getNom_destination() ?? 'Destination';
+            $dateDebut = $voyage->getDate_debut();
 
-            // Calculate real days remaining
-            $daysLeft = 0;
-            if ($dateDebut) {
-                $today     = new \DateTime('today');
-                $tripDay   = (clone $dateDebut)->setTime(0, 0, 0);
-                $diff      = (int) $today->diff($tripDay)->days;
-                $daysLeft  = max(0, $diff);
-            }
-
-            if ($daysLeft === 0) {
-                $when = "c'est aujourd'hui !";
-            } elseif ($daysLeft === 1) {
-                $when = "c'est demain !";
-            } else {
-                $when = "dans {$daysLeft} jours !";
-            }
-
-            $notifications[] = [
-                'voyage_id'   => $id,
+            $items[] = [
+                'voyage_id'   => $voyage->getId_voyage(),
                 'titre'       => $voyage->getTitre_voyage(),
                 'date_debut'  => $dateDebut?->format('d/m/Y'),
-                'days_left'   => $daysLeft,
-                'destination' => $destination?->getNom_destination(),
+                'destination' => $destinationName,
                 'message'     => sprintf(
-                    '🧳 Votre voyage "%s" commence le %s — %s',
+                    '🧭 Nouveau voyage vers %s : "%s"%s',
+                    $destinationName,
                     $voyage->getTitre_voyage(),
-                    $dateDebut?->format('d/m/Y') ?? '?',
-                    $when
+                    $dateDebut ? ' (début le ' . $dateDebut->format('d/m/Y') . ')' : ''
                 ),
             ];
         }
 
         return $this->json([
-            'count'         => count($notifications),
-            'notifications' => $notifications,
+            'count'         => count($items),
+            'notifications' => $items,
         ]);
     }
 
-    /**
-     * Dismiss a notification for this session (no DB write).
-     */
     #[Route('/api/notifications/{voyageId}/dismiss', name: 'api_notification_dismiss', methods: ['POST'])]
     public function dismiss(
         int $voyageId,
-        Request $request,
+        DestinationVoyageNotificationRepository $notificationRepository,
     ): JsonResponse {
-        $session   = $request->getSession();
-        $dismissed = $session->get(self::SESSION_KEY, []);
-
-        if (!in_array($voyageId, $dismissed, true)) {
-            $dismissed[] = $voyageId;
-            $session->set(self::SESSION_KEY, $dismissed);
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['status' => 'ok']);
         }
+
+        $notificationRepository->dismissByUserAndVoyageId($user, $voyageId);
 
         return $this->json(['status' => 'ok']);
     }
 
-    /**
-     * Dismiss all current notifications.
-     */
     #[Route('/api/notifications/dismiss-all', name: 'api_notification_dismiss_all', methods: ['POST'])]
     public function dismissAll(
-        Request $request,
-        VoyageRepository $voyageRepository,
+        DestinationVoyageNotificationRepository $notificationRepository,
     ): JsonResponse {
-        $session = $request->getSession();
-        $voyages = $voyageRepository->findVoyagesStartingInDays(2);
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['status' => 'ok', 'dismissed' => 0]);
+        }
 
-        $ids = array_map(fn($v) => $v->getId_voyage(), $voyages);
-        $existing = $session->get(self::SESSION_KEY, []);
-        $session->set(self::SESSION_KEY, array_unique(array_merge($existing, $ids)));
+        $dismissedCount = $notificationRepository->dismissAllByUser($user);
 
-        return $this->json(['status' => 'ok', 'dismissed' => count($ids)]);
+        return $this->json(['status' => 'ok', 'dismissed' => $dismissedCount]);
     }
 }

@@ -25,4 +25,14 @@ class FavoriteDestinationRepository extends ServiceEntityRepository
             'user' => $user,
         ]);
     }
+
+    /**
+     * @return FavoriteDestination[]
+     */
+    public function findByDestination(Destination $destination): array
+    {
+        return $this->findBy([
+            'destination' => $destination,
+        ]);
+    }
 }

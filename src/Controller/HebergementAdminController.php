@@ -8,6 +8,7 @@ use App\Repository\DestinationRepository;
 use App\Repository\HebergementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -115,11 +116,23 @@ class HebergementAdminController extends AbstractController
     }
 
     #[Route('/new', name: 'app_admin_hebergement_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, HebergementRepository $hebergementRepository): Response
     {
         $hebergement = new Hebergement();
         $form = $this->createForm(HebergementType::class, $hebergement);
         $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            $duplicateHebergement = $hebergementRepository->findDuplicateByName(
+                (string) $hebergement->getNomHebergement(),
+            );
+
+            if ($duplicateHebergement !== null) {
+                $message = 'Un hebergement avec ce nom existe deja.';
+                $form->get('nom_hebergement')->addError(new FormError($message));
+                $form->addError(new FormError($message));
+            }
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($hebergement);
@@ -151,10 +164,23 @@ class HebergementAdminController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_admin_hebergement_edit', methods: ['GET', 'POST'], requirements: ['id' => '\\d+'])]
-    public function edit(Request $request, Hebergement $hebergement, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Hebergement $hebergement, EntityManagerInterface $entityManager, HebergementRepository $hebergementRepository): Response
     {
         $form = $this->createForm(HebergementType::class, $hebergement);
         $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            $duplicateHebergement = $hebergementRepository->findDuplicateByName(
+                (string) $hebergement->getNomHebergement(),
+                $hebergement->getIdHebergement(),
+            );
+
+            if ($duplicateHebergement !== null) {
+                $message = 'Un hebergement avec ce nom existe deja.';
+                $form->get('nom_hebergement')->addError(new FormError($message));
+                $form->addError(new FormError($message));
+            }
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
