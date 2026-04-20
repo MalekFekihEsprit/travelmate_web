@@ -26,11 +26,11 @@ class HebergementController extends AbstractController
         $destinationId = $request->query->getInt('destination', 0);
 
         $selectedDestination = $destinationId > 0 ? $destinationRepository->find($destinationId) : null;
+        $allDestinations = $destinationRepository->findBy([], ['nom_destination' => 'ASC']);
         $allHebergements = $hebergementRepository->findBy([], ['idHebergement' => 'DESC']);
         $destinationOptionsMap = [];
 
-        foreach ($allHebergements as $item) {
-            $destination = $item->getDestination();
+        foreach ($allDestinations as $destination) {
             if ($destination && $destination->getIdDestination()) {
                 $destinationOptionsMap[$destination->getIdDestination()] = [
                     'id' => $destination->getIdDestination(),
