@@ -51,6 +51,10 @@ services:
         arguments:
             $openWeatherMapApiKey: '%env(string:OPENWEATHERMAP_API_KEY)%'
 
+    App\Service\FlightScraperService:
+        arguments:
+            $apiKey: '%env(string:AVIATIONSTACK_API_KEY)%'
+
     App\Service\ReplicateVideoService:
         arguments:
             $apiKey: '%env(GROQ_API_KEY)%'

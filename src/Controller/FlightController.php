@@ -23,7 +23,6 @@ class FlightController extends AbstractController
 
         $voyageSelectionne = null;
 
-        // Lire destination / date depuis le voyage sélectionné
         if ($voyageId) {
             $voyageSelectionne = $voyageRepository->find($voyageId);
             if ($voyageSelectionne) {
@@ -38,30 +37,14 @@ class FlightController extends AbstractController
 
         $results  = null;
         $searched = false;
-        $originCode = 'TUN'; // Départ par défaut : Tunis
-        $destCode   = null;
 
-        if ($destination !== '' && $date !== '') {
+        if ($destination !== '') {
             $searched = true;
-            $destCode = $flightScraper->resolveIataCode($destination);
-
-            if ($destCode) {
-                $results = $flightScraper->searchFlights($originCode, $destCode, $date);
-            } else {
-                $results = [
-                    'status'  => 'error',
-                    'message' => sprintf(
-                        'Code IATA introuvable pour « %s ». Essayez avec le code IATA directement (ex : CDG, IST, MRS).',
-                        htmlspecialchars($destination, \ENT_QUOTES)
-                    ),
-                    'flights' => [],
-                ];
-            }
+            $results = $flightScraper->searchFlights($destination, $date);
         }
 
         return $this->render('flight/index.html.twig', [
             'destination'       => $destination,
-            'destCode'          => $destCode,
             'date'              => $date,
             'results'           => $results,
             'searched'          => $searched,

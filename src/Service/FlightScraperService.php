@@ -2,286 +2,286 @@
 
 namespace App\Service;
 
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Psr\Log\LoggerInterface;
+
 class FlightScraperService
 {
-    /**
-     * Mapping ville → code IATA aéroport principal.
-     */
-    private const IATA_CODES = [
-        // Tunisie
-        'tunis'         => 'TUN',
-        'monastir'      => 'MIR',
-        'enfidha'       => 'NBE',
-        'djerba'        => 'DJE',
-        'tozeur'        => 'TOE',
-        'sfax'          => 'SFA',
-        'tabarka'       => 'TBJ',
-        'gafsa'         => 'GAF',
-        // France
-        'paris'         => 'CDG',
-        'lyon'          => 'LYS',
-        'marseille'     => 'MRS',
-        'nice'          => 'NCE',
-        'toulouse'      => 'TLS',
-        'bordeaux'      => 'BOD',
-        'nantes'        => 'NTE',
-        'strasbourg'    => 'SXB',
-        'lille'         => 'LIL',
-        'montpellier'   => 'MPL',
-        // Europe
-        'london'        => 'LHR',
-        'londres'       => 'LHR',
-        'rome'          => 'FCO',
-        'milan'         => 'MXP',
-        'madrid'        => 'MAD',
-        'barcelone'     => 'BCN',
-        'barcelona'     => 'BCN',
-        'amsterdam'     => 'AMS',
-        'bruxelles'     => 'BRU',
-        'brussels'      => 'BRU',
-        'berlin'        => 'BER',
-        'francfort'     => 'FRA',
-        'frankfurt'     => 'FRA',
-        'munich'        => 'MUC',
-        'vienne'        => 'VIE',
-        'vienna'        => 'VIE',
-        'zurich'        => 'ZRH',
-        'geneve'        => 'GVA',
-        'geneva'        => 'GVA',
-        'lisbonne'      => 'LIS',
-        'lisbon'        => 'LIS',
-        'porto'         => 'OPO',
-        'athenes'       => 'ATH',
-        'athens'        => 'ATH',
-        'prague'        => 'PRG',
-        'varsovie'      => 'WAW',
-        'warsaw'        => 'WAW',
-        'budapest'      => 'BUD',
-        'dublin'        => 'DUB',
-        'copenhague'    => 'CPH',
-        'copenhagen'    => 'CPH',
-        'stockholm'     => 'ARN',
-        'oslo'          => 'OSL',
-        'helsinki'       => 'HEL',
-        // Moyen-Orient / Afrique
-        'istanbul'      => 'IST',
-        'dubai'         => 'DXB',
-        'doha'          => 'DOH',
-        'le caire'      => 'CAI',
-        'cairo'         => 'CAI',
-        'casablanca'    => 'CMN',
-        'marrakech'     => 'RAK',
-        'alger'         => 'ALG',
-        'algiers'       => 'ALG',
-        'tripoli'       => 'TIP',
-        'dakar'         => 'DSS',
-        'abidjan'       => 'ABJ',
-        'nairobi'       => 'NBO',
-        'johannesburg'  => 'JNB',
-        'le cap'        => 'CPT',
-        'cape town'     => 'CPT',
-        // Asie & Amériques
-        'new york'      => 'JFK',
-        'los angeles'   => 'LAX',
-        'montreal'      => 'YUL',
-        'toronto'       => 'YYZ',
-        'tokyo'         => 'NRT',
-        'bangkok'       => 'BKK',
-        'singapour'     => 'SIN',
-        'singapore'     => 'SIN',
-        'kuala lumpur'  => 'KUL',
-        'pekin'         => 'PEK',
-        'beijing'       => 'PEK',
-        'shanghai'      => 'PVG',
-        'hong kong'     => 'HKG',
-        'mumbai'        => 'BOM',
-        'delhi'         => 'DEL',
-        'bali'          => 'DPS',
-        'sydney'        => 'SYD',
-        'sao paulo'     => 'GRU',
-        'mexico'        => 'MEX',
-        'buenos aires'  => 'EZE',
+    private string $apiKey;
+    private HttpClientInterface $httpClient;
+    private LoggerInterface $logger;
+
+    private const BASE_URL = 'https://api.aviationstack.com/v1';
+
+    // Tunis-Carthage IATA code
+    private const ORIGIN_IATA = 'TUN';
+
+    // Map city names to IATA airport codes
+    private const CITY_TO_IATA = [
+        'paris'      => 'CDG',
+        'lyon'       => 'LYS',
+        'marseille'  => 'MRS',
+        'nice'       => 'NCE',
+        'toulouse'   => 'TLS',
+        'bordeaux'   => 'BOD',
+        'nantes'     => 'NTE',
+        'strasbourg' => 'SXB',
+        'lille'      => 'LIL',
+        'montpellier'=> 'MPL',
+        'istanbul'   => 'IST',
+        'london'     => 'LHR',
+        'londres'    => 'LHR',
+        'rome'       => 'FCO',
+        'milan'      => 'MXP',
+        'madrid'     => 'MAD',
+        'barcelona'  => 'BCN',
+        'barcelone'  => 'BCN',
+        'berlin'     => 'BER',
+        'amsterdam'  => 'AMS',
+        'dubai'      => 'DXB',
+        'doha'       => 'DOH',
+        'casablanca' => 'CMN',
+        'alger'      => 'ALG',
+        'tripoli'    => 'TIP',
+        'montreal'   => 'YUL',
+        'le caire'   => 'CAI',
+        'cairo'      => 'CAI',
+        'jeddah'     => 'JED',
+        'djerba'     => 'DJE',
+        'monastir'   => 'MIR',
+        'sfax'       => 'SFA',
+        'bruxelles'  => 'BRU',
+        'brussels'   => 'BRU',
+        'geneve'     => 'GVA',
+        'zurich'     => 'ZRH',
+        'munich'     => 'MUC',
+        'francfort'  => 'FRA',
+        'frankfurt'  => 'FRA',
+        'vienne'     => 'VIE',
+        'vienna'     => 'VIE',
+        'lisbonne'   => 'LIS',
+        'lisbon'     => 'LIS',
+        'athens'     => 'ATH',
+        'athenes'    => 'ATH',
+        'new york'   => 'JFK',
     ];
 
-    /**
-     * Noms des aéroports pour l'affichage.
-     */
-    private const AIRPORT_NAMES = [
-        'TUN' => 'Tunis-Carthage',
-        'MIR' => 'Monastir Habib Bourguiba',
-        'NBE' => 'Enfidha-Hammamet',
-        'DJE' => 'Djerba-Zarzis',
-        'CDG' => 'Paris Charles de Gaulle',
-        'LYS' => 'Lyon Saint-Exupéry',
-        'MRS' => 'Marseille Provence',
-        'NCE' => 'Nice Côte d\'Azur',
-        'LHR' => 'London Heathrow',
-        'FCO' => 'Roma Fiumicino',
-        'MXP' => 'Milano Malpensa',
-        'MAD' => 'Madrid Barajas',
-        'BCN' => 'Barcelona El Prat',
-        'AMS' => 'Amsterdam Schiphol',
-        'BRU' => 'Bruxelles-National',
-        'BER' => 'Berlin Brandenburg',
-        'FRA' => 'Frankfurt am Main',
-        'MUC' => 'München Franz Josef Strauss',
-        'IST' => 'Istanbul Airport',
-        'DXB' => 'Dubai International',
-        'DOH' => 'Doha Hamad',
-        'CAI' => 'Le Caire',
-        'CMN' => 'Casablanca Mohammed V',
-        'RAK' => 'Marrakech Ménara',
-        'ALG' => 'Alger Houari Boumediene',
-        'JFK' => 'New York JFK',
-        'NRT' => 'Tokyo Narita',
-        'BKK' => 'Bangkok Suvarnabhumi',
-    ];
-
-    /**
-     * Compagnies aériennes principales par route depuis Tunis.
-     */
-    private const AIRLINES_BY_ROUTE = [
-        'CDG' => ['Tunisair', 'Transavia', 'Nouvelair'],
-        'LYS' => ['Tunisair', 'Transavia'],
-        'MRS' => ['Tunisair', 'Transavia', 'Nouvelair'],
-        'NCE' => ['Tunisair', 'Transavia'],
-        'TLS' => ['Tunisair'],
-        'BOD' => ['Tunisair'],
-        'NTE' => ['Transavia'],
-        'LIL' => ['Tunisair'],
-        'LHR' => ['Tunisair', 'British Airways'],
-        'FCO' => ['Tunisair', 'Nouvelair'],
-        'MXP' => ['Tunisair', 'Nouvelair'],
-        'MAD' => ['Tunisair'],
-        'BCN' => ['Tunisair', 'Vueling'],
-        'AMS' => ['Tunisair', 'Transavia'],
-        'BRU' => ['Tunisair', 'TUI fly'],
-        'BER' => ['Tunisair'],
-        'FRA' => ['Tunisair', 'Lufthansa'],
-        'MUC' => ['Tunisair', 'Lufthansa'],
-        'VIE' => ['Tunisair', 'Austrian'],
-        'ZRH' => ['Tunisair', 'Swiss'],
-        'GVA' => ['Tunisair'],
-        'IST' => ['Tunisair', 'Turkish Airlines'],
-        'DXB' => ['Tunisair', 'Emirates', 'flydubai'],
-        'DOH' => ['Tunisair', 'Qatar Airways'],
-        'CAI' => ['Tunisair', 'EgyptAir'],
-        'CMN' => ['Tunisair', 'Royal Air Maroc'],
-        'RAK' => ['Tunisair', 'Royal Air Maroc'],
-        'ALG' => ['Tunisair', 'Air Algérie'],
-        'DSS' => ['Tunisair'],
-        'JFK' => ['Tunisair', 'Turkish Airlines', 'Air France'],
-        'NRT' => ['Turkish Airlines', 'Emirates'],
-        'BKK' => ['Turkish Airlines', 'Emirates', 'Qatar Airways'],
-        'MIR' => ['Tunisair', 'Nouvelair'],
-        'DJE' => ['Tunisair', 'Nouvelair'],
-    ];
-
-    public function isConfigured(): bool
-    {
-        return true; // Pas d'API key nécessaire
+    public function __construct(
+        string $apiKey,
+        HttpClientInterface $httpClient,
+        LoggerInterface $logger
+    ) {
+        $this->apiKey = $apiKey;
+        $this->httpClient = $httpClient;
+        $this->logger = $logger;
     }
 
     /**
-     * Génère les liens de recherche de vols sur Kayak, Google Flights, etc.
-     *
-     * @return array{status: string, message?: string, flights: list<array>, count?: int, links?: array}
+     * Resolve a destination query (city name or IATA code) to an IATA code.
      */
-    public function searchFlights(string $origin, string $destination, string $date): array
+    public function resolveIata(string $query): ?string
     {
-        // Générer les URLs de recherche
-        $kayakUrl = sprintf(
-            'https://www.kayak.fr/flights/%s-%s/%s?sort=bestflight_a&fs=stops=0',
-            urlencode($origin),
-            urlencode($destination),
-            urlencode($date)
-        );
-
-        $googleFlightsUrl = sprintf(
-            'https://www.google.com/travel/flights?q=Flights+from+%s+to+%s+on+%s&curr=EUR&hl=fr',
-            urlencode($origin),
-            urlencode($destination),
-            urlencode($date)
-        );
-
-        $skyscannerUrl = sprintf(
-            'https://www.skyscanner.fr/transport/vols/%s/%s/%s/?adultes=1&cabinclass=economy',
-            strtolower($origin),
-            strtolower($destination),
-            str_replace('-', '', substr($date, 2)) // yymmdd
-        );
-
-        $originName = self::AIRPORT_NAMES[$origin] ?? $origin;
-        $destName = self::AIRPORT_NAMES[$destination] ?? $destination;
-        $airlines = self::AIRLINES_BY_ROUTE[$destination] ?? ['Tunisair'];
-
-        // Construire les "vols" comme plateformes de recherche
-        $flights = [
-            [
-                'platform'    => 'Kayak',
-                'icon'        => '🔍',
-                'url'         => $kayakUrl,
-                'description' => 'Comparateur de vols avec les meilleurs prix. Filtres avancés, alertes de prix.',
-                'color'       => '#ff6900',
-                'airlines'    => $airlines,
-            ],
-            [
-                'platform'    => 'Google Flights',
-                'icon'        => '✈️',
-                'url'         => $googleFlightsUrl,
-                'description' => 'Recherche Google avec calendrier de prix et graphiques de tendances.',
-                'color'       => '#4285f4',
-                'airlines'    => $airlines,
-            ],
-            [
-                'platform'    => 'Skyscanner',
-                'icon'        => '🌐',
-                'url'         => $skyscannerUrl,
-                'description' => 'Compare des centaines de compagnies et d\'agences de voyage.',
-                'color'       => '#0770e3',
-                'airlines'    => $airlines,
-            ],
-        ];
-
-        return [
-            'status'      => 'ok',
-            'flights'     => $flights,
-            'count'       => count($flights),
-            'origin'      => $origin,
-            'destination' => $destination,
-            'origin_name' => $originName,
-            'dest_name'   => $destName,
-            'date'        => $date,
-            'airlines'    => $airlines,
-        ];
-    }
-
-    /**
-     * Résoudre un nom de ville en code IATA.
-     */
-    public function resolveIataCode(string $cityName): ?string
-    {
-        $normalized = mb_strtolower(trim($cityName));
-
-        if (isset(self::IATA_CODES[$normalized])) {
-            return self::IATA_CODES[$normalized];
+        $query = trim($query);
+        if ($query === '') {
+            return null;
         }
 
-        foreach (self::IATA_CODES as $city => $code) {
-            if (str_contains($normalized, $city) || str_contains($city, $normalized)) {
-                return $code;
+        // If it looks like an IATA code already (2-4 uppercase letters)
+        $upper = strtoupper($query);
+        if (preg_match('/^[A-Z]{2,4}$/', $upper)) {
+            return $upper;
+        }
+
+        // Look up in our city map
+        $key = mb_strtolower($query);
+        if (isset(self::CITY_TO_IATA[$key])) {
+            return self::CITY_TO_IATA[$key];
+        }
+
+        // Try partial match
+        foreach (self::CITY_TO_IATA as $city => $iata) {
+            if (str_contains($key, $city) || str_contains($city, $key)) {
+                return $iata;
             }
-        }
-
-        if (preg_match('/^[A-Z]{3}$/', trim($cityName))) {
-            return trim($cityName);
         }
 
         return null;
     }
 
-    public function getIataCodes(): array
+    /**
+     * Search flights from Tunis to destination on a given date.
+     */
+    public function searchFlights(string $destinationQuery, string $date): array
     {
-        return self::IATA_CODES;
+        $destIata = $this->resolveIata($destinationQuery);
+
+        if (!$destIata) {
+            return [
+                'status' => 'error',
+                'message' => sprintf(
+                    'Destination « %s » non reconnue. Essayez avec un nom de ville (ex : Paris, Nice, Istanbul) ou un code IATA (ex : CDG, NCE, IST).',
+                    htmlspecialchars($destinationQuery, \ENT_QUOTES)
+                ),
+                'flights' => [],
+            ];
+        }
+
+        try {
+            $response = $this->httpClient->request('GET', self::BASE_URL . '/flights', [
+                'query' => [
+                    'access_key' => $this->apiKey,
+                    'dep_iata'   => self::ORIGIN_IATA,
+                    'arr_iata'   => $destIata,
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            $data = $response->toArray(false);
+
+            // Check for API errors
+            if (isset($data['error'])) {
+                $errorMsg = $data['error']['message'] ?? 'Erreur API';
+                $errorCode = $data['error']['code'] ?? '';
+                $this->logger->warning("AviationStack error [$errorCode]: $errorMsg");
+
+                if ($errorCode === 'usage_limit_reached') {
+                    return [
+                        'status' => 'error',
+                        'message' => 'Limite de requêtes API atteinte pour ce mois. Veuillez réessayer plus tard.',
+                        'flights' => [],
+                    ];
+                }
+
+                return [
+                    'status' => 'error',
+                    'message' => 'Erreur lors de la recherche de vols : ' . $errorMsg,
+                    'flights' => [],
+                ];
+            }
+
+            if ($statusCode !== 200) {
+                $this->logger->warning("AviationStack HTTP $statusCode");
+                return [
+                    'status' => 'error',
+                    'message' => 'L\'API de vols est temporairement indisponible. Veuillez réessayer.',
+                    'flights' => [],
+                ];
+            }
+
+            $flightData = $data['data'] ?? [];
+
+            if (empty($flightData)) {
+                return [
+                    'status' => 'no_results',
+                    'message' => 'Aucun vol trouvé de Tunis vers ' . htmlspecialchars($destinationQuery, \ENT_QUOTES) . ' (' . $destIata . ') aujourd\'hui.',
+                    'flights' => [],
+                    'destIata' => $destIata,
+                ];
+            }
+
+            $flights = [];
+            foreach ($flightData as $flight) {
+                $dep = $flight['departure'] ?? [];
+                $arr = $flight['arrival'] ?? [];
+                $airline = $flight['airline'] ?? [];
+                $flightInfo = $flight['flight'] ?? [];
+
+                $depTime = $dep['scheduled'] ?? $dep['estimated'] ?? null;
+                $arrTime = $arr['scheduled'] ?? $arr['estimated'] ?? null;
+
+                // Calculate duration
+                $durationMinutes = 0;
+                $durationFormatted = '';
+                if ($depTime && $arrTime) {
+                    try {
+                        $depDt = new \DateTime($depTime);
+                        $arrDt = new \DateTime($arrTime);
+                        $diff = $depDt->diff($arrDt);
+                        $durationMinutes = ($diff->h * 60) + $diff->i + ($diff->days * 1440);
+                        $durationFormatted = $this->formatDuration($durationMinutes);
+                    } catch (\Throwable $e) {
+                        $durationFormatted = '';
+                    }
+                }
+
+                $flightNumber = ($airline['iata'] ?? '') . ($flightInfo['number'] ?? '');
+                $airlineName = $airline['name'] ?? 'Inconnu';
+
+                $depIata = $dep['iata'] ?? self::ORIGIN_IATA;
+                $arrIata = $arr['iata'] ?? $destIata;
+                $depAirport = $dep['airport'] ?? 'Tunis-Carthage';
+                $arrAirport = $arr['airport'] ?? $destinationQuery;
+
+                $status = $flight['flight_status'] ?? '';
+
+                $flights[] = [
+                    'id'               => $flightNumber ?: uniqid(),
+                    'flightNumber'     => $flightNumber,
+                    'airlines'         => [$airlineName],
+                    'airlineLogos'     => [],
+                    'departure'        => $depTime,
+                    'arrival'          => $arrTime,
+                    'duration'         => $durationMinutes,
+                    'durationFormatted'=> $durationFormatted,
+                    'stops'            => 0,
+                    'stopsLabel'       => 'Direct',
+                    'originName'       => $depAirport,
+                    'originCode'       => $depIata,
+                    'destName'         => $arrAirport,
+                    'destCode'         => $arrIata,
+                    'status'           => $status,
+                    'statusLabel'      => $this->translateStatus($status),
+                    'depTerminal'      => $dep['terminal'] ?? null,
+                    'depGate'          => $dep['gate'] ?? null,
+                    'arrTerminal'      => $arr['terminal'] ?? null,
+                    'arrBaggage'       => $arr['baggage'] ?? null,
+                    'segments'         => [],
+                ];
+            }
+
+            // Sort by departure time
+            usort($flights, function ($a, $b) {
+                return ($a['departure'] ?? '') <=> ($b['departure'] ?? '');
+            });
+
+            return [
+                'status'   => 'ok',
+                'flights'  => $flights,
+                'count'    => count($flights),
+                'destIata' => $destIata,
+            ];
+        } catch (\Throwable $e) {
+            $this->logger->warning('AviationStack searchFlights error: ' . $e->getMessage());
+
+            return [
+                'status'  => 'error',
+                'message' => 'Erreur lors de la recherche de vols. Veuillez réessayer.',
+                'flights' => [],
+            ];
+        }
+    }
+
+    private function translateStatus(string $status): string
+    {
+        return match ($status) {
+            'scheduled' => 'Programmé',
+            'active'    => 'En vol',
+            'landed'    => 'Atterri',
+            'cancelled' => 'Annulé',
+            'incident'  => 'Incident',
+            'diverted'  => 'Dérouté',
+            'delayed'   => 'Retardé',
+            default     => $status ?: 'N/A',
+        };
+    }
+
+    private function formatDuration(int $minutes): string
+    {
+        $h = intdiv($minutes, 60);
+        $m = $minutes % 60;
+        if ($h === 0) {
+            return $m . 'min';
+        }
+        return $h . 'h' . ($m > 0 ? sprintf('%02d', $m) : '');
     }
 }
