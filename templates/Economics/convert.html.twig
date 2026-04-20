@@ -1,0 +1,470 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Convertisseur de devises — TravelMate{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+
+/* ══ HERO ════════════════════════════════════════════════════════ */
+.convert-hero {
+    background: linear-gradient(135deg, #3b2a1a 0%, var(--color-primary) 100%);
+    border-radius: var(--radius-xl); padding: 1.75rem 2rem;
+    margin-bottom: 1.75rem; color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem; position: relative; overflow: hidden;
+}
+.convert-hero::before {
+    content: '💱'; position: absolute; right: -10px; top: 50%;
+    transform: translateY(-50%); font-size: 7rem; opacity: .07; pointer-events: none;
+}
+.convert-hero__eyebrow {
+    font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+    opacity: .65; font-weight: 500; margin-bottom: .3rem;
+}
+.convert-hero__title {
+    font-family: 'Fraunces', serif; font-size: 1.65rem; font-weight: 600;
+    margin: 0 0 .3rem; letter-spacing: -.02em; line-height: 1.2;
+}
+.convert-hero__desc { opacity: .75; font-size: .86rem; margin: 0; }
+.convert-hero__back {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .5rem 1.1rem; background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.3); border-radius: 999px;
+    font-size: .84rem; font-weight: 600; color: #fff; text-decoration: none;
+    transition: background .18s; flex-shrink: 0;
+}
+.convert-hero__back:hover { background: rgba(255,255,255,.22); }
+
+/* ══ LAYOUT ══════════════════════════════════════════════════════ */
+.convert-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .convert-layout { grid-template-columns: 1fr; }
+    .convert-sidebar { order: -1; }
+}
+
+/* ══ SECTION CARD ════════════════════════════════════════════════ */
+.section-card {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.25rem;
+}
+.section-card__header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: .5rem;
+    padding: .95rem 1.4rem; border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+.section-card__title {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .1em;
+    font-weight: 700; color: var(--color-primary);
+    display: flex; align-items: center; gap: .5rem;
+}
+.section-card__badge {
+    background: rgba(196,111,75,.12); color: var(--color-primary);
+    font-size: .68rem; font-weight: 700; padding: .15rem .55rem; border-radius: 999px;
+}
+.section-card__body { padding: 1.4rem 1.5rem; }
+
+/* ══ FORM FIELDS ═════════════════════════════════════════════════ */
+.form-field { display: flex; flex-direction: column; gap: .38rem; margin-bottom: 1rem; }
+.form-field:last-child { margin-bottom: 0; }
+.form-label {
+    font-size: .8rem; font-weight: 600; color: var(--color-text);
+    display: flex; align-items: center; gap: .35rem;
+}
+.form-label .label-hint {
+    font-size: .74rem; font-weight: 400; color: var(--color-text-muted);
+}
+.form-input, .form-select {
+    width: 100%; padding: .62rem .9rem;
+    background: var(--color-bg); border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md); font: inherit; font-size: .875rem;
+    color: var(--color-text);
+    transition: border-color .18s, box-shadow .18s; box-sizing: border-box;
+}
+.form-select {
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e6258' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right .85rem center;
+    padding-right: 2.4rem; cursor: pointer;
+}
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: rgba(196,111,75,.55);
+    box-shadow: 0 0 0 3px rgba(196,111,75,.12);
+}
+.form-input::placeholder { color: var(--color-text-muted); }
+
+/* ══ SWAP BUTTON ═════════════════════════════════════════════════ */
+.swap-row {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: 1rem;
+}
+.swap-row .form-field { flex: 1; margin-bottom: 0; }
+.btn-swap {
+    width: 36px; height: 36px; flex-shrink: 0;
+    margin-top: 1.3rem; /* align with input */
+    border-radius: 50%; border: 1.5px solid var(--color-border);
+    background: var(--color-bg); color: var(--color-primary);
+    font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .18s;
+}
+.btn-swap:hover {
+    border-color: var(--color-primary); background: rgba(196,111,75,.08);
+    transform: rotate(180deg);
+}
+
+/* ══ AMOUNT ROW ══════════════════════════════════════════════════ */
+.amount-row {
+    display: grid; grid-template-columns: 1fr auto; gap: .75rem;
+    align-items: end; margin-bottom: 1.25rem;
+}
+.amount-row .form-field { margin-bottom: 0; }
+
+/* ══ SUBMIT BUTTON ═══════════════════════════════════════════════ */
+.btn-convert {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    width: 100%; padding: .72rem 1.5rem; border-radius: 999px;
+    font-size: .92rem; font-weight: 700; font-family: inherit;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: #fff; border: none; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(196,111,75,.3);
+    transition: opacity .18s, transform .18s;
+}
+.btn-convert:hover { opacity: .88; transform: translateY(-1px); }
+.btn-convert:active { transform: translateY(0); }
+
+/* ══ RESULT PANEL ════════════════════════════════════════════════ */
+.result-panel {
+    margin-top: 1.25rem;
+    border-radius: var(--radius-lg);
+    border: 1.5px solid rgba(196,111,75,.3);
+    background: linear-gradient(135deg, rgba(196,111,75,.06) 0%, rgba(221,191,140,.08) 100%);
+    overflow: hidden;
+    animation: slideDown .25s ease;
+}
+@keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
+.result-panel__header {
+    padding: .75rem 1.2rem;
+    background: rgba(196,111,75,.1);
+    border-bottom: 1px solid rgba(196,111,75,.2);
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .1em;
+    font-weight: 700; color: var(--color-primary);
+    display: flex; align-items: center; gap: .5rem;
+}
+.result-panel__body { padding: 1.2rem 1.4rem; }
+.result-main {
+    font-family: 'Fraunces', serif; font-size: 1.8rem; font-weight: 600;
+    color: var(--color-text); line-height: 1.1; margin-bottom: .25rem;
+}
+.result-main strong { color: var(--color-primary); }
+.result-rate {
+    font-size: .8rem; color: var(--color-text-muted);
+    display: flex; align-items: center; gap: .3rem;
+}
+.result-rate__dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(34,197,94,.2);
+}
+
+/* ══ SIDEBAR CARDS ═══════════════════════════════════════════════ */
+.info-card {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: 1.15rem 1.25rem;
+    margin-bottom: 1rem;
+}
+.info-card__label {
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--color-text-muted); margin-bottom: .35rem; font-weight: 600;
+    display: flex; align-items: center; gap: .4rem;
+}
+.info-card__value {
+    font-family: 'Fraunces', serif; font-size: 1.35rem; font-weight: 600;
+    color: var(--color-primary); line-height: 1.1;
+}
+.info-card__sub { font-size: .76rem; color: var(--color-text-muted); margin-top: .2rem; }
+
+/* ══ QUICK CONVERT PILLS ═════════════════════════════════════════ */
+.quick-pills {
+    display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: 1.25rem;
+}
+.quick-pill {
+    padding: .3rem .72rem; border-radius: 999px; font-size: .76rem; font-weight: 600;
+    border: 1.5px solid var(--color-border); background: var(--color-bg);
+    color: var(--color-text-muted); cursor: pointer; transition: all .15s; font-family: inherit;
+}
+.quick-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: rgba(196,111,75,.06); }
+.quick-pill.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+/* ══ SOURCE BADGE ════════════════════════════════════════════════ */
+.source-badge {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .28rem .65rem; border-radius: 999px; font-size: .72rem; font-weight: 600;
+    background: rgba(34,197,94,.1); color: #15803d; border: 1px solid rgba(34,197,94,.25);
+}
+
+/* ══ ERROR STATE ═════════════════════════════════════════════════ */
+.convert-error {
+    padding: .8rem 1.15rem; border-radius: var(--radius-md);
+    background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
+    font-size: .86rem; font-weight: 600; margin-top: 1rem;
+    display: flex; align-items: center; gap: .5rem;
+}
+
+/* ══ LOADING STATE ═══════════════════════════════════════════════ */
+.btn-convert.loading {
+    opacity: .7; pointer-events: none;
+}
+.btn-convert.loading::after {
+    content: '';
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+</style>
+{% endblock %}
+
+{% block body %}
+
+{# ── Hero ── #}
+<div class="convert-hero">
+    <div>
+        <div class="convert-hero__eyebrow">TravelMate · Outils financiers</div>
+        <h1 class="convert-hero__title">Convertisseur de devises</h1>
+        <p class="convert-hero__desc">Taux de change en temps réel via Frankfurter · Banque Centrale Européenne</p>
+    </div>
+    <a href="{{ path('app_budget_index') }}" class="convert-hero__back">
+        ← Mes budgets
+    </a>
+</div>
+
+<div class="convert-layout">
+
+    {# ══ MAIN COLUMN ══ #}
+    <div class="convert-main">
+
+        <div class="section-card">
+            <div class="section-card__header">
+                <span class="section-card__title">
+                    💱 Conversion
+                </span>
+                <span class="source-badge">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+                    Frankfurter · Temps réel
+                </span>
+            </div>
+
+            <div class="section-card__body">
+
+                {# Quick amount pills #}
+                <div class="form-field">
+                    <span class="form-label">Montant rapide</span>
+                    <div class="quick-pills">
+                        {% for amt in [100, 500, 1000, 5000, 10000] %}
+                            <button type="button" class="quick-pill" data-amount="{{ amt }}">
+                                {{ amt|number_format(0, '.', ' ') }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <form method="GET" action="{{ path('economics_convert') }}" id="convertForm" novalidate>
+
+                    {# Amount #}
+                    <div class="form-field">
+                        <label for="amount" class="form-label">
+                            Montant
+                            <span class="label-hint">— valeur à convertir</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="amount"
+                            name="amount"
+                            class="form-input"
+                            value="{{ result.amount ?? 1 }}"
+                            min="0.01"
+                            step="any"
+                            placeholder="Ex : 1000"
+                            required
+                        >
+                    </div>
+
+                    {# From / Swap / To #}
+                    <div class="swap-row">
+                        <div class="form-field">
+                            <label for="from" class="form-label">Devise source</label>
+                            <select name="from" id="from" class="form-select">
+                                {% for code, name in currencies %}
+                                    <option value="{{ code }}" {{ (result.from ?? 'EUR') == code ? 'selected' }}>
+                                        {{ code }} — {{ name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn-swap" id="swapBtn" title="Inverser les devises">
+                            ⇄
+                        </button>
+
+                        <div class="form-field">
+                            <label for="to" class="form-label">Devise cible</label>
+                            <select name="to" id="to" class="form-select">
+                                {% for code, name in currencies %}
+                                    <option value="{{ code }}" {{ (result.to ?? 'TND') == code ? 'selected' }}>
+                                        {{ code }} — {{ name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-convert" id="convertBtn">
+                        <span>Convertir</span>
+                    </button>
+
+                </form>
+
+                {# ── Result ── #}
+                {% if result is defined and result.converted is defined %}
+                    <div class="result-panel">
+                        <div class="result-panel__header">
+                            ✦ Résultat
+                        </div>
+                        <div class="result-panel__body">
+                            <div class="result-main">
+                                {{ result.amount|number_format(2, ',', ' ') }} {{ result.from }}
+                                &nbsp;=&nbsp;
+                                <strong>{{ result.converted|number_format(2, ',', ' ') }} {{ result.to }}</strong>
+                            </div>
+                            <div class="result-rate">
+                                <span class="result-rate__dot"></span>
+                                1 {{ result.from }} = {{ result.rate }} {{ result.to }}
+                                &nbsp;·&nbsp;
+                                mis à jour en temps réel
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>{# /.section-card__body #}
+        </div>{# /.section-card #}
+
+    </div>{# /.convert-main #}
+
+    {# ══ SIDEBAR ══ #}
+    <aside class="convert-sidebar">
+
+        {# Source info #}
+        <div class="info-card">
+            <div class="info-card__label">📡 Source de données</div>
+            <div class="info-card__value" style="font-size:1rem; font-family:inherit; font-weight:700;">Frankfurter API</div>
+            <div class="info-card__sub">
+                Alimenté par la <strong>Banque Centrale Européenne</strong>.
+                Taux mis à jour chaque jour ouvrable.
+                Sans clé API requise.
+            </div>
+        </div>
+
+        {# Currencies count #}
+        <div class="info-card">
+            <div class="info-card__label">🌍 Devises disponibles</div>
+            <div class="info-card__value">{{ currencies|length }}</div>
+            <div class="info-card__sub">devises mondiales supportées</div>
+        </div>
+
+        {# Tips #}
+        <div class="section-card">
+            <div class="section-card__header">
+                <span class="section-card__title">💡 Conseils</span>
+            </div>
+            <div class="section-card__body" style="padding: 1rem 1.25rem;">
+                <ul style="margin:0; padding-left:1.1rem; font-size:.82rem; color:var(--color-text-muted); line-height:1.8;">
+                    <li>Utilisez ⇄ pour inverser rapidement les devises.</li>
+                    <li>Les pills de montant permettent une saisie rapide.</li>
+                    <li>Les taux sont ceux de clôture BCE (J-1).</li>
+                    <li>Résultats mis en cache 1 heure pour les performances.</li>
+                </ul>
+            </div>
+        </div>
+
+        {# Link to inflation #}
+        <div class="section-card">
+            <div class="section-card__header">
+                <span class="section-card__title">📈 Inflation</span>
+            </div>
+            <div class="section-card__body" style="padding: 1rem 1.25rem;">
+                <p style="font-size:.82rem; color:var(--color-text-muted); margin:0 0 .75rem;">
+                    Consultez le taux d'inflation CPI annuel par pays (source : Banque Mondiale).
+                </p>
+                <a href="{{ path('economics_inflation', { country: 'TN' }) }}"
+                   style="display:inline-flex; align-items:center; gap:.4rem;
+                          padding:.42rem .95rem; border-radius:999px; font-size:.82rem; font-weight:700;
+                          background:var(--color-primary); color:#fff; text-decoration:none;
+                          transition:opacity .18s;">
+                    Voir l'inflation →
+                </a>
+            </div>
+        </div>
+
+    </aside>
+
+</div>{# /.convert-layout #}
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+(function () {
+
+    /* ── Quick amount pills ── */
+    document.querySelectorAll('.quick-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            const amtInput = document.getElementById('amount');
+            amtInput.value = pill.dataset.amount;
+            document.querySelectorAll('.quick-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+        });
+    });
+
+    /* Mark active pill on load if amount matches */
+    const currentAmount = parseFloat(document.getElementById('amount').value);
+    document.querySelectorAll('.quick-pill').forEach(pill => {
+        if (parseFloat(pill.dataset.amount) === currentAmount) {
+            pill.classList.add('active');
+        }
+    });
+
+    /* ── Swap button ── */
+    document.getElementById('swapBtn').addEventListener('click', () => {
+        const fromSel = document.getElementById('from');
+        const toSel   = document.getElementById('to');
+        const tmp     = fromSel.value;
+        fromSel.value = toSel.value;
+        toSel.value   = tmp;
+    });
+
+    /* ── Loading state on submit ── */
+    document.getElementById('convertForm').addEventListener('submit', function (e) {
+        const amount = parseFloat(document.getElementById('amount').value);
+        if (!amount || amount <= 0) {
+            e.preventDefault();
+            return;
+        }
+        const btn = document.getElementById('convertBtn');
+        btn.classList.add('loading');
+        btn.querySelector('span').textContent = 'Conversion…';
+    });
+
+})();
+</script>
+{% endblock %}

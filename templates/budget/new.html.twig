@@ -1,0 +1,207 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau Budget — TravelMate{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ══ AI ESTIMATION WIDGET ══════════════════════════════ */
+.ai-estimate-wrap {
+    max-width: 720px; margin: 1.25rem auto 0;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); overflow: hidden;
+}
+.ai-estimate-header {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .9rem 1.4rem; border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+.ai-estimate-header__icon {
+    width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+.ai-estimate-header__title {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .1em;
+    font-weight: 700; color: var(--color-primary);
+}
+.ai-estimate-header__sub { font-size: .78rem; color: var(--color-text-muted); margin-top: .05rem; }
+.ai-estimate-body { padding: 1.2rem 1.4rem; }
+.ae-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .75rem;
+    margin-bottom: .85rem;
+}
+.ae-grid--full { grid-template-columns: 1fr; }
+.ae-field { display: flex; flex-direction: column; gap: .3rem; }
+.ae-label { font-size: .78rem; font-weight: 600; color: var(--color-text); }
+.ae-input, .ae-select {
+    width: 100%; padding: .55rem .85rem; box-sizing: border-box;
+    border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+    font: inherit; font-size: .875rem; color: var(--color-text);
+    background: var(--color-bg); transition: border-color .18s, box-shadow .18s;
+}
+.ae-input:focus, .ae-select:focus {
+    outline: none; border-color: rgba(196,111,75,.5);
+    box-shadow: 0 0 0 3px rgba(196,111,75,.1);
+}
+.ae-select { appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e6258' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right .8rem center; padding-right: 2.2rem;
+}
+.ae-btn {
+    width: 100%; padding: .62rem; border-radius: 999px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: #fff; border: none; font: inherit; font-size: .9rem; font-weight: 700;
+    cursor: pointer; transition: opacity .18s, transform .18s;
+    box-shadow: 0 4px 14px rgba(196,111,75,.3);
+}
+.ae-btn:hover { opacity: .88; transform: translateY(-1px); }
+.ae-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.ae-result {
+    margin-top: .9rem; padding: 1rem 1.15rem;
+    background: var(--color-bg); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); font-size: .85rem; color: var(--color-text);
+    line-height: 1.65; white-space: pre-wrap; display: none;
+}
+.ae-result.visible { display: block; }
+.ae-result--loading { opacity: .55; font-style: italic; }
+</style>
+{% endblock %}
+
+{% block body %}
+
+{# ── Page hero ── #}
+<section style="
+    background: linear-gradient(135deg, #3b2a1a 0%, var(--color-primary) 100%);
+    border-radius: var(--radius-xl); overflow: hidden;
+    padding: 1.6rem 2rem; margin-bottom: 1.75rem; color: #fff;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+">
+    <div>
+        <div style="font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;opacity:.65;font-weight:500;margin-bottom:.3rem">
+            Gestion financière
+        </div>
+        <h1 style="font-family:'Fraunces',serif;font-size:1.55rem;font-weight:600;margin:0 0 .3rem;letter-spacing:-.02em">
+            Nouveau budget
+        </h1>
+        <p style="opacity:.75;font-size:.86rem;margin:0">
+            Associez un budget à un voyage et commencez à suivre vos dépenses.
+        </p>
+    </div>
+    <a href="{{ path('app_budget_index') }}" style="
+        display:inline-flex;align-items:center;gap:.4rem;
+        padding:.5rem 1.1rem;background:rgba(255,255,255,.15);
+        border:1px solid rgba(255,255,255,.3);border-radius:999px;
+        font-size:.84rem;font-weight:600;color:#fff;text-decoration:none;
+        transition:background .18s;
+    " onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">
+        ← Retour aux budgets
+    </a>
+</section>
+
+{{ include('budget/_form.html.twig', { button_label: 'Créer le budget' }) }}
+
+{# ══ AI — Estimation du coût de voyage ══════════════════════ #}
+<div class="ai-estimate-wrap">
+    <div class="ai-estimate-header">
+        <div class="ai-estimate-header__icon">✨</div>
+        <div>
+            <div class="ai-estimate-header__title">Assistant IA — Estimation de coût</div>
+            <div class="ai-estimate-header__sub">Obtenez une estimation du budget nécessaire avant de créer votre budget</div>
+        </div>
+    </div>
+    <div class="ai-estimate-body">
+        <div class="ae-grid ae-grid--full">
+            <div class="ae-field">
+                <label class="ae-label" for="est-destination">🌍 Destination</label>
+                <input id="est-destination" type="text" class="ae-input"
+                       placeholder="Ex : Paris, Tokyo, Marrakech…" autocomplete="off">
+            </div>
+        </div>
+        <div class="ae-grid">
+            <div class="ae-field">
+                <label class="ae-label" for="est-jours">📅 Nombre de jours</label>
+                <input id="est-jours" type="number" class="ae-input" placeholder="Ex : 7" min="1" max="365">
+            </div>
+            <div class="ae-field">
+                <label class="ae-label" for="est-personnes">👥 Nombre de personnes</label>
+                <input id="est-personnes" type="number" class="ae-input" placeholder="Ex : 2" min="1" max="50">
+            </div>
+            <div class="ae-field">
+                <label class="ae-label" for="est-devise">💱 Devise souhaitée</label>
+                <select id="est-devise" class="ae-select">
+                    <option value="TND">TND — Dinar tunisien</option>
+                    <option value="EUR">EUR — Euro</option>
+                    <option value="USD">USD — Dollar américain</option>
+                    <option value="GBP">GBP — Livre sterling</option>
+                    <option value="MAD">MAD — Dirham marocain</option>
+                    <option value="CHF">CHF — Franc suisse</option>
+                </select>
+            </div>
+            <div class="ae-field" style="justify-content:flex-end">
+                <label class="ae-label">&nbsp;</label>
+                <button id="est-btn" class="ae-btn" onclick="runEstimation()">
+                    ✨ Estimer le budget
+                </button>
+            </div>
+        </div>
+        <div id="est-result" class="ae-result"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+function runEstimation() {
+    const destination = document.getElementById('est-destination').value.trim();
+    const jours       = parseInt(document.getElementById('est-jours').value);
+    const personnes   = parseInt(document.getElementById('est-personnes').value);
+    const devise      = document.getElementById('est-devise').value;
+    const box         = document.getElementById('est-result');
+    const btn         = document.getElementById('est-btn');
+
+    if (!destination) {
+        box.className = 'ae-result visible';
+        box.textContent = '⚠ Veuillez indiquer une destination.';
+        return;
+    }
+    if (!jours || jours < 1) {
+        box.className = 'ae-result visible';
+        box.textContent = '⚠ Veuillez indiquer un nombre de jours valide.';
+        return;
+    }
+    if (!personnes || personnes < 1) {
+        box.className = 'ae-result visible';
+        box.textContent = '⚠ Veuillez indiquer un nombre de personnes valide.';
+        return;
+    }
+
+    btn.disabled = true;
+    box.className = 'ae-result visible ae-result--loading';
+    box.textContent = '⏳ L\'IA calcule votre estimation, veuillez patienter…';
+
+    fetch('{{ path('app_budget_ai_estimate') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination, jours, personnes, devise })
+    })
+    .then(r => r.json())
+    .then(d => {
+        box.className = 'ae-result visible';
+        box.textContent = d.result || 'Aucune réponse reçue.';
+    })
+    .catch(() => {
+        box.className = 'ae-result visible';
+        box.textContent = '⚠ Le service IA est indisponible. Réessayez plus tard.';
+    })
+    .finally(() => { btn.disabled = false; });
+}
+
+// Allow Enter key to trigger estimation
+document.getElementById('est-destination').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runEstimation();
+});
+</script>
+{% endblock %}

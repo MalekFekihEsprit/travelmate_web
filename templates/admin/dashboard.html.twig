@@ -1,0 +1,58 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Dashboard Admin | TravelMate{% endblock %}
+
+{% block body %}
+    <section class="admin-page-header">
+        <div>
+            <span class="admin-page-header__eyebrow">Espace administrateur</span>
+            <h1 class="admin-page-header__title">Tableau de bord</h1>
+            <p class="admin-page-header__desc">
+                Suivez l’activité générale de la plateforme et intervenez rapidement sur les contenus sensibles.
+            </p>
+        </div>
+
+        <div class="admin-page-header__actions">
+            <a href="#" {# path('app_admin_reports') #} class="btn btn--primary">Voir les signalements</a>
+            <a href="#" {# path('app_admin_users') #} class="btn btn--ghost">Gérer les utilisateurs</a>
+        </div>
+    </section>
+
+    <div class="admin-grid admin-grid--4">
+        <article class="admin-kpi">
+            <div class="admin-kpi__icon">👥</div>
+            <div>
+                <span class="admin-kpi__label">Utilisateurs</span>
+                <span class="admin-kpi__value">12 480</span>
+                <span class="admin-kpi__meta">+184 ce mois-ci</span>
+            </div>
+        </article>
+
+        <article class="admin-kpi">
+            <div class="admin-kpi__icon">🧳</div>
+            <div>
+                <span class="admin-kpi__label">Voyages</span>
+                <span class="admin-kpi__value">3 264</span>
+                <span class="admin-kpi__meta">+9.4% sur 30 jours</span>
+            </div>
+        </article>
+
+        <article class="admin-kpi">
+            <div class="admin-kpi__icon">📍</div>
+            <div>
+                <span class="admin-kpi__label">Destinations</span>
+                <span class="admin-kpi__value">842</span>
+                <span class="admin-kpi__meta">62 en attente</span>
+            </div>
+        </article>
+
+        <article class="admin-kpi">
+            <div class="admin-kpi__icon">🚩</div>
+            <div>
+                <span class="admin-kpi__label">Signalements</span>
+                <span class="admin-kpi__value">28</span>
+                <span class="admin-kpi__meta">7 urgents</span>
+            </div>
+        </article>
+    </div>
+{% endblock %}

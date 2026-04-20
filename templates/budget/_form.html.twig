@@ -1,0 +1,149 @@
+{# budget/_form.html.twig #}
+<style>
+/* Styles identiques à votre template existant */
+.budget-form-wrap { max-width: 720px; margin: 0 auto; }
+.budget-form-header {
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 2rem; padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+}
+.budget-form-header__bar {
+    width: 46px; height: 46px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 14px rgba(196,111,75,.3);
+}
+.budget-form-header__text h2 {
+    font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 600;
+    color: var(--color-text); margin: 0 0 .15rem;
+}
+.budget-form-header__text p { font-size: .82rem; color: var(--color-text-muted); margin: 0; }
+.form-section {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: 1.5rem 1.75rem; margin-bottom: 1rem;
+}
+.form-section__title {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+    font-weight: 700; color: var(--color-primary);
+    margin-bottom: 1.15rem; padding-bottom: .6rem;
+    border-bottom: 1px dashed var(--color-border);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; }
+.form-row--full { grid-template-columns: 1fr; }
+.form-field { display: flex; flex-direction: column; gap: .38rem; }
+.form-label {
+    font-size: .8rem; font-weight: 600; color: var(--color-text);
+    display: flex; align-items: center; gap: .35rem;
+}
+.form-input, .form-textarea, .form-select {
+    width: 100%; padding: .62rem .9rem;
+    background: var(--color-bg); border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md); font: inherit; font-size: .875rem;
+    transition: border-color .18s, box-shadow .18s; box-sizing: border-box;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none; border-color: rgba(196,111,75,.55);
+    box-shadow: 0 0 0 3px rgba(196,111,75,.12);
+}
+.form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+.form-footer {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: .65rem; padding: 1.1rem 1.75rem;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+.btn-cancel {
+    display: inline-flex; align-items: center;
+    padding: .55rem 1.2rem; border-radius: 999px; font-size: .86rem; font-weight: 600;
+    border: 1.5px solid var(--color-border); background: var(--color-bg);
+    color: var(--color-text-muted); cursor: pointer; text-decoration: none;
+}
+.btn-cancel:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.btn-submit {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .6rem 1.5rem; border-radius: 999px; font-size: .88rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: #fff; border: none; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(196,111,75,.3);
+}
+.btn-submit:hover { opacity: .88; transform: translateY(-1px); }
+</style>
+
+{{ form_start(form, { 'attr': { 'id': 'budgetForm', 'novalidate': 'novalidate' } }) }}
+
+<div class="budget-form-wrap">
+    <div class="budget-form-header">
+        <div class="budget-form-header__bar"></div>
+        <div class="budget-form-header__text">
+            <h2>{{ button_label is defined and button_label == 'Modifier' ? 'Modifier le budget' : 'Nouveau budget' }}</h2>
+            <p>Renseignez les informations financières du budget</p>
+        </div>
+    </div>
+
+    {# Section 1 — Voyage #}
+    <div class="form-section">
+        <div class="form-section__title">Voyage associé</div>
+        <div class="form-field">
+            {{ form_label(form.voyage, 'Voyage', { 'label_attr': { 'class': 'form-label' } }) }}
+            {{ form_widget(form.voyage, { 'attr': { 'class': 'form-select' } }) }}
+            {{ form_errors(form.voyage) }}
+        </div>
+    </div>
+
+    {# Section 2 — Informations générales #}
+    <div class="form-section">
+        <div class="form-section__title">Informations générales</div>
+        
+        <div class="form-field form-row--full">
+            {{ form_label(form.libelleBudget, 'Libellé', { 'label_attr': { 'class': 'form-label' } }) }}
+            {{ form_widget(form.libelleBudget, { 'attr': { 'class': 'form-input', 'maxlength': '20' } }) }}
+            {{ form_errors(form.libelleBudget) }}
+        </div>
+
+        <div class="form-field form-row--full">
+            {{ form_label(form.descriptionBudget, 'Description', { 'label_attr': { 'class': 'form-label' } }) }}
+            {{ form_widget(form.descriptionBudget, { 'attr': { 'class': 'form-textarea', 'maxlength': '100', 'rows': '4' } }) }}
+            {{ form_errors(form.descriptionBudget) }}
+        </div>
+    </div>
+
+    {# Section 3 — Montant & Devise #}
+    <div class="form-section">
+        <div class="form-section__title">Montant et devise</div>
+        
+        <div class="form-row">
+            <div class="form-field">
+                {{ form_label(form.montantTotal, 'Montant total', { 'label_attr': { 'class': 'form-label' } }) }}
+                {{ form_widget(form.montantTotal, { 'attr': { 'class': 'form-input', 'min': '0.01', 'step': '0.01' } }) }}
+                {{ form_errors(form.montantTotal) }}
+            </div>
+
+            <div class="form-field">
+                {{ form_label(form.deviseBudget, 'Devise', { 'label_attr': { 'class': 'form-label' } }) }}
+                {{ form_widget(form.deviseBudget, { 'attr': { 'class': 'form-input', 'placeholder': 'TND, EUR, USD...' } }) }}
+                {{ form_errors(form.deviseBudget) }}
+            </div>
+        </div>
+    </div>
+
+    {# Section 4 — Statut #}
+    <div class="form-section">
+        <div class="form-section__title">Statut du budget</div>
+        
+        <div class="form-field">
+            {{ form_label(form.statutBudget, 'Statut', { 'label_attr': { 'class': 'form-label' } }) }}
+            {{ form_widget(form.statutBudget, { 'attr': { 'class': 'form-input', 'placeholder': 'actif, suspendu, cloture, depasse' } }) }}
+            {{ form_errors(form.statutBudget) }}
+        </div>
+    </div>
+
+    {# Footer #}
+    <div class="form-footer">
+        <a href="{{ path('app_budget_index') }}" class="btn-cancel">Annuler</a>
+        <button type="submit" class="btn-submit">
+            {{ button_label|default('Enregistrer') }}
+        </button>
+    </div>
+</div>
+
+{{ form_end(form) }}

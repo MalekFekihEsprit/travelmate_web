@@ -98,3 +98,8 @@ services:
     App\Service\DestinationAiSuggestionService:
         arguments:
             $apiKey: '%env(OPENROUTER_API_KEY)%'
+
+    App\Service\NotificationService:
+        arguments:
+            $ntfyUrl:   '%env(NTFY_URL)%'
+            $ntfyTopic: '%env(NTFY_TOPIC)%'
