@@ -38,11 +38,11 @@ class TelegramController extends AbstractController
             : 'Nouveau participant';
 
         // ✅ Appel API 2 — message de bienvenue dans le groupe Telegram
-        $telegram->sendWelcome(
-            $evenement->getTelegramGroupId(),
-            $userName,
-            $evenement->getTitre()
-        );
+        //$telegram->sendWelcome(
+        //    $evenement->getTelegramGroupId(),
+          //  $userName,
+            //$evenement->getTitre()
+        //);
 
         return $this->json(['invite_link' => $link]);
     }

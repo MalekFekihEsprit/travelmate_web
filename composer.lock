@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e9f590af12a1a93a8e3e63434e64c30a",
+    "content-hash": "ace86b378065f508e91b467460783d8c",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -1584,149 +1584,6 @@
         },
         {
             "name": "endroid/qr-code",
-            "version": "6.0.9",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/endroid/qr-code.git",
-                "reference": "21e888e8597440b2205e2e5c484b6c8e556bcd1a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/endroid/qr-code/zipball/21e888e8597440b2205e2e5c484b6c8e556bcd1a",
-                "reference": "21e888e8597440b2205e2e5c484b6c8e556bcd1a",
-                "shasum": ""
-            },
-            "require": {
-                "bacon/bacon-qr-code": "^3.0",
-                "php": "^8.2"
-            },
-            "require-dev": {
-                "endroid/quality": "dev-main",
-                "ext-gd": "*",
-                "khanamiryan/qrcode-detector-decoder": "^2.0.2",
-                "setasign/fpdf": "^1.8.2"
-            },
-            "suggest": {
-                "ext-gd": "Enables you to write PNG images",
-                "khanamiryan/qrcode-detector-decoder": "Enables you to use the image validator",
-                "roave/security-advisories": "Makes sure package versions with known security issues are not installed",
-                "setasign/fpdf": "Enables you to use the PDF writer"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "6.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Endroid\\QrCode\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jeroen van den Enden",
-                    "email": "info@endroid.nl"
-                }
-            ],
-            "description": "Endroid QR Code",
-            "homepage": "https://github.com/endroid/qr-code",
-            "keywords": [
-                "code",
-                "endroid",
-                "php",
-                "qr",
-                "qrcode"
-            ],
-            "support": {
-                "issues": "https://github.com/endroid/qr-code/issues",
-                "source": "https://github.com/endroid/qr-code/tree/6.0.9"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/endroid",
-                    "type": "github"
-                }
-            ],
-            "time": "2025-07-13T19:59:45+00:00"
-        },
-        {
-            "name": "endroid/qr-code-bundle",
-            "version": "6.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/endroid/qr-code-bundle.git",
-                "reference": "b1e6972cf7ec154f646f0b0d9d12ca901bc0b9d1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/endroid/qr-code-bundle/zipball/b1e6972cf7ec154f646f0b0d9d12ca901bc0b9d1",
-                "reference": "b1e6972cf7ec154f646f0b0d9d12ca901bc0b9d1",
-                "shasum": ""
-            },
-            "require": {
-                "endroid/installer": "^1.2.2",
-                "endroid/qr-code": "^6.0.1",
-                "php": "^8.2",
-                "symfony/framework-bundle": "^5.4||^6.4||^7.0",
-                "symfony/twig-bundle": "^5.4||^6.4||^7.0",
-                "symfony/yaml": "^5.4||^6.4||^7.0"
-            },
-            "require-dev": {
-                "endroid/quality": "dev-main"
-            },
-            "suggest": {
-                "roave/security-advisories": "Avoids installation of package versions with vulnerabilities"
-            },
-            "type": "symfony-bundle",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "6.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Endroid\\QrCodeBundle\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jeroen van den Enden",
-                    "email": "info@endroid.nl"
-                }
-            ],
-            "description": "Endroid QR Code Bundle",
-            "homepage": "https://github.com/endroid/qr-code-bundle",
-            "keywords": [
-                "bundle",
-                "code",
-                "endroid",
-                "php",
-                "qr",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/endroid/qr-code-bundle/issues",
-                "source": "https://github.com/endroid/qr-code-bundle/tree/6.0.0"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/endroid",
-                    "type": "github"
-                }
-            ],
-            "time": "2024-10-21T23:18:20+00:00"
-        },
-        {
-            "name": "endroid/qr-code",
             "version": "5.0.0",
             "source": {
                 "type": "git",
@@ -1799,6 +1656,77 @@
                 }
             ],
             "time": "2023-10-02T22:25:20+00:00"
+        },
+        {
+            "name": "endroid/qr-code-bundle",
+            "version": "5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/endroid/qr-code-bundle.git",
+                "reference": "aa42fbfe654134ac2ec58896ce19379ba9da4d9d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/endroid/qr-code-bundle/zipball/aa42fbfe654134ac2ec58896ce19379ba9da4d9d",
+                "reference": "aa42fbfe654134ac2ec58896ce19379ba9da4d9d",
+                "shasum": ""
+            },
+            "require": {
+                "endroid/installer": "^1.2.2",
+                "endroid/qr-code": "^5.0",
+                "php": "^8.1",
+                "symfony/framework-bundle": "^5.4||^6.0",
+                "symfony/twig-bundle": "^5.4||^6.0",
+                "symfony/yaml": "^5.4||^6.0"
+            },
+            "require-dev": {
+                "endroid/quality": "dev-master"
+            },
+            "suggest": {
+                "roave/security-advisories": "Avoids installation of package versions with vulnerabilities"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Endroid\\QrCodeBundle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jeroen van den Enden",
+                    "email": "info@endroid.nl"
+                }
+            ],
+            "description": "Endroid QR Code Bundle",
+            "homepage": "https://github.com/endroid/qr-code-bundle",
+            "keywords": [
+                "bundle",
+                "code",
+                "endroid",
+                "php",
+                "qr",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/endroid/qr-code-bundle/issues",
+                "source": "https://github.com/endroid/qr-code-bundle/tree/5.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/endroid",
+                    "type": "github"
+                }
+            ],
+            "time": "2023-10-02T22:43:57+00:00"
         },
         {
             "name": "fabpot/goutte",
@@ -3836,68 +3764,6 @@
             "time": "2026-03-03T17:31:43+00:00"
         },
         {
-            "name": "stripe/stripe-php",
-            "version": "v20.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/stripe/stripe-php.git",
-                "reference": "7338bd140e641b1f9c7cb602e2de971e14db6b3b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/7338bd140e641b1f9c7cb602e2de971e14db6b3b",
-                "reference": "7338bd140e641b1f9c7cb602e2de971e14db6b3b",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "php": ">=7.2.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "3.94.0",
-                "phpstan/phpstan": "^1.2",
-                "phpunit/phpunit": "^5.7 || ^9.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "lib/version_check.php"
-                ],
-                "psr-4": {
-                    "Stripe\\": "lib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Stripe and contributors",
-                    "homepage": "https://github.com/stripe/stripe-php/contributors"
-                }
-            ],
-            "description": "Stripe PHP Library",
-            "homepage": "https://stripe.com/",
-            "keywords": [
-                "api",
-                "payment processing",
-                "stripe"
-            ],
-            "support": {
-                "issues": "https://github.com/stripe/stripe-php/issues",
-                "source": "https://github.com/stripe/stripe-php/tree/v20.0.0"
-            },
-            "time": "2026-03-26T01:57:48+00:00"
-        },
-        {
             "name": "stevenmaguire/oauth2-microsoft",
             "version": "2.2.0",
             "source": {
@@ -4670,7 +4536,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-03-06T13:31:08+00:00"
+            "time": "2026-03-27T15:30:51+00:00"
         },
         {
             "name": "symfony/css-selector",
