@@ -4,9 +4,11 @@ namespace App\Controller;
 
 use App\Entity\Hebergement;
 use App\Form\HebergementType;
+use App\Repository\DestinationRepository;
 use App\Repository\HebergementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -15,14 +17,14 @@ use Symfony\Component\Routing\Attribute\Route;
 class HebergementAdminController extends AbstractController
 {
     #[Route('/', name: 'app_admin_hebergements', methods: ['GET'])]
-    public function index(Request $request, HebergementRepository $hebergementRepository): Response
+    public function index(Request $request, HebergementRepository $hebergementRepository, DestinationRepository $destinationRepository): Response
     {
         $search = trim((string) $request->query->get('q', ''));
         $typeFilter = trim((string) $request->query->get('type', ''));
         $destinationFilter = trim((string) $request->query->get('destination', ''));
         $sort = (string) $request->query->get('sort', 'recent');
 
-        $allHebergements = $hebergementRepository->findBy([], ['id_hebergement' => 'DESC']);
+        $allHebergements = $hebergementRepository->findBy([], ['idHebergement' => 'DESC']);
 
         $hebergements = array_values(array_filter($allHebergements, static function (Hebergement $hebergement) use ($search, $typeFilter, $destinationFilter): bool {
             if ($search !== '') {
@@ -92,6 +94,7 @@ class HebergementAdminController extends AbstractController
 
         $averagePrice = $prices !== [] ? round(array_sum($prices) / count($prices), 2) : null;
         $averageNote = $notes !== [] ? round(array_sum($notes) / count($notes), 1) : null;
+        $totalDestinationsAvailable = $destinationRepository->count([]);
 
         return $this->render('hebergement_admin/index.html.twig', [
             'hebergements' => $hebergements,
@@ -105,6 +108,7 @@ class HebergementAdminController extends AbstractController
                 'total' => count($allHebergements),
                 'types' => count($types),
                 'destinations' => count($destinations),
+                'destinationsAvailable' => $totalDestinationsAvailable,
                 'averagePrice' => $averagePrice,
                 'averageNote' => $averageNote,
             ],
@@ -112,11 +116,23 @@ class HebergementAdminController extends AbstractController
     }
 
     #[Route('/new', name: 'app_admin_hebergement_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, HebergementRepository $hebergementRepository): Response
     {
         $hebergement = new Hebergement();
         $form = $this->createForm(HebergementType::class, $hebergement);
         $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            $duplicateHebergement = $hebergementRepository->findDuplicateByName(
+                (string) $hebergement->getNomHebergement(),
+            );
+
+            if ($duplicateHebergement !== null) {
+                $message = 'Un hebergement avec ce nom existe deja.';
+                $form->get('nom_hebergement')->addError(new FormError($message));
+                $form->addError(new FormError($message));
+            }
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($hebergement);
@@ -148,10 +164,23 @@ class HebergementAdminController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_admin_hebergement_edit', methods: ['GET', 'POST'], requirements: ['id' => '\\d+'])]
-    public function edit(Request $request, Hebergement $hebergement, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Hebergement $hebergement, EntityManagerInterface $entityManager, HebergementRepository $hebergementRepository): Response
     {
         $form = $this->createForm(HebergementType::class, $hebergement);
         $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            $duplicateHebergement = $hebergementRepository->findDuplicateByName(
+                (string) $hebergement->getNomHebergement(),
+                $hebergement->getIdHebergement(),
+            );
+
+            if ($duplicateHebergement !== null) {
+                $message = 'Un hebergement avec ce nom existe deja.';
+                $form->get('nom_hebergement')->addError(new FormError($message));
+                $form->addError(new FormError($message));
+            }
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();

@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Budget — TravelMate{% endblock %}
+
+{% block body %}
+
+{# ── Page hero ── #}
+<section style="
+    background: linear-gradient(135deg, #3b2a1a 0%, var(--color-primary) 100%);
+    border-radius: var(--radius-xl); overflow: hidden;
+    padding: 1.6rem 2rem; margin-bottom: 1.75rem; color: #fff;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+">
+    <div>
+        <div style="font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;opacity:.65;font-weight:500;margin-bottom:.3rem">
+            Gestion financière
+        </div>
+        <h1 style="font-family:'Fraunces',serif;font-size:1.55rem;font-weight:600;margin:0 0 .3rem;letter-spacing:-.02em">
+            Modifier le budget
+        </h1>
+        <p style="opacity:.75;font-size:.86rem;margin:0">
+            Modifiez les informations de votre budget.
+        </p>
+    </div>
+    <a href="{{ path('app_budget_index') }}" style="
+        display:inline-flex;align-items:center;gap:.4rem;
+        padding:.5rem 1.1rem;background:rgba(255,255,255,.15);
+        border:1px solid rgba(255,255,255,.3);border-radius:999px;
+        font-size:.84rem;font-weight:600;color:#fff;text-decoration:none;
+        transition:background .18s;
+    " onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">
+        ← Retour aux budgets
+    </a>
+</section>
+
+{{ include('budget/_form.html.twig', { button_label: 'Enregistrer les modifications' }) }}
+
+{% endblock %}

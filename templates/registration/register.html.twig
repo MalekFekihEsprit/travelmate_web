@@ -259,6 +259,76 @@
                 border-radius: 24px;
             }
         }
+
+        .social-auth {
+            margin-top: 1.5rem;
+        }
+
+        .social-auth__divider {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1rem;
+            color: var(--color-text-muted);
+            font-size: .9rem;
+        }
+
+        .social-auth__divider::before,
+        .social-auth__divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .social-auth__grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: .75rem;
+        }
+
+        .social-auth__btn {
+            min-height: 48px;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            background: #fffdfa;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+            transition: all .18s ease;
+        }
+
+        .social-auth__btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(196, 111, 75, 0.35);
+            background: rgba(196, 111, 75, 0.06);
+        }
+
+        @media (max-width: 640px) {
+            .social-auth__grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .geo-phone-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-top: .5rem;
+            padding: .55rem .8rem;
+            border-radius: 999px;
+            background: rgba(47, 127, 121, 0.08);
+            color: var(--color-text);
+            font-size: .9rem;
+        }
+
+        .geo-phone-code {
+            font-weight: 700;
+            color: var(--color-primary);
+        }
     </style>
 {% endblock %}
 
@@ -340,11 +410,45 @@
                             <div class="form-error">{{ form_errors(registrationForm.date_naissance) }}</div>
                         </div>
 
-                        <div class="form-control-block">
-                            {{ form_label(registrationForm.telephone) }}
-                            {{ form_widget(registrationForm.telephone) }}
-                            <div class="form-error">{{ form_errors(registrationForm.telephone) }}</div>
+                        {% set geo_data = get_geo_phone_context() %} {# You'll need to create a Twig function #}
+
+                        <div class="phone-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                            <div class="phone-prefix" style="position: absolute; left: 10px; top: 60%; transform: translateY(-50%); display: flex; gap: 5px; align-items: center; pointer-events: none; z-index: 1; background: transparent;">
+                                <span id="geo-flag-input" style="font-size:1.2rem;">{{ geo_data.flag_emoji|raw }}</span>
+                                <span id="geo-code-prefix" style="color: #666; font-weight: 500;">{{ geo_data.calling_code }}</span>
+                            </div>
+                            <div class="form-control-block" id="user_telephone" style="flex: 1;">
+                                {{ form_label(registrationForm.telephone) }}
+                                {{ form_widget(registrationForm.telephone, { attr: { style: 'padding-left: 90px;' } }) }}
+                                <div class="form-error">{{ form_errors(registrationForm.telephone) }}</div>
+                            </div>
                         </div>
+                        <script>
+                            // Store the calling code directly in JavaScript
+                            const geoCallingCode = '{{ geo_data.calling_code }}';
+                            const phoneInput = document.getElementById('registration_form_telephone');
+                            if (phoneInput && geoCallingCode) {
+                                phoneInput.dataset.callingCode = geoCallingCode;
+                                
+                                // Set placeholder
+                                if (!phoneInput.value.trim()) {
+                                    phoneInput.placeholder = '12 34 56 78 90';
+                                }
+                            }
+                            
+                            // Form submission handler
+                            const form = phoneInput ? phoneInput.closest('form') : null;
+                            if (form && phoneInput) {
+                                form.addEventListener('submit', function() {
+                                    const callingCode = phoneInput.dataset.callingCode;
+                                    const userNumber = phoneInput.value.trim();
+                                    
+                                    if (callingCode && userNumber && !userNumber.startsWith(callingCode)) {
+                                        phoneInput.value = callingCode + ' ' + userNumber;
+                                    }
+                                });
+                            }
+                        </script>
 
                         <div class="form-control-block full">
                             {{ form_label(registrationForm.email) }}
@@ -378,7 +482,7 @@
                                 <button type="button" class="toggle-password" data-target="first">
                                     <i class="far fa-eye-slash"></i>
                                 </button>
-                            </div>                            
+                            </div>
                             <div class="form-error">{{ form_errors(registrationForm.plainPassword.first) }}</div>
                         </div>
 
@@ -409,7 +513,145 @@
                     Vous avez déjà un compte ?
                     <a href="{{ path('app_login') }}">Se connecter</a>
                 </p>
+
+                <div class="social-auth">
+                    <div class="social-auth__divider">
+                        <span>Inscription rapide avec</span>
+                    </div>
+
+                    <div class="social-auth__grid">
+                        <a href="{{ path('connect_google_start') }}" class="social-auth__btn">
+                            <span>Google</span>
+                        </a>
+
+                        <a href="{{ path('connect_github_start') }}" class="social-auth__btn">
+                            <span>GitHub</span>
+                        </a>
+
+                        <a href="{{ path('connect_facebook_start') }}" class="social-auth__btn">
+                            <span>Facebook</span>
+                        </a>
+
+                        <a href="{{ path('connect_microsoft_start') }}" class="social-auth__btn">
+                            <span>Microsoft</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            console.log('DOMContentLoaded fired - starting geo detection');
+            
+            const phoneInput = document.getElementById('registration_form_telephone');
+            const flagPrefix = document.getElementById('geo-flag-input');
+            const codePrefix = document.getElementById('geo-code-prefix');
+            
+            // Get the form element
+            const form = phoneInput ? phoneInput.closest('form') : null;
+
+            console.log('DOM elements found:', {
+                phoneInput: !!phoneInput,
+                flagPrefix: !!flagPrefix,
+                codePrefix: !!codePrefix,
+                form: !!form
+            });
+
+            if (!phoneInput || !flagPrefix || !codePrefix || !form) {
+                console.error('Required DOM elements not found');
+                return;
+            }
+
+            try {
+                console.log('Fetching geo data from {{ path('app_geo_phone_context') }}');
+                const response = await fetch('{{ path('app_geo_phone_context') }}', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Response not OK:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Geo data received:', data);
+
+                if (!data.success) {
+                    console.error('Data success is false');
+                    return;
+                }
+
+                // Update the prefix display with flag and calling code
+                if (data.flag_emoji) {
+                    if (data.flag_url) {
+                        flagPrefix.innerHTML = `<img src="${data.flag_url}" alt="${data.country_name}" style="width: 20px; height: 15px; vertical-align: middle;">`;
+                    } else if (data.flag_emoji) {
+                        flagPrefix.textContent = data.flag_emoji;
+                    }
+                }
+                if (data.calling_code) {
+                    codePrefix.textContent = data.calling_code;
+                }
+                
+                console.log('Prefix updated:', {
+                    flag: flagPrefix.textContent,
+                    code: codePrefix.textContent
+                });
+
+                // Pre-fill hint (if you still want to show it somewhere else)
+                const hint = document.getElementById('geo-phone-hint');
+                if (hint) {
+                    hint.style.display = 'inline-flex';
+                }
+
+                // Only pre-fill if input is empty
+                if (!phoneInput.value.trim()) {
+                    phoneInput.placeholder = '12 34 56 78 90'; // User only types local number
+                    console.log('Input is empty, ready for user input');
+                }
+
+                // Store the calling code for form submission
+                phoneInput.dataset.callingCode = data.calling_code;
+                
+            } catch (e) {
+                console.error('Geo phone context error:', e);
+            }
+        });
+
+        // Handle form submission - combine calling code with user input
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneInput = document.getElementById('registration_form_telephone');
+            const form = phoneInput ? phoneInput.closest('form') : null;
+            
+            if (form && phoneInput) {
+                form.addEventListener('submit', function(e) {
+                    const callingCode = phoneInput.dataset.callingCode;
+                    const userNumber = phoneInput.value.trim();
+                    
+                    console.log('Form submit - combining numbers:', {
+                        callingCode: callingCode,
+                        userNumber: userNumber,
+                        currentValue: phoneInput.value
+                    });
+                    
+                    // Only combine if we have a calling code and the user entered something
+                    if (callingCode && userNumber) {
+                        // Check if the user already included the calling code
+                        if (!userNumber.startsWith(callingCode)) {
+                            phoneInput.value = callingCode + ' ' + userNumber;
+                            console.log('Combined value:', phoneInput.value);
+                        } else {
+                            console.log('Calling code already present');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %}

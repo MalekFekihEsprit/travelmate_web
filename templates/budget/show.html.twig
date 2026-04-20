@@ -1,0 +1,2059 @@
+{% extends 'base.html.twig' %}
+
+{# ── Pre-compute (top-level scope: accessible in ALL blocks) ── #}
+{% set totalDepense = 0 %}
+{% for d in budget.depenses %}
+    {% set totalDepense = totalDepense + d.montantDepense %}
+{% endfor %}
+{% set restant = budget.montantTotal - totalDepense %}
+{% set isOver  = restant < 0 %}
+{% set pct     = budget.montantTotal > 0 ? ((totalDepense / budget.montantTotal) * 100)|round(0) : 0 %}
+
+{% block title %}{{ budget.libelleBudget }} — TravelMate{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+
+/* ══ LAYOUT ══════════════════════════════════════════════════════ */
+.show-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .show-layout { grid-template-columns: 1fr; }
+    .show-sidebar { order: -1; }
+}
+
+/* ══ FLASH MESSAGES ══════════════════════════════════════════════ */
+.flash-success, .flash-error, .flash-warning, .flash-info {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .8rem 1.15rem; border-radius: var(--radius-md);
+    font-size: .88rem; font-weight: 600; margin-bottom: 1rem;
+    animation: slideDown .25s ease;
+}
+.flash-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.flash-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.flash-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.flash-info    { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+@keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
+
+/* ══ HERO ════════════════════════════════════════════════════════ */
+.budget-hero {
+    background: linear-gradient(135deg, #3b2a1a 0%, var(--color-primary) 100%);
+    border-radius: var(--radius-xl); padding: 1.75rem 2rem;
+    margin-bottom: 1.5rem; color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem; position: relative; overflow: hidden;
+}
+.budget-hero::before {
+    content: '💰'; position: absolute; right: -10px; top: 50%;
+    transform: translateY(-50%); font-size: 7rem; opacity: .07; pointer-events: none;
+}
+.budget-hero__eyebrow { font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; opacity:.65; font-weight:500; margin-bottom:.3rem; }
+.budget-hero__title { font-family:'Fraunces',serif; font-size:1.65rem; font-weight:600; margin:0 0 .3rem; letter-spacing:-.02em; line-height:1.2; }
+.budget-hero__desc  { opacity:.75; font-size:.86rem; margin:0; max-width:52ch; }
+.budget-hero__back  {
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.5rem 1.1rem; background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.3); border-radius:999px;
+    font-size:.84rem; font-weight:600; color:#fff; text-decoration:none;
+    transition:background .18s; flex-shrink:0;
+}
+.budget-hero__back:hover { background:rgba(255,255,255,.22); }
+
+/* ══ SECTION CARD ════════════════════════════════════════════════ */
+.section-card {
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); overflow:hidden; margin-bottom:1.25rem;
+}
+.section-card__header {
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;
+    padding:.95rem 1.4rem; border-bottom:1px solid var(--color-border);
+    background:var(--color-bg);
+}
+.section-card__title {
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.1em;
+    font-weight:700; color:var(--color-primary);
+    display:flex; align-items:center; gap:.5rem;
+}
+.section-card__badge {
+    background:rgba(196,111,75,.12); color:var(--color-primary);
+    font-size:.68rem; font-weight:700; padding:.15rem .55rem; border-radius:999px;
+}
+
+/* ══ DEP TOOLBAR ═════════════════════════════════════════════════ */
+.dep-toolbar {
+    display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+    padding:.7rem 1.4rem; border-bottom:1px solid var(--color-border);
+    background:var(--color-bg);
+}
+.dep-search-field {
+    display:flex; align-items:center; gap:.4rem;
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:999px; padding:.38rem .85rem; flex:1; min-width:180px;
+    transition:border-color .18s, box-shadow .18s;
+}
+.dep-search-field:focus-within { border-color:rgba(196,111,75,.45); box-shadow:0 0 0 3px rgba(196,111,75,.1); }
+.dep-search-input { border:none; outline:none; background:transparent; font:inherit; font-size:.84rem; color:var(--color-text); width:100%; }
+.dep-search-input::placeholder { color:var(--color-text-muted); }
+.dep-search-clear { background:none; border:none; cursor:pointer; color:var(--color-text-muted); font-size:.9rem; padding:0; display:none; }
+.dep-search-clear.visible { display:block; }
+.dep-search-clear:hover { color:var(--color-primary); }
+
+.dep-filter-chips { display:flex; gap:.3rem; flex-wrap:wrap; align-items:center; }
+.dep-chip {
+    padding:.28rem .7rem; border-radius:999px; font-size:.74rem; font-weight:600;
+    border:1.5px solid var(--color-border); background:var(--color-bg);
+    color:var(--color-text-muted); cursor:pointer; transition:all .15s;
+}
+.dep-chip:hover { border-color:var(--color-primary); color:var(--color-primary); }
+.dep-chip.active { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+
+.dep-toolbar-right { display:flex; gap:.4rem; margin-left:auto; }
+.dep-export-btn {
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.38rem .8rem; border-radius:999px; font-size:.76rem; font-weight:600;
+    border:1.5px solid var(--color-border); background:var(--color-surface);
+    color:var(--color-text-muted); cursor:pointer; transition:all .15s;
+}
+.dep-export-btn:hover { border-color:var(--color-primary); color:var(--color-primary); background:var(--color-hover); }
+
+/* ══ SELECTION BAR ═══════════════════════════════════════════════ */
+.dep-sel-bar {
+    display:none; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;
+    padding:.55rem 1.4rem; background:rgba(196,111,75,.07);
+    border-bottom:1px solid rgba(196,111,75,.2);
+}
+.dep-sel-bar.visible { display:flex; animation:slideDown .2s ease; }
+.dep-sel-info { font-size:.83rem; font-weight:600; color:var(--color-primary-dark); display:flex; align-items:center; gap:.5rem; }
+.dep-sel-count { background:var(--color-primary); color:#fff; border-radius:999px; padding:.1rem .55rem; font-size:.74rem; font-weight:700; }
+.dep-sel-actions { display:flex; gap:.4rem; align-items:center; }
+.btn-dep-sel {
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.35rem .8rem; border-radius:999px; font-size:.78rem; font-weight:600;
+    border:1.5px solid; cursor:pointer; transition:all .15s; font-family:inherit;
+}
+.btn-dep-sel--cancel { border-color:var(--color-border); background:var(--color-bg); color:var(--color-text-muted); }
+.btn-dep-sel--cancel:hover { border-color:var(--color-primary); color:var(--color-primary); }
+.btn-dep-sel--all { border-color:var(--color-border); background:var(--color-bg); color:var(--color-text-muted); font-size:.74rem; }
+.btn-dep-sel--all:hover { border-color:var(--color-primary); color:var(--color-primary); }
+.btn-dep-sel--delete { border-color:#dc2626; background:#fee2e2; color:#b91c1c; }
+.btn-dep-sel--delete:hover { background:#dc2626; color:#fff; }
+
+/* ══ ADD DEPENSE BUTTON ══════════════════════════════════════════ */
+.btn-add-dep {
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.42rem .95rem; border-radius:999px; font-size:.82rem; font-weight:700;
+    background:var(--color-primary); color:#fff; border:none; cursor:pointer;
+    transition:opacity .18s, transform .18s; text-decoration:none;
+}
+.btn-add-dep:hover { opacity:.88; transform:translateY(-1px); }
+
+/* ══ PROGRESS ════════════════════════════════════════════════════ */
+.progress-wrap { padding:1.1rem 1.4rem; border-bottom:1px solid var(--color-border); }
+.progress-labels { display:flex; justify-content:space-between; font-size:.75rem; color:var(--color-text-muted); margin-bottom:.5rem; font-weight:600; }
+.progress-track { height:8px; background:var(--color-surface-soft,#f5ede3); border-radius:99px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:99px; background:var(--color-primary); transition:width .5s ease; }
+.progress-fill--over { background:#dc2626; }
+.progress-fill--warn { background:#d97706; }
+
+/* ══ DÉPENSES LIST ═══════════════════════════════════════════════ */
+.dep-list { list-style:none; margin:0; padding:0; }
+.dep-item {
+    display:grid; grid-template-columns:auto auto 1fr auto auto;
+    align-items:center; gap:.65rem 1rem;
+    padding:.9rem 1.4rem; border-bottom:1px solid var(--color-border);
+    transition:background .15s; position:relative;
+}
+.dep-item:last-child { border-bottom:none; }
+.dep-item:hover { background:var(--color-hover,rgba(196,111,75,.04)); }
+.dep-item.dep-hidden { display:none; }
+.dep-item.dep-selected { background:rgba(196,111,75,.06); }
+
+.dep-check-wrap {
+    width:18px; height:18px; border-radius:4px;
+    border:2px solid var(--color-border); background:var(--color-bg);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:all .15s; flex-shrink:0;
+}
+.dep-item.dep-selected .dep-check-wrap { background:var(--color-primary); border-color:var(--color-primary); }
+.dep-check-wrap::after { content:''; display:none; width:4px; height:8px; border:2px solid #fff; border-top:none; border-left:none; transform:rotate(45deg) translateY(-1px); }
+.dep-item.dep-selected .dep-check-wrap::after { display:block; }
+
+.dep-icon {
+    width:38px; height:38px; border-radius:var(--radius-md);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; flex-shrink:0;
+}
+.dep-icon--hebergement  { background:#fef3c7; }
+.dep-icon--transport    { background:#dbeafe; }
+.dep-icon--restauration { background:#d1fae5; }
+.dep-icon--loisirs      { background:#ede9fe; }
+.dep-icon--achats       { background:#fce7f3; }
+.dep-icon--sante        { background:#fee2e2; }
+.dep-icon--default      { background:var(--color-surface-soft,#f5ede3); }
+
+.dep-body { min-width:0; }
+.dep-label { font-size:.9rem; font-weight:600; color:var(--color-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dep-meta  { display:flex; align-items:center; gap:.5rem; margin-top:.2rem; flex-wrap:wrap; }
+.dep-cat   {
+    font-size:.68rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+    padding:.1rem .5rem; border-radius:999px;
+    background:var(--color-surface-soft,#f5ede3); color:var(--color-text-muted);
+    border:1px solid var(--color-border);
+}
+.dep-date  { font-size:.74rem; color:var(--color-text-muted); }
+.dep-payment { font-size:.72rem; color:var(--color-text-muted); font-style:italic; }
+
+.dep-amount { font-family:'Fraunces',serif; font-size:1rem; font-weight:600; color:var(--color-text); white-space:nowrap; text-align:right; }
+.dep-amount--high { color:#dc2626; }
+
+.dep-actions { display:flex; align-items:center; gap:.35rem; flex-shrink:0; }
+.dep-btn {
+    width:30px; height:30px; border-radius:var(--radius-sm,6px);
+    display:flex; align-items:center; justify-content:center;
+    border:1.5px solid var(--color-border); background:var(--color-bg);
+    cursor:pointer; font-size:.8rem; transition:all .15s; text-decoration:none;
+    flex-shrink:0;
+}
+.dep-btn--edit:hover   { border-color:var(--color-primary); background:rgba(196,111,75,.1); }
+.dep-btn--delete:hover { border-color:#dc2626; background:#fee2e2; }
+
+.dep-empty { padding:3rem 1.4rem; text-align:center; color:var(--color-text-muted); }
+.dep-empty__icon { font-size:2.5rem; margin-bottom:.75rem; }
+.dep-empty__text { font-size:.9rem; font-weight:600; color:var(--color-text); margin-bottom:.25rem; }
+.dep-empty__sub  { font-size:.82rem; }
+
+.dep-no-results { padding:2rem 1.4rem; text-align:center; color:var(--color-text-muted); font-size:.86rem; display:none; }
+.dep-no-results.visible { display:block; }
+
+/* ══ TOTALS FOOTER ═══════════════════════════════════════════════ */
+.totals-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:.9rem 1.4rem; background:var(--color-bg);
+    border-top:1px solid var(--color-border); gap:1rem; flex-wrap:wrap;
+}
+.totals-item { text-align:center; }
+.totals-label { font-size:.67rem; text-transform:uppercase; letter-spacing:.08em; color:var(--color-text-muted); font-weight:600; }
+.totals-value { font-family:'Fraunces',serif; font-size:1.05rem; font-weight:600; color:var(--color-text); margin-top:.1rem; }
+.totals-value--primary { color:var(--color-primary); }
+.totals-value--danger  { color:#dc2626; }
+.totals-value--success { color:#059669; }
+.totals-sep { color:var(--color-border); font-size:1.2rem; }
+
+/* ══ SIDEBAR INFO ════════════════════════════════════════════════ */
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; padding:1.15rem 1.4rem; }
+.info-item { display:flex; flex-direction:column; gap:.2rem; }
+.info-item--full { grid-column:1/-1; }
+.info-label { font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--color-text-muted); font-weight:600; }
+.info-value { font-size:.9rem; font-weight:600; color:var(--color-text); }
+.info-value--primary { font-family:'Fraunces',serif; font-size:1.1rem; color:var(--color-primary); }
+.info-value--danger  { color:#dc2626; }
+.info-value--success { color:#059669; }
+
+.statut-pill {
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.25rem .7rem; border-radius:999px; font-size:.74rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+}
+.statut-pill--actif    { background:#d1fae5; color:#065f46; }
+.statut-pill--suspendu { background:#fef3c7; color:#92400e; }
+.statut-pill--cloture  { background:#f3f4f6; color:#374151; }
+.statut-pill--depasse  { background:#fee2e2; color:#991b1b; }
+.statut-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+/* ══ ACTION PANEL ════════════════════════════════════════════════ */
+.action-panel {
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); padding:1.15rem 1.4rem;
+    display:flex; flex-direction:column; gap:.6rem;
+}
+.action-panel__title { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; font-weight:700; color:var(--color-text-muted); margin-bottom:.2rem; }
+.btn-action {
+    display:flex; align-items:center; gap:.65rem;
+    padding:.7rem 1.1rem; border-radius:var(--radius-md);
+    font-size:.88rem; font-weight:600; text-decoration:none;
+    border:none; cursor:pointer; transition:all .18s;
+    width:100%; text-align:left; font-family:inherit;
+}
+.btn-action__icon { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; }
+.btn-action__label { flex:1; }
+.btn-action__arrow { opacity:.45; font-size:.8rem; margin-left:auto; }
+.btn-action--edit   { background:rgba(196,111,75,.1); color:var(--color-primary-dark,#7c3c14); border:1.5px solid rgba(196,111,75,.25); }
+.btn-action--edit:hover { background:rgba(196,111,75,.18); border-color:var(--color-primary); transform:translateX(2px); }
+.btn-action--edit .btn-action__icon { background:rgba(196,111,75,.15); }
+.btn-action--delete { background:rgba(220,38,38,.07); color:#b91c1c; border:1.5px solid rgba(220,38,38,.18); }
+.btn-action--delete:hover { background:rgba(220,38,38,.13); border-color:#dc2626; transform:translateX(2px); }
+.btn-action--delete .btn-action__icon { background:rgba(220,38,38,.1); }
+.action-divider { height:1px; background:var(--color-border); margin:.15rem 0; }
+
+/* ══ MODAL OVERLAY ═══════════════════════════════════════════════ */
+.modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    backdrop-filter:blur(3px); z-index:1000;
+    display:none; align-items:center; justify-content:center; padding:1rem;
+}
+.modal-overlay.open { display:flex; animation:fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.modal {
+    background:var(--color-surface); border-radius:var(--radius-xl);
+    border:1px solid var(--color-border);
+    box-shadow:0 24px 64px rgba(0,0,0,.25);
+    width:100%; max-width:540px; max-height:90vh; overflow-y:auto;
+    animation:slideUp .25s ease;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+
+.modal__header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.25rem 1.5rem; border-bottom:1px solid var(--color-border);
+    position:sticky; top:0; background:var(--color-surface); z-index:1;
+}
+.modal__title { font-family:'Fraunces',serif; font-size:1.15rem; font-weight:600; color:var(--color-text); }
+.modal__close {
+    width:32px; height:32px; border-radius:50%; border:1.5px solid var(--color-border);
+    background:var(--color-bg); cursor:pointer; font-size:1rem; color:var(--color-text-muted);
+    display:flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0;
+}
+.modal__close:hover { border-color:#dc2626; color:#dc2626; background:#fee2e2; }
+.modal__body { padding:1.5rem; }
+
+/* ══ MODAL FORM ══════════════════════════════════════════════════ */
+.mf-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+.mf-row--full { grid-template-columns:1fr; }
+.mf-field { display:flex; flex-direction:column; gap:.35rem; }
+.mf-label { font-size:.8rem; font-weight:600; color:var(--color-text); display:flex; align-items:center; gap:.35rem; }
+.mf-label .req { color:var(--color-primary); }
+.mf-input, .mf-select, .mf-textarea {
+    width:100%; padding:.6rem .85rem;
+    background:var(--color-bg); border:1.5px solid var(--color-border);
+    border-radius:var(--radius-md); font:inherit; font-size:.875rem; color:var(--color-text);
+    transition:border-color .18s, box-shadow .18s; box-sizing:border-box;
+}
+.mf-input:focus, .mf-select:focus, .mf-textarea:focus {
+    outline:none; border-color:rgba(196,111,75,.55); box-shadow:0 0 0 3px rgba(196,111,75,.12);
+}
+.mf-input.err, .mf-select.err, .mf-textarea.err { border-color:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.1); }
+.mf-input.ok,  .mf-select.ok,  .mf-textarea.ok  { border-color:#059669; box-shadow:0 0 0 3px rgba(5,150,105,.08); }
+.mf-select { appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e6258' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right .8rem center; padding-right:2.2rem; }
+.mf-textarea { resize:vertical; min-height:80px; line-height:1.6; }
+.mf-error { font-size:.74rem; color:#dc2626; display:none; }
+.mf-error.show { display:block; }
+.mf-hint { font-size:.72rem; color:var(--color-text-muted); }
+.mf-amount-wrap { position:relative; }
+.mf-amount-prefix {
+    position:absolute; left:.85rem; top:50%; transform:translateY(-50%);
+    font-size:.8rem; font-weight:700; color:var(--color-text-muted); pointer-events:none; z-index:1;
+}
+.mf-amount-wrap .mf-input { padding-left:2.6rem; }
+.modal__footer {
+    display:flex; align-items:center; justify-content:flex-end; gap:.65rem;
+    padding:1.1rem 1.5rem; border-top:1px solid var(--color-border);
+    background:var(--color-bg);
+}
+.btn-modal-cancel {
+    padding:.52rem 1.15rem; border-radius:999px; font-size:.86rem; font-weight:600;
+    border:1.5px solid var(--color-border); background:var(--color-surface);
+    color:var(--color-text-muted); cursor:pointer; transition:all .18s; font-family:inherit;
+}
+.btn-modal-cancel:hover { border-color:var(--color-primary); color:var(--color-primary); }
+.btn-modal-submit {
+    padding:.56rem 1.4rem; border-radius:999px; font-size:.88rem; font-weight:700;
+    background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark));
+    color:#fff; border:none; cursor:pointer;
+    box-shadow:0 4px 14px rgba(196,111,75,.3); transition:opacity .18s; font-family:inherit;
+}
+.btn-modal-submit:hover { opacity:.88; }
+.btn-modal-submit--danger { background:linear-gradient(135deg,#dc2626,#b91c1c); box-shadow:0 4px 14px rgba(220,38,38,.3); }
+@media(max-width:600px) { .mf-row { grid-template-columns:1fr; } }
+
+/* ══ AI TOOL BLOCKS ══════════════════════════════════════════════ */
+.ai-tool-block {
+    border:1px solid var(--color-border); border-radius:8px;
+    padding:.9rem 1rem; margin-bottom:.6rem;
+}
+.ai-tool-block:last-child { margin-bottom:0; }
+.ai-tool-title {
+    font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--color-text-muted); margin-bottom:.6rem;
+}
+.ai-input {
+    width:100%; padding:.45rem .7rem; box-sizing:border-box;
+    border:1.5px solid var(--color-border); border-radius:6px;
+    font:inherit; font-size:.82rem; color:var(--color-text);
+    background:var(--color-bg);
+    transition:border-color .18s, box-shadow .18s;
+}
+.ai-input:focus { outline:none; border-color:rgba(196,111,75,.5); box-shadow:0 0 0 3px rgba(196,111,75,.1); }
+.ai-btn {
+    width:100%; padding:.45rem; border-radius:6px;
+    background:var(--color-primary); color:#fff; border:none;
+    font:inherit; font-size:.82rem; font-weight:700; cursor:pointer;
+    transition:opacity .18s;
+}
+.ai-btn:hover { opacity:.85; }
+.ai-result {
+    margin-top:.5rem; font-size:.81rem; color:var(--color-text);
+    line-height:1.55; min-height:1rem; white-space:pre-wrap;
+}
+
+/* ══ CONVERTER INLINE ════════════════════════════════════════════ */
+.conv-inline-wrap {
+    padding: .9rem 1.4rem;
+    display: flex; flex-wrap: wrap; gap: .65rem; align-items: flex-end;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+.conv-inline-field { display:flex; flex-direction:column; gap:.28rem; }
+.conv-inline-label { font-size:.7rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--color-text-muted); }
+.conv-inline-input {
+    padding:.48rem .75rem; border:1.5px solid var(--color-border);
+    border-radius:var(--radius-md); font:inherit; font-size:.875rem;
+    background:var(--color-bg); color:var(--color-text);
+    transition:border-color .18s; box-sizing:border-box;
+}
+.conv-inline-input:focus { outline:none; border-color:rgba(196,111,75,.5); box-shadow:0 0 0 3px rgba(196,111,75,.1); }
+.conv-inline-select {
+    appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e6258' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right .65rem center;
+    padding-right:2rem;
+}
+.conv-inline-btn {
+    padding:.5rem 1.05rem; border-radius:999px; font-size:.82rem; font-weight:700;
+    background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark));
+    color:#fff; border:none; cursor:pointer; white-space:nowrap;
+    transition:opacity .18s; align-self:flex-end;
+}
+.conv-inline-btn:hover { opacity:.88; }
+.conv-inline-result {
+    flex:1; min-width:150px; align-self:flex-end;
+    font-family:'Fraunces',serif; font-size:1.05rem; font-weight:600;
+    color:var(--color-primary); padding:.45rem 0;
+}
+
+/* ══ INFLATION WIDGET ════════════════════════════════════════════ */
+.inflation-widget {
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); overflow:hidden; margin-bottom:1rem;
+}
+.inflation-widget__header {
+    display:flex; align-items:center; gap:.5rem;
+    padding:.8rem 1.2rem; border-bottom:1px solid var(--color-border);
+    background:var(--color-bg);
+}
+.inflation-widget__title {
+    font-size:.7rem; text-transform:uppercase; letter-spacing:.1em;
+    font-weight:700; color:var(--color-primary); flex:1;
+}
+.inflation-country-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--color-bg)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236e6258' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+        no-repeat right .6rem center;
+    border:1px solid var(--color-border); border-radius:999px;
+    padding:.28rem 1.8rem .28rem .65rem;
+    font:inherit; font-size:.74rem; color:var(--color-text); cursor:pointer;
+}
+.inflation-widget__body { padding:1rem 1.2rem; }
+.inflation-did-you-know {
+    font-size:.68rem; text-transform:uppercase; letter-spacing:.08em;
+    font-weight:700; color:var(--color-text-muted); margin-bottom:.45rem;
+}
+.inflation-rate-big {
+    font-family:'Fraunces',serif; font-size:2rem; font-weight:600;
+    color:var(--color-primary); line-height:1; margin-bottom:.2rem;
+}
+.inflation-country-label { font-size:.78rem; color:var(--color-text-muted); margin-bottom:.65rem; }
+.inflation-delta {
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.28rem .7rem; border-radius:999px;
+    font-size:.76rem; font-weight:700;
+}
+.inflation-delta--up   { background:#fee2e2; color:#b91c1c; }
+.inflation-delta--down { background:#d1fae5; color:#065f46; }
+.inflation-delta--flat { background:var(--color-surface-soft,#f5ede3); color:var(--color-text-muted); }
+.inflation-insight {
+    margin-top:.7rem; padding:.6rem .85rem;
+    background:rgba(196,111,75,.07); border-left:3px solid var(--color-primary);
+    border-radius:0 var(--radius-md) var(--radius-md) 0;
+    font-size:.79rem; color:var(--color-text); line-height:1.55;
+}
+.inflation-loading { font-size:.82rem; color:var(--color-text-muted); font-style:italic; }
+
+</style>
+{% endblock %}
+
+{% block body %}
+
+{# ── Flash messages ── #}
+{% for msg in app.flashes('success') %}
+    <div class="flash-success">✅ {{ msg }}</div>
+{% endfor %}
+{% for msg in app.flashes('error') %}
+    <div class="flash-error">❌ {{ msg }}</div>
+{% endfor %}
+{% for msg in app.flashes('warning') %}
+    <div class="flash-warning">⚠️ {{ msg }}</div>
+{% endfor %}
+{% for msg in app.flashes('info') %}
+    <div class="flash-info">ℹ️ {{ msg }}</div>
+{% endfor %}
+
+{# ── Hero ── #}
+<section class="budget-hero">
+    <div>
+        <div class="budget-hero__eyebrow">Gestion financière · Détail du budget</div>
+        <h1 class="budget-hero__title">{{ budget.libelleBudget }}</h1>
+        <p class="budget-hero__desc">{{ budget.descriptionBudget }}</p>
+    </div>
+    <a href="{{ path('app_budget_index') }}" class="budget-hero__back">← Retour aux budgets</a>
+</section>
+
+<div class="show-layout">
+
+    {# ══ MAIN — liste dépenses ══ #}
+    <div class="show-main">
+
+        {# ── Convertisseur inline ── #}
+        <div class="section-card">
+            <div class="section-card__header">
+                <span class="section-card__title">💱 Convertir le budget</span>
+                <span class="section-card__badge">Frankfurter · BCE · Temps réel</span>
+            </div>
+            <div class="conv-inline-wrap">
+                <div class="conv-inline-field">
+                    <span class="conv-inline-label">Montant</span>
+                    <input type="number" id="convAmount" class="conv-inline-input"
+                           value="{{ budget.montantTotal }}" step="0.01" min="0"
+                           style="width:130px;">
+                </div>
+                <div class="conv-inline-field">
+                    <span class="conv-inline-label">De</span>
+                    <input type="text" id="convFrom" class="conv-inline-input"
+                           value="{{ budget.deviseBudget ?? 'TND' }}" maxlength="3"
+                           style="width:70px;text-transform:uppercase;text-align:center;">
+                </div>
+                <div class="conv-inline-field">
+                    <span class="conv-inline-label">Vers</span>
+                    <select id="convTo" class="conv-inline-input conv-inline-select" style="width:90px;">
+                        <option value="EUR" {{ (budget.deviseBudget ?? '') != 'EUR' ? '' : 'selected' }}>EUR</option>
+                        <option value="USD">USD</option>
+                        <option value="TND" {{ (budget.deviseBudget ?? 'TND') == 'TND' ? 'selected' : '' }}>TND</option>
+                        <option value="GBP">GBP</option>
+                        <option value="MAD">MAD</option>
+                        <option value="CHF">CHF</option>
+                        <option value="JPY">JPY</option>
+                        <option value="CAD">CAD</option>
+                    </select>
+                </div>
+                <button class="conv-inline-btn" onclick="runBudgetConversion()">Convertir</button>
+                <div id="convInlineResult" class="conv-inline-result"></div>
+            </div>
+        </div>
+
+        <div class="section-card">
+
+            {# Header #}
+            <div class="section-card__header">
+                <span class="section-card__title">
+                    📋 Dépenses
+                    <span class="section-card__badge" id="dep-total-count">{{ budget.depenses|length }}</span>
+                </span>
+                <button class="btn-add-dep" onclick="openModal('modal-add')">
+                    + Ajouter une dépense
+                </button>
+            </div>
+
+            {# Dep Toolbar #}
+            {% if budget.depenses|length > 0 %}
+            <div class="dep-toolbar">
+                <div class="dep-search-field">
+                    <span style="font-size:.85rem">🔍</span>
+                    <input type="search" class="dep-search-input" id="depSearchInput"
+                           placeholder="Rechercher une dépense…" autocomplete="off">
+                    <button class="dep-search-clear" id="depSearchClear">✕</button>
+                </div>
+                <div class="dep-filter-chips" id="depCatFilter">
+                    <button class="dep-chip active" data-cat="all">Toutes</button>
+                </div>
+                <div class="dep-toolbar-right">
+                    <button class="dep-export-btn" id="depExportCsvBtn" title="Exporter CSV">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        CSV
+                    </button>
+                    <button class="dep-export-btn" id="depExportPdfBtn" title="Exporter PDF">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+                        PDF
+                    </button>
+                </div>
+            </div>
+
+            {# Selection bar #}
+            <div class="dep-sel-bar" id="depSelBar">
+                <div class="dep-sel-info">
+                    <span class="dep-sel-count" id="depSelCount">0</span>
+                    dépense(s) sélectionnée(s)
+                </div>
+                <div class="dep-sel-actions">
+                    <button class="btn-dep-sel btn-dep-sel--all" id="btnDepSelAll">☑ Tout sélect.</button>
+                    <button class="btn-dep-sel btn-dep-sel--cancel" id="btnDepSelCancel">✕ Annuler</button>
+                    <button class="btn-dep-sel btn-dep-sel--delete" id="btnDepSelDelete">🗑️ Supprimer</button>
+                </div>
+            </div>
+            {% endif %}
+
+            {# Progress #}
+            <div class="progress-wrap">
+                <div class="progress-labels">
+                    <span>0</span>
+                    <span>
+                        {% if isOver %}⚠ Dépassé de {{ restant|abs|number_format(2, ',', ' ') }} {{ budget.deviseBudget ?? 'TND' }}
+                        {% else %}{{ pct }}% consommé{% endif %}
+                    </span>
+                    <span>{{ budget.montantTotal|number_format(2, ',', ' ') }} {{ budget.deviseBudget ?? 'TND' }}</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill {{ isOver ? 'progress-fill--over' : (pct > 75 ? 'progress-fill--warn' : '') }}"
+                         style="width:{{ pct > 100 ? 100 : pct }}%"></div>
+                </div>
+            </div>
+
+            {# List #}
+            {% if budget.depenses|length > 0 %}
+            <ul class="dep-list" id="depList">
+            {% for d in budget.depenses %}
+                {% set cat = d.categorieDepense|lower %}
+                {% set iconMap = {
+                    'hébergement':'🏨','hebergement':'🏨',
+                    'transport':'✈️','restauration':'🍽️',
+                    'nourriture':'🍽️','loisirs':'🎭',
+                    'activité':'🎭','achats':'🛍️',
+                    'shopping':'🛍️','santé':'💊','sante':'💊'
+                } %}
+                {% set icon = iconMap[cat] ?? '💸' %}
+                {% set iconCls = cat in ['hébergement','hebergement'] ? 'dep-icon--hebergement'
+                    : (cat == 'transport' ? 'dep-icon--transport'
+                    : (cat in ['restauration','nourriture'] ? 'dep-icon--restauration'
+                    : (cat in ['loisirs','activité'] ? 'dep-icon--loisirs'
+                    : (cat in ['achats','shopping'] ? 'dep-icon--achats'
+                    : (cat in ['santé','sante'] ? 'dep-icon--sante' : 'dep-icon--default'))))) %}
+
+                <li class="dep-item"
+                    data-id="{{ d.idDepense }}"
+                    data-label="{{ d.libelleDepense|lower }}"
+                    data-cat="{{ d.categorieDepense|lower }}"
+                    data-cat-display="{{ d.categorieDepense }}"
+                    data-montant="{{ d.montantDepense }}"
+                    data-date="{{ d.dateCreation|date('d/m/Y') }}"
+                    data-devise="{{ d.deviseDepense ?? budget.deviseBudget ?? 'TND' }}"
+                    data-description="{{ d.descriptionDepense|e('js') }}"
+                    data-type="{{ d.typePaiement|e('js') }}"
+                    data-delete-url="{{ path('app_depense_delete', {id: d.idDepense}) }}"
+                    data-csrf="{{ csrf_token('delete_depense' ~ d.idDepense) }}"
+                    data-edit-url="{{ path('app_depense_edit', {id: d.idDepense}) }}">
+
+                    <div class="dep-check-wrap" onclick="toggleDepSel(this.closest('.dep-item'))" title="Sélectionner"></div>
+                    <div class="dep-icon {{ iconCls }}">{{ icon }}</div>
+                    <div class="dep-body">
+                        <div class="dep-label">{{ d.libelleDepense }}</div>
+                        <div class="dep-meta">
+                            <span class="dep-cat">{{ d.categorieDepense }}</span>
+                            <span class="dep-date">{{ d.dateCreation|date('d/m/Y') }}</span>
+                            {% if d.typePaiement %}
+                                <span class="dep-payment">· {{ d.typePaiement }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="dep-amount {{ d.montantDepense > (budget.montantTotal * 0.3) ? 'dep-amount--high' : '' }}">
+                        {{ d.montantDepense|number_format(2, ',', ' ') }}
+                        <span style="font-size:.7rem;font-weight:400;color:var(--color-text-muted)">
+                            {{ d.deviseDepense ?? budget.deviseBudget ?? 'TND' }}
+                        </span>
+                    </div>
+                    <div class="dep-actions">
+                        <button class="dep-btn dep-btn--edit"
+                            title="Modifier"
+                            onclick="openEditModal(this.closest('.dep-item'))">✏️</button>
+                        <button class="dep-btn dep-btn--delete"
+                            title="Supprimer"
+                            onclick="openDeleteModal(this.closest('.dep-item'))">🗑️</button>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+
+            <div class="dep-no-results" id="depNoResults">
+                <div style="font-size:1.8rem;margin-bottom:.5rem">🔍</div>
+                Aucune dépense ne correspond à votre recherche.
+            </div>
+
+            <div class="totals-row">
+                <div class="totals-item">
+                    <div class="totals-label">Budget alloué</div>
+                    <div class="totals-value totals-value--primary">
+                        {{ budget.montantTotal|number_format(2, ',', ' ') }} {{ budget.deviseBudget ?? 'TND' }}
+                    </div>
+                </div>
+                <div class="totals-sep">|</div>
+                <div class="totals-item">
+                    <div class="totals-label">Total dépensé</div>
+                    <div class="totals-value">
+                        {{ totalDepense|number_format(2, ',', ' ') }} {{ budget.deviseBudget ?? 'TND' }}
+                    </div>
+                </div>
+                <div class="totals-sep">|</div>
+                <div class="totals-item">
+                    <div class="totals-label">{{ isOver ? 'Excédent' : 'Restant' }}</div>
+                    <div class="totals-value {{ isOver ? 'totals-value--danger' : 'totals-value--success' }}">
+                        {{ isOver ? '- ' : '+ ' }}{{ restant|abs|number_format(2, ',', ' ') }} {{ budget.deviseBudget ?? 'TND' }}
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="dep-empty">
+                <div class="dep-empty__icon">📭</div>
+                <div class="dep-empty__text">Aucune dépense enregistrée</div>
+                <div class="dep-empty__sub">Cliquez sur « + Ajouter une dépense » pour commencer.</div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    {# ══ SIDEBAR ══ #}
+    <div class="show-sidebar">
+
+        {# ── Informations ── #}
+        <div class="section-card">
+            <div class="section-card__header">
+                <span class="section-card__title">ℹ️ Informations</span>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Montant total</span>
+                    <span class="info-value info-value--primary">{{ budget.montantTotal|number_format(2,',',' ') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Devise</span>
+                    <span class="info-value">{{ budget.deviseBudget ?? 'TND' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Statut</span>
+                    <span class="info-value">
+                        {% set statut = budget.statutBudget ?? 'actif' %}
+                        <span class="statut-pill statut-pill--{{ statut }}">
+                            <span class="statut-dot" style="background:{% if statut=='actif' %}#059669{% elseif statut=='suspendu' %}#d97706{% elseif statut=='cloture' %}#6b7280{% else %}#dc2626{% endif %}"></span>
+                            {{ statut|capitalize }}
+                        </span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Dépenses</span>
+                    <span class="info-value">{{ budget.depenses|length }} entrée(s)</span>
+                </div>
+                {% if budget.voyage %}
+                <div class="info-item info-item--full">
+                    <span class="info-label">Voyage associé</span>
+                    <span class="info-value">📍 {{ budget.voyage.titreVoyage }}</span>
+                </div>
+                {% endif %}
+                <div class="info-item info-item--full">
+                    <span class="info-label">Consommation</span>
+                    <span class="info-value {{ isOver ? 'info-value--danger' : 'info-value--success' }}">
+                        {{ pct }}% — {{ isOver ? '⚠ Dépassé' : '✔ Contrôlé' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {# ── Widget Inflation par Devise ── #}
+        <div class="inflation-widget">
+            <div class="inflation-widget__header">
+                <span class="inflation-widget__title">💱 Inflation par devise</span>
+                <span class="section-card__badge">Basé sur {{ budget.deviseBudget ?? 'TND' }}</span>
+            </div>
+            <div class="inflation-widget__body" id="inflationByCurrencyWidget">
+                <p class="inflation-loading">⏳ Chargement des données d'inflation pour {{ budget.deviseBudget ?? 'TND' }}…</p>
+            </div>
+        </div>
+
+        {# ── Widget Inflation Général ── #}
+        <div class="inflation-widget">
+            <div class="inflation-widget__header">
+                <span class="inflation-widget__title">📈 Inflation générale</span>
+                <select class="inflation-country-select" id="inflCountrySelect">
+                    <option value="TN">🇹🇳 Tunisie</option>
+                    <option value="FR">🇫🇷 France</option>
+                    <option value="DE">🇩🇪 Allemagne</option>
+                    <option value="ES">🇪🇸 Espagne</option>
+                    <option value="IT">🇮🇹 Italie</option>
+                    <option value="MA">🇲🇦 Maroc</option>
+                    <option value="TR">🇹🇷 Turquie</option>
+                    <option value="US">🇺🇸 États-Unis</option>
+                    <option value="GB">🇬🇧 Royaume-Uni</option>
+                    <option value="JP">🇯🇵 Japon</option>
+                </select>
+            </div>
+            <div class="inflation-widget__body" id="inflWidgetBody">
+                <p class="inflation-loading">⏳ Chargement…</p>
+            </div>
+        </div>
+
+        {# ── Actions ── #}
+        <div class="action-panel">
+            <div class="action-panel__title">Actions budget</div>
+            <a href="{{ path('app_budget_edit', {'id': budget.idBudget}) }}" class="btn-action btn-action--edit">
+                <span class="btn-action__icon">✏️</span>
+                <span class="btn-action__label">Modifier le budget</span>
+                <span class="btn-action__arrow">›</span>
+            </a>
+            <div class="action-divider"></div>
+            <button id="massConvertBtn" class="btn-action btn-action--edit" style="margin-top:0.5rem">
+                <span class="btn-action__icon">💱</span>
+                <span class="btn-action__label">Convertir toutes les dépenses</span>
+                <span class="btn-action__arrow">›</span>
+            </button>
+            <div class="action-divider"></div>
+            <form method="post" action="{{ path('app_budget_delete', {'id': budget.idBudget}) }}"
+                  onsubmit="return confirm('Supprimer ce budget et toutes ses dépenses ?');" style="margin:0">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ budget.idBudget) }}">
+                <button type="submit" class="btn-action btn-action--delete">
+                    <span class="btn-action__icon">🗑️</span>
+                    <span class="btn-action__label">Supprimer le budget</span>
+                    <span class="btn-action__arrow">›</span>
+                </button>
+            </form>
+        </div>
+
+        {# ── AI PANEL ── #}
+        <div class="action-panel" style="margin-top:1rem">
+            <div class="action-panel__title">🤖 Assistants IA</div>
+
+            {# Ntfy alert #}
+            {% if pct >= 80 %}
+            <div id="ntfy-notif-box" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:.85rem 1rem;margin-bottom:.6rem">
+                <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#92400e;margin-bottom:.35rem">
+                    ⚠️ Alerte budget
+                </div>
+                <div id="ntfy-notif-text" style="font-size:.82rem;color:#78350f;line-height:1.55;margin-bottom:.6rem">
+                    <span style="opacity:.55;font-style:italic">Envoi de la notification…</span>
+                </div>
+                <div id="ntfy-sent-badge" style="display:none;font-size:.72rem;font-weight:600;padding:.25rem .6rem;border-radius:999px;background:#d1fae5;color:#065f46;display:inline-flex;align-items:center;gap:.3rem;margin-bottom:.55rem">
+                    ✅ Notification push envoyée
+                </div>
+                <div style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid #fed7aa">
+                    <div style="font-size:.72rem;color:#92400e;font-weight:600;margin-bottom:.3rem">
+                        📲 Recevoir les alertes sur mobile
+                    </div>
+                    <a href="https://ntfy.sh/{{ ntfy_topic }}"
+                       target="_blank" rel="noopener"
+                       style="display:inline-flex;align-items:center;gap:.35rem;font-size:.76rem;font-weight:700;
+                              padding:.35rem .75rem;border-radius:999px;background:#f97316;color:#fff;
+                              text-decoration:none;transition:opacity .18s"
+                       onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                        S'abonner au canal ntfy
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {# Convertisseur devise (sidebar) #}
+            <div class="ai-tool-block">
+                <div class="ai-tool-title">💱 Convertir une devise</div>
+                <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.4rem;align-items:center;margin-bottom:.45rem">
+                    <input id="conv-amount" type="number" placeholder="Montant" min="0.01" step="0.01"
+                           class="ai-input" style="text-align:right">
+                    <span style="font-size:.78rem;color:var(--color-text-muted);text-align:center;padding:0 .15rem">→</span>
+                    <select id="conv-to" class="ai-input">
+                        <option value="EUR">EUR</option>
+                        <option value="USD">USD</option>
+                        <option value="TND" {{ (budget.deviseBudget ?? 'TND') == 'TND' ? 'selected' : '' }}>TND</option>
+                        <option value="GBP">GBP</option>
+                        <option value="MAD">MAD</option>
+                        <option value="CHF">CHF</option>
+                    </select>
+                </div>
+                <div style="font-size:.7rem;color:var(--color-text-muted);margin-bottom:.45rem">
+                    Depuis : <strong>{{ budget.deviseBudget ?? 'TND' }}</strong>
+                </div>
+                <button class="ai-btn" onclick="runConversion()">Convertir</button>
+                <div id="conv-result" class="ai-result"></div>
+            </div>
+
+            {# Ajustement inflation #}
+            <div class="ai-tool-block">
+                <div class="ai-tool-title">📈 Ajustement inflation</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.45rem">
+                    <input id="infl-montant" type="number" placeholder="Montant" min="0.01" step="0.01" class="ai-input">
+                    <input id="infl-devise"  type="text"   placeholder="Devise" class="ai-input" value="{{ budget.deviseBudget ?? 'TND' }}">
+                    <input id="infl-de"      type="number" placeholder="Année de" min="1990" max="2100" class="ai-input">
+                    <input id="infl-a"       type="number" placeholder="Année à"  min="1990" max="2100" class="ai-input" value="{{ 'now'|date('Y') }}">
+                </div>
+                <button class="ai-btn" onclick="runInflation()">Calculer</button>
+                <div id="infl-result" class="ai-result"></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{# ══ MODAL — Bulk delete ══ #}
+<div class="modal-overlay" id="modal-bulk-dep" onclick="if(event.target===this)closeModal('modal-bulk-dep')">
+    <div class="modal" style="max-width:420px">
+        <div class="modal__header">
+            <span class="modal__title">🗑️ Suppression groupée</span>
+            <button class="modal__close" onclick="closeModal('modal-bulk-dep')">✕</button>
+        </div>
+        <div class="modal__body" style="text-align:center;padding:1.5rem">
+            <div style="font-size:2.5rem;margin-bottom:.75rem">⚠️</div>
+            <div style="font-weight:700;font-size:1rem;color:var(--color-text);margin-bottom:.6rem">
+                Confirmer la suppression groupée
+            </div>
+            <p style="color:var(--color-text-muted);font-size:.86rem;margin:0 0 1rem">
+                Vous allez supprimer <strong id="bulk-dep-count" style="color:#dc2626"></strong> dépense(s). Cette action est irréversible.
+            </p>
+            <div id="bulk-dep-names" style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:.65rem .9rem;text-align:left;font-size:.8rem;color:var(--color-text-muted);max-height:110px;overflow-y:auto;"></div>
+        </div>
+        <div class="modal__footer">
+            <button class="btn-modal-cancel" onclick="closeModal('modal-bulk-dep')">Annuler</button>
+            <button class="btn-modal-submit btn-modal-submit--danger" onclick="executeBulkDepDelete()">🗑️ Supprimer</button>
+        </div>
+    </div>
+</div>
+
+{# ══ MODAL — Ajouter une dépense ══ #}
+<div class="modal-overlay" id="modal-add" onclick="handleOverlayClick(event,'modal-add')">
+    <div class="modal">
+        <div class="modal__header">
+            <span class="modal__title">➕ Nouvelle dépense</span>
+            <button class="modal__close" onclick="closeModal('modal-add')">✕</button>
+        </div>
+        <form method="post" action="{{ path('app_depense_new', {'budgetId': budget.idBudget}) }}"
+              id="form-add" novalidate>
+            <input type="hidden" name="_token" value="{{ csrf_token('depense_new') }}">
+            <div class="modal__body">
+                <div class="mf-row">
+                    <div class="mf-field">
+                        <label class="mf-label" for="add-libelle">Libellé <span class="req">*</span></label>
+                        <input class="mf-input" id="add-libelle" name="libelle_depense" type="text"
+                               placeholder="Ex : Taxi aéroport" maxlength="60" required>
+                        <span class="mf-error" id="err-add-libelle">Libellé requis (max 60 car.)</span>
+                    </div>
+                    <div class="mf-field">
+                        <label class="mf-label" for="add-montant">Montant <span class="req">*</span></label>
+                        <div class="mf-amount-wrap">
+                            <span class="mf-amount-prefix" id="add-prefix">{{ budget.deviseBudget ?? 'TND' }}</span>
+                            <input class="mf-input" id="add-montant" name="montant_depense" type="number"
+                                   placeholder="0.00" min="0.01" step="0.01" required>
+                        </div>
+                        <span class="mf-error" id="err-add-montant">Montant supérieur à 0 requis</span>
+                    </div>
+                </div>
+                <div class="mf-row">
+                    <div class="mf-field">
+                        <label class="mf-label" for="add-categorie">Catégorie <span class="req">*</span></label>
+                        <select class="mf-select" id="add-categorie" name="categorie_depense" required>
+                            <option value="">-- Choisir --</option>
+                            <option value="Hébergement">🏨 Hébergement</option>
+                            <option value="Transport">✈️ Transport</option>
+                            <option value="Restauration">🍽️ Restauration</option>
+                            <option value="Loisirs">🎭 Loisirs</option>
+                            <option value="Achats">🛍️ Achats</option>
+                            <option value="Santé">💊 Santé</option>
+                            <option value="Autre">💸 Autre</option>
+                        </select>
+                        <span class="mf-error" id="err-add-categorie">Catégorie requise</span>
+                    </div>
+                    <div class="mf-field">
+                        <label class="mf-label" for="add-type">Type de paiement <span class="req">*</span></label>
+                        <select class="mf-select" id="add-type" name="type_paiement" required>
+                            <option value="">-- Choisir --</option>
+                            <option value="Espèces">💵 Espèces</option>
+                            <option value="Carte bancaire">💳 Carte bancaire</option>
+                            <option value="Virement">🏦 Virement</option>
+                            <option value="Mobile Pay">📱 Mobile Pay</option>
+                            <option value="Autre">💸 Autre</option>
+                        </select>
+                        <span class="mf-error" id="err-add-type">Type de paiement requis</span>
+                    </div>
+                </div>
+                <div class="mf-row">
+                    <div class="mf-field">
+                        <label class="mf-label" for="add-devise">Devise</label>
+                        <select class="mf-select" id="add-devise" name="devise_depense">
+                            <option value="">Devise du budget</option>
+                            <option value="TND" {% if (budget.deviseBudget ?? 'TND') == 'TND' %}selected{% endif %}>TND</option>
+                            <option value="EUR" {% if (budget.deviseBudget ?? '') == 'EUR' %}selected{% endif %}>EUR</option>
+                            <option value="USD" {% if (budget.deviseBudget ?? '') == 'USD' %}selected{% endif %}>USD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="MAD">MAD</option>
+                            <option value="CHF">CHF</option>
+                        </select>
+                    </div>
+                    <div class="mf-field">
+                        <label class="mf-label" for="add-date">Date <span class="req">*</span></label>
+                        <input class="mf-input" id="add-date" name="date_creation" type="date" required>
+                        <span class="mf-error" id="err-add-date">Date requise</span>
+                    </div>
+                </div>
+                <div class="mf-row mf-row--full">
+                    <div class="mf-field">
+                        <label class="mf-label" for="add-desc">Description <span class="req">*</span></label>
+                        <textarea class="mf-textarea" id="add-desc" name="description_depense"
+                                  placeholder="Détails de la dépense…" maxlength="255" required></textarea>
+                        <span class="mf-error" id="err-add-desc">Description requise (max 255 car.)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-add')">Annuler</button>
+                <button type="submit" class="btn-modal-submit" onclick="return validateDepForm('form-add')">
+                    ➕ Ajouter la dépense
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ══ MODAL — Modifier une dépense ══ #}
+<div class="modal-overlay" id="modal-edit" onclick="handleOverlayClick(event,'modal-edit')">
+    <div class="modal">
+        <div class="modal__header">
+            <span class="modal__title">✏️ Modifier la dépense</span>
+            <button class="modal__close" onclick="closeModal('modal-edit')">✕</button>
+        </div>
+        <form method="post" id="form-edit" novalidate>
+            <input type="hidden" name="_method" value="PUT">
+            <input type="hidden" name="_token" id="edit-token" value="">
+            <div class="modal__body">
+                <div class="mf-row">
+                    <div class="mf-field">
+                        <label class="mf-label" for="edit-libelle">Libellé <span class="req">*</span></label>
+                        <input class="mf-input" id="edit-libelle" name="libelle_depense" type="text"
+                               placeholder="Ex : Taxi aéroport" maxlength="60" required>
+                        <span class="mf-error" id="err-edit-libelle">Libellé requis (max 60 car.)</span>
+                    </div>
+                    <div class="mf-field">
+                        <label class="mf-label" for="edit-montant">Montant <span class="req">*</span></label>
+                        <div class="mf-amount-wrap">
+                            <span class="mf-amount-prefix" id="edit-prefix">{{ budget.deviseBudget ?? 'TND' }}</span>
+                            <input class="mf-input" id="edit-montant" name="montant_depense" type="number"
+                                   placeholder="0.00" min="0.01" step="0.01" required>
+                        </div>
+                        <span class="mf-error" id="err-edit-montant">Montant supérieur à 0 requis</span>
+                    </div>
+                </div>
+                <div class="mf-row">
+                    <div class="mf-field">
+                        <label class="mf-label" for="edit-categorie">Catégorie <span class="req">*</span></label>
+                        <select class="mf-select" id="edit-categorie" name="categorie_depense" required>
+                            <option value="">-- Choisir --</option>
+                            <option value="Hébergement">🏨 Hébergement</option>
+                            <option value="Transport">✈️ Transport</option>
+                            <option value="Restauration">🍽️ Restauration</option>
+                            <option value="Loisirs">🎭 Loisirs</option>
+                            <option value="Achats">🛍️ Achats</option>
+                            <option value="Santé">💊 Santé</option>
+                            <option value="Autre">💸 Autre</option>
+                        </select>
+                        <span class="mf-error" id="err-edit-categorie">Catégorie requise</span>
+                    </div>
+                    <div class="mf-field">
+                        <label class="mf-label" for="edit-type">Type de paiement <span class="req">*</span></label>
+                        <select class="mf-select" id="edit-type" name="type_paiement" required>
+                            <option value="">-- Choisir --</option>
+                            <option value="Espèces">💵 Espèces</option>
+                            <option value="Carte bancaire">💳 Carte bancaire</option>
+                            <option value="Virement">🏦 Virement</option>
+                            <option value="Mobile Pay">📱 Mobile Pay</option>
+                            <option value="Autre">💸 Autre</option>
+                        </select>
+                        <span class="mf-error" id="err-edit-type">Type de paiement requis</span>
+                    </div>
+                </div>
+                <div class="mf-row">
+                    <div class="mf-field">
+                        <label class="mf-label" for="edit-devise">Devise</label>
+                        <select class="mf-select" id="edit-devise" name="devise_depense">
+                            <option value="">Devise du budget</option>
+                            <option value="TND">TND</option>
+                            <option value="EUR">EUR</option>
+                            <option value="USD">USD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="MAD">MAD</option>
+                            <option value="CHF">CHF</option>
+                        </select>
+                    </div>
+                    <div class="mf-field">
+                        <label class="mf-label" for="edit-date">Date <span class="req">*</span></label>
+                        <input class="mf-input" id="edit-date" name="date_creation" type="date" required>
+                        <span class="mf-error" id="err-edit-date">Date requise</span>
+                    </div>
+                </div>
+                <div class="mf-row mf-row--full">
+                    <div class="mf-field">
+                        <label class="mf-label" for="edit-desc">Description <span class="req">*</span></label>
+                        <textarea class="mf-textarea" id="edit-desc" name="description_depense"
+                                  placeholder="Détails de la dépense…" maxlength="255" required></textarea>
+                        <span class="mf-error" id="err-edit-desc">Description requise (max 255 car.)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-edit')">Annuler</button>
+                <button type="submit" class="btn-modal-submit" onclick="return validateDepForm('form-edit')">
+                    ✅ Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ══ MODAL — Supprimer une dépense ══ #}
+<div class="modal-overlay" id="modal-delete" onclick="handleOverlayClick(event,'modal-delete')">
+    <div class="modal" style="max-width:400px">
+        <div class="modal__header">
+            <span class="modal__title">🗑️ Supprimer la dépense</span>
+            <button class="modal__close" onclick="closeModal('modal-delete')">✕</button>
+        </div>
+        <div class="modal__body" style="text-align:center;padding:2rem 1.5rem">
+            <div style="font-size:2.5rem;margin-bottom:.75rem">⚠️</div>
+            <div style="font-weight:700;font-size:1rem;color:var(--color-text);margin-bottom:.5rem">
+                Confirmer la suppression
+            </div>
+            <p style="color:var(--color-text-muted);font-size:.88rem;margin:0">
+                Vous êtes sur le point de supprimer la dépense
+                <strong id="delete-dep-name" style="color:var(--color-text)"></strong>.
+                Cette action est irréversible.
+            </p>
+        </div>
+        <form method="post" id="form-delete" style="margin:0">
+            <input type="hidden" name="_token" id="delete-token" value="">
+            <div class="modal__footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-delete')">Annuler</button>
+                <button type="submit" class="btn-modal-submit btn-modal-submit--danger">🗑️ Supprimer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ══ MODAL — Conversion en masse ══ #}
+<div class="modal-overlay" id="modal-convert-all" onclick="if(event.target===this)closeConvertModal()">
+    <div class="modal" style="max-width:400px">
+        <div class="modal__header">
+            <span class="modal__title">💱 Convertir toutes les dépenses</span>
+            <button class="modal__close" onclick="closeConvertModal()">✕</button>
+        </div>
+        <div class="modal__body" style="padding:1.5rem;">
+            <p style="margin-bottom:1rem;font-size:0.9rem;">Convertir toutes les dépenses vers une nouvelle devise :</p>
+            <div class="mf-field">
+                <label class="mf-label" for="convert-target-devise">Nouvelle devise</label>
+                <select id="convert-target-devise" class="mf-select">
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="USD">USD - Dollar US</option>
+                    <option value="TND" {{ (budget.deviseBudget ?? 'TND') == 'TND' ? 'selected' : '' }}>TND - Dinar Tunisien</option>
+                    <option value="GBP">GBP - Livre Sterling</option>
+                    <option value="MAD">MAD - Dirham Marocain</option>
+                    <option value="CHF">CHF - Franc Suisse</option>
+                    <option value="JPY">JPY - Yen Japonais</option>
+                    <option value="CAD">CAD - Dollar Canadien</option>
+                </select>
+            </div>
+            <div id="convert-progress" style="display:none;margin-top:1rem;">
+                <div class="progress-track" style="height:4px;">
+                    <div class="progress-fill" style="width:0%;height:100%;"></div>
+                </div>
+                <p style="font-size:0.75rem;margin-top:0.5rem;text-align:center;" id="convert-progress-text">Conversion en cours...</p>
+            </div>
+        </div>
+        <div class="modal__footer">
+            <button class="btn-modal-cancel" onclick="closeConvertModal()">Annuler</button>
+            <button class="btn-modal-submit" onclick="executeConvertAll()">Convertir</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+/* ============================================================
+   MODAL HELPERS
+============================================================ */
+function openModal(id) { 
+    document.getElementById(id).classList.add('open'); 
+    document.body.style.overflow = 'hidden'; 
+}
+function closeModal(id) { 
+    document.getElementById(id).classList.remove('open'); 
+    document.body.style.overflow = ''; 
+}
+function handleOverlayClick(e, id) { 
+    if (e.target === document.getElementById(id)) closeModal(id); 
+}
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+});
+
+// Set default date
+const dateInput = document.getElementById('add-date');
+if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+/* ============================================================
+   OPEN EDIT MODAL
+============================================================ */
+function openEditModal(item) {
+    const id = item.dataset.id;
+    const libelle = item.querySelector('.dep-label').textContent;
+    const montant = item.dataset.montant;
+    const categorie = item.dataset.catDisplay;
+    const description = item.dataset.description;
+    const devise = item.dataset.devise;
+    const typePaiement = item.dataset.type;
+    const date = item.dataset.date;
+    
+    const editUrl = "{{ path('app_depense_edit', {'id': 'ID'}) }}".replace('ID', id);
+    document.getElementById('form-edit').action = editUrl;
+    document.getElementById('edit-token').value = '';
+    document.getElementById('edit-libelle').value = libelle;
+    document.getElementById('edit-montant').value = montant;
+    document.getElementById('edit-date').value = date;
+    document.getElementById('edit-desc').value = description;
+    
+    const catSel = document.getElementById('edit-categorie');
+    for(let i = 0; i < catSel.options.length; i++) {
+        if(catSel.options[i].value.toLowerCase() === categorie.toLowerCase()) {
+            catSel.selectedIndex = i;
+            break;
+        }
+    }
+    
+    const typeSel = document.getElementById('edit-type');
+    for(let i = 0; i < typeSel.options.length; i++) {
+        if(typeSel.options[i].value.toLowerCase() === typePaiement.toLowerCase()) {
+            typeSel.selectedIndex = i;
+            break;
+        }
+    }
+    
+    const devSel = document.getElementById('edit-devise');
+    for(let i = 0; i < devSel.options.length; i++) {
+        if(devSel.options[i].value === devise) {
+            devSel.selectedIndex = i;
+            break;
+        }
+    }
+    
+    document.getElementById('edit-prefix').textContent = devise || '{{ budget.deviseBudget ?? "TND" }}';
+    
+    document.querySelectorAll('#form-edit .mf-input, #form-edit .mf-select, #form-edit .mf-textarea')
+        .forEach(el => el.classList.remove('ok','err'));
+    document.querySelectorAll('#form-edit .mf-error').forEach(e => e.classList.remove('show'));
+    
+    openModal('modal-edit');
+}
+
+/* ============================================================
+   OPEN DELETE MODAL
+============================================================ */
+function openDeleteModal(item) {
+    const id = item.dataset.id;
+    const libelle = item.querySelector('.dep-label').textContent;
+    const deleteUrl = "{{ path('app_depense_delete', {'id': 'ID'}) }}".replace('ID', id);
+    document.getElementById('form-delete').action = deleteUrl;
+    document.getElementById('delete-token').value = '';
+    document.getElementById('delete-dep-name').textContent = '"' + libelle + '"';
+    openModal('modal-delete');
+}
+
+/* ============================================================
+   VALIDATION FORMULAIRE
+============================================================ */
+function vField(fieldId, errorId, condition) {
+    const el = document.getElementById(fieldId);
+    const err = document.getElementById(errorId);
+    if (!el) return true;
+    const ok = condition(el.value);
+    el.classList.toggle('ok', ok);
+    el.classList.toggle('err', !ok);
+    if (err) err.classList.toggle('show', !ok);
+    return ok;
+}
+
+function validateDepForm(formId) {
+    const prefix = formId === 'form-add' ? 'add' : 'edit';
+    let ok = true;
+    ok = vField(`${prefix}-libelle`, `err-${prefix}-libelle`, v => v.trim().length > 0 && v.trim().length <= 60) && ok;
+    ok = vField(`${prefix}-montant`, `err-${prefix}-montant`, v => parseFloat(v) > 0) && ok;
+    ok = vField(`${prefix}-categorie`, `err-${prefix}-categorie`, v => !!v) && ok;
+    ok = vField(`${prefix}-type`, `err-${prefix}-type`, v => !!v) && ok;
+    ok = vField(`${prefix}-date`, `err-${prefix}-date`, v => !!v) && ok;
+    ok = vField(`${prefix}-desc`, `err-${prefix}-desc`, v => v.trim().length > 0 && v.trim().length <= 255) && ok;
+    return ok;
+}
+
+// Attach validation events
+['libelle','montant','categorie','type','date','desc'].forEach(f => {
+    ['add','edit'].forEach(prefix => {
+        const el = document.getElementById(`${prefix}-${f}`);
+        if (el) el.addEventListener('blur', () => validateDepForm(`form-${prefix}`));
+    });
+});
+
+// Update prefix when devise changes
+document.getElementById('add-devise')?.addEventListener('change', function() {
+    document.getElementById('add-prefix').textContent = this.value || '{{ budget.deviseBudget ?? "TND" }}';
+});
+document.getElementById('edit-devise')?.addEventListener('change', function() {
+    document.getElementById('edit-prefix').textContent = this.value || '{{ budget.deviseBudget ?? "TND" }}';
+});
+
+/* ============================================================
+   DÉPENSES — RECHERCHE DYNAMIQUE + FILTRE CATÉGORIE
+============================================================ */
+let depItems = [];
+let depSearch = '';
+let depCatSel = 'all';
+
+function refreshDepItems() {
+    depItems = Array.from(document.querySelectorAll('.dep-item[data-id]'));
+}
+
+function applyDepFilters() {
+    const q = depSearch.toLowerCase().trim();
+    let visible = 0;
+    depItems.forEach(item => {
+        const label = item.querySelector('.dep-label')?.textContent.toLowerCase() || '';
+        const matchTxt = !q || label.includes(q);
+        const matchCat = depCatSel === 'all' || item.dataset.cat === depCatSel;
+        const show = matchTxt && matchCat;
+        item.classList.toggle('dep-hidden', !show);
+        if (show) visible++;
+    });
+    const noResults = document.getElementById('depNoResults');
+    if (noResults) noResults.classList.toggle('visible', visible === 0);
+}
+
+// Initialiser la recherche et les filtres
+document.addEventListener('DOMContentLoaded', function() {
+    refreshDepItems();
+    
+    // Catégories uniques pour les chips
+    const catFilter = document.getElementById('depCatFilter');
+    if (catFilter && depItems.length > 0) {
+        const cats = [...new Set(depItems.map(i => i.dataset.catDisplay))].sort();
+        cats.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'dep-chip';
+            btn.dataset.cat = cat.toLowerCase();
+            btn.textContent = cat;
+            catFilter.appendChild(btn);
+        });
+    }
+    
+    // Écouteur recherche
+    const searchInput = document.getElementById('depSearchInput');
+    const searchClear = document.getElementById('depSearchClear');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            depSearch = e.target.value;
+            if (searchClear) searchClear.classList.toggle('visible', depSearch.length > 0);
+            applyDepFilters();
+        });
+    }
+    
+    if (searchClear) {
+        searchClear.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            depSearch = '';
+            searchClear.classList.remove('visible');
+            if (searchInput) searchInput.focus();
+            applyDepFilters();
+        });
+    }
+    
+    // Écouteur filtre catégorie
+    if (catFilter) {
+        catFilter.addEventListener('click', (e) => {
+            const btn = e.target.closest('.dep-chip');
+            if (!btn) return;
+            depCatSel = btn.dataset.cat;
+            catFilter.querySelectorAll('.dep-chip').forEach(c => c.classList.toggle('active', c.dataset.cat === depCatSel));
+            applyDepFilters();
+        });
+    }
+});
+
+/* ============================================================
+   MULTI-SELECT DÉPENSES
+============================================================ */
+let selectedDepIds = new Set();
+let depSelMode = false;
+
+function toggleDepSel(item) {
+    const id = item.dataset.id;
+    if (selectedDepIds.has(id)) {
+        selectedDepIds.delete(id);
+        item.classList.remove('dep-selected');
+    } else {
+        selectedDepIds.add(id);
+        item.classList.add('dep-selected');
+    }
+    const selBar = document.getElementById('depSelBar');
+    const selCount = document.getElementById('depSelCount');
+    if (selectedDepIds.size === 0) {
+        depSelMode = false;
+        if (selBar) selBar.classList.remove('visible');
+    } else {
+        depSelMode = true;
+        if (selBar) selBar.classList.add('visible');
+        if (selCount) selCount.textContent = selectedDepIds.size;
+    }
+}
+
+document.getElementById('btnDepSelCancel')?.addEventListener('click', () => {
+    selectedDepIds.clear();
+    depSelMode = false;
+    const selBar = document.getElementById('depSelBar');
+    if (selBar) selBar.classList.remove('visible');
+    depItems.forEach(i => i.classList.remove('dep-selected'));
+});
+
+document.getElementById('btnDepSelAll')?.addEventListener('click', () => {
+    const visItems = depItems.filter(i => !i.classList.contains('dep-hidden'));
+    const allSel = visItems.every(i => selectedDepIds.has(i.dataset.id));
+    if (allSel) {
+        visItems.forEach(i => {
+            selectedDepIds.delete(i.dataset.id);
+            i.classList.remove('dep-selected');
+        });
+        if (selectedDepIds.size === 0) {
+            depSelMode = false;
+            const selBar = document.getElementById('depSelBar');
+            if (selBar) selBar.classList.remove('visible');
+        }
+    } else {
+        visItems.forEach(i => {
+            selectedDepIds.add(i.dataset.id);
+            i.classList.add('dep-selected');
+        });
+        depSelMode = true;
+        const selBar = document.getElementById('depSelBar');
+        if (selBar) selBar.classList.add('visible');
+    }
+    const selCount = document.getElementById('depSelCount');
+    if (selCount) selCount.textContent = selectedDepIds.size;
+});
+
+document.getElementById('btnDepSelDelete')?.addEventListener('click', () => {
+    if (selectedDepIds.size === 0) return;
+    const names = [...selectedDepIds].map(id => {
+        const el = document.querySelector(`.dep-item[data-id="${id}"]`);
+        return el ? el.querySelector('.dep-label').textContent.trim() : id;
+    });
+    const bulkCount = document.getElementById('bulk-dep-count');
+    const bulkNames = document.getElementById('bulk-dep-names');
+    if (bulkCount) bulkCount.textContent = selectedDepIds.size;
+    if (bulkNames) bulkNames.innerHTML = names.map(n => `<div>• ${escapeHtml(n)}</div>`).join('');
+    openModal('modal-bulk-dep');
+});
+
+async function executeBulkDepDelete() {
+    closeModal('modal-bulk-dep');
+    const ids = [...selectedDepIds];
+    for (const id of ids) {
+        const item = document.querySelector(`.dep-item[data-id="${id}"]`);
+        if (!item) continue;
+        const fd = new FormData();
+        fd.append('_token', item.dataset.csrf || '');
+        fd.append('_method', 'DELETE');
+        try {
+            await fetch(item.dataset.deleteUrl, { method: 'POST', body: fd });
+        } catch(e) {}
+        item.remove();
+    }
+    selectedDepIds.clear();
+    depSelMode = false;
+    const selBar = document.getElementById('depSelBar');
+    if (selBar) selBar.classList.remove('visible');
+    const selCount = document.getElementById('depSelCount');
+    if (selCount) selCount.textContent = 0;
+    refreshDepItems();
+    applyDepFilters();
+    window.location.reload();
+}
+
+function escapeHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ======/* ============================================================
+   FIXED EXPORT FUNCTIONS
+============================================================ */
+
+// Make sure this runs AFTER your depense items are loaded
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Define depItems - select all depense item elements
+    // Adjust the selector based on your actual HTML structure
+    const depItems = document.querySelectorAll('.depense-item, .dep-item, [data-depense-id]');
+    
+    // If you're dynamically adding items, you might need to use a different selector
+    // Common alternatives:
+    // const depItems = document.querySelectorAll('.depense-card');
+    // const depItems = document.querySelectorAll('[data-montant]');
+    
+    console.log('Found depense items:', depItems.length); // Debug - check console
+    
+    /* ============================================================
+       EXPORT CSV
+    ============================================================ */
+    document.getElementById('depExportCsvBtn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        try {
+            // Check if depItems exists and has items
+            if (!depItems || depItems.length === 0) {
+                alert('Aucune dépense à exporter.');
+                return;
+            }
+            
+            const visibleItems = Array.from(depItems).filter(i => !i.classList.contains('dep-hidden'));
+            
+            if (visibleItems.length === 0) {
+                alert('Aucune dépense à exporter.');
+                return;
+            }
+            
+            const headers = ['Libellé', 'Catégorie', 'Montant', 'Devise', 'Date', 'Type de paiement', 'Description'];
+            
+            const rows = visibleItems.map(item => {
+                const label = item.querySelector('.dep-label')?.textContent.trim() || 
+                             item.querySelector('[data-label]')?.textContent.trim() || '';
+                const categorie = item.dataset.catDisplay || 
+                                 item.querySelector('.dep-categorie')?.textContent.trim() || '';
+                const montantValue = parseFloat(item.dataset.montant || 0);
+                const montant = isNaN(montantValue) ? '0,00' : montantValue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const devise = item.dataset.devise || 'TND';
+                const date = item.dataset.date || 
+                            item.querySelector('.dep-date')?.textContent.trim() || '';
+                const type = item.dataset.type || 
+                            item.querySelector('.dep-type')?.textContent.trim() || '';
+                const description = item.dataset.description || 
+                                   item.querySelector('.dep-description')?.textContent.trim() || '';
+                return [label, categorie, montant, devise, date, type, description];
+            });
+            
+            const csvContent = [headers, ...rows]
+                .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+            
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            
+            // Get budget name safely
+            let budgetName = 'depenses';
+            const budgetElement = document.querySelector('[data-budget-libelle], .budget-title');
+            if (budgetElement) {
+                budgetName = budgetElement.textContent.trim().replace(/[^a-z0-9]/gi, '_');
+            }
+            
+            link.download = `${budgetName}_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            const btn = document.getElementById('depExportCsvBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✓ Exporté !';
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        } catch (error) {
+            console.error('Erreur export CSV:', error);
+            alert('Erreur lors de l\'export CSV: ' + error.message);
+        }
+    });
+    
+    /* ============================================================
+       EXPORT PDF
+    ============================================================ */
+    document.getElementById('depExportPdfBtn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        try {
+            // Check if jspdf is loaded
+            if (typeof window.jspdf === 'undefined') {
+                alert('La bibliothèque PDF n\'est pas chargée. Veuillez rafraîchir la page.');
+                return;
+            }
+            
+            if (!depItems || depItems.length === 0) {
+                alert('Aucune dépense à exporter.');
+                return;
+            }
+            
+            const visibleItems = Array.from(depItems).filter(i => !i.classList.contains('dep-hidden'));
+            
+            if (visibleItems.length === 0) {
+                alert('Aucune dépense à exporter.');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pageWidth = 210;
+            const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+            
+            // Get currency from first item or default
+            const devise = visibleItems[0]?.dataset.devise || 'TND';
+            
+            // Get budget info from the page
+            let budgetTitle = 'Rapport de Dépenses';
+            let budgetTotal = 0;
+            let totalDepense = 0;
+            
+            const budgetTitleEl = document.querySelector('[data-budget-title], .budget-title, h1');
+            if (budgetTitleEl) budgetTitle = budgetTitleEl.textContent.trim();
+            
+            // Calculate total
+            totalDepense = visibleItems.reduce((sum, item) => {
+                const montant = parseFloat(item.dataset.montant || 0);
+                return sum + (isNaN(montant) ? 0 : montant);
+            }, 0);
+            
+            // En-tête
+            doc.setFillColor(59, 42, 26);
+            doc.rect(0, 0, pageWidth, 25, 'F');
+            doc.setFillColor(196, 111, 75);
+            doc.rect(0, 17, pageWidth, 8, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('✦ TravelMate', 14, 11);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Rapport de Dépenses', 14, 20.5);
+            doc.setFontSize(7.5);
+            doc.setTextColor(255, 230, 200);
+            doc.text(`Généré le ${today}`, pageWidth - 14, 20.5, { align: 'right' });
+            
+            // Infos budget
+            doc.setFillColor(250, 245, 240);
+            doc.rect(0, 25, pageWidth, 22, 'F');
+            doc.setTextColor(59, 42, 26);
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'bold');
+            doc.text(budgetTitle, 14, 34);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(110, 90, 70);
+            const budgetInfo = `Total dépenses : ${totalDepense.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${devise}  |  ${visibleItems.length} dépense(s)`;
+            doc.text(budgetInfo, 14, 42);
+            
+            // Statistiques
+            const sumVisible = totalDepense;
+            const stats = [
+                { label: `${visibleItems.length} dépense(s)`, value: '', color: [196, 111, 75] },
+                { label: 'Total', value: `${sumVisible.toLocaleString('fr-FR')} ${devise}`, color: [59, 130, 246] }
+            ];
+            
+            let startX = 14;
+            stats.forEach((stat) => {
+                const width = 55;
+                doc.setFillColor(...stat.color);
+                doc.roundedRect(startX, 52, width, 10, 2, 2, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'bold');
+                doc.text(stat.label, startX + 3, 57);
+                if (stat.value) {
+                    doc.setFontSize(8);
+                    doc.text(stat.value, startX + width - 3, 57, { align: 'right' });
+                }
+                startX += width + 6;
+            });
+            
+            // Tableau
+            const tableBody = visibleItems.map((item, idx) => {
+                const label = item.querySelector('.dep-label')?.textContent.trim() || 
+                             item.querySelector('[data-label]')?.textContent.trim() || 
+                             `Dépense ${idx + 1}`;
+                const categorie = item.dataset.catDisplay || 
+                                 item.querySelector('.dep-categorie')?.textContent.trim() || '';
+                const montant = parseFloat(item.dataset.montant || 0);
+                const montantDisplay = isNaN(montant) ? '0,00' : montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const date = item.dataset.date || 
+                            item.querySelector('.dep-date')?.textContent.trim() || '';
+                
+                return [
+                    String(idx + 1),
+                    label.substring(0, 50), // Limit length
+                    categorie.substring(0, 30),
+                    montantDisplay,
+                    date
+                ];
+            });
+            
+            // Check if autoTable plugin is available
+            if (typeof doc.autoTable !== 'function') {
+                alert('Le plugin autoTable pour PDF n\'est pas chargé.');
+                return;
+            }
+            
+            doc.autoTable({
+                startY: 68,
+                head: [['#', 'Libellé', 'Catégorie', `Montant (${devise})`, 'Date']],
+                body: tableBody,
+                headStyles: { 
+                    fillColor: [59, 42, 26], 
+                    textColor: [255, 230, 200], 
+                    fontStyle: 'bold', 
+                    fontSize: 9, 
+                    cellPadding: 4 
+                },
+                bodyStyles: { 
+                    fontSize: 8.5, 
+                    textColor: [40, 40, 40], 
+                    cellPadding: 3.5 
+                },
+                alternateRowStyles: { fillColor: [252, 248, 243] },
+                columnStyles: {
+                    0: { cellWidth: 10, halign: 'center' },
+                    1: { cellWidth: 70 },
+                    2: { cellWidth: 40 },
+                    3: { cellWidth: 35, halign: 'right' },
+                    4: { cellWidth: 25, halign: 'center' }
+                },
+                foot: [[
+                    '', 
+                    'Total', 
+                    '', 
+                    totalDepense.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 
+                    ''
+                ]],
+                footStyles: { 
+                    fillColor: [245, 237, 227], 
+                    textColor: [59, 42, 26], 
+                    fontStyle: 'bold', 
+                    fontSize: 9 
+                },
+                margin: { left: 14, right: 14 },
+                tableLineColor: [220, 210, 200],
+                tableLineWidth: 0.3
+            });
+            
+            // Pied de page
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFillColor(245, 237, 227);
+                doc.rect(0, 285, pageWidth, 12, 'F');
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(160, 140, 120);
+                doc.text('TravelMate — Document confidentiel', 14, 292);
+                doc.text(`Page ${i} / ${pageCount}`, pageWidth - 14, 292, { align: 'right' });
+            }
+            
+            const filename = `depenses_${new Date().toISOString().slice(0,10)}.pdf`;
+            doc.save(filename);
+            
+            const btn = document.getElementById('depExportPdfBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✓ PDF créé !';
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        } catch (error) {
+            console.error('Erreur export PDF:', error);
+            alert('Erreur lors de l\'export PDF: ' + error.message);
+        }
+    });
+});
+
+/* ============================================================
+   CONVERSION
+============================================================ */
+function runBudgetConversion() {
+    const montant = parseFloat(document.getElementById('convAmount')?.value);
+    const from = document.getElementById('convFrom')?.value.trim().toUpperCase();
+    const to = document.getElementById('convTo')?.value;
+    const box = document.getElementById('convInlineResult');
+    if (!montant || montant <= 0) {
+        if (box) box.textContent = '⚠ Montant invalide.';
+        return;
+    }
+    if (box) box.innerHTML = '<span style="opacity:.5;font-style:italic;">⏳ calcul…</span>';
+    fetch('{{ path('app_budget_ai_convert') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ montant, from, to })
+    })
+    .then(r => r.json())
+    .then(d => { if (box) box.textContent = d.result ?? '—'; })
+    .catch(() => { if (box) box.textContent = '⚠ Service indisponible.'; });
+}
+
+function aiLoading(el) { if (el) el.innerHTML = '<span style="opacity:.5;font-style:italic;">⏳ calcul…</span>'; }
+function aiError(el) { if (el) el.textContent = '⚠ Service indisponible, réessayez plus tard.'; }
+
+function runConversion() {
+    const montant = parseFloat(document.getElementById('conv-amount')?.value);
+    const to = document.getElementById('conv-to')?.value;
+    const from = '{{ budget.deviseBudget ?? "TND" }}';
+    const box = document.getElementById('conv-result');
+    if (!montant || montant <= 0) {
+        if (box) box.textContent = '⚠ Entrez un montant valide.';
+        return;
+    }
+    aiLoading(box);
+    fetch('{{ path('app_budget_ai_convert') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ montant, from, to })
+    })
+    .then(r => r.json())
+    .then(d => { if (box) box.textContent = d.result || '—'; })
+    .catch(() => aiError(box));
+}
+
+function runInflation() {
+    const montant = parseFloat(document.getElementById('infl-montant')?.value);
+    const devise = document.getElementById('infl-devise')?.value.trim();
+    const de = document.getElementById('infl-de')?.value.trim();
+    const a = document.getElementById('infl-a')?.value.trim();
+    const box = document.getElementById('infl-result');
+    if (!montant || !devise || !de || !a) {
+        if (box) box.textContent = '⚠ Remplissez tous les champs.';
+        return;
+    }
+    aiLoading(box);
+    fetch('{{ path('app_budget_ai_inflation') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ montant, devise, de, a })
+    })
+    .then(r => r.json())
+    .then(d => { if (box) box.textContent = d.result || '—'; })
+    .catch(() => aiError(box));
+}
+
+/* ============================================================
+   INFLATION PAR DEVISE
+============================================================ */
+function loadInflationByCurrency() {
+    const widget = document.getElementById('inflationByCurrencyWidget');
+    if (!widget) return;
+    widget.innerHTML = '<p class="inflation-loading">⏳ Chargement des données d\'inflation...</p>';
+    fetch('{{ path('app_budget_ai_inflation_currency', {id: budget.idBudget}) }}')
+        .then(r => r.json())
+        .then(d => {
+            if (d.error) {
+                widget.innerHTML = `<p class="inflation-loading">⚠ ${d.error}</p>`;
+                return;
+            }
+            if (d.success) {
+                const rate = d.inflation_rate;
+                const rateIcon = rate > 5 ? '⚠️' : (rate > 0 ? '📈' : '📉');
+                widget.innerHTML = `
+                    <div class="inflation-did-you-know">Taux d'inflation - ${d.country}</div>
+                    <div class="inflation-rate-big">${rate}%</div>
+                    <div class="inflation-country-label">${d.currency_name} (${d.currency}) · ${d.year} · ${d.source}</div>
+                    ${d.is_estimated ? '<div style="font-size:0.7rem;color:#d97706;margin-bottom:0.5rem;">⚠️ Estimation basée sur les données disponibles</div>' : ''}
+                    <div class="inflation-insight" style="margin-top:0.75rem;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                            <span style="font-size:1.2rem;">${rateIcon}</span>
+                            <span style="font-weight:700;">Impact sur votre budget</span>
+                        </div>
+                        <p style="margin:0 0 0.5rem;font-size:0.82rem;">${d.advice}</p>
+                        <div style="margin-top:0.75rem;padding:0.6rem;background:rgba(196,111,75,.08);border-radius:8px;">
+                            <div style="font-size:0.7rem;font-weight:700;margin-bottom:0.3rem;">📊 Impact financier</div>
+                            <div style="font-size:0.78rem;">
+                                <div>Budget actuel : ${d.budget_impact.original_budget.toLocaleString('fr-FR')} ${d.currency}</div>
+                                <div>Perte de pouvoir d'achat : <strong style="color:#dc2626;">-${d.budget_impact.purchasing_power_loss.toLocaleString('fr-FR')} ${d.currency}</strong></div>
+                                <div>Budget ajusté nécessaire : ${d.budget_impact.adjusted_budget_needed.toLocaleString('fr-FR')} ${d.currency}</div>
+                            </div>
+                        </div>
+                        ${d.recommendations && d.recommendations.length > 0 ? `
+                        <div style="margin-top:0.75rem;">
+                            <div style="font-size:0.7rem;font-weight:700;margin-bottom:0.3rem;">💡 Recommandations</div>
+                            <ul style="margin:0;padding-left:1rem;font-size:0.75rem;color:var(--color-text-muted);">
+                                ${d.recommendations.map(r => `<li>${r}</li>`).join('')}
+                            </ul>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        })
+        .catch(() => {
+            widget.innerHTML = '<p class="inflation-loading">⚠ Service d\'inflation temporairement indisponible.</p>';
+        });
+}
+
+/* ============================================================
+   INFLATION GENERALE
+============================================================ */
+function loadInflation(country) {
+    const body = document.getElementById('inflWidgetBody');
+    if (!body) return;
+    body.innerHTML = '<p class="inflation-loading">⏳ Chargement des données…</p>';
+    fetch('{{ path('app_budget_ai_inflation_country') }}?country=' + country)
+        .then(r => r.json())
+        .then(d => {
+            if (d.error) {
+                body.innerHTML = '<p class="inflation-loading">⚠ Données indisponibles pour ce pays.</p>';
+                return;
+            }
+            const rate = d.rate !== null ? d.rate : null;
+            const delta = d.delta;
+            let deltaHtml = '';
+            let insight = '';
+            if (delta !== null) {
+                const sign = delta > 0 ? '+' : '';
+                const cls = delta > 2 ? 'up' : delta < -1 ? 'down' : 'flat';
+                const arrow = delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
+                const prevYear = d.year ? parseInt(d.year) - 1 : '—';
+                deltaHtml = `<span class="inflation-delta inflation-delta--${cls}">${arrow} ${sign}${delta}% vs ${prevYear}</span>`;
+                if (delta > 5) {
+                    insight = `⚠️ L'inflation a fortement progressé de <strong>+${delta}%</strong> par rapport à l'année précédente. Prévoyez un budget plus généreux pour cette destination.`;
+                } else if (delta > 2) {
+                    insight = `📈 L'inflation a augmenté de <strong>+${delta}%</strong>. Les prix ont progressé — ajustez votre budget en conséquence.`;
+                } else if (delta < -1) {
+                    insight = `📉 Bonne nouvelle : l'inflation a baissé de <strong>${delta}%</strong>. Cette destination est plus abordable que l'an dernier.`;
+                } else {
+                    insight = `✅ L'inflation est stable à <strong>${rate !== null ? rate + '%' : 'N/A'}</strong> pour cette destination.`;
+                }
+            }
+            body.innerHTML = `
+                <div class="inflation-did-you-know">Le saviez-vous ?</div>
+                <div class="inflation-rate-big">${rate !== null ? rate + '%' : 'N/A'}</div>
+                <div class="inflation-country-label">${d.country} · ${d.year ?? '—'} · CPI annuel</div>
+                ${deltaHtml}
+                ${insight ? `<div class="inflation-insight">${insight}</div>` : ''}
+            `;
+        })
+        .catch(() => {
+            body.innerHTML = '<p class="inflation-loading">⚠ Service indisponible.</p>';
+        });
+}
+
+/* ============================================================
+   CONVERSION EN MASSE
+============================================================ */
+function closeConvertModal() {
+    const modal = document.getElementById('modal-convert-all');
+    if (modal) modal.classList.remove('open');
+}
+
+async function executeConvertAll() {
+    const targetDevise = document.getElementById('convert-target-devise')?.value;
+    const progressDiv = document.getElementById('convert-progress');
+    const progressBar = progressDiv?.querySelector('.progress-fill');
+    const progressText = document.getElementById('convert-progress-text');
+    const submitBtn = document.querySelector('#modal-convert-all .btn-modal-submit');
+    const cancelBtn = document.querySelector('#modal-convert-all .btn-modal-cancel');
+    
+    if (submitBtn) submitBtn.disabled = true;
+    if (cancelBtn) cancelBtn.disabled = true;
+    if (progressDiv) progressDiv.style.display = 'block';
+    if (progressText) progressText.textContent = 'Conversion en cours...';
+    if (progressBar) progressBar.style.width = '30%';
+    
+    try {
+        const formData = new FormData();
+        formData.append('target_devise', targetDevise);
+        if (progressBar) progressBar.style.width = '60%';
+        const response = await fetch('{{ path('app_budget_convert_depenses', {id: budget.idBudget}) }}', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        if (result.success) {
+            if (progressBar) progressBar.style.width = '100%';
+            if (progressText) progressText.textContent = '✓ ' + result.message;
+            setTimeout(() => {
+                closeConvertModal();
+                window.location.reload();
+            }, 1500);
+        } else {
+            if (progressText) progressText.textContent = '❌ ' + (result.error || 'Erreur lors de la conversion');
+            if (progressBar) progressBar.style.backgroundColor = '#dc2626';
+            if (submitBtn) submitBtn.disabled = false;
+            if (cancelBtn) cancelBtn.disabled = false;
+        }
+    } catch (error) {
+        if (progressText) progressText.textContent = '❌ Erreur réseau. Veuillez réessayer.';
+        if (progressBar) progressBar.style.backgroundColor = '#dc2626';
+        if (submitBtn) submitBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+    }
+}
+
+document.getElementById('massConvertBtn')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-convert-all');
+    if (modal) modal.classList.add('open');
+});
+
+/* ============================================================
+   INITIALISATION
+============================================================ */
+const inflSelect = document.getElementById('inflCountrySelect');
+if (inflSelect) {
+    loadInflation(inflSelect.value);
+    inflSelect.addEventListener('change', () => loadInflation(inflSelect.value));
+}
+
+if (document.getElementById('inflationByCurrencyWidget')) {
+    loadInflationByCurrency();
+}
+
+/* ============================================================
+   TOAST NOTIFICATION
+============================================================ */
+(function() {
+    function showToast(message) {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = 'background:#3b2a1a;color:#fff;padding:.75rem 1.1rem;border-radius:8px;font-size:.85rem;max-width:320px;line-height:1.5;opacity:0;transform:translateY(10px);transition:opacity .25s ease, transform .25s ease';
+        container.appendChild(toast);
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        }));
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+        }, 4000);
+    }
+    const _fetch = window.fetch;
+    window.fetch = async function(...args) {
+        const res = await _fetch(...args);
+        const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url ?? '');
+        if (url.includes('/ai/notification')) {
+            res.clone().json().then(data => { if (data?.message) showToast(data.message); }).catch(() => {});
+        }
+        return res;
+    };
+})();
+</script>
+{% endblock %}

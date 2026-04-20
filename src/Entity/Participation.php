@@ -17,6 +17,11 @@ class Participation
         'Observateur',
     ];
 
+    public const SELECTABLE_ROLES = [
+        self::DEFAULT_ROLE,
+        'Observateur',
+    ];
+
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'participations')]
     #[ORM\JoinColumn(name: 'id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
@@ -81,5 +86,15 @@ class Participation
     public static function getAvailableRoles(): array
     {
         return self::ROLES;
+    }
+
+    public static function getSelectableRoles(): array
+    {
+        return self::SELECTABLE_ROLES;
+    }
+
+    public static function isSelectableRole(string $role): bool
+    {
+        return in_array($role, self::SELECTABLE_ROLES, true);
     }
 }

@@ -16,6 +16,22 @@ class DestinationRepository extends ServiceEntityRepository
         parent::__construct($registry, Destination::class);
     }
 
+    public function findDuplicateByName(string $name, ?int $excludeId = null): ?Destination
+    {
+        $queryBuilder = $this->createQueryBuilder('d')
+            ->where('TRIM(LOWER(d.nom_destination)) = :name')
+            ->setParameter('name', mb_strtolower(trim($name)))
+            ->setMaxResults(1);
+
+        if ($excludeId !== null) {
+            $queryBuilder
+                ->andWhere('d.id_destination != :excludeId')
+                ->setParameter('excludeId', $excludeId);
+        }
+
+        return $queryBuilder->getQuery()->getOneOrNullResult();
+    }
+
     //    /**
     //     * @return Destination[] Returns an array of Destination objects
     //     */

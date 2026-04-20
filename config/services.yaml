@@ -1,16 +1,20 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
-
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     profile_photos_directory: '%kernel.project_dir%/public/uploads/profiles'
+    face_api_base_url: '%env(FACE_API_BASE_URL)%'
+    face_match_threshold: '%env(float:FACE_MATCH_THRESHOLD)%'
+    ipapi_base_url: '%env(IPAPI_BASE_URL)%'
     activites_images_directory: '%kernel.project_dir%/public/uploads/activites'
     evenements_images_directory: '%kernel.project_dir%/public/uploads/evenements'
+    app.groq.cache_ttl: 86400
+    app.openrouteservice.cache_ttl: 604800
+    app.cerebras.api_key: ''
+    app.cerebras.model: 'llama3.1-8b'
+    cities_json_path: '%kernel.project_dir%/data/cities.json'
 
 services:
-    # default configuration for services in *this* file
     _defaults:
+        autowire: true
+        autoconfigure: true
         autowire: true
         autoconfigure: true
 
@@ -25,7 +29,86 @@ services:
     App\Controller\WeatherController:
         arguments:
             $openWeatherApiKey: '%env(OPENWEATHER_API_KEY)%'
+    App\Service\FaceRecognitionClient:
+        arguments:
+            $faceApiBaseUrl: '%face_api_base_url%'
 
+    App\Service\GeoIpService:
+        arguments:
+            $baseUrl: '%ipapi_base_url%'
+
+    App\Service\GroqCulturalRulesService:
+        arguments:
+            $apiKey: '%env(string:GROQ_API_KEY)%'
+            $model: '%env(string:GROQ_MODEL)%'
+            $cacheDirectory: '%kernel.cache_dir%/groq_cultural_rules'
+            $cacheTtl: '%app.groq.cache_ttl%'
+
+    App\Service\OpenRouteServiceGeocoder:
+        arguments:
+            $apiKey: '%env(string:OPENROUTESERVICE_API_KEY)%'
+            $geocodeUrl: '%env(string:OPENROUTESERVICE_GEOCODE_URL)%'
+            $cacheDirectory: '%kernel.cache_dir%/openrouteservice_geocoder'
+            $cacheTtl: '%app.openrouteservice.cache_ttl%'
+
+    App\Service\WeatherService:
+        arguments:
+            $openWeatherMapApiKey: '%env(string:OPENWEATHERMAP_API_KEY)%'
+
+    App\Service\FlightScraperService:
+        arguments:
+            $apiKey: '%env(string:AVIATIONSTACK_API_KEY)%'
+
+    App\Service\ReplicateVideoService:
+        arguments:
+            $apiKey: '%env(GROQ_API_KEY)%'
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\StabilityImageService:
+        arguments:
+            $apiKey: '%env(STABILITY_API_KEY)%'
+
+    App\Service\CerebrasItinerarySuggestionService:
+        arguments:
+            $apiKey: '%env(default:app.cerebras.api_key:CEREBRAS_API_KEY)%'
+            $model: '%env(default:app.cerebras.model:CEREBRAS_MODEL)%'
+    App\Service\CityCountryLookupService:
+        arguments:
+            $citiesJsonPath: '%cities_json_path%'
+            $restCountriesService: '@App\Service\RestCountriesService'
+
+    App\Service\HebergementScraperService:
+        arguments:
+            $rapidApiKey: '%env(RAPIDAPI_KEY)%'
+            $rapidApiHost: '%env(RAPIDAPI_HOST)%'
+            $rapidApiUrl: '%env(RAPIDAPI_URL)%'
+            $rapidApiCurrency: '%env(RAPIDAPI_CURRENCY)%'
+            $rapidApiLanguage: '%env(RAPIDAPI_LANGUAGE)%'
+
+    App\Service\UnsplashImageService:
+        arguments:
+            $accessKey: '%env(UNSPLASH_ACCESS_KEY)%'
+
+    App\Service\DestinationImageFetcherService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\YouTubeVideoService:
+        arguments:
+            $apiKey: '%env(YOUTUBE_API_KEY)%'
+            $minDurationSeconds: 30
+            $maxDurationSeconds: 240
+
+    App\Service\DestinationAiSuggestionService:
+        arguments:
+            $apiKey: '%env(OPENROUTER_API_KEY)%'
+
+    App\Service\NotificationService:
+        arguments:
+            $ntfyUrl:   '%env(NTFY_URL)%'
+            $ntfyTopic: '%env(NTFY_TOPIC)%'
+
+    
     App\Controller\ReservationController:
         arguments:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'

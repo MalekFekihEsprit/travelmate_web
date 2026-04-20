@@ -6,11 +6,16 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 use App\Repository\DestinationRepository;
 
+#[Vich\Uploadable]
 #[ORM\Entity(repositoryClass: DestinationRepository::class)]
 #[ORM\Table(name: 'destination')]
+#[UniqueEntity(fields: ['nom_destination'], message: 'Une destination avec ce nom existe deja.', errorPath: 'nom_destination')]
 class Destination
 {
     #[ORM\Id]
@@ -141,8 +146,8 @@ class Destination
         return $this;
     }
 
-    #[ORM\Column(type: 'float', nullable: true)]
-    private ?float $score_destination = null;
+    #[ORM\Column(type: 'float', options: ['default' => 0])]
+    private ?float $score_destination = 0.0;
 
     public function getScore_destination(): ?float
     {
@@ -211,6 +216,55 @@ class Destination
         return $this;
     }
 
+    // ── VichUploader image fields ─────────────────────────────────────────────
+
+    #[ORM\Column(name: 'image_name', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $imageName = null;
+
+    #[Vich\UploadableField(mapping: 'destination_images', fileNameProperty: 'imageName')]
+    private ?File $imageFile = null;
+
+    #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $updatedAt = null;
+
+    public function getImageName(): ?string
+    {
+        return $this->imageName;
+    }
+
+    public function setImageName(?string $imageName): self
+    {
+        $this->imageName = $imageName;
+        return $this;
+    }
+
+    public function getImageFile(): ?File
+    {
+        return $this->imageFile;
+    }
+
+    public function setImageFile(?File $imageFile): self
+    {
+        $this->imageFile = $imageFile;
+        if ($imageFile !== null) {
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
+    // ── Relationships ─────────────────────────────────────────────────────────
+
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'destinations')]
     #[ORM\JoinColumn(name: 'added_by', referencedColumnName: 'id')]
     private ?User $user = null;
@@ -229,9 +283,175 @@ class Destination
     #[ORM\OneToMany(targetEntity: Hebergement::class, mappedBy: 'destination')]
     private Collection $hebergements;
 
-    /**
-     * @return Collection<int, Hebergement>
-     */
+    #[ORM\OneToMany(targetEntity: Voyage::class, mappedBy: 'destination')]
+    private Collection $voyages;
+
+    #[ORM\OneToMany(targetEntity: NoteDestination::class, mappedBy: 'destination', orphanRemoval: true)]
+    private Collection $notesDestination;
+
+    #[ORM\OneToMany(targetEntity: FavoriteDestination::class, mappedBy: 'destination', orphanRemoval: true)]
+    private Collection $favoriteDestinations;
+
+    public function __construct()
+    {
+        $this->hebergements    = new ArrayCollection();
+        $this->voyages         = new ArrayCollection();
+        $this->notesDestination = new ArrayCollection();
+        $this->favoriteDestinations = new ArrayCollection();
+    }
+
+    // ── Camel-case aliases (used by Twig & other controllers) ─────────────────
+
+    public function getIdDestination(): ?int
+    {
+        return $this->id_destination;
+    }
+
+    public function getNomDestination(): ?string
+    {
+        return $this->nom_destination;
+    }
+
+    public function setNomDestination(string $nom_destination): static
+    {
+        $this->nom_destination = $nom_destination;
+        return $this;
+    }
+
+    public function getPaysDestination(): ?string
+    {
+        return $this->pays_destination;
+    }
+
+    public function setPaysDestination(string $pays_destination): static
+    {
+        $this->pays_destination = $pays_destination;
+        return $this;
+    }
+
+    public function getRegionDestination(): ?string
+    {
+        return $this->region_destination;
+    }
+
+    public function setRegionDestination(?string $region_destination): static
+    {
+        $this->region_destination = $region_destination;
+        return $this;
+    }
+
+    public function getDescriptionDestination(): ?string
+    {
+        return $this->description_destination;
+    }
+
+    public function setDescriptionDestination(?string $description_destination): static
+    {
+        $this->description_destination = $description_destination;
+        return $this;
+    }
+
+    public function getClimatDestination(): ?string
+    {
+        return $this->climat_destination;
+    }
+
+    public function setClimatDestination(?string $climat_destination): static
+    {
+        $this->climat_destination = $climat_destination;
+        return $this;
+    }
+
+    public function getSaisonDestination(): ?string
+    {
+        return $this->saison_destination;
+    }
+
+    public function setSaisonDestination(?string $saison_destination): static
+    {
+        $this->saison_destination = $saison_destination;
+        return $this;
+    }
+
+    public function getLatitudeDestination(): ?float
+    {
+        return $this->latitude_destination;
+    }
+
+    public function setLatitudeDestination(?float $latitude_destination): static
+    {
+        $this->latitude_destination = $latitude_destination;
+        return $this;
+    }
+
+    public function getLongitudeDestination(): ?float
+    {
+        return $this->longitude_destination;
+    }
+
+    public function setLongitudeDestination(?float $longitude_destination): static
+    {
+        $this->longitude_destination = $longitude_destination;
+        return $this;
+    }
+
+    public function getScoreDestination(): ?float
+    {
+        return $this->score_destination;
+    }
+
+    public function setScoreDestination(?float $score_destination): static
+    {
+        $this->score_destination = $score_destination;
+        return $this;
+    }
+
+    public function getCurrencyDestination(): ?string
+    {
+        return $this->currency_destination;
+    }
+
+    public function setCurrencyDestination(?string $currency_destination): static
+    {
+        $this->currency_destination = $currency_destination;
+        return $this;
+    }
+
+    public function getFlagDestination(): ?string
+    {
+        return $this->flag_destination;
+    }
+
+    public function setFlagDestination(?string $flag_destination): static
+    {
+        $this->flag_destination = $flag_destination;
+        return $this;
+    }
+
+    public function getLanguagesDestination(): ?string
+    {
+        return $this->languages_destination;
+    }
+
+    public function setLanguagesDestination(?string $languages_destination): static
+    {
+        $this->languages_destination = $languages_destination;
+        return $this;
+    }
+
+    public function getVideoUrl(): ?string
+    {
+        return $this->video_url;
+    }
+
+    public function setVideoUrl(?string $video_url): static
+    {
+        $this->video_url = $video_url;
+        return $this;
+    }
+
+    // ── Collection helpers ────────────────────────────────────────────────────
+
     public function getHebergements(): Collection
     {
         if (!$this->hebergements instanceof Collection) {
@@ -254,18 +474,6 @@ class Destination
         return $this;
     }
 
-    #[ORM\OneToMany(targetEntity: Voyage::class, mappedBy: 'destination')]
-    private Collection $voyages;
-
-    public function __construct()
-    {
-        $this->hebergements = new ArrayCollection();
-        $this->voyages = new ArrayCollection();
-    }
-
-    /**
-     * @return Collection<int, Voyage>
-     */
     public function getVoyages(): Collection
     {
         if (!$this->voyages instanceof Collection) {
@@ -288,165 +496,63 @@ class Destination
         return $this;
     }
 
-    public function getIdDestination(): ?int
+    public function getNotesDestination(): Collection
     {
-        return $this->id_destination;
+        if (!$this->notesDestination instanceof Collection) {
+            $this->notesDestination = new ArrayCollection();
+        }
+        return $this->notesDestination;
     }
 
-    public function getNomDestination(): ?string
+    public function addNoteDestination(NoteDestination $noteDestination): self
     {
-        return $this->nom_destination;
+        if (!$this->getNotesDestination()->contains($noteDestination)) {
+            $this->getNotesDestination()->add($noteDestination);
+            $noteDestination->setDestination($this);
+        }
+        return $this;
     }
 
-    public function setNomDestination(string $nom_destination): static
+    public function removeNoteDestination(NoteDestination $noteDestination): self
     {
-        $this->nom_destination = $nom_destination;
+        if ($this->getNotesDestination()->removeElement($noteDestination)) {
+            if ($noteDestination->getDestination() === $this) {
+                $noteDestination->setDestination(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FavoriteDestination>
+     */
+    public function getFavoriteDestinations(): Collection
+    {
+        if (!$this->favoriteDestinations instanceof Collection) {
+            $this->favoriteDestinations = new ArrayCollection();
+        }
+
+        return $this->favoriteDestinations;
+    }
+
+    public function addFavoriteDestination(FavoriteDestination $favoriteDestination): self
+    {
+        if (!$this->getFavoriteDestinations()->contains($favoriteDestination)) {
+            $this->getFavoriteDestinations()->add($favoriteDestination);
+            $favoriteDestination->setDestination($this);
+        }
 
         return $this;
     }
 
-    public function getPaysDestination(): ?string
+    public function removeFavoriteDestination(FavoriteDestination $favoriteDestination): self
     {
-        return $this->pays_destination;
-    }
-
-    public function setPaysDestination(string $pays_destination): static
-    {
-        $this->pays_destination = $pays_destination;
+        if ($this->getFavoriteDestinations()->removeElement($favoriteDestination)) {
+            if ($favoriteDestination->getDestination() === $this) {
+                $favoriteDestination->setDestination(null);
+            }
+        }
 
         return $this;
     }
-
-    public function getRegionDestination(): ?string
-    {
-        return $this->region_destination;
-    }
-
-    public function setRegionDestination(?string $region_destination): static
-    {
-        $this->region_destination = $region_destination;
-
-        return $this;
-    }
-
-    public function getDescriptionDestination(): ?string
-    {
-        return $this->description_destination;
-    }
-
-    public function setDescriptionDestination(?string $description_destination): static
-    {
-        $this->description_destination = $description_destination;
-
-        return $this;
-    }
-
-    public function getClimatDestination(): ?string
-    {
-        return $this->climat_destination;
-    }
-
-    public function setClimatDestination(?string $climat_destination): static
-    {
-        $this->climat_destination = $climat_destination;
-
-        return $this;
-    }
-
-    public function getSaisonDestination(): ?string
-    {
-        return $this->saison_destination;
-    }
-
-    public function setSaisonDestination(?string $saison_destination): static
-    {
-        $this->saison_destination = $saison_destination;
-
-        return $this;
-    }
-
-    public function getLatitudeDestination(): ?string
-    {
-        return $this->latitude_destination;
-    }
-
-    public function setLatitudeDestination(?string $latitude_destination): static
-    {
-        $this->latitude_destination = $latitude_destination;
-
-        return $this;
-    }
-
-    public function getLongitudeDestination(): ?string
-    {
-        return $this->longitude_destination;
-    }
-
-    public function setLongitudeDestination(?string $longitude_destination): static
-    {
-        $this->longitude_destination = $longitude_destination;
-
-        return $this;
-    }
-
-    public function getScoreDestination(): ?string
-    {
-        return $this->score_destination;
-    }
-
-    public function setScoreDestination(?string $score_destination): static
-    {
-        $this->score_destination = $score_destination;
-
-        return $this;
-    }
-
-    public function getCurrencyDestination(): ?string
-    {
-        return $this->currency_destination;
-    }
-
-    public function setCurrencyDestination(?string $currency_destination): static
-    {
-        $this->currency_destination = $currency_destination;
-
-        return $this;
-    }
-
-    public function getFlagDestination(): ?string
-    {
-        return $this->flag_destination;
-    }
-
-    public function setFlagDestination(?string $flag_destination): static
-    {
-        $this->flag_destination = $flag_destination;
-
-        return $this;
-    }
-
-    public function getLanguagesDestination(): ?string
-    {
-        return $this->languages_destination;
-    }
-
-    public function setLanguagesDestination(?string $languages_destination): static
-    {
-        $this->languages_destination = $languages_destination;
-
-        return $this;
-    }
-
-    public function getVideoUrl(): ?string
-    {
-        return $this->video_url;
-    }
-
-    public function setVideoUrl(?string $video_url): static
-    {
-        $this->video_url = $video_url;
-
-        return $this;
-    }
-
 }

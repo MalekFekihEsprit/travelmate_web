@@ -17,6 +17,20 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class VoyageType extends AbstractType
 {
+    /**
+     * @return array<string, string[]>
+     */
+    private const DESTINATION_ALIASES = [
+        'nice' => ['nice', 'france', 'french riviera', 'cote d azur', 'cote azur'],
+        'rome' => ['rome', 'roma', 'italy', 'italie'],
+        'milan' => ['milan', 'milano', 'italy', 'italie'],
+        'tokyo' => ['tokyo', 'tokio', 'japan', 'japon'],
+        'new york city' => ['new york', 'new york city', 'nyc', 'usa', 'united states', 'etats unis', 'americas', 'america'],
+        'tunisia' => ['tunisia', 'tunisie', 'tunis', 'la marsa', 'marsa', 'gammarth', 'sidi bou said', 'jendouba', 'hammamet'],
+        'hammamet' => ['hammamet', 'tunisia', 'tunisie', 'nabeul'],
+        'istanbul' => ['istanbul', 'turkey', 'turquie', 'asia'],
+    ];
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -42,10 +56,13 @@ class VoyageType extends AbstractType
                     return $pays ? sprintf('%s - %s', $nom, $pays) : $nom;
                 },
                 'choice_attr' => static function (Destination $destination): array {
+                    $terms = self::buildDestinationTerms($destination);
+
                     return [
                         'data-destination-name' => (string) ($destination->getNomDestination() ?? $destination->getNom_destination() ?? ''),
                         'data-destination-country' => (string) ($destination->getPaysDestination() ?? $destination->getPays_destination() ?? ''),
                         'data-destination-region' => (string) ($destination->getRegionDestination() ?? $destination->getRegion_destination() ?? ''),
+                        'data-destination-aliases' => implode('|', $terms),
                     ];
                 },
                 'attr' => [
@@ -72,6 +89,7 @@ class VoyageType extends AbstractType
                     $haystack = implode(' ', array_filter([
                         $activite->getNom(),
                         $activite->getLieu(),
+                        $activite->getDescription(),
                     ]));
 
                     return [
@@ -113,5 +131,53 @@ class VoyageType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Voyage::class,
         ]);
+    }
+
+    /**
+     * @return string[]
+     */
+    private static function buildDestinationTerms(Destination $destination): array
+    {
+        $values = array_filter([
+            $destination->getNomDestination() ?? $destination->getNom_destination(),
+            $destination->getPaysDestination() ?? $destination->getPays_destination(),
+            $destination->getRegionDestination() ?? $destination->getRegion_destination(),
+        ]);
+
+        $terms = [];
+
+        foreach ($values as $value) {
+            $normalized = self::normalize((string) $value);
+
+            if ($normalized === '') {
+                continue;
+            }
+
+            $terms[] = $normalized;
+
+            if (isset(self::DESTINATION_ALIASES[$normalized])) {
+                array_push($terms, ...self::DESTINATION_ALIASES[$normalized]);
+            }
+        }
+
+        return array_values(array_unique(array_filter($terms)));
+    }
+
+    private static function normalize(string $value): string
+    {
+        $normalized = $value;
+
+        if (function_exists('transliterator_transliterate')) {
+            $transliterated = transliterator_transliterate('Any-Latin; Latin-ASCII;', $value);
+
+            if (is_string($transliterated)) {
+                $normalized = $transliterated;
+            }
+        }
+
+        $normalized = mb_strtolower($normalized);
+        $normalized = preg_replace('/[^a-z0-9]+/', ' ', $normalized);
+
+        return trim((string) $normalized);
     }
 }

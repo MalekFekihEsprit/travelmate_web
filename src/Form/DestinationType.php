@@ -7,7 +7,6 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -25,15 +24,10 @@ class DestinationType extends AbstractType
                 ]
             ])
             ->add('pays_destination', TextType::class, [
+                'label' => 'Pays',
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'Le pays est requis']),
                     new Assert\Regex(['pattern' => '/^[a-zA-ZÀ-ÿ\s-]+$/', 'message' => 'Le pays ne doit contenir que des lettres']),
-                ]
-            ])
-            ->add('region_destination', TextType::class, [
-                'required' => false,
-                'constraints' => [
-                    new Assert\Regex(['pattern' => '/^[a-zA-ZÀ-ÿ\s-]*$/', 'message' => 'La région ne doit contenir que des lettres']),
                 ]
             ])
             ->add('description_destination', TextareaType::class, [
@@ -67,28 +61,6 @@ class DestinationType extends AbstractType
                 ],
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La saison idéale est requise']),
-                ]
-            ])
-            ->add('score_destination', IntegerType::class, [
-                'constraints' => [
-                    new Assert\NotBlank(['message' => 'La note est requise']),
-                    new Assert\Range(['min' => 1, 'max' => 5, 'notInRangeMessage' => 'La note doit être entre 1 et 5']),
-                ]
-            ])
-            ->add('currency_destination', TextType::class, [
-                'constraints' => [
-                    new Assert\NotBlank(['message' => 'La devise est requise']),
-                ]
-            ])
-            ->add('languages_destination', TextType::class, [
-                'constraints' => [
-                    new Assert\NotBlank(['message' => 'Les langues sont requises']),
-                ]
-            ])
-            ->add('video_url', TextType::class, [
-                'required' => false,
-                'constraints' => [
-                    new Assert\Url(['message' => 'Veuillez entrer une URL valide']),
                 ]
             ])
         ;

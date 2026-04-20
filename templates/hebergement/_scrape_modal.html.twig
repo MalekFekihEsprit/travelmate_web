@@ -1,0 +1,40 @@
+{# templates/hebergement/_scrape_modal.html.twig
+   Injected into index.html.twig via the <div id="scrapeModal"> block. #}
+
+<div id="scrapeModal" class="scrape-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="scrapeModalTitle" hidden>
+    <div class="scrape-modal">
+
+        {# ── Header ─────────────────────────────────────────────────────────── #}
+        <div class="scrape-modal__header">
+            <h2 id="scrapeModalTitle" class="scrape-modal__title">
+                🔍 Suggestions d'hébergements
+            </h2>
+            <button type="button" class="scrape-modal__close" id="scrapeModalClose" aria-label="Fermer">×</button>
+        </div>
+
+        {# ── Status message ─────────────────────────────────────────────────── #}
+        <p id="scrapeStatusMsg" class="scrape-modal__status" aria-live="polite" hidden></p>
+
+        {# ── Results grid ───────────────────────────────────────────────────── #}
+        <div id="scrapeResultsWrapper" hidden>
+            <div class="scrape-modal__results-header">
+                <span id="scrapeResultsCount" class="scrape-modal__count"></span>
+                <div class="scrape-modal__bulk-actions">
+                    <button type="button" id="scrapeSelectAll" class="scrape-modal__btn scrape-modal__btn--ghost">Tout sélectionner</button>
+                    <button type="button" id="scrapeDeselectAll" class="scrape-modal__btn scrape-modal__btn--ghost">Tout désélectionner</button>
+                </div>
+            </div>
+
+            <div id="scrapeResultsGrid" class="scrape-results-grid"></div>
+
+            <div class="scrape-modal__footer">
+                <span id="scrapeSelectedCount" class="scrape-modal__count">0 sélectionné(s)</span>
+                <button type="button" id="scrapeSaveBtn" class="scrape-modal__btn scrape-modal__btn--save" disabled>
+                    <span id="scrapeSaveBtnLabel">💾 Enregistrer la sélection</span>
+                    <span id="scrapeSaveBtnSpinner" class="scrape-spinner" hidden aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>

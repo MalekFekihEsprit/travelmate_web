@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .voyage-form-page {
             display: grid;
@@ -371,6 +372,16 @@
                     .trim();
             }
 
+            function tokenize(values) {
+                return values
+                    .flatMap(function (value) {
+                        return normalize(value).split(/[^a-z0-9]+/);
+                    })
+                    .filter(function (token, index, tokens) {
+                        return token.length >= 4 && tokens.indexOf(token) === index;
+                    });
+            }
+
             function getDestinationTerms() {
                 var selectedOption = destinationField.options[destinationField.selectedIndex];
 
@@ -382,11 +393,67 @@
                     selectedOption.dataset.destinationName,
                     selectedOption.dataset.destinationCountry,
                     selectedOption.dataset.destinationRegion,
+                    selectedOption.dataset.destinationAliases,
                 ]
+                    .flatMap(function (value) {
+                        return (value || '').split('|');
+                    })
                     .map(normalize)
                     .filter(function (term) {
                         return term.length > 0;
                     });
+            }
+
+            // Datepickers (flatpickr)
+            (function () {
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+                script.async = true;
+                script.onload = function () {
+                    var startInput = document.getElementById('{{ form.date_debut.vars.id }}');
+                    var endInput = document.getElementById('{{ form.date_fin.vars.id }}');
+
+                    if (startInput) {
+                        var startPicker = flatpickr(startInput, {
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            allowInput: true,
+                            onChange: function (selectedDates) {
+                                if (selectedDates && selectedDates[0] && endPicker) {
+                                    endPicker.set('minDate', selectedDates[0]);
+                                }
+                            }
+                        });
+                    }
+
+                    var endPicker = null;
+                    if (endInput) {
+                        endPicker = flatpickr(endInput, {
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            allowInput: true,
+                        });
+                    }
+                };
+                document.head.appendChild(script);
+            }());
+
+            function applyActivityVisibility(option, shouldShow) {
+                var input = option.querySelector('input');
+
+                option.classList.toggle('is-hidden', !shouldShow);
+
+                if (!input) {
+                    return;
+                }
+
+                input.disabled = !shouldShow;
+
+                if (!shouldShow) {
+                    input.checked = false;
+                }
             }
 
             function syncActivities() {
@@ -395,35 +462,37 @@
                 }
 
                 var destinationTerms = getDestinationTerms();
-                var visibleCount = 0;
+                var destinationTokens = tokenize(destinationTerms);
+                var strictMatchCount = 0;
 
                 activityOptions.forEach(function (option) {
                     var haystack = normalize(option.dataset.activityHaystack);
-                    var input = option.querySelector('input');
-                    var matches = destinationTerms.length > 0 && destinationTerms.some(function (term) {
-                        return haystack.includes(term);
-                    });
-
-                    option.classList.toggle('is-hidden', !matches);
-
-                    if (input) {
-                        input.disabled = !matches;
-
-                        if (!matches) {
-                            input.checked = false;
-                        }
-                    }
+                    var matches = destinationTerms.length > 0 && (
+                        destinationTerms.some(function (term) {
+                            return haystack.includes(term);
+                        }) || destinationTokens.some(function (token) {
+                            return haystack.includes(token);
+                        })
+                    );
 
                     if (matches) {
-                        visibleCount += 1;
+                        strictMatchCount += 1;
                     }
+
+                    option.dataset.strictMatch = matches ? 'true' : 'false';
+                });
+
+                activityOptions.forEach(function (option) {
+                    var shouldShow = destinationTerms.length > 0 && option.dataset.strictMatch === 'true';
+
+                    applyActivityVisibility(option, shouldShow);
                 });
 
                 if (activityEmpty) {
                     if (destinationTerms.length === 0) {
                         activityEmpty.textContent = 'Selectionnez une destination pour afficher uniquement les activites correspondantes.';
                         activityEmpty.hidden = false;
-                    } else if (visibleCount === 0) {
+                    } else if (strictMatchCount === 0) {
                         activityEmpty.textContent = 'Aucune activite ne correspond a la destination choisie.';
                         activityEmpty.hidden = false;
                     } else {

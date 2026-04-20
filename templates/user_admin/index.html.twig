@@ -331,127 +331,161 @@
 {% endblock %}
 
 {% block javascripts %}
+    {{ parent() }}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-        const table = document.querySelector('.users-table');
-        if (!table) return;
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('dynamic-users-filter-form');
+            const resultsContainer = document.getElementById('users-results');
+            const searchInput = document.getElementById('q');
+            const roleSelect = document.getElementById('role');
 
-        const headers = table.querySelectorAll('thead th[data-sort]');
-        let currentSort = { column: null, direction: 'asc' };
+            let debounceTimer = null;
 
-        headers.forEach(header => {
-            header.style.cursor = 'pointer';
-            header.addEventListener('click', () => sortTable(header));
-        });
+            function initTableSorting() {
+                const table = document.querySelector('.users-table');
+                if (!table) return;
 
-        function sortTable(header) {
-            const columnIndex = Array.from(header.parentElement.children).indexOf(header);
-            const sortType = header.getAttribute('data-sort');
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
+                const headers = table.querySelectorAll('thead th[data-sort]');
+                let currentSort = { column: null, direction: 'asc' };
 
-            // Toggle direction if same column, else default to asc
-            if (currentSort.column === columnIndex) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.direction = 'asc';
-            }
-            currentSort.column = columnIndex;
+                headers.forEach(header => {
+                    header.style.cursor = 'pointer';
+                    header.onclick = () => sortTable(header);
+                });
 
-            // Sort rows
-            rows.sort((rowA, rowB) => {
-                let cellA = rowA.children[columnIndex];
-                let cellB = rowB.children[columnIndex];
-                let valueA, valueB;
+                function sortTable(header) {
+                    const columnIndex = Array.from(header.parentElement.children).indexOf(header);
+                    const sortType = header.getAttribute('data-sort');
+                    const tbody = table.querySelector('tbody');
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
 
-                switch (sortType) {
-                    case 'string':
-                        // For "Utilisateur" column, we need to get the name from inner div
-                        if (columnIndex === 0) {
-                            const nameA = cellA.querySelector('.user-cell__name');
-                            const nameB = cellB.querySelector('.user-cell__name');
-                            valueA = nameA ? nameA.textContent.trim() : '';
-                            valueB = nameB ? nameB.textContent.trim() : '';
-                        } else {
-                            valueA = cellA.textContent.trim();
-                            valueB = cellB.textContent.trim();
+                    if (currentSort.column === columnIndex) {
+                        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSort.direction = 'asc';
+                    }
+                    currentSort.column = columnIndex;
+
+                    rows.sort((rowA, rowB) => {
+                        const cellA = rowA.children[columnIndex];
+                        const cellB = rowB.children[columnIndex];
+                        let valueA, valueB;
+
+                        switch (sortType) {
+                            case 'string':
+                                if (columnIndex === 0) {
+                                    const nameA = cellA.querySelector('.user-cell__name');
+                                    const nameB = cellB.querySelector('.user-cell__name');
+                                    valueA = nameA ? nameA.textContent.trim() : '';
+                                    valueB = nameB ? nameB.textContent.trim() : '';
+                                } else {
+                                    valueA = cellA.textContent.trim();
+                                    valueB = cellB.textContent.trim();
+                                }
+                                return compareStrings(valueA, valueB, currentSort.direction);
+
+                            case 'role':
+                                const roleOrder = { 'ADMIN': 1, 'USER': 2 };
+                                const roleA = cellA.querySelector('.status-pill--role-admin, .status-pill--role-user');
+                                const roleB = cellB.querySelector('.status-pill--role-admin, .status-pill--role-user');
+                                valueA = roleA ? (roleA.classList.contains('status-pill--role-admin') ? 'ADMIN' : 'USER') : '';
+                                valueB = roleB ? (roleB.classList.contains('status-pill--role-admin') ? 'ADMIN' : 'USER') : '';
+                                return compareNumbers(roleOrder[valueA] || 3, roleOrder[valueB] || 3, currentSort.direction);
+
+                            case 'verification':
+                                const verifiedOrder = { 'Vérifié': 1, 'Non vérifié': 2 };
+                                const statusSpanA = cellA.querySelector('.status-pill--success, .status-pill--warning');
+                                const statusSpanB = cellB.querySelector('.status-pill--success, .status-pill--warning');
+                                valueA = statusSpanA ? statusSpanA.textContent.trim() : '';
+                                valueB = statusSpanB ? statusSpanB.textContent.trim() : '';
+                                return compareNumbers(verifiedOrder[valueA] || 3, verifiedOrder[valueB] || 3, currentSort.direction);
+
+                            case 'date':
+                                const dateA = parseDate(cellA.textContent.trim());
+                                const dateB = parseDate(cellB.textContent.trim());
+                                return compareNumbers(dateA, dateB, currentSort.direction);
+
+                            default:
+                                return 0;
                         }
-                        return compareStrings(valueA, valueB, currentSort.direction);
-                    
-                    case 'role':
-                        const roleOrder = { 'ADMIN': 1, 'USER': 2 };
-                        const roleA = cellA.querySelector('.status-pill--role-admin, .status-pill--role-user');
-                        const roleB = cellB.querySelector('.status-pill--role-admin, .status-pill--role-user');
-                        valueA = roleA ? (roleA.classList.contains('status-pill--role-admin') ? 'ADMIN' : 'USER') : '';
-                        valueB = roleB ? (roleB.classList.contains('status-pill--role-admin') ? 'ADMIN' : 'USER') : '';
-                        return compareNumbers(roleOrder[valueA] || 3, roleOrder[valueB] || 3, currentSort.direction);
-                    
-                    case 'verification':
-                        const verifiedOrder = { 'Vérifié': 1, 'Non vérifié': 2 };
-                        const statusSpanA = cellA.querySelector('.status-pill--success, .status-pill--warning');
-                        const statusSpanB = cellB.querySelector('.status-pill--success, .status-pill--warning');
-                        valueA = statusSpanA ? statusSpanA.textContent.trim() : '';
-                        valueB = statusSpanB ? statusSpanB.textContent.trim() : '';
-                        return compareNumbers(verifiedOrder[valueA] || 3, verifiedOrder[valueB] || 3, currentSort.direction);
-                    
-                    case 'date':
-                        // Parse date from format "dd/mm/yyyy HH:ii"
-                        const dateA = parseDate(cellA.textContent.trim());
-                        const dateB = parseDate(cellB.textContent.trim());
-                        return compareNumbers(dateA, dateB, currentSort.direction);
-                    
-                    default:
-                        return 0;
+                    });
+
+                    rows.forEach(row => tbody.appendChild(row));
+                    updateSortIcons(headers, header, currentSort.direction);
                 }
-            });
 
-            // Reorder rows in the DOM
-            rows.forEach(row => tbody.appendChild(row));
+                function compareStrings(a, b, direction) {
+                    a = a.toLowerCase();
+                    b = b.toLowerCase();
+                    if (a === b) return 0;
+                    const result = a > b ? 1 : -1;
+                    return direction === 'asc' ? result : -result;
+                }
 
-            // Update visual indicator on headers (optional)
-            updateSortIcons(header);
-        }
+                function compareNumbers(a, b, direction) {
+                    if (a === b) return 0;
+                    const result = a > b ? 1 : -1;
+                    return direction === 'asc' ? result : -result;
+                }
 
-        function compareStrings(a, b, direction) {
-            a = a.toLowerCase();
-            b = b.toLowerCase();
-            if (a === b) return 0;
-            const result = a > b ? 1 : -1;
-            return direction === 'asc' ? result : -result;
-        }
+                function parseDate(dateStr) {
+                    if (!dateStr || dateStr === '—') return 0;
+                    const [datePart, timePart] = dateStr.split(' ');
+                    const [day, month, year] = datePart.split('/');
+                    const [hour, minute] = timePart ? timePart.split(':') : ['00', '00'];
+                    return new Date(year, month - 1, day, hour, minute).getTime();
+                }
 
-        function compareNumbers(a, b, direction) {
-            if (a === b) return 0;
-            const result = a > b ? 1 : -1;
-            return direction === 'asc' ? result : -result;
-        }
+                function updateSortIcons(headers, clickedHeader, direction) {
+                    headers.forEach(h => {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                        const arrow = h.querySelector('.sort-arrow');
+                        if (arrow) arrow.remove();
+                    });
 
-        function parseDate(dateStr) {
-            if (!dateStr || dateStr === '—') return 0;
-            // Format: "dd/mm/yyyy HH:ii"
-            const [datePart, timePart] = dateStr.split(' ');
-            const [day, month, year] = datePart.split('/');
-            const [hour, minute] = timePart ? timePart.split(':') : ['00', '00'];
-            return new Date(year, month - 1, day, hour, minute).getTime();
-        }
+                    const arrowSpan = document.createElement('span');
+                    arrowSpan.className = 'sort-arrow';
+                    arrowSpan.textContent = direction === 'asc' ? ' ↑' : ' ↓';
+                    clickedHeader.appendChild(arrowSpan);
+                    clickedHeader.classList.add(direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            }
 
-        function updateSortIcons(clickedHeader) {
-            // Remove any existing arrow indicators
-            headers.forEach(h => {
-                h.classList.remove('sort-asc', 'sort-desc');
-                // Optional: remove inner arrow spans
-                const arrow = h.querySelector('.sort-arrow');
-                if (arrow) arrow.remove();
-            });
+            function fetchResults() {
+                const params = new URLSearchParams(new FormData(form));
 
-            // Add arrow to current column
-            const arrowSpan = document.createElement('span');
-            arrowSpan.className = 'sort-arrow';
-            arrowSpan.textContent = currentSort.direction === 'asc' ? ' ↑' : ' ↓';
-            clickedHeader.appendChild(arrowSpan);
-            clickedHeader.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-        }
-    });
+                fetch(`{{ path('app_admin_users') }}?${params.toString()}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    resultsContainer.innerHTML = html;
+
+                    const newUrl = `{{ path('app_admin_users') }}?${params.toString()}`;
+                    window.history.replaceState({}, '', newUrl);
+
+                    initTableSorting();
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement dynamique des utilisateurs :', error);
+                });
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(fetchResults, 300);
+                });
+            }
+
+            if (roleSelect) {
+                roleSelect.addEventListener('change', fetchResults);
+            }
+
+            initTableSorting();
+        });
     </script>
 {% endblock %}
 
@@ -483,13 +517,7 @@
 
         <div class="admin-card">
             <div class="toolbar">
-                <div class="toolbar__top">
-                    <span class="toolbar__count">
-                        {{ users|length }} utilisateur{{ users|length > 1 ? 's' : '' }}
-                    </span>
-                </div>
-
-                <form method="get" class="filters-form">
+                <form method="get" class="filters-form" id="dynamic-users-filter-form">
                     <div class="filters-form__group">
                         <label for="q">Recherche</label>
                         <input
@@ -498,6 +526,7 @@
                             name="q"
                             value="{{ search }}"
                             placeholder="Nom, prénom ou email..."
+                            autocomplete="off"
                         >
                     </div>
 
@@ -510,76 +539,15 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn--ghost">Appliquer</button>
-
-                    <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Réinitialiser</a>
+                    <div class="filters-form__group" style="align-self:end;">
+                        <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Réinitialiser</a>
+                    </div>
                 </form>
             </div>
 
-            {% if users is not empty %}
-                <div class="users-table-wrap">
-                    <table class="users-table">
-                        <thead>
-                            <tr>
-                                <th data-sort="string">Utilisateur</th>
-                                <th data-sort="string">Téléphone</th>
-                                <th data-sort="role">Rôle</th>
-                                <th data-sort="verification">Vérification</th>
-                                <th data-sort="date">Date création</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in users %}
-                                <tr>
-                                    <td>
-                                        <div class="user-cell">
-                                            <img src="{{ user.profileImage }}" alt="Photo" class="user-cell__avatar">
-                                            <div>
-                                                <div class="user-cell__name">{{ user.prenom }} {{ user.nom }}</div>
-                                                <div class="user-cell__email">{{ user.email }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>{{ user.telephone ?: '—' }}</td>
-                                    <td>
-                                        <span class="status-pill {{ user.role == 'ADMIN' ? 'status-pill--role-admin' : 'status-pill--role-user' }}">
-                                            {{ user.role }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="status-pill {{ user.isVerified ? 'status-pill--success' : 'status-pill--warning' }}">
-                                            {{ user.isVerified ? 'Vérifié' : 'Non vérifié' }}
-                                        </span>
-                                    </td>
-                                    <td>{{ user.createdAt ? user.createdAt|date('d/m/Y H:i') : '—' }}</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <a href="{{ path('app_admin_users_edit', {'id': user.id}) }}" class="btn btn--ghost">
-                                                Modifier
-                                            </a>
-
-                                            <form method="post"
-                                                  action="{{ path('app_admin_users_delete', {'id': user.id}) }}"
-                                                  class="danger-inline"
-                                                  onsubmit="return confirm('Voulez-vous vraiment supprimer cet utilisateur ?');">
-                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
-                                                <button type="submit" class="btn btn-delete">
-                                                    Supprimer
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    Aucun utilisateur trouvé avec ces critères.
-                </div>
-            {% endif %}
+            <div id="users-results">
+                {% include 'user_admin/_users_results.html.twig' with { users: users } %}
+            </div>
         </div>
     </section>
 {% endblock %}

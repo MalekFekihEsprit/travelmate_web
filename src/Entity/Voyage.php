@@ -105,7 +105,7 @@ class Voyage
     }
 
     #[ORM\ManyToOne(targetEntity: Destination::class, inversedBy: 'voyages')]
-    #[ORM\JoinColumn(name: 'id_destination', referencedColumnName: 'id_destination')]
+    #[ORM\JoinColumn(name: 'id_destination', referencedColumnName: 'id_destination', onDelete: 'CASCADE')]
     #[Assert\NotNull(message: 'La destination est obligatoire.')]
     private ?Destination $destination = null;
 

@@ -1,0 +1,1184 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Budgets — TravelMate{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ── TOOLBAR ─────────────────────────── */
+.toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .75rem;
+    margin-bottom: 1.5rem; padding: 1rem 1.25rem;
+    background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+}
+.toolbar__left  { display:flex; flex-wrap:wrap; gap:.6rem; flex:1; min-width:0; align-items:center; }
+.toolbar__right { display:flex; flex-wrap:wrap; gap:.6rem; flex-shrink:0; align-items:center; }
+
+.search-field {
+    display:flex; align-items:center; gap:.45rem;
+    background:var(--color-bg); border:1px solid var(--color-border);
+    border-radius:999px; padding:.48rem 1rem; min-width:240px;
+}
+.search-field:focus-within { border-color:rgba(196,111,75,.45); box-shadow:0 0 0 3px rgba(196,111,75,.1); }
+.search-field__input { border:none; outline:none; background:transparent; font:inherit; font-size:.88rem; color:var(--color-text); width:100%; }
+.search-field__input::placeholder { color:var(--color-text-muted); }
+.search-clear {
+    background:none; border:none; cursor:pointer; color:var(--color-text-muted);
+    font-size:1rem; line-height:1; padding:0; display:none; flex-shrink:0;
+}
+.search-clear:hover { color:var(--color-primary); }
+.search-clear.visible { display:block; }
+
+.filter-select {
+    appearance:none; -webkit-appearance:none;
+    background:var(--color-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e6258' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right .75rem center;
+    border:1px solid var(--color-border); border-radius:999px;
+    padding:.48rem 2.2rem .48rem 1rem; font:inherit; font-size:.86rem;
+    color:var(--color-text); cursor:pointer;
+}
+.filter-select:focus { outline:none; border-color:rgba(196,111,75,.45); }
+
+.filter-group { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--color-bg); padding: .3rem .8rem; border-radius: 999px; border: 1px solid var(--color-border); }
+.filter-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: .05em; }
+
+/* Style pour le select voyage */
+.voyage-select {
+    padding: .25rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    outline: none;
+}
+.voyage-select:focus {
+    border-color: var(--color-primary);
+}
+.voyage-select:hover {
+    border-color: var(--color-primary);
+}
+
+.filter-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+.chip {
+    padding: .25rem .7rem; border-radius: 999px; font-size: .75rem; font-weight: 600;
+    border: 1.5px solid var(--color-border); background: var(--color-bg);
+    color: var(--color-text-muted); cursor: pointer; transition: all .15s;
+}
+.chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.chip.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.chip--over.active { background: #b91c1c; border-color: #b91c1c; }
+.chip--ok.active   { background: #047857; border-color: #047857; }
+
+.btn-export {
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.46rem .95rem; border-radius:999px; font-size:.82rem; font-weight:600;
+    border:1.5px solid var(--color-border); background:var(--color-surface);
+    color:var(--color-text-muted); cursor:pointer;
+}
+.btn-export:hover { border-color:var(--color-primary); color:var(--color-primary); background:var(--color-hover); }
+
+/* ── SELECTION TOOLBAR ───────────────────────── */
+.selection-bar {
+    display:none; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.65rem;
+    padding:.75rem 1.15rem; margin-bottom:1rem;
+    background:rgba(196,111,75,.08); border:1.5px solid rgba(196,111,75,.3);
+    border-radius:var(--radius-lg);
+}
+.selection-bar.visible { display:flex; }
+.selection-bar__info { display:flex; align-items:center; gap:.7rem; font-size:.88rem; font-weight:600; color:var(--color-primary-dark); }
+.selection-bar__count {
+    background:var(--color-primary); color:#fff;
+    border-radius:999px; padding:.15rem .65rem; font-size:.78rem; font-weight:700;
+}
+.selection-bar__actions { display:flex; gap:.5rem; align-items:center; }
+.btn-sel {
+    display:inline-flex; align-items:center; gap:.35rem;
+    padding:.42rem .9rem; border-radius:999px; font-size:.82rem; font-weight:600;
+    border:1.5px solid; cursor:pointer;
+}
+.btn-sel--cancel { border-color:var(--color-border); background:var(--color-bg); color:var(--color-text-muted); }
+.btn-sel--cancel:hover { border-color:var(--color-primary); color:var(--color-primary); }
+.btn-sel--delete { border-color:#dc2626; background:#fee2e2; color:#b91c1c; }
+.btn-sel--delete:hover { background:#dc2626; color:#fff; }
+.btn-sel--select-all { border-color:var(--color-border); background:var(--color-bg); color:var(--color-text-muted); font-size:.78rem; }
+
+/* ── SUMMARY BAR ─────────────────────── */
+.summary-bar { display:grid; grid-template-columns:repeat(auto-fit, minmax(155px,1fr)); gap:.85rem; margin-bottom:1.75rem; }
+.summary-card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:.95rem 1.15rem; }
+.summary-card__label { font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--color-text-muted); margin-bottom:.2rem; }
+.summary-card__value { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:600; color:var(--color-primary); line-height:1.1; }
+.summary-card__sub { font-size:.74rem; color:var(--color-text-muted); margin-top:.1rem; }
+
+/* ── RESULTS META ────────────────────── */
+.results-meta {
+    font-size:.82rem; color:var(--color-text-muted); margin-bottom:.85rem;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;
+}
+
+/* ── LAYOUT WITH DETAIL PANEL ────────── */
+.budget-layout { display:grid; grid-template-columns:1fr; gap:1.5rem; }
+.budget-layout.with-detail { grid-template-columns:1fr 340px; }
+
+/* ── GRID ────────────────────────────── */
+.act-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:1.25rem; }
+
+/* ── CARD ────────────────────────────── */
+.act-card {
+    display:flex; flex-direction:column;
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); overflow:hidden;
+    transition:transform .2s, box-shadow .2s;
+    cursor:pointer; position:relative;
+}
+.act-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px var(--color-shadow); }
+.act-card.selected { border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(196,111,75,.18); }
+.act-card.active-detail { border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(196,111,75,.25); }
+
+.card-checkbox-wrap {
+    position:absolute; top:.6rem; left:.6rem; z-index:10;
+    opacity:0; transition:opacity .18s;
+}
+.act-card:hover .card-checkbox-wrap,
+.act-card.selected .card-checkbox-wrap,
+.select-mode .card-checkbox-wrap { opacity:1; }
+.card-checkbox {
+    width:20px; height:20px; border-radius:5px;
+    border:2px solid var(--color-primary); background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:0 1px 4px rgba(0,0,0,.15);
+}
+.act-card.selected .card-checkbox { background:var(--color-primary); }
+.card-checkbox::after { content:''; display:none; width:5px; height:9px; border:2px solid #fff; border-top:none; border-left:none; transform:rotate(45deg) translateY(-1px); }
+.act-card.selected .card-checkbox::after { display:block; }
+
+.act-card__img-wrap {
+    position:relative; height:110px;
+    background:linear-gradient(135deg, #f5ede3 0%, rgba(221,191,140,.3) 100%);
+    display:flex; align-items:center; justify-content:center;
+}
+.act-card__img-placeholder { font-size:2.2rem; }
+.act-card__badges { position:absolute; top:.55rem; right:.55rem; display:flex; gap:.3rem; }
+.act-card__body { flex:1; padding:.9rem 1rem 1rem; }
+.act-card__name { font-weight:700; font-size:.97rem; color:var(--color-text); }
+.act-card__location { font-size:.8rem; color:var(--color-text-muted); }
+.act-card__tags { display:flex; flex-wrap:wrap; gap:.3rem; margin:.3rem 0; }
+
+.budget-progress { margin-top:.35rem; height:5px; border-radius:99px; background:#e5e7eb; overflow:hidden; }
+.budget-progress__fill { height:100%; border-radius:99px; background:var(--color-secondary); }
+.budget-progress__fill--over { background:#dc2626; }
+
+.act-card__footer {
+    margin-top:auto; padding-top:.75rem;
+    border-top:1px solid var(--color-border);
+    display:flex; align-items:flex-end; justify-content:space-between; gap:.5rem;
+}
+.act-price-label { font-size:.68rem; text-transform:uppercase; color:var(--color-text-muted); }
+.act-price-value { font-family:'Fraunces',serif; font-size:1.05rem; font-weight:600; color:var(--color-primary); }
+
+.act-card__actions { display:flex; align-items:center; gap:.4rem; }
+.act-card__btn {
+    width:32px; height:32px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:.85rem; text-decoration:none; border:1.5px solid var(--color-border);
+    background:var(--color-bg); cursor:pointer;
+}
+.act-card__btn--view   { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
+.act-card__btn--edit:hover   { border-color:var(--color-primary); background:rgba(196,111,75,.1); }
+.act-card__btn--delete:hover { border-color:#dc2626; background:#fee2e2; }
+
+.badge { display:inline-flex; padding:.18rem .55rem; border-radius:999px; font-size:.68rem; font-weight:700; }
+.badge--cat { background:rgba(255,253,249,.92); color:var(--color-primary-dark); border:1px solid rgba(196,111,75,.2); }
+.badge--trending { background:#fde8e8; color:#b91c1c; }
+.tag { padding:.2rem .55rem; border-radius:999px; font-size:.72rem; background:#f3f4f6; color:#6b7280; border:1px solid #e5e7eb; }
+.tag--facile    { background:#d1fae5; color:#065f46; }
+.tag--difficile { background:#fee2e2; color:#991b1b; }
+
+.empty-state { grid-column:1/-1; text-align:center; padding:4rem 1rem; color:var(--color-text-muted); }
+
+/* hero */
+.act-hero {
+    border-radius:var(--radius-xl); overflow:hidden;
+    min-height:200px; display:flex; align-items:stretch; margin-bottom:1.75rem;
+    background:linear-gradient(135deg, #3b2a1a 0%, var(--color-primary) 100%);
+}
+.act-hero__content { flex:1; padding:1.8rem 2rem; color:#fff; }
+.act-hero__title { font-family:'Fraunces',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:600; }
+.btn-hero-primary {
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.55rem 1.25rem; background:#fff; color:var(--color-primary-dark);
+    border-radius:999px; font-weight:700; text-decoration:none;
+}
+.act-hero__stats {
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    padding:1.5rem 2.5rem; color:#fff;
+    border-left:1px solid rgba(255,255,255,.15);
+}
+.hero-stat__num   { font-family:'Fraunces',serif; font-size:2.6rem; font-weight:600; }
+.hero-stat__label { font-size:.76rem; text-transform:uppercase; opacity:.65; }
+
+/* detail panel */
+.detail-panel {
+    display:none;
+    background:var(--color-surface); border:1px solid var(--color-border);
+    border-radius:var(--radius-lg); overflow:hidden;
+    position:sticky; top:1.5rem; max-height:85vh; overflow-y:auto;
+}
+.detail-panel.visible { display:block; }
+
+.dp-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1rem 1.25rem; background:linear-gradient(135deg,#3b2a1a,var(--color-primary));
+    color:#fff;
+}
+.dp-close {
+    width:28px; height:28px; border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.4); background:rgba(255,255,255,.1);
+    cursor:pointer;
+}
+.dp-progress-wrap { padding:.85rem 1.15rem; border-bottom:1px solid var(--color-border); }
+.dp-progress-track { height:6px; background:#e5e7eb; border-radius:99px; overflow:hidden; }
+.dp-progress-fill { height:100%; border-radius:99px; background:var(--color-primary); }
+.dp-progress-fill--over { background:#dc2626; }
+
+.dp-stats { display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--color-border); }
+.dp-stat { padding:.75rem 1rem; border-right:1px solid var(--color-border); }
+.dp-stat:last-child { border-right:none; }
+.dp-stat__label { font-size:.62rem; text-transform:uppercase; color:var(--color-text-muted); }
+.dp-stat__value { font-family:'Fraunces',serif; font-size:.95rem; font-weight:600; }
+
+.dp-dep-list { list-style:none; margin:0; padding:0; max-height: 300px; overflow-y: auto; }
+.dp-dep-item {
+    display:flex; align-items:center; gap:.65rem;
+    padding:.7rem 1.15rem; border-bottom:1px solid var(--color-border);
+}
+.dp-dep-icon {
+    width:32px; height:32px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    background:#f3f4f6;
+}
+.dp-dep-label { font-size:.82rem; font-weight:600; }
+.dp-dep-meta  { font-size:.7rem; color:var(--color-text-muted); }
+.dp-dep-amount { font-family:'Fraunces',serif; font-size:.88rem; font-weight:600; white-space:nowrap; }
+
+.dp-actions { padding:.85rem 1.15rem; display:flex; flex-direction:column; gap:.45rem; border-top:1px solid var(--color-border); }
+.dp-btn {
+    display:flex; align-items:center; gap:.55rem;
+    padding:.6rem .95rem; border-radius:var(--radius-md);
+    font-size:.84rem; font-weight:600; text-decoration:none;
+    cursor:pointer;
+}
+.dp-btn--view   { background:var(--color-primary); color:#fff; }
+.dp-btn--edit   { background:rgba(196,111,75,.1); color:var(--color-primary-dark); border:1.5px solid rgba(196,111,75,.2); }
+.dp-btn--delete { background:rgba(220,38,38,.07); color:#b91c1c; border:1.5px solid rgba(220,38,38,.18); }
+
+/* pagination */
+.pagination-wrap {
+    display: flex; align-items: center; justify-content: center;
+    gap: .5rem; margin-top: 2rem; padding: 1.25rem;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg); flex-wrap: wrap;
+}
+.pag-btn {
+    min-width: 36px; height: 36px; padding: 0 .6rem;
+    border-radius: var(--radius-md); border: 1.5px solid var(--color-border);
+    background: var(--color-bg); color: var(--color-text-muted);
+    font-size: .85rem; font-weight: 600; cursor: pointer;
+}
+.pag-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.pag-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* modal */
+.modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    backdrop-filter:blur(3px); z-index:1000;
+    display:none; align-items:center; justify-content:center; padding:1rem;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+    background:var(--color-surface); border-radius:var(--radius-xl);
+    border:1px solid var(--color-border);
+    width:100%; max-width:440px;
+}
+.modal__header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.1rem 1.5rem; border-bottom:1px solid var(--color-border);
+}
+.modal__close {
+    width:30px; height:30px; border-radius:50%; border:1.5px solid var(--color-border);
+    background:var(--color-bg); cursor:pointer;
+}
+.modal__body { padding:1.5rem; text-align:center; }
+.modal__footer {
+    display:flex; align-items:center; justify-content:flex-end; gap:.65rem;
+    padding:1rem 1.5rem; border-top:1px solid var(--color-border);
+}
+.btn-modal-cancel {
+    padding:.52rem 1.15rem; border-radius:999px; font-size:.86rem; font-weight:600;
+    border:1.5px solid var(--color-border); background:var(--color-surface);
+    cursor:pointer;
+}
+.btn-modal-submit--danger {
+    padding:.56rem 1.4rem; border-radius:999px; font-size:.88rem; font-weight:700;
+    background:linear-gradient(135deg,#dc2626,#b91c1c); color:#fff;
+    border:none; cursor:pointer;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+
+{# Flash messages #}
+{% for msg in app.flashes('success') %}
+    <div style="background:#d1fae5;color:#065f46;padding:.8rem 1.15rem;border-radius:var(--radius-md);margin-bottom:1rem;">
+        ✅ {{ msg }}
+    </div>
+{% endfor %}
+
+{# PRE-COMPUTE #}
+{% set grandTotal = 0 %}
+{% set grandSpent = 0 %}
+{% set countOver  = 0 %}
+{% for budget in budgets %}
+    {% set tot = 0 %}
+    {% for dep in budget.depenses %}{% set tot = tot + dep.montantDepense %}{% endfor %}
+    {% set grandTotal = grandTotal + budget.montantTotal %}
+    {% set grandSpent = grandSpent + tot %}
+    {% if tot > budget.montantTotal %}{% set countOver = countOver + 1 %}{% endif %}
+{% endfor %}
+
+{# HERO #}
+<section class="act-hero">
+    <div class="act-hero__content">
+        <span style="font-size:.76rem;text-transform:uppercase;opacity:.7;">Gestion financière</span>
+        <h1 class="act-hero__title">Gérez vos budgets de voyage</h1>
+        <p style="opacity:.8;">Suivez vos dépenses, contrôlez vos coûts et profitez de vos voyages sans stress financier.</p>
+        <div style="margin-top:.4rem;">
+            <a href="{{ path('app_budget_new') }}" class="btn-hero-primary">+ Nouveau budget</a>
+        </div>
+    </div>
+    <div class="act-hero__stats">
+        <div class="hero-stat__num">{{ budgets|length }}</div>
+        <div class="hero-stat__label">Budgets</div>
+    </div>
+</section>
+
+{# SUMMARY BAR #}
+<div class="summary-bar">
+    <div class="summary-card">
+        <div class="summary-card__label">Budget total</div>
+        <div class="summary-card__value">{{ grandTotal|number_format(2, ',', ' ') }}</div>
+        <div class="summary-card__sub">toutes devises</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-card__label">Total dépensé</div>
+        <div class="summary-card__value" style="color:var(--color-text)">{{ grandSpent|number_format(2, ',', ' ') }}</div>
+        <div class="summary-card__sub">sur tous les budgets</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-card__label">Restant estimé</div>
+        <div class="summary-card__value" style="color:var(--color-secondary)">{{ (grandTotal - grandSpent)|number_format(2, ',', ' ') }}</div>
+        <div class="summary-card__sub">solde global</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-card__label">Budgets dépassés</div>
+        <div class="summary-card__value" style="color:{% if countOver > 0 %}#dc2626{% else %}var(--color-secondary){% endif %}">{{ countOver }}</div>
+        <div class="summary-card__sub">sur {{ budgets|length }} budgets</div>
+    </div>
+</div>
+
+{# TOOLBAR with FILTERS #}
+<div class="toolbar">
+    <div class="toolbar__left">
+        <!-- Search -->
+        <div class="search-field">
+            <span>🔍</span>
+            <input type="search" id="searchInput" class="search-field__input" placeholder="Nom, voyage, devise…" autocomplete="off">
+            <button class="search-clear" id="searchClear">✕</button>
+        </div>
+
+        <!-- Voyage Filter - DROPDOWN (liste déroulante) -->
+        <div class="filter-group">
+            <span class="filter-label">Voyage :</span>
+            <select id="voyageSelect" class="voyage-select">
+                <option value="all">Tous les voyages</option>
+            </select>
+        </div>
+
+        <!-- Devise Filter (multi-select chips) -->
+        <div class="filter-group">
+            <span class="filter-label">Devise :</span>
+            <div class="filter-chips" id="deviseChipsContainer">
+                <button class="chip active" data-devise="all">Toutes</button>
+            </div>
+        </div>
+
+        <!-- Statut Filter (multi-select chips) -->
+        <div class="filter-group">
+            <span class="filter-label">Statut :</span>
+            <div class="filter-chips" id="statutChipsContainer">
+                <button class="chip active" data-statut="all">Tous</button>
+                <button class="chip chip--ok" data-statut="ok">✔ Contrôlé</button>
+                <button class="chip chip--over" data-statut="over">⚠ Dépassé</button>
+            </div>
+        </div>
+    </div>
+    <div class="toolbar__right">
+        <select id="sortSelect" class="filter-select">
+            <option value="default">Ordre par défaut</option>
+            <option value="name-asc">Nom A → Z</option>
+            <option value="name-desc">Nom Z → A</option>
+            <option value="montant-desc">Montant ↓</option>
+            <option value="montant-asc">Montant ↑</option>
+            <option value="restant-desc">Restant ↓</option>
+            <option value="restant-asc">Restant ↑</option>
+            <option value="depenses-desc">Nb dépenses ↓</option>
+            <option value="depenses-asc">Nb dépenses ↑</option>
+        </select>
+        <button class="btn-export" id="resetFiltersBtn">⟳ Réinitialiser</button>
+    </div>
+</div>
+
+{# SELECTION BAR #}
+<div class="selection-bar" id="selectionBar">
+    <div class="selection-bar__info">
+        <span class="selection-bar__count" id="selCount">0</span>
+        budget(s) sélectionné(s)
+    </div>
+    <div class="selection-bar__actions">
+        <button class="btn-sel btn-sel--select-all" id="btnSelectAll">☑ Tout sélectionner</button>
+        <button class="btn-sel btn-sel--cancel" id="btnCancelSel">✕ Annuler</button>
+        <button class="btn-sel btn-sel--delete" id="btnDeleteSel">🗑️ Supprimer la sélection</button>
+    </div>
+</div>
+
+<div class="results-meta">
+    <span id="resultsCount"><strong>{{ budgets|length }}</strong> budget(s) affiché(s)</span>
+    <span id="activeFiltersLabel" style="color:var(--color-primary);font-weight:600"></span>
+</div>
+
+{# GRID + DETAIL PANEL #}
+<div class="budget-layout" id="budgetLayout">
+    <div>
+        <div class="act-grid" id="budgetGrid">
+            {% for budget in budgets %}
+                {% set totalDepense = 0 %}
+                {% for dep in budget.depenses %}
+                    {% set totalDepense = totalDepense + dep.montantDepense %}
+                {% endfor %}
+                {% set restant = budget.montantTotal - totalDepense %}
+                {% set isOver  = restant < 0 %}
+                {% set pct     = budget.montantTotal > 0 ? ((totalDepense / budget.montantTotal) * 100)|round(0) : 0 %}
+
+                {% set depsJson = [] %}
+                {% for d in budget.depenses %}
+                    {% set depsJson = depsJson|merge([{
+                        label: d.libelleDepense,
+                        montant: d.montantDepense,
+                        devise: d.deviseDepense ?? budget.deviseBudget ?? 'TND',
+                        categorie: d.categorieDepense,
+                        date: d.dateCreation|date('d/m/Y')
+                    }]) %}
+                {% endfor %}
+
+                <div class="act-card"
+                     data-id="{{ budget.idBudget }}"
+                     data-name="{{ budget.libelleBudget|lower }}"
+                     data-voyage="{{ budget.voyage ? budget.voyage.titreVoyage|lower : '' }}"
+                     data-voyage-id="{{ budget.voyage ? budget.voyage.idVoyage : '' }}"
+                     data-voyage-title="{{ budget.voyage ? budget.voyage.titreVoyage|e('html_attr') : '' }}"
+                     data-devise="{{ budget.deviseBudget ?? 'TND' }}"
+                     data-statut="{{ isOver ? 'over' : 'ok' }}"
+                     data-montant="{{ budget.montantTotal }}"
+                     data-depenses="{{ budget.depenses|length }}"
+                     data-restant="{{ restant }}"
+                     data-pct="{{ pct }}"
+                     data-libelle="{{ budget.libelleBudget|e('html_attr') }}"
+                     data-total-depense="{{ totalDepense }}"
+                     data-is-over="{{ isOver ? '1' : '0' }}"
+                     data-url-show="{{ path('app_budget_show', {id: budget.idBudget}) }}"
+                     data-url-edit="{{ path('app_budget_edit', {id: budget.idBudget}) }}"
+                     data-url-delete="{{ path('app_budget_delete', {id: budget.idBudget}) }}"
+                     data-csrf-delete="{{ csrf_token('delete' ~ budget.idBudget) }}"
+                     data-deps="{{ depsJson|json_encode|e('html_attr') }}"
+                     onclick="handleCardClick(event, this)">
+
+                    <div class="card-checkbox-wrap">
+                        <div class="card-checkbox"></div>
+                    </div>
+
+                    <div class="act-card__img-wrap">
+                        <div class="act-card__img-placeholder">💰</div>
+                        <div class="act-card__badges">
+                            <span class="badge badge--cat">{{ budget.deviseBudget ?? 'TND' }}</span>
+                            {% if isOver %}<span class="badge badge--trending">Dépassé</span>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="act-card__body">
+                        <div class="act-card__name">{{ budget.libelleBudget }}</div>
+                        {% if budget.voyage %}
+                            <div class="act-card__location">📍 {{ budget.voyage.titreVoyage }}</div>
+                        {% endif %}
+                        <div class="act-card__tags">
+                            <span class="tag">{{ budget.depenses|length }} dépenses</span>
+                            <span class="tag {{ isOver ? 'tag--difficile' : 'tag--facile' }}">
+                                {{ isOver ? '⚠ Dépassé' : '✔ Contrôlé' }}
+                            </span>
+                        </div>
+                        <div class="budget-progress">
+                            <div class="budget-progress__fill {{ isOver ? 'budget-progress__fill--over' : '' }}" style="width:{{ pct > 100 ? 100 : pct }}%"></div>
+                        </div>
+                        <div style="font-size:.7rem;color:var(--color-text-muted);text-align:right;">{{ pct }}% consommé</div>
+
+                        <div class="act-card__footer">
+                            <div>
+                                <div class="act-price-label">Budget total</div>
+                                <div class="act-price-value">{{ budget.montantTotal|number_format(2, ',', ' ') }} {{ budget.deviseBudget ?? 'TND' }}</div>
+                                <div style="font-size:.78rem;">Dépensé : {{ totalDepense|number_format(2, ',', ' ') }}</div>
+                                <div style="font-size:.82rem;font-weight:600;color:{{ isOver ? '#dc2626' : '#059669' }}">
+                                    {{ isOver ? '↑ Excès : ' ~ restant|abs|number_format(2, ',', ' ') : '↓ Restant : ' ~ restant|number_format(2, ',', ' ') }}
+                                </div>
+                            </div>
+                            <div class="act-card__actions" onclick="event.stopPropagation()">
+                                <a href="{{ path('app_budget_show', {id: budget.idBudget}) }}" class="act-card__btn act-card__btn--view">→</a>
+                                <a href="{{ path('app_budget_edit', {id: budget.idBudget}) }}" class="act-card__btn act-card__btn--edit">✏️</a>
+                                <button class="act-card__btn act-card__btn--delete" onclick="confirmDeleteOne(this)">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div style="font-size:3rem;">💸</div>
+                    <div style="font-weight:700;">Aucun budget pour l'instant</div>
+                    <p>Créez votre premier budget pour commencer à suivre vos dépenses.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div id="noResults" style="display:none;text-align:center;padding:3rem 1rem;">
+            <div style="font-size:2.5rem;">🔍</div>
+            <div style="font-weight:700;">Aucun résultat</div>
+            <p>Essayez de modifier vos filtres ou votre recherche.</p>
+        </div>
+
+        <div class="pagination-wrap" id="paginationWrap"></div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detailPanel">
+        <div class="dp-header">
+            <span class="dp-header__title" id="dp-title">—</span>
+            <button class="dp-close" onclick="closeDetailPanel()">✕</button>
+        </div>
+        <div class="dp-progress-wrap">
+            <div class="dp-progress-track">
+                <div class="dp-progress-fill" id="dp-progress-fill" style="width:0%"></div>
+            </div>
+        </div>
+        <div class="dp-stats">
+            <div class="dp-stat"><div class="dp-stat__label">Budget alloué</div><div class="dp-stat__value" id="dp-montant-total">—</div></div>
+            <div class="dp-stat"><div class="dp-stat__label">Total dépensé</div><div class="dp-stat__value" id="dp-depense-total">—</div></div>
+            <div class="dp-stat"><div class="dp-stat__label">Restant</div><div class="dp-stat__value" id="dp-restant">—</div></div>
+            <div class="dp-stat"><div class="dp-stat__label">Nb dépenses</div><div class="dp-stat__value" id="dp-nb-dep">—</div></div>
+        </div>
+        <ul class="dp-dep-list" id="dp-dep-list"></ul>
+        <div class="dp-actions" id="dp-actions"></div>
+    </div>
+</div>
+
+{# Hidden forms #}
+<form id="form-budget-delete" method="post" style="display:none">
+    <input type="hidden" name="_token" id="budget-delete-token">
+    <input type="hidden" name="_method" value="DELETE">
+</form>
+
+{# Bulk delete modal #}
+<div class="modal-overlay" id="modal-bulk-delete" onclick="if(event.target===this)closeBulkModal()">
+    <div class="modal">
+        <div class="modal__header"><span class="modal__title">🗑️ Suppression groupée</span><button class="modal__close" onclick="closeBulkModal()">✕</button></div>
+        <div class="modal__body">
+            <div style="font-size:2.5rem;">⚠️</div>
+            <div style="font-weight:700;">Confirmer la suppression</div>
+            <p>Supprimer <strong id="bulk-count" style="color:#dc2626"></strong> budget(s) ?<br>Cette action est irréversible.</p>
+            <div id="bulk-names" style="background:#f3f4f6;border-radius:8px;padding:.75rem;text-align:left;font-size:.82rem;max-height:120px;overflow-y:auto;"></div>
+        </div>
+        <div class="modal__footer">
+            <button class="btn-modal-cancel" onclick="closeBulkModal()">Annuler</button>
+            <button class="btn-modal-submit--danger" onclick="executeBulkDelete()">🗑️ Supprimer tout</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+/* ============================================================
+   CORE FILTERING - VOYAGE EN LISTE DEROULANTE
+   ============================================================ */
+
+const PER_PAGE = 6;
+
+// Filter state
+let state = {
+    search: '',
+    selectedVoyage: 'all',  // Pour le select (un seul voyage à la fois)
+    devises: new Set(['all']),
+    statuts: new Set(['all']),
+    sort: 'default',
+    page: 1
+};
+
+let allCards = [];
+let activeDetailCard = null;
+let selectedIds = new Set();
+let selectMode = false;
+
+// Helper: refresh card list from DOM
+function refreshCards() {
+    allCards = Array.from(document.querySelectorAll('.act-card'));
+}
+
+// ============================================================
+// VOYAGE FILTER - Liste déroulante (SELECT)
+// ============================================================
+function populateVoyageSelect() {
+    const select = document.getElementById('voyageSelect');
+    if (!select) return;
+
+    // Garder l'option "Tous les voyages"
+    select.innerHTML = '<option value="all">Tous les voyages</option>';
+
+    // Collecter les voyages uniques depuis les cartes
+    const voyagesMap = new Map();
+    allCards.forEach(card => {
+        const voyageId = card.dataset.voyageId;
+        const voyageTitle = card.dataset.voyageTitle;
+        if (voyageId && voyageTitle && !voyagesMap.has(voyageId)) {
+            voyagesMap.set(voyageId, voyageTitle);
+        }
+    });
+
+    // Trier et ajouter les options
+    const sorted = Array.from(voyagesMap.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+    for (const [id, title] of sorted) {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = title;
+        select.appendChild(option);
+    }
+
+    // Écouter le changement de sélection
+    select.addEventListener('change', (e) => {
+        state.selectedVoyage = e.target.value;
+        state.page = 1;
+        applyAllFilters();
+    });
+}
+
+// ============================================================
+// DEVISE FILTERS - Multi-select chips
+// ============================================================
+function populateDeviseFilters() {
+    const container = document.getElementById('deviseChipsContainer');
+    if (!container) return;
+
+    // Garder seulement "Toutes" au début
+    container.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'chip active';
+    allBtn.dataset.devise = 'all';
+    allBtn.textContent = 'Toutes';
+    container.appendChild(allBtn);
+
+    // Collecter les devises uniques
+    const devisesSet = new Set();
+    allCards.forEach(card => {
+        const devise = card.dataset.devise;
+        if (devise) devisesSet.add(devise);
+    });
+
+    // Ajouter les chips
+    const sorted = Array.from(devisesSet).sort();
+    for (const devise of sorted) {
+        const chip = document.createElement('button');
+        chip.className = 'chip';
+        chip.dataset.devise = devise;
+        chip.textContent = devise;
+        container.appendChild(chip);
+    }
+
+    // Attacher les événements click
+    document.querySelectorAll('#deviseChipsContainer .chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const value = chip.dataset.devise;
+            if (value === 'all') {
+                state.devises.clear();
+                state.devises.add('all');
+                document.querySelectorAll('#deviseChipsContainer .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            } else {
+                state.devises.delete('all');
+                if (state.devises.has(value)) {
+                    state.devises.delete(value);
+                    chip.classList.remove('active');
+                } else {
+                    state.devises.add(value);
+                    chip.classList.add('active');
+                }
+                if (state.devises.size === 0) {
+                    state.devises.add('all');
+                    const allChip = document.querySelector('#deviseChipsContainer .chip[data-devise="all"]');
+                    if (allChip) allChip.classList.add('active');
+                } else {
+                    const allChip = document.querySelector('#deviseChipsContainer .chip[data-devise="all"]');
+                    if (allChip) allChip.classList.remove('active');
+                }
+            }
+            state.page = 1;
+            applyAllFilters();
+        });
+    });
+}
+
+// ============================================================
+// STATUT FILTERS - Multi-select chips
+// ============================================================
+function initStatutFilters() {
+    document.querySelectorAll('#statutChipsContainer .chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const value = chip.dataset.statut;
+            if (value === 'all') {
+                state.statuts.clear();
+                state.statuts.add('all');
+                document.querySelectorAll('#statutChipsContainer .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            } else {
+                state.statuts.delete('all');
+                if (state.statuts.has(value)) {
+                    state.statuts.delete(value);
+                    chip.classList.remove('active');
+                } else {
+                    state.statuts.add(value);
+                    chip.classList.add('active');
+                }
+                if (state.statuts.size === 0) {
+                    state.statuts.add('all');
+                    const allChip = document.querySelector('#statutChipsContainer .chip[data-statut="all"]');
+                    if (allChip) allChip.classList.add('active');
+                } else {
+                    const allChip = document.querySelector('#statutChipsContainer .chip[data-statut="all"]');
+                    if (allChip) allChip.classList.remove('active');
+                }
+            }
+            state.page = 1;
+            applyAllFilters();
+        });
+    });
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+        state.search = e.target.value;
+        searchClear.classList.toggle('visible', state.search.length > 0);
+        state.page = 1;
+        applyAllFilters();
+    });
+
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        state.search = '';
+        searchClear.classList.remove('visible');
+        state.page = 1;
+        applyAllFilters();
+    });
+}
+
+// ============================================================
+// SORT
+// ============================================================
+function initSort() {
+    const sortSelect = document.getElementById('sortSelect');
+    if (!sortSelect) return;
+    sortSelect.addEventListener('change', (e) => {
+        state.sort = e.target.value;
+        state.page = 1;
+        applyAllFilters();
+    });
+}
+
+// ============================================================
+// RESET ALL FILTERS
+// ============================================================
+function initResetButton() {
+    const resetBtn = document.getElementById('resetFiltersBtn');
+    if (!resetBtn) return;
+    resetBtn.addEventListener('click', () => {
+        // Reset state
+        state.search = '';
+        state.selectedVoyage = 'all';
+        state.devises.clear();
+        state.devises.add('all');
+        state.statuts.clear();
+        state.statuts.add('all');
+        state.sort = 'default';
+        state.page = 1;
+
+        // Reset UI
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.value = '';
+        const searchClear = document.getElementById('searchClear');
+        if (searchClear) searchClear.classList.remove('visible');
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) sortSelect.value = 'default';
+        const voyageSelect = document.getElementById('voyageSelect');
+        if (voyageSelect) voyageSelect.value = 'all';
+
+        // Reset devise chips
+        document.querySelectorAll('#deviseChipsContainer .chip').forEach(c => {
+            c.classList.remove('active');
+            if (c.dataset.devise === 'all') c.classList.add('active');
+        });
+
+        // Reset statut chips
+        document.querySelectorAll('#statutChipsContainer .chip').forEach(c => {
+            c.classList.remove('active');
+            if (c.dataset.statut === 'all') c.classList.add('active');
+        });
+
+        applyAllFilters();
+    });
+}
+
+// ============================================================
+// CORE FILTER & PAGINATION
+// ============================================================
+function applyAllFilters() {
+    const q = state.search.toLowerCase().trim();
+
+    let visible = allCards.filter(card => {
+        // Text search
+        const textMatch = !q ||
+            card.dataset.name.includes(q) ||
+            (card.dataset.voyage && card.dataset.voyage.includes(q)) ||
+            card.dataset.devise.toLowerCase().includes(q);
+
+        // Voyage filter (select - une seule valeur)
+        let voyageMatch = state.selectedVoyage === 'all';
+        if (!voyageMatch && card.dataset.voyageId) {
+            voyageMatch = state.selectedVoyage === card.dataset.voyageId;
+        }
+
+        // Devise filter
+        let deviseMatch = state.devises.has('all') || state.devises.has(card.dataset.devise);
+
+        // Statut filter
+        let statutMatch = state.statuts.has('all') || state.statuts.has(card.dataset.statut);
+
+        return textMatch && voyageMatch && deviseMatch && statutMatch;
+    });
+
+    // Sort
+    visible.sort((a, b) => {
+        switch (state.sort) {
+            case 'name-asc': return a.dataset.name.localeCompare(b.dataset.name);
+            case 'name-desc': return b.dataset.name.localeCompare(a.dataset.name);
+            case 'montant-asc': return parseFloat(a.dataset.montant) - parseFloat(b.dataset.montant);
+            case 'montant-desc': return parseFloat(b.dataset.montant) - parseFloat(a.dataset.montant);
+            case 'depenses-asc': return parseInt(a.dataset.depenses) - parseInt(b.dataset.depenses);
+            case 'depenses-desc': return parseInt(b.dataset.depenses) - parseInt(a.dataset.depenses);
+            case 'restant-asc': return parseFloat(a.dataset.restant) - parseFloat(b.dataset.restant);
+            case 'restant-desc': return parseFloat(b.dataset.restant) - parseFloat(a.dataset.restant);
+            default: return 0;
+        }
+    });
+
+    // Pagination
+    const totalPages = Math.max(1, Math.ceil(visible.length / PER_PAGE));
+    if (state.page > totalPages) state.page = totalPages;
+
+    const start = (state.page - 1) * PER_PAGE;
+    const pageItems = visible.slice(start, start + PER_PAGE);
+
+    // Hide all, show page items
+    allCards.forEach(c => c.style.display = 'none');
+    pageItems.forEach(c => c.style.display = '');
+
+    // Update results count
+    const from = visible.length === 0 ? 0 : start + 1;
+    const to = Math.min(start + PER_PAGE, visible.length);
+    const resultsSpan = document.getElementById('resultsCount');
+    if (resultsSpan) {
+        resultsSpan.innerHTML = visible.length === 0
+            ? `<strong>0</strong> résultat`
+            : `<strong>${from}–${to}</strong> sur <strong>${visible.length}</strong> budget(s)`;
+    }
+
+    // Update active filters label
+    const parts = [];
+    if (q) parts.push(`🔍 "${q}"`);
+    if (state.selectedVoyage !== 'all') {
+        const select = document.getElementById('voyageSelect');
+        const selectedText = select?.options[select.selectedIndex]?.textContent || state.selectedVoyage;
+        parts.push(`Voyage: ${selectedText}`);
+    }
+    if (!state.devises.has('all')) parts.push(`Devise: ${[...state.devises].join(', ')}`);
+    if (!state.statuts.has('all')) parts.push(`Statut: ${[...state.statuts].map(s => s === 'ok' ? 'Contrôlé' : 'Dépassé').join(', ')}`);
+    if (state.sort !== 'default') parts.push('Trié');
+    const activeLabel = document.getElementById('activeFiltersLabel');
+    if (activeLabel) activeLabel.textContent = parts.length ? '— ' + parts.join(' · ') : '';
+
+    // Show/hide no results
+    const noResultsDiv = document.getElementById('noResults');
+    if (noResultsDiv) noResultsDiv.style.display = visible.length === 0 ? 'block' : 'none';
+
+    // Show/hide pagination
+    const pagWrap = document.getElementById('paginationWrap');
+    if (pagWrap) {
+        if (visible.length <= PER_PAGE) {
+            pagWrap.style.display = 'none';
+        } else {
+            pagWrap.style.display = 'flex';
+            renderPagination(totalPages);
+        }
+    }
+}
+
+function renderPagination(total) {
+    const pagWrap = document.getElementById('paginationWrap');
+    if (!pagWrap) return;
+    if (total <= 1) {
+        pagWrap.innerHTML = '';
+        return;
+    }
+    let html = '';
+    html += `<button class="pag-btn" onclick="goPage(${state.page - 1})" ${state.page === 1 ? 'disabled' : ''}>‹ Préc.</button>`;
+    for (let i = 1; i <= total; i++) {
+        if (i === state.page) {
+            html += `<button class="pag-btn active">${i}</button>`;
+        } else if (i === 1 || i === total || (i >= state.page - 2 && i <= state.page + 2)) {
+            html += `<button class="pag-btn" onclick="goPage(${i})">${i}</button>`;
+        } else if (i === state.page - 3 || i === state.page + 3) {
+            html += `<span class="pag-ellipsis">…</span>`;
+        }
+    }
+    html += `<button class="pag-btn" onclick="goPage(${state.page + 1})" ${state.page === total ? 'disabled' : ''}>Suiv. ›</button>`;
+    html += `<span class="pag-info">Page ${state.page} / ${total}</span>`;
+    pagWrap.innerHTML = html;
+}
+
+function goPage(page) {
+    state.page = page;
+    applyAllFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+// DETAIL PANEL
+// ============================================================
+const CAT_ICON = {
+    'hébergement':'🏨','hebergement':'🏨','transport':'✈️',
+    'restauration':'🍽️','nourriture':'🍽️','loisirs':'🎭',
+    'activité':'🎭','achats':'🛍️','shopping':'🛍️','santé':'💊','sante':'💊'
+};
+
+function openDetailPanel(card) {
+    if (activeDetailCard) activeDetailCard.classList.remove('active-detail');
+    activeDetailCard = card;
+    card.classList.add('active-detail');
+
+    const devise = card.dataset.devise;
+    const montant = parseFloat(card.dataset.montant);
+    const depensed = parseFloat(card.dataset.totalDepense);
+    const restant = parseFloat(card.dataset.restant);
+    const isOver = card.dataset.isOver === '1';
+    const pct = Math.min(parseInt(card.dataset.pct), 100);
+    const deps = JSON.parse(card.dataset.deps || '[]');
+
+    document.getElementById('dp-title').textContent = card.dataset.libelle;
+    document.getElementById('dp-montant-total').textContent = `${montant.toLocaleString('fr-FR')} ${devise}`;
+    document.getElementById('dp-depense-total').textContent = `${depensed.toLocaleString('fr-FR')} ${devise}`;
+    document.getElementById('dp-restant').textContent = (isOver ? '- ' : '+ ') + Math.abs(restant).toLocaleString('fr-FR') + ' ' + devise;
+    document.getElementById('dp-nb-dep').textContent = deps.length;
+
+    const fill = document.getElementById('dp-progress-fill');
+    fill.style.width = pct + '%';
+    fill.className = 'dp-progress-fill' + (isOver ? ' dp-progress-fill--over' : '');
+
+    const list = document.getElementById('dp-dep-list');
+    if (deps.length === 0) {
+        list.innerHTML = '<li class="dp-empty">📭 Aucune dépense enregistrée</li>';
+    } else {
+        list.innerHTML = deps.map(d => {
+            const cat = (d.categorie || '').toLowerCase();
+            const icon = CAT_ICON[cat] || '💸';
+            return `<li class="dp-dep-item">
+                <div class="dp-dep-icon">${icon}</div>
+                <div style="flex:1">
+                    <div class="dp-dep-label">${escapeHtml(d.label)}</div>
+                    <div class="dp-dep-meta">${escapeHtml(d.categorie)} · ${escapeHtml(d.date)}</div>
+                </div>
+                <div class="dp-dep-amount">${parseFloat(d.montant).toLocaleString('fr-FR')} <small>${escapeHtml(d.devise)}</small></div>
+            </li>`;
+        }).join('');
+    }
+
+    document.getElementById('dp-actions').innerHTML = `
+        <a href="${card.dataset.urlShow}" class="dp-btn dp-btn--view">→ Voir le détail complet</a>
+        <a href="${card.dataset.urlEdit}" class="dp-btn dp-btn--edit">✏️ Modifier le budget</a>
+        <button class="dp-btn dp-btn--delete" onclick="confirmDeleteOneByCard(document.querySelector('.act-card.active-detail'))">🗑️ Supprimer ce budget</button>
+    `;
+
+    document.getElementById('budgetLayout').classList.add('with-detail');
+    document.getElementById('detailPanel').classList.add('visible');
+}
+
+function closeDetailPanel() {
+    if (activeDetailCard) activeDetailCard.classList.remove('active-detail');
+    activeDetailCard = null;
+    document.getElementById('budgetLayout').classList.remove('with-detail');
+    document.getElementById('detailPanel').classList.remove('visible');
+}
+
+function escapeHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ============================================================
+// SELECTION & BULK DELETE
+// ============================================================
+function updateSelCount() {
+    document.getElementById('selCount').textContent = selectedIds.size;
+}
+
+function toggleSelectMode(on) {
+    selectMode = on;
+    document.getElementById('budgetGrid').classList.toggle('select-mode', on);
+    document.getElementById('selectionBar').classList.toggle('visible', on);
+    if (!on) {
+        selectedIds.clear();
+        allCards.forEach(c => c.classList.remove('selected'));
+        updateSelCount();
+    }
+}
+
+function toggleCardSelection(card) {
+    const id = card.dataset.id;
+    if (selectedIds.has(id)) {
+        selectedIds.delete(id);
+        card.classList.remove('selected');
+    } else {
+        selectedIds.add(id);
+        card.classList.add('selected');
+    }
+    if (selectedIds.size === 0) {
+        toggleSelectMode(false);
+    } else {
+        selectMode = true;
+        document.getElementById('selectionBar').classList.add('visible');
+        updateSelCount();
+    }
+}
+
+function handleCardClick(e, card) {
+    if (e.target.closest('.act-card__actions')) return;
+    if (e.target.closest('.card-checkbox-wrap') || selectMode) {
+        toggleCardSelection(card);
+        return;
+    }
+    openDetailPanel(card);
+}
+
+document.getElementById('btnCancelSel')?.addEventListener('click', () => toggleSelectMode(false));
+document.getElementById('btnSelectAll')?.addEventListener('click', () => {
+    const visible = allCards.filter(c => c.style.display !== 'none');
+    const allSelected = visible.every(c => selectedIds.has(c.dataset.id));
+    if (allSelected) {
+        visible.forEach(c => { selectedIds.delete(c.dataset.id); c.classList.remove('selected'); });
+        if (selectedIds.size === 0) toggleSelectMode(false);
+    } else {
+        visible.forEach(c => { selectedIds.add(c.dataset.id); c.classList.add('selected'); });
+        selectMode = true;
+        document.getElementById('selectionBar').classList.add('visible');
+        updateSelCount();
+    }
+});
+
+document.getElementById('btnDeleteSel')?.addEventListener('click', () => {
+    if (selectedIds.size === 0) return;
+    const names = [...selectedIds].map(id => {
+        const c = document.querySelector(`.act-card[data-id="${id}"]`);
+        return c ? escapeHtml(c.dataset.libelle) : id;
+    });
+    document.getElementById('bulk-count').textContent = selectedIds.size;
+    document.getElementById('bulk-names').innerHTML = names.map(n => `<div>• ${n}</div>`).join('');
+    document.getElementById('modal-bulk-delete').classList.add('open');
+});
+
+function closeBulkModal() {
+    document.getElementById('modal-bulk-delete').classList.remove('open');
+}
+
+async function executeBulkDelete() {
+    closeBulkModal();
+    const ids = [...selectedIds];
+    for (const id of ids) {
+        const card = document.querySelector(`.act-card[data-id="${id}"]`);
+        if (!card) continue;
+        const form = document.getElementById('form-budget-delete');
+        form.action = card.dataset.urlDelete;
+        document.getElementById('budget-delete-token').value = card.dataset.csrfDelete;
+        const fd = new FormData(form);
+        try {
+            await fetch(form.action, { method: 'POST', body: fd });
+        } catch(e) {}
+        card.remove();
+    }
+    toggleSelectMode(false);
+    window.location.reload();
+}
+
+function confirmDeleteOne(btn) {
+    const card = btn.closest('.act-card');
+    confirmDeleteOneByCard(card);
+}
+
+function confirmDeleteOneByCard(card) {
+    if (!card) return;
+    if (!confirm(`Supprimer le budget "${card.dataset.libelle}" et toutes ses dépenses ?`)) return;
+    const form = document.getElementById('form-budget-delete');
+    form.action = card.dataset.urlDelete;
+    document.getElementById('budget-delete-token').value = card.dataset.csrfDelete;
+    form.submit();
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    refreshCards();
+    populateVoyageSelect();    // Liste déroulante pour les voyages
+    populateDeviseFilters();   // Chips pour les devises
+    initStatutFilters();       // Chips pour les statuts
+    initSearch();
+    initSort();
+    initResetButton();
+    applyAllFilters();
+});
+</script>
+{% endblock %}

@@ -16,6 +16,22 @@ class HebergementRepository extends ServiceEntityRepository
         parent::__construct($registry, Hebergement::class);
     }
 
+    public function findDuplicateByName(string $name, ?int $excludeId = null): ?Hebergement
+    {
+        $queryBuilder = $this->createQueryBuilder('h')
+            ->where('TRIM(LOWER(h.nomHebergement)) = :name')
+            ->setParameter('name', mb_strtolower(trim($name)))
+            ->setMaxResults(1);
+
+        if ($excludeId !== null) {
+            $queryBuilder
+                ->andWhere('h.idHebergement != :excludeId')
+                ->setParameter('excludeId', $excludeId);
+        }
+
+        return $queryBuilder->getQuery()->getOneOrNullResult();
+    }
+
     //    /**
     //     * @return Hebergement[] Returns an array of Hebergement objects
     //     */

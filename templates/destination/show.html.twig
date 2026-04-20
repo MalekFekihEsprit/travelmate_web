@@ -4,13 +4,42 @@
 
 {% block body %}
 <section class="destination-detail">
-    <div class="destination-detail__header">
-        <div class="destination-detail__flag-rating">
-            {% if destination.flagDestination %}
-                <img src="{{ destination.flagDestination }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
-            {% endif %}
-            {% if destination.scoreDestination %}
-                <span class="destination-detail__rating">⭐ {{ destination.scoreDestination }}/5</span>
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success" style="margin-bottom: 1rem;">{{ message }}</div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger" style="margin-bottom: 1rem;">{{ message }}</div>
+    {% endfor %}
+
+    <div class="destination-detail__header {{ destination.imageName ? 'destination-detail__header--with-photo' : '' }}"{% if destination.imageName %} style="background-image: linear-gradient(145deg, rgba(28, 20, 14, 0.62), rgba(196, 111, 75, 0.62)), url('{{ asset('uploads/destinations/' ~ destination.imageName) }}');"{% endif %}>
+        <div class="destination-detail__header-top">
+            <div class="destination-detail__flag-rating">
+                {% if destination.flagDestination %}
+                    <img src="{{ destination.flagDestination }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
+                {% else %}
+                    <div class="destination-detail__flag-placeholder">🌍</div>
+                {% endif %}
+                <span class="destination-detail__rating">⭐ {{ average_score|default(destination.scoreDestination)|number_format(2, '.', '') }}/5</span>
+            </div>
+
+            {% if app.user %}
+                <form
+                    method="post"
+                    action="{{ path('app_destination_favorite_toggle', {'id_destination': destination.idDestination}) }}"
+                    class="destination-detail__favorite-form"
+                    data-destination-favorite-form
+                >
+                    <input type="hidden" name="_token" value="{{ csrf_token('favorite_destination_' ~ destination.idDestination) }}">
+                    <button
+                        type="submit"
+                        class="destination-detail__favorite-btn {{ is_favorite|default(false) ? 'is-favorite' : '' }}"
+                        aria-label="{{ is_favorite|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                        title="{{ is_favorite|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                    >
+                        ♥
+                    </button>
+                </form>
             {% endif %}
         </div>
         <h1>{{ destination.nomDestination }}</h1>
@@ -52,13 +81,56 @@
             </div>
         {% endif %}
 
+        {% if app.user %}
+            <div class="destination-detail__description">
+                <h3>Noter cette destination</h3>
+                {% set currentUserNote = user_note|default(null) %}
+                {% set initialRating = currentUserNote is not null ? currentUserNote|round(0, 'common') : 0 %}
+                <form method="post" action="{{ path('app_destination_rate', {'id_destination': destination.idDestination}) }}" class="destination-rating-form">
+                    <fieldset class="destination-rating__stars" aria-label="Votre note">
+                        {% for star in 5..1 %}
+                            <input
+                                type="radio"
+                                id="destination-rating-{{ star }}"
+                                name="note"
+                                value="{{ star }}"
+                                {% if star == initialRating %}checked{% endif %}
+                                onchange="if (this.form.requestSubmit) { this.form.requestSubmit(); } else { this.form.submit(); }"
+                            >
+                            <label for="destination-rating-{{ star }}" aria-label="{{ star }} étoile{{ star > 1 ? 's' : '' }}">★</label>
+                        {% endfor %}
+                    </fieldset>
+                    <input type="hidden" name="_token" value="{{ csrf_token('rate_destination_' ~ destination.idDestination) }}">
+                </form>
+            </div>
+        {% else %}
+            <div class="destination-detail__description">
+                <h3>Noter cette destination</h3>
+                <p>Connectez-vous pour donner une note.</p>
+            </div>
+        {% endif %}
+
         {% if destination.videoUrl and destination.videoUrl|trim %}
             <div class="destination-detail__video-wrapper">
                 <div class="destination-detail__video-container">
                     {% if 'youtube.com' in destination.videoUrl or 'youtu.be' in destination.videoUrl %}
-                        {% set videoId = destination.videoUrl|replace({'https://www.youtube.com/watch?v=': '', 'https://youtu.be/': '', 'https://youtube.com/watch?v=': '', 'http://www.youtube.com/watch?v=': '', 'http://youtu.be/': ''}) %}
+                        {% set videoUrl = destination.videoUrl|trim %}
+                        {% set videoId = '' %}
+
+                        {% if 'youtu.be/' in videoUrl %}
+                            {% set videoId = videoUrl|split('youtu.be/')|last|split('?')|first|split('&')|first|split('/')|first %}
+                        {% elseif '/shorts/' in videoUrl %}
+                            {% set videoId = videoUrl|split('/shorts/')|last|split('?')|first|split('&')|first|split('/')|first %}
+                        {% elseif 'watch?v=' in videoUrl %}
+                            {% set videoId = videoUrl|split('watch?v=')|last|split('&')|first|split('#')|first %}
+                        {% elseif '/embed/' in videoUrl %}
+                            {% set videoId = videoUrl|split('/embed/')|last|split('?')|first|split('&')|first|split('/')|first %}
+                        {% endif %}
+
                         {% if videoId and videoId|length > 0 %}
-                            <iframe width="100%" height="500" src="https://www.youtube.com/embed/{{ videoId }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            <iframe width="100%" height="500" src="https://www.youtube.com/embed/{{ videoId|trim }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        {% else %}
+                            <a href="{{ destination.videoUrl }}" target="_blank" rel="noopener noreferrer">Voir la vidéo sur YouTube</a>
                         {% endif %}
                     {% endif %}
                 </div>
@@ -83,8 +155,20 @@
     height: 120px;
     border-radius: 16px;
     box-shadow: 0 12px 40px rgba(196, 111, 75, 0.35);
-    object-fit: cover;
+    object-fit: contain;
+}
+
+.destination-detail__flag-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 16px;
     border: 4px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 40px rgba(196, 111, 75, 0.35);
 }
 
 .destination-detail__header {
@@ -97,6 +181,12 @@
     box-shadow: 0 20px 60px rgba(196, 111, 75, 0.25);
     position: relative;
     overflow: hidden;
+}
+
+.destination-detail__header--with-photo {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .destination-detail__header h1 {
@@ -115,6 +205,44 @@
     align-items: center;
     gap: 2rem;
     margin-bottom: 1.5rem;
+}
+
+.destination-detail__header-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.destination-detail__favorite-form {
+    margin: 0;
+}
+
+.destination-detail__favorite-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.75);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    cursor: pointer;
+    transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.destination-detail__favorite-btn:hover {
+    transform: translateY(-1px) scale(1.04);
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.destination-detail__favorite-btn.is-favorite {
+    background: #e53935;
+    color: #fff;
 }
 
 .destination-detail__flag {
@@ -208,6 +336,57 @@
     line-height: 2;
     color: var(--color-text);
     font-size: 0.95rem;
+}
+
+.destination-rating-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.destination-rating__stars {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 0.25rem;
+    align-items: center;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.destination-rating__stars input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.destination-rating__stars label {
+    border: 0;
+    background: transparent;
+    font-size: 2rem;
+    line-height: 1;
+    color: #d6d9de;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.12s ease, color 0.18s ease;
+}
+
+.destination-rating__stars label:hover,
+.destination-rating__stars label:hover ~ label,
+.destination-rating__stars input:checked ~ label {
+    color: #f1b70b;
+}
+
+.destination-rating__stars label:hover,
+.destination-rating__stars label:focus-visible {
+    transform: translateY(-1px) scale(1.03);
+    outline: none;
+}
+
+.destination-rating__stars input:checked + label,
+.destination-rating__stars input:checked ~ label {
+    color: #f1b70b;
 }
 
 .destination-detail__video-wrapper {
@@ -359,6 +538,42 @@
         padding: 0.9rem 1.5rem;
         font-size: 0.85rem;
     }
+
+    .destination-rating__stars label {
+        font-size: 1.75rem;
+    }
 }
 </style>
+
+<script>
+document.querySelectorAll('[data-destination-favorite-form]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                const button = form.querySelector('.destination-detail__favorite-btn');
+                if (!button || typeof data.is_favorite === 'undefined') {
+                    return;
+                }
+
+                button.classList.toggle('is-favorite', data.is_favorite);
+                button.setAttribute('aria-label', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+                button.setAttribute('title', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+            })
+            .catch(function () {
+                form.submit();
+            });
+    });
+});
+</script>
 {% endblock %}

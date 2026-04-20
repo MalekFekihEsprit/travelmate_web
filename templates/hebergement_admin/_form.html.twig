@@ -1,4 +1,14 @@
 <style>
+    .server-error-banner {
+        padding: 0.9rem 1rem;
+        border: 1px solid #e63946;
+        border-radius: 8px;
+        background: rgba(230, 57, 70, 0.08);
+        color: #a41f2a;
+        font-size: 0.9rem;
+        margin-bottom: 0.85rem;
+    }
+
     .admin-form ul {
         list-style: none;
         padding: 0;
@@ -28,6 +38,28 @@
         onsubmit: confirm_message is defined and confirm_message ? 'return confirm("' ~ confirm_message|e('js') ~ '");' : null
     }
 }) }}
+
+{% set formAlertMessage = null %}
+{% for error in form.nom_hebergement.vars.errors %}
+    {% if formAlertMessage is null %}
+        {% set formAlertMessage = error.message %}
+    {% endif %}
+{% endfor %}
+{% for error in form.vars.errors %}
+    {% if formAlertMessage is null %}
+        {% set formAlertMessage = error.message %}
+    {% endif %}
+{% endfor %}
+
+<div class="admin-form__group admin-form__group--full form-group-error">
+    {% if form.vars.submitted and not form.vars.valid %}
+        <div class="server-error-banner">Veuillez corriger les erreurs du formulaire.</div>
+    {% endif %}
+    {% if formAlertMessage is not null %}
+        <div class="server-error-banner">{{ formAlertMessage }}</div>
+    {% endif %}
+    {{ form_errors(form) }}
+</div>
 
 <div class="admin-form__grid">
     <div class="admin-form__group">
@@ -85,3 +117,11 @@
 </div>
 
 {{ form_end(form) }}
+
+{% if formAlertMessage is not null %}
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+    window.alert({{ formAlertMessage|json_encode|raw }});
+});
+</script>
+{% endif %}

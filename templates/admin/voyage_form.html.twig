@@ -1,0 +1,458 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}{{ page_title }} | TravelMate Admin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-voyage-form-page {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .admin-voyage-form-card,
+        .admin-voyage-form-flash {
+            padding: 1.35rem;
+            border-radius: 28px;
+            border: 1px solid rgba(196, 111, 75, 0.18);
+            background: linear-gradient(135deg, rgba(255,253,249,0.96), rgba(243,234,223,0.9));
+            box-shadow: var(--admin-shadow-soft);
+        }
+
+        .admin-voyage-form-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .admin-voyage-form-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            color: var(--admin-text);
+        }
+
+        .admin-voyage-form-text {
+            color: var(--admin-text-muted);
+            max-width: 60ch;
+        }
+
+        .admin-voyage-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .admin-voyage-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .admin-voyage-form-field {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .admin-voyage-form-field--full {
+            grid-column: 1 / -1;
+        }
+
+        .admin-voyage-form-label {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+
+        .travel-form__input {
+            width: 100%;
+            min-height: 48px;
+            padding: 0.82rem 0.95rem;
+            border-radius: 14px;
+            border: 1px solid var(--admin-border);
+            background: rgba(255, 253, 249, 0.96);
+            color: var(--admin-text);
+        }
+
+        .travel-form__input:focus {
+            outline: none;
+            border-color: rgba(196, 111, 75, 0.32);
+            box-shadow: 0 0 0 4px rgba(196, 111, 75, 0.1);
+            background: #fff;
+        }
+
+        .admin-voyage-form-errors {
+            color: var(--admin-danger);
+            font-size: 0.88rem;
+        }
+
+        .admin-voyage-form-errors ul {
+            list-style: none;
+        }
+
+        .admin-voyage-activity-picker {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.9rem;
+        }
+
+        .admin-voyage-activity-option {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            padding: 1rem;
+            border: 1px solid var(--admin-border);
+            border-radius: 18px;
+            background: rgba(255, 253, 249, 0.92);
+            cursor: pointer;
+        }
+
+        .admin-voyage-activity-option.is-hidden {
+            display: none;
+        }
+
+        .admin-voyage-activity-option__body {
+            display: grid;
+            gap: 0.28rem;
+        }
+
+        .admin-voyage-activity-option__title {
+            font-weight: 600;
+            color: var(--admin-text);
+        }
+
+        .admin-voyage-activity-option__meta,
+        .admin-voyage-activity-empty {
+            color: var(--admin-text-muted);
+            font-size: 0.88rem;
+        }
+
+        .admin-voyage-activity-empty {
+            padding: 1rem;
+            border: 1px dashed rgba(196, 111, 75, 0.28);
+            border-radius: 18px;
+            background: rgba(255, 253, 249, 0.72);
+        }
+
+        .admin-voyage-form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .admin-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 48px;
+            padding: 0.8rem 1.15rem;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .admin-action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .admin-action-btn--primary {
+            background: var(--admin-primary);
+            color: #fff;
+            box-shadow: 0 14px 28px rgba(196, 111, 75, 0.18);
+        }
+
+        .admin-action-btn--primary:hover {
+            background: var(--admin-primary-dark);
+        }
+
+        .admin-action-btn--ghost {
+            background: rgba(255, 253, 249, 0.92);
+            color: var(--admin-text-muted);
+            border-color: var(--admin-border);
+        }
+
+        .admin-action-btn--ghost:hover {
+            color: var(--admin-primary);
+            border-color: rgba(196, 111, 75, 0.28);
+            background: rgba(196, 111, 75, 0.06);
+            box-shadow: 0 10px 24px rgba(71, 48, 35, 0.06);
+        }
+
+        .admin-action-btn.is-submitting {
+            opacity: 0.6;
+            pointer-events: none;
+            cursor: wait;
+        }
+
+        @media (max-width: 900px) {
+            .admin-voyage-form-grid,
+            .admin-voyage-activity-picker {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-voyage-form-header,
+            .admin-voyage-form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <section class="admin-voyage-form-page">
+        {% for message in app.flashes('warning') %}
+            <div class="admin-voyage-form-flash">{{ message }}</div>
+        {% endfor %}
+
+        {% if not has_destinations %}
+            <div class="admin-voyage-form-flash">
+                Aucune destination n'est disponible pour le moment. Ajoutez d'abord une destination pour pouvoir enregistrer un voyage.
+            </div>
+        {% endif %}
+
+        {% if not has_activites %}
+            <div class="admin-voyage-form-flash">
+                Aucune activite n'est disponible pour le moment. Ajoutez d'abord des activites pour pouvoir les associer au voyage.
+            </div>
+        {% endif %}
+
+        <div class="admin-voyage-form-card">
+            <div class="admin-voyage-form-header">
+                <div>
+                    <h1 class="admin-voyage-form-title">{{ page_title }}</h1>
+                    <p class="admin-voyage-form-text">{{ page_text }}</p>
+                </div>
+
+                <a href="{{ path('app_admin_voyages') }}" class="admin-action-btn admin-action-btn--ghost">Retour au dashboard</a>
+            </div>
+
+            {{ form_start(form, {'attr': {'class': 'admin-voyage-form'}}) }}
+                <input type="hidden" name="_voyage_form_nonce" value="{{ form_nonce }}">
+                <div class="admin-voyage-form-errors">{{ form_errors(form) }}</div>
+
+                <div class="admin-voyage-form-grid">
+                    <div class="admin-voyage-form-field admin-voyage-form-field--full">
+                        <label class="admin-voyage-form-label" for="{{ form.titre_voyage.vars.id }}">{{ form.titre_voyage.vars.label }}</label>
+                        {{ form_widget(form.titre_voyage) }}
+                        <div class="admin-voyage-form-errors">{{ form_errors(form.titre_voyage) }}</div>
+                    </div>
+
+                    <div class="admin-voyage-form-field admin-voyage-form-field--full">
+                        <label class="admin-voyage-form-label" for="{{ form.destination.vars.id }}">{{ form.destination.vars.label }}</label>
+                        {{ form_widget(form.destination) }}
+                        <div class="admin-voyage-form-errors">{{ form_errors(form.destination) }}</div>
+                    </div>
+
+                    <div class="admin-voyage-form-field admin-voyage-form-field--full">
+                        <label class="admin-voyage-form-label" for="{{ form.activites.vars.id }}">{{ form.activites.vars.label }}</label>
+                        <div class="admin-voyage-activity-picker" data-activity-picker>
+                            {% for activityField in form.activites %}
+                                {% set activityLieu = activityField.vars.attr['data-activity-lieu'] ?? '' %}
+                                {% set activityDuree = activityField.vars.attr['data-activity-duree'] ?? '' %}
+                                {% set activityHaystack = activityField.vars.attr['data-activity-haystack'] ?? '' %}
+
+                                <label class="admin-voyage-activity-option" data-activity-option data-activity-haystack="{{ activityHaystack }}">
+                                    {{ form_widget(activityField) }}
+                                    <span class="admin-voyage-activity-option__body">
+                                        <span class="admin-voyage-activity-option__title">{{ activityField.vars.label }}</span>
+                                        <span class="admin-voyage-activity-option__meta">
+                                            {% if activityLieu %}
+                                                {{ activityLieu }}
+                                            {% else %}
+                                                Lieu non precise
+                                            {% endif %}
+                                            {% if activityDuree %}
+                                                • {{ activityDuree }} h
+                                            {% endif %}
+                                        </span>
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="admin-voyage-activity-empty" data-activity-empty>
+                            Selectionnez une destination pour afficher uniquement les activites correspondantes.
+                        </div>
+                        <div class="admin-voyage-form-errors">{{ form_errors(form.activites) }}</div>
+                    </div>
+
+                    <div class="admin-voyage-form-field">
+                        <label class="admin-voyage-form-label" for="{{ form.date_debut.vars.id }}">{{ form.date_debut.vars.label }}</label>
+                        {{ form_widget(form.date_debut) }}
+                        <div class="admin-voyage-form-errors">{{ form_errors(form.date_debut) }}</div>
+                    </div>
+
+                    <div class="admin-voyage-form-field">
+                        <label class="admin-voyage-form-label" for="{{ form.date_fin.vars.id }}">{{ form.date_fin.vars.label }}</label>
+                        {{ form_widget(form.date_fin) }}
+                        <div class="admin-voyage-form-errors">{{ form_errors(form.date_fin) }}</div>
+                    </div>
+
+                    <div class="admin-voyage-form-field admin-voyage-form-field--full">
+                        <label class="admin-voyage-form-label" for="{{ form.statut.vars.id }}">{{ form.statut.vars.label }}</label>
+                        {{ form_widget(form.statut) }}
+                        <div class="admin-voyage-form-errors">{{ form_errors(form.statut) }}</div>
+                    </div>
+                </div>
+
+                <div class="admin-voyage-form-actions">
+                    <a href="{{ path('app_admin_voyages') }}" class="admin-action-btn admin-action-btn--ghost">Annuler</a>
+                    <button type="submit" class="admin-action-btn admin-action-btn--primary" data-admin-voyage-submit>{{ submit_label }}</button>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var voyageForm = document.querySelector('.admin-voyage-form');
+            var submitButton = voyageForm ? voyageForm.querySelector('[data-admin-voyage-submit]') : null;
+            var destinationField = document.getElementById('{{ form.destination.vars.id }}');
+            var activityOptions = document.querySelectorAll('[data-activity-option]');
+            var activityEmpty = document.querySelector('[data-activity-empty]');
+
+            if (voyageForm && submitButton) {
+                var initialSubmitLabel = submitButton.textContent;
+
+                voyageForm.addEventListener('submit', function (event) {
+                    if (voyageForm.dataset.submitting === 'true') {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    voyageForm.dataset.submitting = 'true';
+                    submitButton.disabled = true;
+                    submitButton.classList.add('is-submitting');
+                    submitButton.textContent = 'Enregistrement...';
+                });
+
+                window.addEventListener('pageshow', function () {
+                    voyageForm.dataset.submitting = 'false';
+                    submitButton.disabled = false;
+                    submitButton.classList.remove('is-submitting');
+                    submitButton.textContent = initialSubmitLabel;
+                });
+            }
+
+            function normalize(value) {
+                return (value || '')
+                    .toString()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .trim();
+            }
+
+            function tokenize(values) {
+                return values
+                    .flatMap(function (value) {
+                        return normalize(value).split(/[^a-z0-9]+/);
+                    })
+                    .filter(function (token, index, tokens) {
+                        return token.length >= 4 && tokens.indexOf(token) === index;
+                    });
+            }
+
+            function getDestinationTerms() {
+                if (!destinationField) {
+                    return [];
+                }
+
+                var selectedOption = destinationField.options[destinationField.selectedIndex];
+
+                if (!selectedOption || !selectedOption.value) {
+                    return [];
+                }
+
+                return [
+                    selectedOption.dataset.destinationName,
+                    selectedOption.dataset.destinationCountry,
+                    selectedOption.dataset.destinationRegion,
+                    selectedOption.dataset.destinationAliases,
+                ]
+                    .flatMap(function (value) {
+                        return (value || '').split('|');
+                    })
+                    .map(normalize)
+                    .filter(function (term) {
+                        return term.length > 0;
+                    });
+            }
+
+            function applyActivityVisibility(option, shouldShow) {
+                var input = option.querySelector('input');
+
+                option.classList.toggle('is-hidden', !shouldShow);
+
+                if (!input) {
+                    return;
+                }
+
+                input.disabled = !shouldShow;
+
+                if (!shouldShow) {
+                    input.checked = false;
+                }
+            }
+
+            function syncActivities() {
+                if (!destinationField || activityOptions.length === 0) {
+                    return;
+                }
+
+                var destinationTerms = getDestinationTerms();
+                var destinationTokens = tokenize(destinationTerms);
+                var strictMatchCount = 0;
+
+                activityOptions.forEach(function (option) {
+                    var haystack = normalize(option.dataset.activityHaystack);
+                    var matches = destinationTerms.length > 0 && (
+                        destinationTerms.some(function (term) {
+                            return haystack.includes(term);
+                        }) || destinationTokens.some(function (token) {
+                            return haystack.includes(token);
+                        })
+                    );
+
+                    if (matches) {
+                        strictMatchCount += 1;
+                    }
+
+                    option.dataset.strictMatch = matches ? 'true' : 'false';
+                });
+
+                activityOptions.forEach(function (option) {
+                    var shouldShow = destinationTerms.length > 0 && option.dataset.strictMatch === 'true';
+
+                    applyActivityVisibility(option, shouldShow);
+                });
+
+                if (activityEmpty) {
+                    if (destinationTerms.length === 0) {
+                        activityEmpty.textContent = 'Selectionnez une destination pour afficher uniquement les activites correspondantes.';
+                        activityEmpty.hidden = false;
+                    } else if (strictMatchCount === 0) {
+                        activityEmpty.textContent = 'Aucune activite ne correspond a la destination selectionnee.';
+                        activityEmpty.hidden = false;
+                    } else {
+                        activityEmpty.hidden = true;
+                    }
+                }
+            }
+
+            if (destinationField) {
+                destinationField.addEventListener('change', syncActivities);
+                syncActivities();
+            }
+        });
+    </script>
+{% endblock %}

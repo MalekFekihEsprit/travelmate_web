@@ -1,0 +1,578 @@
+{% extends 'base_admin.html.twig' %}
+{% block title %}{{ budget.libelleBudget }} — Détail{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+.anim { animation: fadeUp .4s ease both; }
+
+.amt-pos { color:var(--admin-success); font-weight:700; }
+.amt-neg { color:var(--admin-danger); font-weight:700; }
+
+.leader-item {
+    display:flex;
+    justify-content:space-between;
+    padding:.6rem .8rem;
+    border-radius:10px;
+    margin-bottom:.4rem;
+    background:rgba(0,0,0,.03);
+}
+.leader-item.top1 { background:rgba(196,111,75,.12); }
+
+.admin-table tbody tr:hover {
+    background:rgba(196,111,75,.05);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card {
+    background: rgba(255,253,249,.94);
+    border: 1px solid var(--admin-border);
+    border-radius: 16px;
+    padding: 1rem;
+}
+
+.stat-card__title {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--admin-text-muted);
+    margin-bottom: .75rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--admin-primary);
+}
+
+.health-status {
+    display: inline-block;
+    padding: .25rem .75rem;
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 600;
+}
+
+.health-exceeded { background: rgba(191,91,91,.15); color: var(--admin-danger); }
+.health-critical { background: rgba(191,91,91,.1); color: #dc3545; }
+.health-warning { background: rgba(255,193,7,.15); color: #ffc107; }
+.health-healthy { background: rgba(40,167,69,.1); color: #28a745; }
+
+/* Chart containers */
+.chart-container {
+    background: rgba(255,253,249,.94);
+    border: 1px solid var(--admin-border);
+    border-radius: 24px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+.chart-container__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+.chart-container__title {
+    font-size: .96rem;
+    font-weight: 700;
+    color: var(--admin-text);
+}
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+
+{# ── 🔙 BACK BUTTON ── #}
+<div style="margin-bottom:1rem;">
+    {% if budget.voyage %}
+        <a href="{{ path('admin_budget_index', {'voyage': budget.voyage.idVoyage}) }}"
+           style="display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-radius:10px;background:rgba(196,111,75,.08);color:var(--admin-primary);font-weight:600;text-decoration:none;transition:.2s;">
+            ← Back to voyage budgets
+        </a>
+    {% else %}
+        <a href="{{ path('admin_budget_index') }}"
+           style="display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-radius:10px;background:rgba(196,111,75,.08);color:var(--admin-primary);font-weight:600;text-decoration:none;">
+            ← Back to budgets
+        </a>
+    {% endif %}
+</div>
+
+{# ── HEADER ── #}
+<div class="admin-page-header anim" style="margin-bottom:1rem;">
+    <div>
+        <span class="admin-page-header__eyebrow">Budget · {{ budget.deviseBudget }}</span>
+        <h1 class="admin-page-header__title">{{ budget.libelleBudget }}</h1>
+    </div>
+</div>
+
+{# ── KPIs ── #}
+<div class="admin-grid admin-grid--4 anim" style="margin-bottom:1rem;">
+    <div class="admin-kpi">
+        <div>💰 Total Amount</div>
+        <div style="font-size:1.5rem; font-weight:700;">{{ budget.montantTotal|number_format(0,',',' ') }} {{ budget.deviseBudget }}</div>
+    </div>
+    <div class="admin-kpi">
+        <div>📤 Spent</div>
+        <div style="font-size:1.5rem; font-weight:700;">{{ totalDepenses|number_format(0,',',' ') }} {{ budget.deviseBudget }}</div>
+    </div>
+    <div class="admin-kpi">
+        <div>🏦 Remaining</div>
+        <div style="font-size:1.5rem; font-weight:700;" class="{{ reste < 0 ? 'amt-neg' : 'amt-pos' }}">
+            {{ reste|number_format(0,',',' ') }}
+        </div>
+    </div>
+    <div class="admin-kpi">
+        <div>🧾 Expenses count</div>
+        <div style="font-size:1.5rem; font-weight:700;">{{ nbDepenses }}</div>
+    </div>
+</div>
+
+{# ── Health Status Card ── #}
+<div class="admin-card anim" style="margin-bottom:1rem;">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title">💡 Budget Health</h3>
+    </div>
+    <div style="padding:1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <span class="health-status health-{{ health.status }}">
+                    {% if health.status == 'exceeded' %}🔴 Exceeded
+                    {% elseif health.status == 'critical' %}🟠 Critical (90%+)
+                    {% elseif health.status == 'warning' %}🟡 Warning (75%+)
+                    {% else %}🟢 Healthy{% endif %}
+                </span>
+            </div>
+            <div style="flex:1; max-width:300px;">
+                <div class="budget-bar" style="height:8px;">
+                    <div class="budget-bar__fill budget-bar__fill--{{ health.percentage >= 90 ? 'danger' : (health.percentage >= 75 ? 'warn' : 'ok') }}" 
+                         style="width: {{ health.percentage > 100 ? 100 : health.percentage }}%"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:0.5rem;">
+                    <span>0%</span>
+                    <span>{{ health.percentage }}%</span>
+                    <span>100%</span>
+                </div>
+            </div>
+            <div>
+                <div>Spent: {{ health.total_spent|number_format(0,',',' ') }}</div>
+                <div>Remaining: {{ health.remaining|number_format(0,',',' ') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── CHARTS SECTION ── #}
+<div class="anim">
+    {# Chart 1: Expenses by Category (Pie/Donut) #}
+    <div class="chart-container">
+        <div class="chart-container__header">
+            <div>
+                <div class="chart-container__title">📊 Expenses by Category</div>
+                <div style="font-size:.78rem;color:var(--admin-text-muted);">Distribution of spending by category</div>
+            </div>
+            <span style="font-size:1.3rem;">🥧</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="expensesByCategoryChart"></canvas>
+        </div>
+    </div>
+
+    {# Chart 2: Daily Spending Trend (Line Chart) #}
+    <div class="chart-container">
+        <div class="chart-container__header">
+            <div>
+                <div class="chart-container__title">📈 Daily Spending Trend</div>
+                <div style="font-size:.78rem;color:var(--admin-text-muted);">Daily expenses over time</div>
+            </div>
+            <span style="font-size:1.3rem;">📅</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="dailyTrendChart"></canvas>
+        </div>
+    </div>
+
+    {# Chart 3: Payment Methods (Bar Chart) #}
+    <div class="chart-container">
+        <div class="chart-container__header">
+            <div>
+                <div class="chart-container__title">💳 Spending by Payment Method</div>
+                <div style="font-size:.78rem;color:var(--admin-text-muted);">Comparison of payment methods</div>
+            </div>
+            <span style="font-size:1.3rem;">💳</span>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="paymentMethodsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{# ── Statistics Section ── #}
+<div class="stats-grid anim">
+    <div class="stat-card">
+        <div class="stat-card__title">📊 By Category</div>
+        {% for cat in statsByCategory %}
+            <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px solid var(--admin-border);">
+                <span>{{ cat.categorie_depense }}</span>
+                <span style="font-weight:600;">{{ cat.total|number_format(0,',',' ') }} {{ budget.deviseBudget }}</span>
+            </div>
+        {% else %}
+            <div class="admin-empty">No data</div>
+        {% endfor %}
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card__title">💳 By Payment Method</div>
+        {% for method in statsByPaymentMethod %}
+            <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px solid var(--admin-border);">
+                <span>{{ method.type_paiement }}</span>
+                <span style="font-weight:600;">{{ method.total|number_format(0,',',' ') }} {{ budget.deviseBudget }}</span>
+            </div>
+        {% else %}
+            <div class="admin-empty">No data</div>
+        {% endfor %}
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-card__title">📅 Top Spending Days</div>
+        {% set dailyTotals = {} %}
+        {% for depense in depenses %}
+            {% set dateKey = depense.dateCreation|date('Y-m-d') %}
+            {% set dailyTotals = dailyTotals|merge({(dateKey): (dailyTotals[dateKey]|default(0) + depense.montantDepense)}) %}
+        {% endfor %}
+        {% set sortedDays = dailyTotals|sort((a,b) => b <=> a)|slice(0,5) %}
+        {% for date, total in sortedDays %}
+            <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px solid var(--admin-border);">
+                <span>{{ date|date('d/m/Y') }}</span>
+                <span style="font-weight:600;">{{ total|number_format(0,',',' ') }} {{ budget.deviseBudget }}</span>
+            </div>
+        {% else %}
+            <div class="admin-empty">No data</div>
+        {% endfor %}
+    </div>
+</div>
+
+{# ── 🏆 TOP BUDGETS COMPARISON ── #}
+{% if allBudgets is defined and allBudgets|length > 1 %}
+<div class="admin-card anim" style="margin-bottom:1rem;">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title">🏆 Budget Comparison</h3>
+    </div>
+    <div style="padding:1rem;">
+        {% set sortedBudgets = allBudgets|slice(0,5) %}
+        {% for budgetItem in sortedBudgets %}
+            <div style="display:flex; justify-content:space-between; margin-bottom:.5rem; padding:.5rem; background:{% if budgetItem.id == budget.idBudget %}rgba(196,111,75,.1){% else %}transparent{% endif %}; border-radius:8px;">
+                <div>
+                    {% if loop.index == 1 %}🥇
+                    {% elseif loop.index == 2 %}🥈
+                    {% elseif loop.index == 3 %}🥉
+                    {% endif %}
+                    {{ budgetItem.budget }}
+                    {% if budgetItem.id == budget.idBudget %} <span style="font-size:.7rem;">(current)</span>{% endif %}
+                </div>
+                <div>
+                    <span style="font-weight:600;">{{ budgetItem.percentage }}%</span>
+                    <span style="font-size:.75rem; color:var(--admin-text-muted);">
+                        ({{ budgetItem.spent|number_format(0,',',' ') }}/{{ budgetItem.total|number_format(0,',',' ') }})
+                    </span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# ── 🏆 LEADERBOARD CATEGORIES ── #}
+<div class="admin-card anim" style="margin-bottom:1rem;">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title">🏆 Top Spending Categories</h3>
+    </div>
+    <div style="padding:1rem;">
+        {% set sortedCategories = parCategorie|sort((a,b)=> b <=> a) %}
+        {% set rank = 1 %}
+        {% for cat, montant in sortedCategories %}
+            <div class="leader-item {{ rank == 1 ? 'top1' }}">
+                <div>
+                    {% if rank == 1 %}🥇
+                    {% elseif rank == 2 %}🥈
+                    {% elseif rank == 3 %}🥉
+                    {% else %}#{{ rank }}
+                    {% endif %}
+                    {{ cat }}
+                </div>
+                <div>
+                    {{ montant|number_format(0,',',' ') }} {{ budget.deviseBudget }}
+                </div>
+            </div>
+            {% set rank = rank + 1 %}
+        {% else %}
+            <div>No data</div>
+        {% endfor %}
+    </div>
+</div>
+
+{# ── EXPENSES TABLE ── #}
+<div class="admin-card anim">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title">Expenses ({{ nbDepenses }})</h3>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for d in depenses %}
+                <tr>
+                    <td><strong>{{ d.libelleDepense }}</strong></td>
+                    <td>{{ d.categorieDepense }}</td>
+                    <td>{{ d.montantDepense|number_format(0,',',' ') }} {{ d.deviseDepense }}</td>
+                    <td>{{ d.typePaiement }}</td>
+                    <td>{{ d.dateCreation|date('d/m/Y') }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="admin-empty">No expenses</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# ── Data bridge: Twig → JS for charts ── #}
+<script type="application/json" id="chart-categories-labels">
+    {{ statsByCategory|map(cat => cat.categorie_depense)|json_encode|raw }}
+</script>
+<script type="application/json" id="chart-categories-values">
+    {{ statsByCategory|map(cat => cat.total)|json_encode|raw }}
+</script>
+<script type="application/json" id="chart-payment-labels">
+    {{ statsByPaymentMethod|map(method => method.type_paiement)|json_encode|raw }}
+</script>
+<script type="application/json" id="chart-payment-values">
+    {{ statsByPaymentMethod|map(method => method.total)|json_encode|raw }}
+</script>
+<script type="application/json" id="chart-daily-labels">
+    {% set dailyData = {} %}
+    {% for depense in depenses %}
+        {% set dateKey = depense.dateCreation|date('d/m/Y') %}
+        {% set dailyData = dailyData|merge({(dateKey): (dailyData[dateKey]|default(0) + depense.montantDepense)}) %}
+    {% endfor %}
+    {% set sortedDates = dailyData|keys|sort %}
+    {{ sortedDates|json_encode|raw }}
+</script>
+<script type="application/json" id="chart-daily-values">
+    {% set dailyValues = [] %}
+    {% for date in sortedDates|default([]) %}
+        {% set dailyValues = dailyValues|merge([dailyData[date]]) %}
+    {% endfor %}
+    {{ dailyValues|json_encode|raw }}
+</script>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+Chart.defaults.font.family = "'Outfit', sans-serif";
+Chart.defaults.color = '#71665c';
+
+const palette = ['#c46f4b','#2f7f79','#ddbf8c','#bf5b5b','#6b8f71','#a85a39','#1f5c58','#e8b86b','#7c9a8e','#d49c6c'];
+const devise = '{{ budget.deviseBudget }}';
+
+// Get data from DOM
+const categoryLabels = JSON.parse(document.getElementById('chart-categories-labels').textContent || '[]');
+const categoryValues = JSON.parse(document.getElementById('chart-categories-values').textContent || '[]');
+const paymentLabels = JSON.parse(document.getElementById('chart-payment-labels').textContent || '[]');
+const paymentValues = JSON.parse(document.getElementById('chart-payment-values').textContent || '[]');
+const dailyLabels = JSON.parse(document.getElementById('chart-daily-labels').textContent || '[]');
+const dailyValues = JSON.parse(document.getElementById('chart-daily-values').textContent || '[]');
+
+// Chart 1: Expenses by Category (Doughnut Chart)
+if (document.getElementById('expensesByCategoryChart') && categoryLabels.length > 0) {
+    new Chart(document.getElementById('expensesByCategoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                data: categoryValues,
+                backgroundColor: categoryLabels.map((_, i) => palette[i % palette.length] + 'cc'),
+                borderColor: categoryLabels.map((_, i) => palette[i % palette.length]),
+                borderWidth: 2,
+                hoverOffset: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyleWidth: 10,
+                        font: { size: 12 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return `${label}: ${value.toLocaleString()} ${devise} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateRotate: true,
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+}
+
+// Chart 2: Daily Spending Trend (Line Chart)
+if (document.getElementById('dailyTrendChart') && dailyLabels.length > 0) {
+    new Chart(document.getElementById('dailyTrendChart'), {
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: 'Daily Spending',
+                data: dailyValues,
+                borderColor: '#c46f4b',
+                backgroundColor: 'rgba(196,111,75,0.05)',
+                borderWidth: 3,
+                pointBackgroundColor: '#c46f4b',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.3,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Spent: ${context.raw.toLocaleString()} ${devise}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { 
+                        font: { size: 10 },
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: true,
+                        maxTicksLimit: 10
+                    }
+                },
+                y: {
+                    grid: { color: 'rgba(231,220,205,.5)' },
+                    ticks: {
+                        font: { size: 11 },
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+}
+
+// Chart 3: Payment Methods (Bar Chart)
+if (document.getElementById('paymentMethodsChart') && paymentLabels.length > 0) {
+    new Chart(document.getElementById('paymentMethodsChart'), {
+        type: 'bar',
+        data: {
+            labels: paymentLabels,
+            datasets: [{
+                label: 'Amount by Payment Method',
+                data: paymentValues,
+                backgroundColor: paymentLabels.map((_, i) => palette[i % palette.length] + 'cc'),
+                borderColor: paymentLabels.map((_, i) => palette[i % palette.length]),
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Amount: ${context.raw.toLocaleString()} ${devise}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                },
+                y: {
+                    grid: { color: 'rgba(231,220,205,.5)' },
+                    ticks: {
+                        font: { size: 11 },
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

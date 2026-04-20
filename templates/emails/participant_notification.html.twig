@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ email_title }}</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f4ede5; color: #241b17; font-family: Georgia, 'Times New Roman', serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(180deg, #efe3d3 0%, #f8f3ed 100%); margin: 0; padding: 32px 16px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 680px; background: #fffdfa; border-radius: 28px; overflow: hidden; box-shadow: 0 20px 60px rgba(69, 46, 32, 0.14);">
+                    <tr>
+                        <td style="padding: 32px 36px; background: radial-gradient(circle at top left, rgba(219, 182, 122, 0.45), transparent 34%), linear-gradient(135deg, #fff7ef 0%, #f2e3d3 100%); border-bottom: 1px solid #ecdac6;">
+                            <div style="font-family: Arial, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #b06b41; margin-bottom: 14px;">TravelMate</div>
+                            <h1 style="margin: 0 0 12px; font-size: 34px; line-height: 1.1; color: #241b17;">{{ email_title }}</h1>
+                            <p style="margin: 0; font-family: Arial, sans-serif; font-size: 15px; line-height: 1.7; color: #5f5047;">{{ email_intro }}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 32px 36px 20px;">
+                            <p style="margin: 0 0 22px; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #3d312b;">Bonjour {{ recipient_name }},</p>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse: separate; border-spacing: 0; background: #fcf6f0; border: 1px solid #f0ddca; border-radius: 22px; overflow: hidden; margin-bottom: 24px;">
+                                <tr>
+                                    <td style="padding: 24px 24px 18px;">
+                                        <div style="font-family: Arial, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #9d5d39; margin-bottom: 12px;">Recapitulatif</div>
+                                        <div style="font-size: 28px; line-height: 1.15; color: #241b17; margin-bottom: 16px;">{{ voyage.titreVoyage }}</div>
+
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-family: Arial, sans-serif; font-size: 14px; color: #5f5047;">
+                                            <tr>
+                                                <td style="padding: 8px 0; width: 140px; font-weight: 700; color: #3d312b;">Role</td>
+                                                <td style="padding: 8px 0;">{{ role_label }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; width: 140px; font-weight: 700; color: #3d312b;">Destination</td>
+                                                <td style="padding: 8px 0;">{{ destination_name ?: 'Non precisee' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; width: 140px; font-weight: 700; color: #3d312b;">Statut</td>
+                                                <td style="padding: 8px 0;">{{ is_role_update ? 'Participation mise a jour' : 'Participation confirmee' }}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom: 22px;">
+                                <tr>
+                                    <td align="center" bgcolor="#b86d45" style="border-radius: 999px;">
+                                        <a href="{{ voyage_url }}" style="display: inline-block; padding: 14px 24px; font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; color: #fffdfa; text-decoration: none;">{{ button_label }}</a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0 0 12px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.7; color: #5f5047;">Vous pouvez consulter les details du voyage a tout moment depuis votre espace TravelMate.</p>
+                            <p style="margin: 0; font-family: Arial, sans-serif; font-size: 13px; line-height: 1.7; color: #8b7769;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur : {{ voyage_url }}</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

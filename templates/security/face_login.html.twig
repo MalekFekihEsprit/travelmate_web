@@ -1,0 +1,246 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion par visage | TravelMate{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .face-shell { max-width: 1100px; margin: 0 auto; padding: 2rem 0 3rem; }
+        .face-grid { display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; }
+        .face-panel, .face-card {
+            border: 1px solid var(--color-border);
+            border-radius: 30px;
+            background: rgba(255,253,249,.94);
+            padding: 1.8rem;
+        }
+        .face-panel {
+            background: linear-gradient(135deg, rgba(255,253,249,.96), rgba(243,234,223,.92));
+        }
+        .face-title { font-family:'Fraunces', serif; font-size:2rem; margin-bottom:.6rem; }
+        .face-text { color: var(--color-text-muted); margin-bottom: 1rem; }
+        .flash-stack { display:grid; gap:.75rem; margin-bottom:1rem; }
+        .flash-message {
+            padding:.95rem 1rem; border-radius:16px; border:1px solid transparent;
+        }
+        .flash-message--error { background:rgba(191,91,91,.10); border-color:rgba(191,91,91,.16); color:#9e4747; }
+        .camera-wrap {
+            border:1px solid var(--color-border);
+            border-radius:24px;
+            overflow:hidden;
+            background:#111;
+            position: relative;
+            aspect-ratio: 4 / 3;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+        video, canvas, .captured-preview {
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+        }
+        canvas { display:none; }
+        .captured-preview { display:none; }
+        .face-actions {
+            display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;
+        }
+        .btn-face {
+            min-height:48px; padding:0 1rem; border-radius:999px; border:0; cursor:pointer; font-weight:700;
+        }
+        .btn-face--primary { background: var(--color-primary); color:#fff; }
+        .btn-face--ghost { background: transparent; color: var(--color-primary); border:1px solid rgba(196,111,75,.22); }
+        .file-input-wrap { margin-top:1rem; }
+        .face-submit {
+            width:100%; min-height:52px; margin-top:1.25rem;
+            border:0; border-radius:999px; background:var(--color-primary); color:#fff; font-weight:700; cursor:pointer;
+        }
+        @media (max-width: 900px) {
+            .face-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<section class="face-shell">
+    <div class="face-grid">
+        <div class="face-panel">
+            <h1 class="face-title">Connexion par visage</h1>
+            <p class="face-text">
+                Placez votre visage devant la caméra ou importez une photo nette de votre visage.
+                Si un visage enregistré correspond, vous serez connecté automatiquement.
+            </p>
+
+            <ul style="color:var(--color-text-muted); padding-left:1.1rem; line-height:1.8;">
+                <li>Utilisez une image nette, bien éclairée</li>
+                <li>Gardez un seul visage dans le cadre</li>
+                <li>Vous pouvez aussi continuer avec email et mot de passe</li>
+            </ul>
+
+            <div style="margin-top:1.2rem;">
+                <a href="{{ path('app_login') }}" class="btn-face btn-face--ghost" style="display:inline-flex; align-items:center; text-decoration:none;">
+                    Retour à la connexion classique
+                </a>
+            </div>
+        </div>
+
+        <div class="face-card">
+            <div class="flash-stack">
+                {% for message in app.flashes('error') %}
+                    <div class="flash-message flash-message--error">{{ message }}</div>
+                {% endfor %}
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="face-login-form">
+                <div class="camera-wrap">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                    <img id="capturedPreview" class="captured-preview" alt="Capture visage">
+                </div>
+
+                <div class="face-actions">
+                    <button type="button" class="btn-face btn-face--ghost" id="startCameraBtn">Activer la caméra</button>
+                    <button type="button" class="btn-face btn-face--ghost" id="captureBtn">Capturer</button>
+                    <button type="button" class="btn-face btn-face--ghost" id="resetBtn">Réinitialiser</button>
+                </div>
+
+                <div class="file-input-wrap">
+                    <label for="faceImage" style="display:block; margin-bottom:.5rem; font-weight:600;">Ou importer une image</label>
+                    <input type="file" name="faceImage" id="faceImage" accept="image/*" capture="user">
+                </div>
+
+                <button type="submit" class="face-submit">Se connecter avec le visage</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // DOM elements
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const capturedPreview = document.getElementById('capturedPreview');
+            const faceInput = document.getElementById('faceImage');
+            const startCameraBtn = document.getElementById('startCameraBtn');
+            const captureBtn = document.getElementById('captureBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const loginForm = document.querySelector('form'); // Adjust selector if needed
+
+            let stream = null;
+
+            // Start camera and show video
+            async function startCamera() {
+                if (stream) {
+                    // Already running, just ensure video is visible
+                    video.style.display = 'block';
+                    capturedPreview.style.display = 'none';
+                    return;
+                }
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user' },
+                        audio: false
+                    });
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    capturedPreview.style.display = 'none';
+                } catch (e) {
+                    console.error('Camera error:', e);
+                    alert('Impossible d’accéder à la caméra. Vérifiez les permissions.');
+                }
+            }
+
+            // Stop all camera tracks
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                    video.srcObject = null;
+                }
+            }
+
+            // Capture photo from video stream
+            function capturePhoto() {
+                if (!video.videoWidth || !video.videoHeight) {
+                    alert('Activez la caméra avant de capturer.');
+                    return;
+                }
+
+                // Set canvas dimensions to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert canvas to blob and create file
+                canvas.toBlob(blob => {
+                    if (!blob) {
+                        alert('Erreur lors de la capture.');
+                        return;
+                    }
+
+                    const file = new File([blob], 'face-capture.jpg', { type: 'image/jpeg' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    faceInput.files = dataTransfer.files;
+
+                    // Show preview, hide video
+                    capturedPreview.src = URL.createObjectURL(blob);
+                    capturedPreview.style.display = 'block';
+                    video.style.display = 'none';
+
+                    // Stop camera to save resources
+                    stopCamera();
+                }, 'image/jpeg', 0.95);
+            }
+
+            // Reset everything: clear file input, show video, restart camera
+            function resetCapture() {
+                // Clear file input
+                faceInput.value = '';
+                // Clear preview
+                if (capturedPreview.src) {
+                    URL.revokeObjectURL(capturedPreview.src);
+                    capturedPreview.src = '';
+                }
+                capturedPreview.style.display = 'none';
+                // Show video element
+                video.style.display = 'block';
+                // Restart camera (stop old stream and start fresh)
+                stopCamera();
+                startCamera();
+            }
+
+            // Event listeners
+            startCameraBtn.addEventListener('click', startCamera);
+            captureBtn.addEventListener('click', capturePhoto);
+            resetBtn.addEventListener('click', resetCapture);
+
+            // Optional: auto-start camera when page loads
+            startCamera();
+
+            // Clean up when leaving the page
+            window.addEventListener('beforeunload', () => {
+                if (capturedPreview.src) URL.revokeObjectURL(capturedPreview.src);
+                stopCamera();
+            });
+
+            // If user manually selects a file via the file input, show preview and stop camera
+            faceInput.addEventListener('change', () => {
+                if (faceInput.files && faceInput.files[0]) {
+                    const file = faceInput.files[0];
+                    if (capturedPreview.src) URL.revokeObjectURL(capturedPreview.src);
+                    capturedPreview.src = URL.createObjectURL(file);
+                    capturedPreview.style.display = 'block';
+                    video.style.display = 'none';
+                    stopCamera();
+                }
+            });
+        });
+    </script>
+{% endblock %}

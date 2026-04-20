@@ -1,0 +1,71 @@
+{% if users is not empty %}
+    <div class="users-table-wrap">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th data-sort="string">Utilisateur</th>
+                    <th data-sort="string">Téléphone</th>
+                    <th data-sort="role">Rôle</th>
+                    <th data-sort="verification">Vérification</th>
+                    <th data-sort="date">Date création</th>
+                    <th>Confiance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <img src="{{ user.profileImage }}" alt="Photo" class="user-cell__avatar">
+                                <div>
+                                    <div class="user-cell__name">{{ user.prenom }} {{ user.nom }}</div>
+                                    <div class="user-cell__email">{{ user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.telephone ?: '—' }}</td>
+                        <td>
+                            <span class="status-pill {{ user.role == 'ADMIN' ? 'status-pill--role-admin' : 'status-pill--role-user' }}">
+                                {{ user.role }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-pill {{ user.isVerified ? 'status-pill--success' : 'status-pill--warning' }}">
+                                {{ user.isVerified ? 'Vérifié' : 'Non vérifié' }}
+                            </span>
+                        </td>
+                        <td>{{ user.createdAt ? user.createdAt|date('d/m/Y H:i') : '—' }}</td>
+                        <td>
+                            <span class="status-pill
+                                {{ user.trustScore >= 80 ? 'status-pill--success' : (user.trustScore >= 50 ? 'status-pill--warning' : 'status-pill--danger') }}">
+                                {{ user.trustScore }}/100
+                            </span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <a href="{{ path('app_admin_users_edit', {'id': user.id}) }}" class="btn btn--ghost">
+                                    Modifier
+                                </a>
+
+                                <form method="post"
+                                      action="{{ path('app_admin_users_delete', {'id': user.id}) }}"
+                                      class="danger-inline"
+                                      onsubmit="return confirm('Voulez-vous vraiment supprimer cet utilisateur ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
+                                    <button type="submit" class="btn btn-delete">
+                                        Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        Aucun utilisateur trouvé avec ces critères.
+    </div>
+{% endif %}

@@ -178,6 +178,16 @@
         margin-bottom: 1.5rem;
     }
 
+    .server-error-banner {
+        padding: 0.9rem 1rem;
+        border: 1px solid #e63946;
+        border-radius: 8px;
+        background: rgba(230, 57, 70, 0.08);
+        color: #a41f2a;
+        font-size: 0.9rem;
+        margin-bottom: 0.85rem;
+    }
+
     .admin-form ul.form-error-list {
         list-style: none;
         padding: 0;
@@ -198,6 +208,64 @@
     .admin-form .has-error .admin-input:focus {
         box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.15);
     }
+
+    .admin-form__label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .btn--ai {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.78rem;
+        border: 1px solid #c46f4b;
+        background: rgba(196, 111, 75, 0.08);
+        color: #8a4628;
+        border-radius: 6px;
+    }
+
+    .btn--ai:hover {
+        background: rgba(196, 111, 75, 0.15);
+    }
+
+    .btn--ai:disabled {
+        opacity: 0.65;
+        cursor: wait;
+    }
+
+    .btn--season {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.78rem;
+        border: 1px solid #4b8ac4;
+        background: rgba(75, 138, 196, 0.08);
+        color: #27547a;
+        border-radius: 6px;
+    }
+
+    .btn--season:hover {
+        background: rgba(75, 138, 196, 0.15);
+    }
+
+    .btn--season:disabled {
+        opacity: 0.65;
+        cursor: wait;
+    }
+
+    .ai-status {
+        margin-top: 0.5rem;
+        font-size: 0.78rem;
+        color: #6d737a;
+        min-height: 1.1rem;
+    }
+
+    .ai-status.is-error {
+        color: #d63838;
+    }
+
+    .ai-status.is-success {
+        color: #0c8a5d;
+    }
 </style>
 
 {{ form_start(form, {
@@ -208,7 +276,54 @@
     }
 }) }}
 
+{% set formAlertMessage = null %}
+{% for error in form.nom_destination.vars.errors %}
+    {% if formAlertMessage is null %}
+        {% set formAlertMessage = error.message %}
+    {% endif %}
+{% endfor %}
+{% for error in form.vars.errors %}
+    {% if formAlertMessage is null %}
+        {% set formAlertMessage = error.message %}
+    {% endif %}
+{% endfor %}
+
+<div class="admin-form__group admin-form__group--full form-group-error">
+    {% if form.vars.submitted and not form.vars.valid %}
+        <div class="server-error-banner">Veuillez corriger les erreurs du formulaire.</div>
+    {% endif %}
+    {% if formAlertMessage is not null %}
+        <div class="server-error-banner">{{ formAlertMessage }}</div>
+    {% endif %}
+    {{ form_errors(form) }}
+</div>
+
 <div class="admin-form__grid">
+
+    {# Pays #}
+    <div class="admin-form__group">
+        {{ form_label(form.pays_destination, 'Pays') }}
+        <div class="admin-form-wrapper">
+            {{ form_widget(form.pays_destination, {
+                'attr': {
+                    'class': 'admin-input',
+                    'placeholder': 'ex: France',
+                    'data-validate': 'required|minLength:2|pattern:[a-zA-ZÀ-ÿ -]+',
+                    'data-error-required': 'Le pays est requis',
+                    'data-error-minLength': 'Le pays doit avoir au moins 2 caractères',
+                    'data-error-pattern': 'Le pays ne doit contenir que des lettres'
+                }
+            }) }}
+            {% set paysHasErrors = form.pays_destination.vars.errors|length > 0 %}
+            <div class="field-error {{ paysHasErrors ? 'show' : '' }}" data-error-for="pays_destination">
+                {% if paysHasErrors %}
+                    {% for error in form.pays_destination.vars.errors %}
+                        {{ error.message }}{% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
     {# Nom Destination #}
     <div class="admin-form__group">
@@ -225,69 +340,23 @@
                     'data-error-pattern': 'Le nom ne doit contenir que des lettres'
                 }
             }) }}
-            <div class="field-error" data-error-for="nom_destination"></div>
-        </div>
-    </div>
-
-    {# Pays #}
-    <div class="admin-form__group">
-        {{ form_label(form.pays_destination, 'Pays') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.pays_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: France',
-                    'data-validate': 'required|minLength:2|pattern:[a-zA-ZÀ-ÿ -]+',
-                    'data-error-required': 'Le pays est requis',
-                    'data-error-minLength': 'Le pays doit avoir au moins 2 caractères',
-                    'data-error-pattern': 'Le pays ne doit contenir que des lettres'
-                }
-            }) }}
-            <div class="field-error" data-error-for="pays_destination"></div>
-        </div>
-    </div>
-
-    {# Région #}
-    <div class="admin-form__group">
-        {{ form_label(form.region_destination, 'Région') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.region_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: Île-de-France',
-                    'data-validate': 'pattern:[a-zA-ZÀ-ÿ -]*'
-                }
-            }) }}
-            <div class="field-error" data-error-for="region_destination"></div>
-            <p class="field-hint">Optionnel</p>
-        </div>
-    </div>
-
-    {# Score #}
-    <div class="admin-form__group">
-        {{ form_label(form.score_destination, 'Note (1-5)') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.score_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'type': 'number',
-                    'min': '1',
-                    'max': '5',
-                    'placeholder': 'ex: 5',
-                    'data-validate': 'required|number|min:1|max:5',
-                    'data-error-required': 'La note est requise',
-                    'data-error-number': 'La note doit être un nombre',
-                    'data-error-min': 'La note doit être entre 1 et 5',
-                    'data-error-max': 'La note doit être entre 1 et 5'
-                }
-            }) }}
-            <div class="field-error" data-error-for="score_destination"></div>
+            {% set nomHasErrors = form.nom_destination.vars.errors|length > 0 %}
+            <div class="field-error {{ nomHasErrors ? 'show' : '' }}" data-error-for="nom_destination">
+                {% if nomHasErrors %}
+                    {% for error in form.nom_destination.vars.errors %}
+                        {{ error.message }}{% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
         </div>
     </div>
 
     {# Description #}
     <div class="admin-form__group admin-form__group--full">
-        {{ form_label(form.description_destination, 'Description') }}
+        <div class="admin-form__label-row">
+            {{ form_label(form.description_destination, 'Description') }}
+            <button type="button" id="aiGenerateDescription" class="btn btn--ai">Generer avec IA</button>
+        </div>
         <div class="admin-form-wrapper">
             {{ form_widget(form.description_destination, {
                 'attr': {
@@ -299,6 +368,7 @@
                 }
             }) }}
             <div class="field-error" data-error-for="description_destination"></div>
+            <div id="aiStatus" class="ai-status" aria-live="polite"></div>
         </div>
     </div>
 
@@ -319,7 +389,10 @@
 
     {# Saison #}
     <div class="admin-form__group">
-        {{ form_label(form.saison_destination, 'Meilleure saison') }}
+        <div class="admin-form__label-row">
+            {{ form_label(form.saison_destination, 'Meilleure saison') }}
+            <button type="button" id="aiSuggestSeason" class="btn btn--season">Suggérer la saison idéale</button>
+        </div>
         <div class="admin-form-wrapper">
             {{ form_widget(form.saison_destination, {
                 'attr': {
@@ -329,57 +402,7 @@
                 }
             }) }}
             <div class="field-error" data-error-for="saison_destination"></div>
-        </div>
-    </div>
-
-    {# Devise #}
-    <div class="admin-form__group">
-        {{ form_label(form.currency_destination, 'Devise') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.currency_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: EUR',
-                    'data-validate': 'required|maxLength:10',
-                    'data-error-required': 'La devise est requise',
-                    'data-error-maxLength': 'La devise ne doit pas dépasser 10 caractères'
-                }
-            }) }}
-            <div class="field-error" data-error-for="currency_destination"></div>
-        </div>
-    </div>
-
-    {# Langues #}
-    <div class="admin-form__group admin-form__group--full">
-        {{ form_label(form.languages_destination, 'Langues parlées') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.languages_destination, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: Français, Anglais',
-                    'data-validate': 'required|minLength:2',
-                    'data-error-required': 'Les langues sont requises',
-                    'data-error-minLength': 'Veuillez entrer au moins 2 caractères'
-                }
-            }) }}
-            <div class="field-error" data-error-for="languages_destination"></div>
-        </div>
-    </div>
-
-    {# URL Vidéo #}
-    <div class="admin-form__group admin-form__group--full">
-        {{ form_label(form.video_url, 'Lien vidéo YouTube') }}
-        <div class="admin-form-wrapper">
-            {{ form_widget(form.video_url, {
-                'attr': {
-                    'class': 'admin-input',
-                    'placeholder': 'ex: https://www.youtube.com/watch?v=...',
-                    'data-validate': 'url',
-                    'data-error-url': 'Veuillez entrer une URL valide'
-                }
-            }) }}
-            <div class="field-error" data-error-for="video_url"></div>
-            <p class="field-hint">Optionnel - YouTube uniquement</p>
+            <div id="seasonStatus" class="ai-status" aria-live="polite"></div>
         </div>
     </div>
 
@@ -398,6 +421,202 @@
 {{ form_end(form) }}
 
 <script>
+const locationValidateUrl = '{{ path('app_destination_location_validate') }}';
+const seasonSuggestionUrl = '{{ path('app_destination_season_suggestion') }}';
+const aiSuggestionsUrl = '{{ path('app_destination_ai_suggestions') }}';
+const cityInput = document.querySelector('input[name$="[nom_destination]"]');
+const countryInput = document.querySelector('input[name$="[pays_destination]"]');
+const descriptionInput = document.querySelector('textarea[name$="[description_destination]"]');
+const aiGenerateButton = document.getElementById('aiGenerateDescription');
+const aiStatus = document.getElementById('aiStatus');
+const seasonInput = document.querySelector('select[name$="[saison_destination]"]');
+const seasonButton = document.getElementById('aiSuggestSeason');
+const seasonStatus = document.getElementById('seasonStatus');
+let locationValidationTimer = null;
+
+function setAiStatus(message, state = '') {
+    if (!aiStatus) {
+        return;
+    }
+
+    aiStatus.textContent = message;
+    aiStatus.classList.remove('is-error', 'is-success');
+
+    if (state === 'error') {
+        aiStatus.classList.add('is-error');
+    }
+
+    if (state === 'success') {
+        aiStatus.classList.add('is-success');
+    }
+}
+
+function setSeasonStatus(message, state = '') {
+    if (!seasonStatus) {
+        return;
+    }
+
+    seasonStatus.textContent = message;
+    seasonStatus.classList.remove('is-error', 'is-success');
+
+    if (state === 'error') {
+        seasonStatus.classList.add('is-error');
+    }
+
+    if (state === 'success') {
+        seasonStatus.classList.add('is-success');
+    }
+}
+
+function setFieldError(fieldName, message) {
+    const input = document.querySelector(`[name$="[${fieldName}]"]`);
+    const errorContainer = document.querySelector(`[data-error-for="${fieldName}"]`);
+
+    if (!input || !errorContainer) {
+        return;
+    }
+
+    if (message) {
+        input.classList.add('input-error');
+        input.classList.remove('input-success');
+        errorContainer.textContent = message;
+        errorContainer.classList.add('show');
+    } else {
+        errorContainer.textContent = '';
+        errorContainer.classList.remove('show');
+        if (input.value.trim() !== '') {
+            input.classList.remove('input-error');
+            input.classList.add('input-success');
+        }
+    }
+}
+
+function runLiveLocationValidation() {
+    if (!cityInput || !countryInput) {
+        return;
+    }
+
+    const city = cityInput.value.trim();
+    const country = countryInput.value.trim();
+
+    if (city === '' || country === '') {
+        setFieldError('nom_destination', null);
+        setFieldError('pays_destination', null);
+        return;
+    }
+
+    const params = new URLSearchParams({ city, country });
+
+    fetch(`${locationValidateUrl}?${params.toString()}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.is_valid_country) {
+                setFieldError('pays_destination', 'Ce pays n\'existe pas dans la base locale.');
+                return;
+            }
+
+            setFieldError('pays_destination', null);
+
+            if (!data.is_valid_pair) {
+                setFieldError('nom_destination', 'Cette ville ne correspond pas au pays saisi.');
+                return;
+            }
+
+            setFieldError('nom_destination', null);
+        })
+        .catch(() => {
+            // Keep client-side validation non-blocking if endpoint is temporarily unavailable.
+        });
+}
+
+async function generateDescriptionWithAi() {
+    if (!cityInput || !countryInput || !descriptionInput || !aiGenerateButton) {
+        return;
+    }
+
+    const city = cityInput.value.trim();
+    const country = countryInput.value.trim();
+
+    if (city === '' || country === '') {
+        setAiStatus('Renseignez d abord le nom du lieu et le pays.', 'error');
+        return;
+    }
+
+    aiGenerateButton.disabled = true;
+    const previousLabel = aiGenerateButton.textContent;
+    aiGenerateButton.textContent = 'Generation...';
+    setAiStatus('Generation du contenu IA en cours...');
+
+    try {
+        const params = new URLSearchParams({ city, country });
+        const response = await fetch(`${aiSuggestionsUrl}?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const payload = await response.json();
+        if (!response.ok || payload.error) {
+            throw new Error(payload.error || 'La generation IA a echoue.');
+        }
+
+        descriptionInput.value = payload.content || '';
+        descriptionInput.dispatchEvent(new Event('input', { bubbles: true }));
+        setAiStatus('Description et suggestions generees avec succes.', 'success');
+    } catch (error) {
+        setAiStatus(error.message || 'Erreur pendant la generation IA.', 'error');
+    } finally {
+        aiGenerateButton.disabled = false;
+        aiGenerateButton.textContent = previousLabel;
+    }
+}
+
+async function suggestIdealSeason() {
+    if (!cityInput || !countryInput || !seasonInput || !seasonButton) {
+        return;
+    }
+
+    const city = cityInput.value.trim();
+    const country = countryInput.value.trim();
+
+    if (city === '' || country === '') {
+        setSeasonStatus('Renseignez d abord le nom du lieu et le pays.', 'error');
+        return;
+    }
+
+    seasonButton.disabled = true;
+    const previousLabel = seasonButton.textContent;
+    seasonButton.textContent = 'Recherche...';
+    setSeasonStatus('Calcul de la saison idéale en cours...');
+
+    try {
+        const params = new URLSearchParams({ city, country });
+        const response = await fetch(`${seasonSuggestionUrl}?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const payload = await response.json();
+        if (!response.ok || payload.error) {
+            throw new Error(payload.error || 'La suggestion de saison a echoue.');
+        }
+
+        seasonInput.value = payload.season || '';
+        seasonInput.dispatchEvent(new Event('change', { bubbles: true }));
+        setSeasonStatus(`Saison idéale suggérée: ${payload.season}.`, 'success');
+    } catch (error) {
+        setSeasonStatus(error.message || 'Erreur pendant la suggestion de saison.', 'error');
+    } finally {
+        seasonButton.disabled = false;
+        seasonButton.textContent = previousLabel;
+    }
+}
+
 function validateForm() {
     const form = document.querySelector('.admin-form');
     const inputs = form.querySelectorAll('[data-validate]');
@@ -509,5 +728,24 @@ document.querySelector('.admin-form')?.addEventListener('input', function(e) {
             input.classList.remove('input-error', 'input-success');
         }
     }
+
+    if (e.target === cityInput || e.target === countryInput) {
+        if (locationValidationTimer) {
+            clearTimeout(locationValidationTimer);
+        }
+
+        locationValidationTimer = setTimeout(runLiveLocationValidation, 280);
+    }
+});
+
+aiGenerateButton?.addEventListener('click', generateDescriptionWithAi);
+seasonButton?.addEventListener('click', suggestIdealSeason);
+</script>
+
+{% if formAlertMessage is not null %}
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+    window.alert({{ formAlertMessage|json_encode|raw }});
 });
 </script>
+{% endif %}

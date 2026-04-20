@@ -395,29 +395,7 @@ class ActiviteController extends AbstractController
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  SHOW ADMIN — Détail activité + feedback IA des avis (Grok)
-    //  ⚠️  Doit rester AVANT /new pour éviter le conflit de route /{id}
-    // ──────────────────────────────────────────────────────────────────────
-    #[Route('/admin/activite/{id}', name: 'app_activite_show_admin', methods: ['GET'])]
-    public function showAdmin(Activite $activite): Response
-    {
-        $feedback    = $this->getAvisFeedback($activite);
-        $totalAvis   = count($activite->getAvis());
-        $flaggedAvis = array_filter(
-            $activite->getAvis()->toArray(),
-            fn($a) => $a->isFlagged()
-        );
-
-        return $this->render('admin/activite/show.html.twig', [
-            'activite'     => $activite,
-            'feedback'     => $feedback,
-            'totalAvis'    => $totalAvis,
-            'flaggedCount' => count($flaggedAvis),
-        ]);
-    }
-
-    // ──────────────────────────────────────────────────────────────────────
-    //  NEW
+    //  NEW — ⚠️  Doit être AVANT /{id} pour éviter le conflit de route
     // ──────────────────────────────────────────────────────────────────────
     #[Route('/admin/activite/new', name: 'app_activite_new', methods: ['GET', 'POST'])]
     public function new(
@@ -451,6 +429,28 @@ class ActiviteController extends AbstractController
         return $this->render('admin/activite/new.html.twig', [
             'activite' => $activite,
             'form'     => $form,
+        ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    //  SHOW ADMIN — Détail activité + feedback IA des avis (Grok)
+    //  ⚠️  Doit rester APRÈS /new et /price-advisor pour éviter conflit /{id}
+    // ──────────────────────────────────────────────────────────────────────
+    #[Route('/admin/activite/{id}', name: 'app_activite_show_admin', methods: ['GET'])]
+    public function showAdmin(Activite $activite): Response
+    {
+        $feedback    = $this->getAvisFeedback($activite);
+        $totalAvis   = count($activite->getAvis());
+        $flaggedAvis = array_filter(
+            $activite->getAvis()->toArray(),
+            fn($a) => $a->isFlagged()
+        );
+
+        return $this->render('admin/activite/show.html.twig', [
+            'activite'     => $activite,
+            'feedback'     => $feedback,
+            'totalAvis'    => $totalAvis,
+            'flaggedCount' => count($flaggedAvis),
         ]);
     }
 

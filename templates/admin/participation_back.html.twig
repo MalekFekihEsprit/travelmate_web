@@ -564,6 +564,9 @@
                                     <td>
                                         <div class="admin-participations-role-cell">
                                             <select name="role_participation_display" class="admin-participations-select" style="min-width: 180px;" data-admin-role-select>
+                                                {% if participation.roleParticipation not in role_options %}
+                                                    <option value="{{ participation.roleParticipation }}" selected>{{ participation.roleParticipation }} (actuel)</option>
+                                                {% endif %}
                                                 {% for role in role_options %}
                                                     <option value="{{ role }}" {{ participation.roleParticipation == role ? 'selected' : '' }}>{{ role }}</option>
                                                 {% endfor %}

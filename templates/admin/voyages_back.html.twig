@@ -481,6 +481,12 @@
             border-color: rgba(47, 127, 121, 0.22);
         }
 
+        .admin-voyages-icon--view {
+            background: rgba(109, 138, 150, 0.14);
+            color: #425e68;
+            border-color: rgba(109, 138, 150, 0.24);
+        }
+
         .admin-voyages-icon--delete {
             background: rgba(191, 91, 91, 0.12);
             color: var(--admin-danger);
@@ -637,9 +643,9 @@
             <div class="admin-voyages-form-card__header">
                 <div>
                     <h2 class="admin-voyages-form-card__title">{{ editing_voyage ? 'Modifier le voyage' : 'Ajouter un voyage' }}</h2>
-                    <p class="admin-voyages-form-card__desc">
-                        {{ editing_voyage ? 'Mettez a jour les informations du voyage selectionne.' : 'Renseignez les details principaux puis ajoutez le voyage dans la base.' }}
-                    </p>
+                    {% if editing_voyage %}
+                        <p class="admin-voyages-form-card__desc">Mettez a jour les informations du voyage selectionne.</p>
+                    {% endif %}
                 </div>
                 {% if editing_voyage %}
                     <span class="status-pill status-pill--warning">Edition #{{ editing_voyage.idVoyage }}</span>
@@ -648,93 +654,98 @@
                 {% endif %}
             </div>
 
-            {% if form_errors is not empty %}
-                <div class="admin-voyages-errors">
-                    {% for error in form_errors %}
-                        <div class="admin-voyages-error">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+            {% if editing_voyage %}
+                {% if form_errors is not empty %}
+                    <div class="admin-voyages-errors">
+                        {% for error in form_errors %}
+                            <div class="admin-voyages-error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-            <form
-                method="post"
-                action="{{ editing_voyage ? path('app_admin_voyages_update', {'id_voyage': editing_voyage.idVoyage}) : path('app_admin_voyages_create') }}"
-                class="admin-voyages-form"
-            >
-                <input type="hidden" name="_token" value="{{ editing_voyage ? csrf_token('admin_voyage_update_' ~ editing_voyage.idVoyage) : csrf_token('admin_voyage_create') }}">
-                <input type="hidden" name="_submission_nonce" value="{{ form_nonce }}">
-                <input type="hidden" name="current_search" value="{{ app.request.query.get('search', '') }}">
+                <form
+                    method="post"
+                    action="{{ path('app_admin_voyages_update', {'id_voyage': editing_voyage.idVoyage}) }}"
+                    class="admin-voyages-form"
+                >
+                    <input type="hidden" name="_token" value="{{ csrf_token('admin_voyage_update_' ~ editing_voyage.idVoyage) }}">
+                    <input type="hidden" name="_submission_nonce" value="{{ form_nonce }}">
+                    <input type="hidden" name="current_search" value="{{ app.request.query.get('search', '') }}">
 
-                <div class="admin-voyages-form__grid">
-                    <div class="admin-voyages-field">
-                        <label class="admin-voyages-label" for="admin-voyage-title">Titre</label>
-                        <input id="admin-voyage-title" class="admin-voyages-input" type="text" name="titre_voyage" value="{{ voyage_form.titreVoyage ?? '' }}" placeholder="Titre du voyage" required>
+                    <div class="admin-voyages-form__grid">
+                        <div class="admin-voyages-field">
+                            <label class="admin-voyages-label" for="admin-voyage-title">Titre</label>
+                            <input id="admin-voyage-title" class="admin-voyages-input" type="text" name="titre_voyage" value="{{ voyage_form.titreVoyage ?? '' }}" placeholder="Titre du voyage" required>
+                        </div>
+
+                        <div class="admin-voyages-field">
+                            <label class="admin-voyages-label" for="admin-voyage-status">Statut</label>
+                            <select id="admin-voyage-status" class="admin-voyages-select" name="statut" required>
+                                <option value="">Choisir un statut</option>
+                                {% for status in status_options %}
+                                    <option value="{{ status }}" {{ voyage_form.statut == status ? 'selected' : '' }}>{{ status }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="admin-voyages-field">
+                            <label class="admin-voyages-label" for="admin-voyage-start">Debut</label>
+                            <input id="admin-voyage-start" class="admin-voyages-input" type="date" name="date_debut" value="{{ voyage_form.dateDebut ? voyage_form.dateDebut|date('Y-m-d') : '' }}" required>
+                        </div>
+
+                        <div class="admin-voyages-field">
+                            <label class="admin-voyages-label" for="admin-voyage-end">Fin</label>
+                            <input id="admin-voyage-end" class="admin-voyages-input" type="date" name="date_fin" value="{{ voyage_form.dateFin ? voyage_form.dateFin|date('Y-m-d') : '' }}" required>
+                        </div>
+
+                        <div class="admin-voyages-field admin-voyages-field--readonly">
+                            <label class="admin-voyages-label" for="admin-voyage-destination-id">ID destination</label>
+                            <input id="admin-voyage-destination-id" class="admin-voyages-input" type="text" value="{{ voyage_form.destination ? voyage_form.destination.idDestination : '' }}" readonly>
+                        </div>
+
+                        <div class="admin-voyages-field">
+                            <label class="admin-voyages-label" for="admin-voyage-destination">Destination</label>
+                            <select id="admin-voyage-destination" class="admin-voyages-select" name="destination_id" required>
+                                <option value="">Choisir une destination</option>
+                                {% for destination in destinations %}
+                                    <option
+                                        value="{{ destination.idDestination }}"
+                                        data-destination-id="{{ destination.idDestination }}"
+                                        {{ voyage_form.destination and voyage_form.destination.idDestination == destination.idDestination ? 'selected' : '' }}
+                                    >
+                                        {{ destination.nomDestination }}{% if destination.paysDestination %} - {{ destination.paysDestination }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="admin-voyages-field">
-                        <label class="admin-voyages-label" for="admin-voyage-status">Statut</label>
-                        <select id="admin-voyage-status" class="admin-voyages-select" name="statut" required>
-                            <option value="">Choisir un statut</option>
-                            {% for status in status_options %}
-                                <option value="{{ status }}" {{ voyage_form.statut == status ? 'selected' : '' }}>{{ status }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="admin-voyages-field">
-                        <label class="admin-voyages-label" for="admin-voyage-start">Debut</label>
-                        <input id="admin-voyage-start" class="admin-voyages-input" type="date" name="date_debut" value="{{ voyage_form.dateDebut ? voyage_form.dateDebut|date('Y-m-d') : '' }}" required>
-                    </div>
-
-                    <div class="admin-voyages-field">
-                        <label class="admin-voyages-label" for="admin-voyage-end">Fin</label>
-                        <input id="admin-voyage-end" class="admin-voyages-input" type="date" name="date_fin" value="{{ voyage_form.dateFin ? voyage_form.dateFin|date('Y-m-d') : '' }}" required>
-                    </div>
-
-                    <div class="admin-voyages-field admin-voyages-field--readonly">
-                        <label class="admin-voyages-label" for="admin-voyage-destination-id">ID destination</label>
-                        <input id="admin-voyage-destination-id" class="admin-voyages-input" type="text" value="{{ voyage_form.destination ? voyage_form.destination.idDestination : '' }}" readonly>
-                    </div>
-
-                    <div class="admin-voyages-field">
-                        <label class="admin-voyages-label" for="admin-voyage-destination">Destination</label>
-                        <select id="admin-voyage-destination" class="admin-voyages-select" name="destination_id" required>
-                            <option value="">Choisir une destination</option>
-                            {% for destination in destinations %}
-                                <option
-                                    value="{{ destination.idDestination }}"
-                                    data-destination-id="{{ destination.idDestination }}"
-                                    {{ voyage_form.destination and voyage_form.destination.idDestination == destination.idDestination ? 'selected' : '' }}
-                                >
-                                    {{ destination.nomDestination }}{% if destination.paysDestination %} - {{ destination.paysDestination }}{% endif %}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="admin-voyages-form__actions">
-                    <button type="submit" class="admin-action-btn {{ editing_voyage ? 'admin-action-btn--secondary' : 'admin-action-btn--primary' }}" data-admin-primary-submit>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            {% if editing_voyage %}
+                    <div class="admin-voyages-form__actions">
+                        <button type="submit" class="admin-action-btn admin-action-btn--secondary" data-admin-primary-submit>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M13.5 8.5L16.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                            {% else %}
-                                <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                            {% endif %}
-                        </svg>
-                        <span>{{ editing_voyage ? 'Mettre a jour' : 'Ajouter' }}</span>
-                    </button>
+                            </svg>
+                            <span>Mettre a jour</span>
+                        </button>
 
-                    {% if editing_voyage %}
                         <a href="{{ path('app_admin_voyages') }}" class="admin-action-btn admin-action-btn--ghost">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <span>Annuler</span>
                         </a>
-                    {% endif %}
+                    </div>
+                </form>
+            {% else %}
+                <div class="admin-voyages-form__actions">
+                    <a href="{{ path('app_admin_voyages_new') }}" class="admin-action-btn admin-action-btn--primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                        <span>Ajouter un voyage</span>
+                    </a>
 
                     <a href="{{ path('app_admin_voyages') }}" class="admin-action-btn admin-action-btn--refresh">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -746,7 +757,7 @@
                         <span>Refresh</span>
                     </a>
                 </div>
-            </form>
+            {% endif %}
         </section>
 
         <section class="admin-card admin-voyages-list-card">
@@ -774,25 +785,35 @@
                     <table class="admin-voyages-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Titre</th>
                                 <th>Debut</th>
                                 <th>Fin</th>
                                 <th>Statut</th>
-                                <th>ID Dest</th>
+                                <th>Montant total</th>
                                 <th>Destination</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for voyage in voyages %}
+                                {% set budgetSummary = budget_summaries[voyage.idVoyage] ?? null %}
                                 <tr>
-                                    <td>{{ voyage.idVoyage }}</td>
                                     <td>{{ voyage.titreVoyage }}</td>
                                     <td>{{ voyage.dateDebut ? voyage.dateDebut|date('Y-m-d') : '-' }}</td>
                                     <td>{{ voyage.dateFin ? voyage.dateFin|date('Y-m-d') : '-' }}</td>
                                     <td>{{ voyage.statut }}</td>
-                                    <td>{{ voyage.destination ? voyage.destination.idDestination : '-' }}</td>
+                                    <td>
+                                        {% if budgetSummary %}
+                                            {{ budgetSummary.totalAmount|number_format(2, ',', ' ') }}
+                                            {% if budgetSummary.currencyCount > 1 %}
+                                                multi-devise
+                                            {% elseif budgetSummary.currency %}
+                                                {{ budgetSummary.currency }}
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <div class="admin-voyages-destination">
                                             <span>{{ voyage.destination ? voyage.destination.nomDestination : 'Non definie' }}</span>
@@ -803,6 +824,13 @@
                                     </td>
                                     <td>
                                         <div class="admin-voyages-actions">
+                                            <a href="{{ path('app_admin_voyages_show', {'id_voyage': voyage.idVoyage}) }}" class="admin-voyages-icon admin-voyages-icon--view" title="Consulter" aria-label="Consulter les informations du voyage {{ voyage.titreVoyage }}">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d="M2.5 12C4.6 7.8 8.1 5.5 12 5.5C15.9 5.5 19.4 7.8 21.5 12C19.4 16.2 15.9 18.5 12 18.5C8.1 18.5 4.6 16.2 2.5 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                                    <path d="M12 14.5C13.3807 14.5 14.5 13.3807 14.5 12C14.5 10.6193 13.3807 9.5 12 9.5C10.6193 9.5 9.5 10.6193 9.5 12C9.5 13.3807 10.6193 14.5 12 14.5Z" stroke="currentColor" stroke-width="1.8"/>
+                                                </svg>
+                                            </a>
+
                                             <a href="{{ path('app_admin_participations', {'id_voyage': voyage.idVoyage}) }}" class="admin-voyages-icon admin-voyages-icon--participants" title="Participations" aria-label="Gerer les participations du voyage {{ voyage.titreVoyage }}">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                                     <path d="M16 21V19.5C16 18.1193 14.8807 17 13.5 17H7.5C6.11929 17 5 18.1193 5 19.5V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -812,7 +840,7 @@
                                                 </svg>
                                             </a>
 
-                                            <a href="{{ path('app_admin_voyages', {'edit': voyage.idVoyage}) }}" class="admin-voyages-icon admin-voyages-icon--edit" title="Modifier" aria-label="Modifier le voyage {{ voyage.titreVoyage }}">
+                                            <a href="{{ path('app_admin_voyages_update', {'id_voyage': voyage.idVoyage}) }}" class="admin-voyages-icon admin-voyages-icon--edit" title="Modifier" aria-label="Modifier le voyage {{ voyage.titreVoyage }}">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                                     <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                     <path d="M13.5 8.5L16.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -930,6 +958,47 @@
                     }
                 });
             });
+
+            // Load flatpickr dynamically and initialize date fields
+            (function () {
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css';
+                document.head.appendChild(link);
+
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+                script.async = true;
+                script.onload = function () {
+                    var adminStart = document.getElementById('admin-voyage-start');
+                    var adminEnd = document.getElementById('admin-voyage-end');
+                    var endPicker = null;
+
+                    if (adminStart) {
+                        flatpickr(adminStart, {
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            allowInput: true,
+                            onChange: function (selectedDates) {
+                                if (selectedDates && selectedDates[0] && endPicker) {
+                                    endPicker.set('minDate', selectedDates[0]);
+                                }
+                            }
+                        });
+                    }
+
+                    if (adminEnd) {
+                        endPicker = flatpickr(adminEnd, {
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            allowInput: true,
+                        });
+                    }
+                };
+                document.head.appendChild(script);
+            }());
         });
     </script>
 {% endblock %}

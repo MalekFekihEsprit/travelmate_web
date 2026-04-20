@@ -1,0 +1,790 @@
+{% extends 'base_admin.html.twig' %}
+{% block title %}Budgets — Analytics{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+@keyframes fadeUp {
+    from { opacity:0; transform:translateY(18px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+.anim   { animation: fadeUp .5s ease both; }
+.anim-1 { animation-delay:.05s; }
+.anim-2 { animation-delay:.12s; }
+.anim-3 { animation-delay:.19s; }
+.anim-4 { animation-delay:.26s; }
+.anim-5 { animation-delay:.33s; }
+.anim-6 { animation-delay:.40s; }
+
+/* KPI variants */
+.admin-kpi--teal  { border-left: 3px solid var(--admin-secondary); }
+.admin-kpi--terra { border-left: 3px solid var(--admin-primary); }
+.admin-kpi--sand  { border-left: 3px solid var(--admin-accent); }
+.admin-kpi--red   { border-left: 3px solid var(--admin-danger); }
+
+.kpi-icon {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; flex-shrink: 0;
+}
+.kpi-icon--terra { background: rgba(196,111,75,.12); }
+.kpi-icon--teal  { background: rgba(47,127,121,.12); }
+.kpi-icon--sand  { background: rgba(221,191,140,.2); }
+.kpi-icon--red   { background: rgba(191,91,91,.1); }
+
+/* Charts */
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+@media(max-width:860px){ .chart-grid { grid-template-columns: 1fr; } }
+
+.chart-card {
+    background: rgba(255,253,249,.94);
+    border: 1px solid var(--admin-border);
+    border-radius: 24px;
+    padding: 1.25rem;
+    box-shadow: var(--admin-shadow-soft);
+}
+.chart-card__header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+.chart-card__title {
+    font-size: .96rem; font-weight: 700;
+    color: var(--admin-text);
+}
+.chart-card__sub {
+    font-size: .78rem;
+    color: var(--admin-text-muted);
+    margin-top: .1rem;
+}
+.chart-wrap { position: relative; height: 220px; }
+
+/* Filter bar */
+.filter-bar {
+    display: flex; flex-wrap: wrap;
+    gap: .75rem; align-items: center;
+    padding: 1rem 1.25rem;
+}
+.filter-select {
+    height: 42px;
+    padding: 0 2.2rem 0 .9rem;
+    border-radius: 999px;
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371665c' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right .8rem center;
+    appearance: none;
+    font-size: .88rem;
+    color: var(--admin-text);
+    cursor: pointer;
+    min-width: 200px;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.filter-select:focus {
+    outline: none;
+    border-color: rgba(196,111,75,.4);
+    box-shadow: 0 0 0 3px rgba(196,111,75,.08);
+}
+
+/* Sort buttons */
+.sort-btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .45rem .9rem;
+    border-radius: 999px;
+    border: 1px solid var(--admin-border);
+    background: var(--admin-surface);
+    font-size: .8rem; font-weight: 600;
+    color: var(--admin-text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.sort-btn:hover, .sort-btn.active {
+    background: rgba(196,111,75,.08);
+    border-color: rgba(196,111,75,.3);
+    color: var(--admin-primary);
+}
+.sort-btn svg { transition: transform var(--transition-fast); }
+.sort-btn.desc svg { transform: rotate(180deg); }
+
+/* Table enhancements */
+.admin-table tbody tr {
+    transition: background var(--transition-fast);
+}
+.admin-table tbody tr:hover {
+    background: rgba(196,111,75,.04);
+}
+
+/* Budget consumption bar */
+.budget-bar-wrap {
+    display: flex; align-items: center; gap: .6rem;
+    min-width: 120px;
+}
+.budget-bar {
+    flex: 1; height: 6px;
+    background: var(--admin-border);
+    border-radius: 999px; overflow: hidden;
+}
+.budget-bar__fill {
+    height: 100%; border-radius: 999px;
+    transition: width .6s ease;
+}
+.budget-bar__fill--ok     { background: var(--admin-success); }
+.budget-bar__fill--warn   { background: var(--admin-warning); }
+.budget-bar__fill--danger { background: var(--admin-danger); }
+
+/* Status dot */
+.dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:.35rem; }
+.dot--success { background: var(--admin-success); }
+.dot--warning { background: var(--admin-warning); }
+.dot--danger  { background: var(--admin-danger); }
+
+/* Pagination styles */
+.pagination-container {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+.pagination {
+    display: inline-flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.pagination a, .pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 0.75rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    color: var(--admin-text);
+}
+.pagination a:hover {
+    background: rgba(196,111,75,.1);
+    border-color: var(--admin-primary);
+    color: var(--admin-primary);
+    transform: translateY(-1px);
+}
+.pagination .current {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+    color: white;
+}
+.pagination .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.pagination .dots {
+    border: none;
+    background: transparent;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+
+{# ── Page header ── #}
+<div class="admin-page-header anim anim-1">
+    <div>
+        <span class="admin-page-header__eyebrow">Analytics · Finance</span>
+        <h1 class="admin-page-header__title">Budgets & Dépenses</h1>
+        <p class="admin-page-header__desc">
+            Vue BI complète — filtrez par voyage, triez et analysez la santé financière de chaque budget.
+        </p>
+    </div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-start;">
+        <a href="{{ path('app_admin_dashboard') }}" class="btn btn--ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Dashboard
+        </a>
+    </div>
+</div>
+
+{# ── KPIs ── #}
+<div class="admin-grid admin-grid--4 anim anim-2" style="margin-bottom:1rem;">
+    <div class="admin-kpi admin-kpi--terra">
+        <div class="kpi-icon kpi-icon--terra">💰</div>
+        <div>
+            <span class="admin-kpi__label">Montant total alloué</span>
+            <span class="admin-kpi__value">{{ totalMontant|number_format(0, ',', ' ') }}</span>
+            <span class="admin-kpi__meta">sur {{ budgets.getTotalItemCount }} budget(s)</span>
+        </div>
+    </div>
+    <div class="admin-kpi admin-kpi--teal">
+        <div class="kpi-icon kpi-icon--teal">📊</div>
+        <div>
+            <span class="admin-kpi__label">Dépenses enregistrées</span>
+            <span class="admin-kpi__value">{{ totalDepensesCount }}</span>
+            <span class="admin-kpi__meta">toutes catégories</span>
+        </div>
+    </div>
+    <div class="admin-kpi admin-kpi--sand">
+        <div class="kpi-icon kpi-icon--sand">✅</div>
+        <div>
+            <span class="admin-kpi__label">Budgets actifs</span>
+            <span class="admin-kpi__value">{{ nbActifs }}</span>
+            <span class="admin-kpi__meta">{{ nbTermines }} terminé(s)</span>
+        </div>
+    </div>
+    <div class="admin-kpi admin-kpi--red">
+        <div class="kpi-icon kpi-icon--red">🗺️</div>
+        <div>
+            <span class="admin-kpi__label">Voyages couverts</span>
+            <span class="admin-kpi__value">{{ voyages|length }}</span>
+            <span class="admin-kpi__meta">avec budget associé</span>
+        </div>
+    </div>
+</div>
+
+{# ── Charts Row 1 ── #}
+<div class="chart-grid anim anim-3">
+    <div class="chart-card">
+        <div class="chart-card__header">
+            <div>
+                <div class="chart-card__title">Montants par voyage</div>
+                <div class="chart-card__sub">Histogramme comparatif</div>
+            </div>
+            <span style="font-size:1.3rem;">📈</span>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="chartMontants"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-card__header">
+            <div>
+                <div class="chart-card__title">Répartition par statut</div>
+                <div class="chart-card__sub">Distribution des budgets</div>
+            </div>
+            <span style="font-size:1.3rem;">🥧</span>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="chartStatuts"></canvas>
+        </div>
+    </div>
+</div>
+
+{# ── Charts Row 2 ── #}
+<div class="chart-grid anim anim-3">
+    <div class="chart-card">
+        <div class="chart-card__header">
+            <div>
+                <div class="chart-card__title">📊 Taux d'utilisation des budgets</div>
+                <div class="chart-card__sub">Distribution par niveau de consommation</div>
+            </div>
+            <span style="font-size:1.3rem;">🎯</span>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="utilizationChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-card__header">
+            <div>
+                <div class="chart-card__title">💚 Santé des budgets</div>
+                <div class="chart-card__sub">Healthy vs Warning vs Critical</div>
+            </div>
+            <span style="font-size:1.3rem;">🏥</span>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="healthChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{# ── Insights Section ── #}
+<div class="admin-grid admin-grid--2 anim anim-3" style="margin-bottom:1rem; gap:1rem;">
+    <div class="chart-card">
+        <div class="chart-card__header">
+            <div>
+                <div class="chart-card__title">🏆 Top catégories de dépenses</div>
+                <div class="chart-card__sub">Les plus dépensées (global)</div>
+            </div>
+        </div>
+        <div style="padding:0.5rem;">
+            {% for category in globalStats.topCategories %}
+                <div style="display:flex; justify-content:space-between; padding:0.5rem; border-bottom:1px solid var(--admin-border);">
+                    <span>{{ category.categorie_depense }}</span>
+                    <span style="font-weight:600;">{{ category.total|number_format(0, ',', ' ') }} €</span>
+                </div>
+            {% else %}
+                <div class="admin-empty">Aucune donnée</div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="chart-card">
+        <div class="chart-card__header">
+            <div>
+                <div class="chart-card__title">⚠️ Budgets les plus consommés</div>
+                <div class="chart-card__sub">Taux d'utilisation élevé</div>
+            </div>
+        </div>
+        <div style="padding:0.5rem;">
+            {% for budgetItem in globalStats.budgetUtilization|slice(0,5) %}
+                <div style="margin-bottom:0.75rem;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                        <span style="font-size:0.85rem; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ budgetItem.budget }}</span>
+                        <span style="font-size:0.85rem; font-weight:600; margin-left:0.5rem;">{{ budgetItem.percentage }}%</span>
+                    </div>
+                    <div class="budget-bar" style="height:6px;">
+                        <div class="budget-bar__fill budget-bar__fill--{{ budgetItem.status == 'critical' ? 'danger' : (budgetItem.status == 'warning' ? 'warn' : 'ok') }}" 
+                             style="width: {{ budgetItem.percentage > 100 ? 100 : budgetItem.percentage }}%"></div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="admin-empty">Aucune donnée</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{# ── Filter bar ── #}
+<div class="admin-card anim anim-4" style="margin-bottom:1rem;">
+    <form method="get" action="{{ path('admin_budget_index') }}">
+        <div class="filter-bar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="color:var(--admin-text-muted);flex-shrink:0;">
+                <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+
+            <select name="voyage" class="filter-select" onchange="this.form.submit()">
+                <option value="">— Tous les voyages —</option>
+                {% for voyage in voyages %}
+                    <option value="{{ voyage.idVoyage }}"
+                        {% if selectedVoyageId == voyage.idVoyage %}selected{% endif %}>
+                        {{ voyage.titreVoyage }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <select name="statut" class="filter-select" onchange="this.form.submit()">
+                <option value="">— Tous les statuts —</option>
+                <option value="actif"   {% if selectedStatut == 'actif' %}selected{% endif %}>Actif</option>
+                <option value="termine" {% if selectedStatut == 'termine' %}selected{% endif %}>Terminé</option>
+                <option value="inactif" {% if selectedStatut == 'inactif' %}selected{% endif %}>Inactif</option>
+            </select>
+            
+            <select name="limit" class="filter-select" onchange="this.form.submit()">
+                <option value="15" {% if app.request.query.get('limit') == 15 %}selected{% endif %}>15 par page</option>
+                <option value="30" {% if app.request.query.get('limit') == 30 %}selected{% endif %}>30 par page</option>
+                <option value="50" {% if app.request.query.get('limit') == 50 %}selected{% endif %}>50 par page</option>
+                <option value="100" {% if app.request.query.get('limit') == 100 %}selected{% endif %}>100 par page</option>
+            </select>
+
+            {% if selectedVoyageId or selectedStatut %}
+                <a href="{{ path('admin_budget_index') }}" class="btn btn--ghost"
+                   style="height:42px;padding:0 1rem;font-size:.85rem;">
+                    ✕ Réinitialiser
+                </a>
+            {% endif %}
+
+            <span style="margin-left:auto;font-size:.82rem;color:var(--admin-text-muted);">
+                {{ budgets.getTotalItemCount }} résultat(s) — Page {{ budgets.getCurrentPageNumber }} / {{ budgets.getPageCount }}
+            </span>
+        </div>
+    </form>
+</div>
+
+{# ── Table ── #}
+<div class="admin-card anim anim-5">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title">Liste des budgets</h3>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <button class="sort-btn active" data-dir="asc" onclick="sortTable(this,1)">
+                Libellé
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v14M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <button class="sort-btn" data-dir="asc" onclick="sortTable(this,3)">
+                Montant
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v14M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <button class="sort-btn" data-dir="asc" onclick="sortTable(this,6)">
+                Dépenses
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v14M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="admin-table-wrap">
+        <table class="admin-table" id="budgetTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Budget</th>
+                    <th>Voyage</th>
+                    <th>Montant</th>
+                    <th>Devise</th>
+                    <th>Statut</th>
+                    <th>Dépenses</th>
+                    <th>Consommation</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for budget in budgets %}
+                {% set totalSpent = 0 %}
+                {% for depense in budget.depenses %}
+                    {% set totalSpent = totalSpent + depense.montantDepense %}
+                {% endfor %}
+                {% set pct = budget.montantTotal > 0 ? ((totalSpent / budget.montantTotal) * 100)|round(0) : 0 %}
+                {% set pctCapped = pct > 100 ? 100 : pct %}
+                {% set fillClass = pct >= 90 ? 'danger' : (pct >= 65 ? 'warn' : 'ok') %}
+                <tr>
+                    <td style="color:var(--admin-text-muted);font-size:.8rem;">{{ loop.index }}</td>
+                    <td><strong>{{ budget.libelleBudget }}</strong></td>
+                    <td style="color:var(--admin-text-muted);">
+                        {{ budget.voyage ? budget.voyage.titreVoyage : '—' }}
+                    </td>
+                    <td style="font-weight:600;">
+                        {{ budget.montantTotal|number_format(0, ',', ' ') }}
+                    </td>
+                    <td>
+                        <span style="padding:.2rem .55rem;background:var(--admin-surface-alt);border-radius:6px;font-size:.78rem;font-weight:600;">
+                            {{ budget.deviseBudget }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if budget.statutBudget == 'actif' %}
+                            <span class="status-pill status-pill--success">
+                                <span class="dot dot--success"></span>Actif
+                            </span>
+                        {% elseif budget.statutBudget == 'termine' %}
+                            <span class="status-pill status-pill--warning">
+                                <span class="dot dot--warning"></span>Terminé
+                            </span>
+                        {% else %}
+                            <span class="status-pill status-pill--danger">
+                                <span class="dot dot--danger"></span>Inactif
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="font-weight:600;text-align:center;">{{ budget.depenses|length }}</td>
+                    <td>
+                        <div class="budget-bar-wrap">
+                            <div class="budget-bar">
+                                <div class="budget-bar__fill budget-bar__fill--{{ fillClass }}"
+                                     style="width:{{ pctCapped }}%"></div>
+                            </div>
+                            <span style="font-size:.75rem;color:var(--admin-text-muted);width:30px;text-align:right;">
+                                {{ pct }}%
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{{ path('admin_budget_show', {'id': budget.idBudget}) }}"
+                           class="btn btn--ghost"
+                           style="padding:.5rem .9rem;font-size:.82rem;">
+                            Détails →
+                        </a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="9" class="admin-empty">
+                        <div style="padding:2.5rem 0;">
+                            <div style="font-size:2rem;margin-bottom:.5rem;">🔍</div>
+                            Aucun budget trouvé pour cette sélection
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {# ── Pagination ── #}
+    <div class="pagination-container">
+        <div class="pagination">
+            {% if budgets.getCurrentPageNumber > 1 %}
+                <a href="{{ path('admin_budget_index', { 'page': budgets.getCurrentPageNumber - 1, 'voyage': selectedVoyageId, 'statut': selectedStatut, 'limit': app.request.query.get('limit') }) }}">
+                    ← Précédent
+                </a>
+            {% else %}
+                <span class="disabled">← Précédent</span>
+            {% endif %}
+            
+            {% for page in 1..budgets.getPageCount %}
+                {% if page == budgets.getCurrentPageNumber %}
+                    <span class="current">{{ page }}</span>
+                {% elseif page <= 3 or page > budgets.getPageCount - 3 or (page >= budgets.getCurrentPageNumber - 2 and page <= budgets.getCurrentPageNumber + 2) %}
+                    <a href="{{ path('admin_budget_index', { 'page': page, 'voyage': selectedVoyageId, 'statut': selectedStatut, 'limit': app.request.query.get('limit') }) }}">
+                        {{ page }}
+                    </a>
+                {% elseif page == 4 or page == budgets.getPageCount - 3 %}
+                    <span class="dots">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if budgets.getCurrentPageNumber < budgets.getPageCount %}
+                <a href="{{ path('admin_budget_index', { 'page': budgets.getCurrentPageNumber + 1, 'voyage': selectedVoyageId, 'statut': selectedStatut, 'limit': app.request.query.get('limit') }) }}">
+                    Suivant →
+                </a>
+            {% else %}
+                <span class="disabled">Suivant →</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# ── Data bridge: Twig → JS ── #}
+<script type="application/json" id="data-labels">{{ voyageLabels|json_encode|raw }}</script>
+<script type="application/json" id="data-montants">{{ voyageMontants|json_encode|raw }}</script>
+<script type="application/json" id="data-actif">{{ nbActifs }}</script>
+<script type="application/json" id="data-termine">{{ nbTermines }}</script>
+<script type="application/json" id="data-inactif">{{ nbInactifs }}</script>
+<script type="application/json" id="data-utilization">{{ globalStats.budgetUtilization|json_encode|raw }}</script>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+Chart.defaults.font.family = "'Outfit', sans-serif";
+Chart.defaults.color = '#71665c';
+
+const palette = ['#c46f4b','#2f7f79','#ddbf8c','#bf5b5b','#6b8f71','#a85a39','#1f5c58'];
+
+/* ── Read data from DOM ── */
+const labelsBar  = JSON.parse(document.getElementById('data-labels').textContent);
+const dataBar    = JSON.parse(document.getElementById('data-montants').textContent);
+const nbActif    = parseInt(document.getElementById('data-actif').textContent);
+const nbTermine  = parseInt(document.getElementById('data-termine').textContent);
+const nbInactif  = parseInt(document.getElementById('data-inactif').textContent);
+const utilizationData = JSON.parse(document.getElementById('data-utilization').textContent);
+
+/* ── Bar chart: montants par voyage ── */
+if (document.getElementById('chartMontants')) {
+    new Chart(document.getElementById('chartMontants'), {
+        type: 'bar',
+        data: {
+            labels: labelsBar,
+            datasets: [{
+                label: 'Montant alloué',
+                data: dataBar,
+                backgroundColor: labelsBar.map((_, i) => palette[i % palette.length] + 'cc'),
+                borderColor:     labelsBar.map((_, i) => palette[i % palette.length]),
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                y: { grid: { color: 'rgba(231,220,205,.5)' }, ticks: { font: { size: 11 } } }
+            },
+            animation: { duration: 900, easing: 'easeOutQuart' }
+        }
+    });
+}
+
+/* ── Doughnut: statuts ── */
+if (document.getElementById('chartStatuts')) {
+    new Chart(document.getElementById('chartStatuts'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Actif', 'Terminé', 'Inactif'],
+            datasets: [{
+                data: [nbActif, nbTermine, nbInactif],
+                backgroundColor: ['#3c8b72cc', '#b9872fcc', '#bf5b5bcc'],
+                borderColor:     ['#3c8b72',   '#b9872f',   '#bf5b5b'],
+                borderWidth: 2,
+                hoverOffset: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyleWidth: 10,
+                        font: { size: 12 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                            return `${context.label}: ${context.raw} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: { animateRotate: true, duration: 900 }
+        }
+    });
+}
+
+/* ── Budget Utilization Distribution (Histogram) ── */
+if (document.getElementById('utilizationChart') && utilizationData && utilizationData.length > 0) {
+    const utilizationRanges = {
+        '0-25%': 0,
+        '25-50%': 0,
+        '50-75%': 0,
+        '75-90%': 0,
+        '90-100%': 0,
+        '>100%': 0
+    };
+    
+    utilizationData.forEach(item => {
+        const pct = parseFloat(item.percentage);
+        if (pct < 25) utilizationRanges['0-25%']++;
+        else if (pct < 50) utilizationRanges['25-50%']++;
+        else if (pct < 75) utilizationRanges['50-75%']++;
+        else if (pct < 90) utilizationRanges['75-90%']++;
+        else if (pct <= 100) utilizationRanges['90-100%']++;
+        else utilizationRanges['>100%']++;
+    });
+    
+    new Chart(document.getElementById('utilizationChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(utilizationRanges),
+            datasets: [{
+                label: 'Nombre de budgets',
+                data: Object.values(utilizationRanges),
+                backgroundColor: '#c46f4bcc',
+                borderColor: '#c46f4b',
+                borderWidth: 2,
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.raw} budget(s)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { font: { size: 10 } } },
+                y: { 
+                    ticks: { stepSize: 1, font: { size: 11 } },
+                    grid: { color: 'rgba(231,220,205,.5)' }
+                }
+            },
+            animation: { duration: 900, easing: 'easeOutQuart' }
+        }
+    });
+}
+
+/* ── Budget Health Overview (Pie Chart) ── */
+if (document.getElementById('healthChart') && utilizationData && utilizationData.length > 0) {
+    const healthData = { healthy: 0, warning: 0, critical: 0 };
+    
+    utilizationData.forEach(item => {
+        if (item.status === 'critical') healthData.critical++;
+        else if (item.status === 'warning') healthData.warning++;
+        else healthData.healthy++;
+    });
+    
+    new Chart(document.getElementById('healthChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Sain (<75%)', 'Attention (75-90%)', 'Critique (>90%)'],
+            datasets: [{
+                data: [healthData.healthy, healthData.warning, healthData.critical],
+                backgroundColor: ['#28a745cc', '#ffc107cc', '#dc3545cc'],
+                borderColor: ['#28a745', '#ffc107', '#dc3545'],
+                borderWidth: 2,
+                hoverOffset: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyleWidth: 10,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = healthData.healthy + healthData.warning + healthData.critical;
+                            const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                            return `${context.label}: ${context.raw} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: { animateRotate: true, duration: 900 }
+        }
+    });
+}
+
+/* ── Client-side sort ── */
+function sortTable(btn, colIndex) {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active', 'desc', 'asc'));
+    const tbody = document.querySelector('#budgetTable tbody');
+    const rows  = Array.from(tbody.querySelectorAll('tr'));
+    const dir   = btn.dataset.dir === 'asc' ? 'desc' : 'asc';
+    btn.dataset.dir = dir;
+    btn.classList.add('active', dir);
+
+    rows.sort((a, b) => {
+        let aText = a.cells[colIndex]?.innerText.trim().replace(/[\s,]/g, '') || '';
+        let bText = b.cells[colIndex]?.innerText.trim().replace(/[\s,]/g, '') || '';
+        
+        // Check if numeric
+        const aNum = parseFloat(aText);
+        const bNum = parseFloat(bText);
+        
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return dir === 'asc' ? aNum - bNum : bNum - aNum;
+        }
+        
+        aText = aText.toLowerCase();
+        bText = bText.toLowerCase();
+        if (aText < bText) return dir === 'asc' ? -1 : 1;
+        if (aText > bText) return dir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+{% endblock %}
