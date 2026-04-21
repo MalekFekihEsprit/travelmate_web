@@ -46,29 +46,122 @@
         /* ══ Price Advisor ══ */
         #price-advisor {
             display: none;
-            margin-top: 0.85rem;
-            padding: 1rem 1.2rem;
-            background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-            border: 1.5px solid #6ee7b7;
-            border-radius: 12px;
+            margin-top: 1rem;
+            border-radius: 16px;
+            overflow: hidden;
             font-size: 0.87rem;
             color: #065f46;
+            box-shadow: 0 4px 24px rgba(5, 150, 105, 0.13), 0 1.5px 6px rgba(5,150,105,0.07);
+            border: none;
+            background: transparent;
         }
-        .pa-header { display:flex; align-items:center; gap:0.5rem; font-weight:700; font-size:0.92rem; margin-bottom:0.75rem; }
-        .pa-spinner { display:inline-block; width:13px; height:13px; border:2px solid #a7f3d0; border-top-color:#059669; border-radius:50%; animation:spin 0.7s linear infinite; }
+        .pa-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.85rem 1.25rem;
+            background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+            color: #fff;
+        }
+        .pa-card-header-icon {
+            font-size: 1.15rem;
+            line-height: 1;
+        }
+        .pa-card-header-title {
+            font-weight: 700;
+            font-size: 0.93rem;
+            letter-spacing: 0.01em;
+            flex: 1;
+        }
+        .pa-card-body {
+            padding: 1rem 1.2rem 1.1rem;
+            background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 1.5px solid #6ee7b7;
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+        }
+        /* Ancien header masqué — remplacé par pa-card-header */
+        .pa-header { display:none; }
+        .pa-spinner { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; }
         @keyframes spin { to { transform:rotate(360deg); } }
-        .pa-stats { display:flex; gap:0; margin-bottom:0.6rem; background:#d1fae5; border-radius:8px; overflow:hidden; }
-        .pa-stat { flex:1; display:flex; flex-direction:column; align-items:center; padding:0.5rem 0.3rem; border-right:1px solid #a7f3d0; }
-        .pa-stat:last-child { border-right:none; }
-        .pa-stat-label { font-size:0.68rem; color:#4b7c68; text-transform:uppercase; letter-spacing:0.04em; }
-        .pa-stat-val { font-size:1rem; font-weight:700; color:#064e3b; }
-        .pa-comparison { margin:0.5rem 0; padding:0.45rem 0.8rem; border-radius:7px; font-weight:600; font-size:0.83rem; }
-        .pa-above { background:#fef9c3; color:#92400e; border:1px solid #fde68a; }
-        .pa-below { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
-        .pa-ok    { background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; }
-        .pa-examples { margin:0.5rem 0 0; padding-left:1.1rem; font-size:0.8rem; color:#374151; }
-        .pa-examples li { margin-bottom:0.25rem; line-height:1.4; }
-        .pa-footer { margin-top:0.6rem; font-size:0.72rem; color:#9ca3af; border-top:1px solid #a7f3d0; padding-top:0.4rem; }
+        .pa-stats {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0.75rem;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #a7f3d0;
+            box-shadow: 0 1px 4px rgba(5,150,105,0.07);
+        }
+        .pa-stat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.65rem 0.3rem 0.5rem;
+            border-right: 1px solid #d1fae5;
+            transition: background 0.18s;
+        }
+        .pa-stat:last-child { border-right: none; }
+        .pa-stat:hover { background: #f0fdf4; }
+        .pa-stat-label {
+            font-size: 0.65rem;
+            color: #6b9e8a;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            margin-bottom: 0.18rem;
+        }
+        .pa-stat-val {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #064e3b;
+        }
+        .pa-comparison {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.55rem 0;
+            padding: 0.55rem 0.9rem;
+            border-radius: 9px;
+            font-weight: 600;
+            font-size: 0.83rem;
+            border-left-width: 4px;
+            border-left-style: solid;
+        }
+        .pa-above { background:#fffbeb; color:#92400e; border-color:#f59e0b; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; }
+        .pa-below { background:#f0fdf4; color:#15803d; border-color:#22c55e; border: 1px solid #bbf7d0; border-left: 4px solid #22c55e; }
+        .pa-ok    { background:#eff6ff; color:#1e40af; border-color:#60a5fa; border: 1px solid #bfdbfe; border-left: 4px solid #60a5fa; }
+        .pa-examples {
+            margin: 0.6rem 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .pa-examples li {
+            display: flex;
+            align-items: baseline;
+            gap: 0.4rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.8rem;
+            color: #374151;
+            line-height: 1.45;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.6);
+        }
+        .pa-examples li:hover { background: rgba(255,255,255,0.95); }
+        .pa-footer {
+            margin-top: 0.75rem;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            border-top: 1px dashed #a7f3d0;
+            padding-top: 0.45rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .pa-footer::before { content: "🤖"; font-size: 0.75rem; }
     </style>
 {% endblock %}
 
@@ -154,13 +247,15 @@
 
                         {# ══ PRICE ADVISOR WIDGET ══ #}
                         <div id="price-advisor">
-                            <div class="pa-header">
-                                <span>📊</span>
-                                <span>Veille tarifaire IA</span>
+                            <div class="pa-card-header">
+                                <span class="pa-card-header-icon">📊</span>
+                                <span class="pa-card-header-title">Veille tarifaire IA</span>
                                 <span id="pa-loader" style="display:none"><span class="pa-spinner"></span></span>
                             </div>
-                            <div id="pa-body">
-                                <span style="color:#4b7c68;font-style:italic">Tapez le nom de l'activité pour analyser le marché…</span>
+                            <div class="pa-card-body">
+                                <div id="pa-body">
+                                    <span style="color:#4b7c68;font-style:italic">Tapez le nom de l'activité pour analyser le marché…</span>
+                                </div>
                             </div>
                         </div>
                         {# ══ FIN PRICE ADVISOR ══ #}

@@ -21,13 +21,13 @@ class ActiviteController extends AbstractController
     // ════════════════════════════════════════════════════════════════════════
 
     /** Python du venv ai_service (contient openai, etc.) */
-    private const PYTHON_VENV = 'C:/Users/Admin/Desktop/projet sym/ai_service/venv/Scripts/python.exe';
+    private const PYTHON_VENV = 'C:/Users/malek/projet web/ai_service/venv/Scripts/python.exe';
 
     /** Scripts Python */
-    private const SCRIPT_AVIS_ANALYSER       = 'C:/Users/Admin/Desktop/projet sym/ai_service/avis_analyser.py';
-    private const SCRIPT_AI_RECOMMENDER      = 'C:/Users/Admin/Desktop/projet sym/ai_recommender/ai_recommender.py';
-    private const SCRIPT_SIMILAR_RECOMMENDER = 'C:/Users/Admin/Desktop/projet sym/ai_recommender/activity_recommender.py';
-    private const SCRIPT_PRICE_SCRAPER       = 'C:/Users/Admin/Desktop/projet sym/price_scraper/price_scraper.py';
+    private const SCRIPT_AVIS_ANALYSER       = 'C:/Users/malek/projet web/ai_service/avis_analyser.py';
+    private const SCRIPT_AI_RECOMMENDER      = 'C:/Users/malek/projet web/ai_recommender/ai_recommender.py';
+    private const SCRIPT_SIMILAR_RECOMMENDER = 'C:/Users/malek/projet web/ai_recommender/activity_recommender.py';
+    private const SCRIPT_PRICE_SCRAPER       = 'C:/Users/malek/projet web/price_scraper/price_scraper.py';
 
     // ════════════════════════════════════════════════════════════════════════
     //  HELPER PRIVÉ — IA RECOMMANDATION (quiz / scoring)
