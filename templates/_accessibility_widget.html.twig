@@ -1,0 +1,453 @@
+{# ══ GLOBAL ACCESSIBILITY WIDGET — dark mode · translation · zoom · hover TTS ══ #}
+<style>
+/* ── Dark mode ── */
+[data-theme="dark"] {
+    --color-bg:           #2e2a25;
+    --color-surface:      #38332d;
+    --color-surface-soft: #423d36;
+    --color-border:       #524840;
+    --color-text:         #f5f0e8;
+    --color-text-muted:   #b8a898;
+    --color-hover:        rgba(196,111,75,.18);
+    --color-active:       rgba(196,111,75,.28);
+    --color-shadow:       rgba(0,0,0,.25);
+}
+[data-theme="dark"] body {
+    background: radial-gradient(circle at top right, rgba(196,111,75,.1), transparent 22%),
+                linear-gradient(180deg, #322e28 0%, #2e2a25 100%) !important;
+    color: var(--color-text);
+}
+[data-theme="dark"] .app-navbar {
+    background: rgba(50,46,40,.94) !important;
+    border-bottom-color: rgba(82,72,64,.9) !important;
+}
+[data-theme="dark"] .profile-dropdown,
+[data-theme="dark"] #notifDropdown {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background: var(--color-bg) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+}
+
+/* ── FAB ── */
+.a11y-fab {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    z-index: 9000;
+    display: flex; flex-direction: column; align-items: flex-end;
+    gap: .5rem;
+}
+.a11y-fab__toggle {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: var(--color-primary); color: #fff;
+    border: none; cursor: pointer; font-size: 1.3rem;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(196,111,75,.45);
+    transition: transform .2s, background .2s;
+}
+.a11y-fab__toggle:hover { background: var(--color-primary-dark); transform: scale(1.08); }
+.a11y-fab__toggle[aria-expanded="true"] { background: var(--color-primary-dark); }
+
+/* ── Panel ── */
+.a11y-panel {
+    display: none; flex-direction: column; gap: .35rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: .75rem;
+    box-shadow: 0 12px 36px rgba(0,0,0,.18);
+    min-width: 220px;
+}
+.a11y-panel.open { display: flex; }
+.a11y-panel__label {
+    font-size: .65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--color-text-muted);
+    padding: .1rem .3rem .45rem;
+    border-bottom: 1px solid var(--color-border); margin-bottom: .1rem;
+}
+.a11y-panel__section {
+    font-size: .62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--color-text-muted);
+    padding: .35rem .3rem .05rem; opacity: .75;
+}
+.a11y-btn {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .5rem .7rem;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg); color: var(--color-text);
+    font-size: .83rem; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+    font-family: inherit; text-align: left; width: 100%;
+}
+.a11y-btn:hover  { background: var(--color-hover); border-color: var(--color-primary); color: var(--color-primary); }
+.a11y-btn.active { background: rgba(196,111,75,.12); border-color: var(--color-primary); color: var(--color-primary); }
+
+/* Lang row */
+.a11y-lang-row { display: flex; gap: .3rem; padding: .15rem .1rem; }
+.a11y-lang-btn {
+    flex: 1; padding: .4rem .2rem;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg); color: var(--color-text);
+    font-size: .78rem; font-weight: 700;
+    cursor: pointer; transition: all .15s;
+    font-family: inherit; text-align: center;
+}
+.a11y-lang-btn:hover  { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-hover); }
+.a11y-lang-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+/* Zoom row */
+.a11y-zoom-row { display: flex; align-items: center; gap: .3rem; padding: .3rem .3rem; }
+.a11y-zoom-row span { font-size: .78rem; color: var(--color-text-muted); flex: 1; font-weight: 600; }
+.a11y-zoom-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg); color: var(--color-text);
+    font-size: .85rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s; font-family: inherit;
+}
+.a11y-zoom-btn:hover { background: var(--color-hover); border-color: var(--color-primary); color: var(--color-primary); }
+
+/* TTS bar */
+.a11y-tts-bar {
+    display: none; align-items: center; gap: .5rem;
+    padding: .38rem .7rem;
+    background: rgba(196,111,75,.12);
+    border-radius: var(--radius-md);
+    font-size: .75rem; color: var(--color-primary); font-weight: 600;
+    max-width: 240px;
+}
+.a11y-tts-bar.visible { display: flex; }
+.a11y-tts-bar__dot {
+    width: 8px; height: 8px; flex-shrink: 0;
+    border-radius: 50%; background: var(--color-primary);
+    animation: a11yPulse .9s infinite alternate;
+}
+.a11y-tts-bar__text { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+@keyframes a11yPulse { from{opacity:.3;transform:scale(.85)} to{opacity:1;transform:scale(1)} }
+
+/* Hover highlight */
+.a11y-hover-mode *:not(.a11y-fab):not(.a11y-fab *) { cursor: crosshair !important; }
+.a11y-hover-highlight {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 3px !important; border-radius: 4px;
+}
+
+/* Translation overlay */
+#a11yTranslating {
+    display: none; position: fixed; inset: 0; z-index: 8999;
+    background: rgba(0,0,0,.3); backdrop-filter: blur(2px);
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem;
+    color: #fff; font-size: .95rem; font-weight: 600;
+}
+#a11yTranslating.visible { display: flex; }
+#a11yTranslating .a11y-spinner {
+    width: 34px; height: 34px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: a11ySpin .7s linear infinite;
+}
+@keyframes a11ySpin { to { transform: rotate(360deg); } }
+</style>
+
+{# Translation overlay #}
+<div id="a11yTranslating" role="status" aria-live="polite">
+    <div class="a11y-spinner"></div>
+    <span id="a11yTranslatingText">Traduction en cours…</span>
+</div>
+
+{# FAB #}
+<div class="a11y-fab" role="region" aria-label="Accessibilité">
+
+    <div class="a11y-tts-bar" id="a11yTtsBar" aria-live="polite">
+        <span class="a11y-tts-bar__dot"></span>
+        <span class="a11y-tts-bar__text" id="a11yTtsBarText">…</span>
+        <button onclick="a11yStopTts()" style="margin-left:.4rem;background:none;border:none;cursor:pointer;color:var(--color-primary);font-size:.85rem;font-weight:700;flex-shrink:0" aria-label="Arrêter">✕</button>
+    </div>
+
+    <div class="a11y-panel" id="a11yPanel" role="menu">
+        <div class="a11y-panel__label">♿ Accessibilité</div>
+
+        <div class="a11y-panel__section">🔊 Lecture</div>
+        <button class="a11y-btn" id="a11yHoverBtn" onclick="a11yToggleHover()" aria-pressed="false">
+            🖱️ <span data-i18n="hover">Lire au survol</span>
+        </button>
+        <button class="a11y-btn" onclick="a11yStopTts()">
+            ⏹ <span data-i18n="stop">Arrêter la lecture</span>
+        </button>
+
+        <div class="a11y-panel__section">🎨 Affichage</div>
+        <button class="a11y-btn" id="a11yDarkBtn" onclick="a11yToggleDark()" aria-pressed="false">
+            <span id="a11yDarkIcon">🌙</span> <span id="a11yDarkLabel" data-i18n="darkMode">Mode sombre</span>
+        </button>
+        <div class="a11y-zoom-row">
+            <span data-i18n="zoom">Zoom texte</span>
+            <button class="a11y-zoom-btn" onclick="a11yZoom(-1)" title="Réduire">A−</button>
+            <button class="a11y-zoom-btn" onclick="a11yZoom(0)"  title="Normal">↺</button>
+            <button class="a11y-zoom-btn" onclick="a11yZoom(1)"  title="Agrandir">A+</button>
+        </div>
+
+        <div class="a11y-panel__section">🌐 Langue</div>
+        <div class="a11y-lang-row">
+            <button class="a11y-lang-btn" id="a11yLangFr" onclick="a11ySetLang('fr')">🇫🇷 FR</button>
+            <button class="a11y-lang-btn" id="a11yLangEn" onclick="a11ySetLang('en')">🇬🇧 EN</button>
+            <button class="a11y-lang-btn" id="a11yLangEs" onclick="a11ySetLang('es')">🇪🇸 ES</button>
+        </div>
+    </div>
+
+    <button class="a11y-fab__toggle"
+            id="a11yFabToggle"
+            aria-label="Ouvrir les options d'accessibilité"
+            aria-expanded="false"
+            aria-controls="a11yPanel"
+            onclick="a11yTogglePanel()">♿</button>
+</div>
+
+<script>
+(function () {
+    /* ── state ── */
+    let hoverMode      = false;
+    let lastTarget     = null;
+    let idleTimer      = null;
+    let leaveTimer     = null;
+    let lastSpokenText = '';
+    let currentLang    = localStorage.getItem('a11y_lang') || 'fr';
+    let darkMode       = localStorage.getItem('a11y_dark') === '1';
+    let zoomLevel      = parseFloat(localStorage.getItem('a11y_zoom') || '1');
+    let ttsLang        = 'fr-FR';
+
+    /* ── UI strings ── */
+    const UI = {
+        fr: { hover:'Lire au survol', stop:'Arrêter la lecture', darkMode:'Mode sombre', lightMode:'Mode clair', zoom:'Zoom texte', translating:'Traduction en cours…', hoverOn:'Survol actif — cliquer pour désactiver', hoverOff:'Lire au survol' },
+        en: { hover:'Read on hover',  stop:'Stop reading',       darkMode:'Dark mode',   lightMode:'Light mode',  zoom:'Text zoom',  translating:'Translating…',           hoverOn:'Hover active — click to disable',        hoverOff:'Read on hover' },
+        es: { hover:'Leer al pasar',  stop:'Detener lectura',    darkMode:'Modo oscuro', lightMode:'Modo claro',  zoom:'Zoom texto', translating:'Traduciendo…',           hoverOn:'Hover activo — clic para desactivar',    hoverOff:'Leer al pasar' }
+    };
+
+    /* ── init ── */
+    applyZoom(zoomLevel);
+    applyDark(darkMode, false);
+    applyLangUI(currentLang);
+    window.speechSynthesis && (window.speechSynthesis.onvoiceschanged = () => {});
+
+    /* ── panel ── */
+    window.a11yTogglePanel = function () {
+        const panel  = document.getElementById('a11yPanel');
+        const toggle = document.getElementById('a11yFabToggle');
+        const open   = panel.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(open));
+    };
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.a11y-fab')) {
+            document.getElementById('a11yPanel')?.classList.remove('open');
+            document.getElementById('a11yFabToggle')?.setAttribute('aria-expanded','false');
+        }
+    });
+
+    /* ── dark mode ── */
+    window.a11yToggleDark = function () {
+        darkMode = !darkMode;
+        applyDark(darkMode, true);
+    };
+    function applyDark(on, save) {
+        document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+        const btn   = document.getElementById('a11yDarkBtn');
+        const label = document.getElementById('a11yDarkLabel');
+        const icon  = document.getElementById('a11yDarkIcon');
+        if (btn)   btn.classList.toggle('active', on);
+        if (btn)   btn.setAttribute('aria-pressed', String(on));
+        if (icon)  icon.textContent = on ? '☀️' : '🌙';
+        if (label) label.textContent = on ? UI[currentLang].lightMode : UI[currentLang].darkMode;
+        if (save)  localStorage.setItem('a11y_dark', on ? '1' : '0');
+    }
+
+    /* ── zoom ── */
+    window.a11yZoom = function (dir) {
+        zoomLevel = dir === 0 ? 1 : Math.min(1.6, Math.max(0.8, zoomLevel + dir * 0.1));
+        applyZoom(zoomLevel);
+        localStorage.setItem('a11y_zoom', zoomLevel);
+    };
+    function applyZoom(l) { document.documentElement.style.fontSize = (l * 100) + '%'; }
+
+    /* ── translation ── */
+    const cache = { fr:{}, en:{}, es:{} };
+    let originalsStored = false;
+
+    function storeOriginals() {
+        if (originalsStored) return;
+        document.querySelectorAll('[data-translate]').forEach(el => {
+            if (!el.dataset.orig) el.dataset.orig = el.textContent.trim();
+        });
+        originalsStored = true;
+    }
+
+    window.a11ySetLang = async function (lang) {
+        if (lang === currentLang) return;
+        currentLang = lang;
+        localStorage.setItem('a11y_lang', lang);
+        applyLangUI(lang);
+
+        if (lang === 'fr') { restoreOriginals(); return; }
+
+        storeOriginals();
+        const nodes  = [...document.querySelectorAll('[data-translate]')];
+        if (!nodes.length) return;
+
+        showOverlay(true, UI[lang].translating);
+
+        const unique = [...new Set(nodes.map(el => el.dataset.orig || el.textContent.trim()))].filter(Boolean);
+        const results = {};
+
+        /* chunks of 5 to respect rate limit */
+        for (let i = 0; i < unique.length; i += 5) {
+            await Promise.all(unique.slice(i, i+5).map(async text => {
+                if (cache[lang][text]) { results[text] = cache[lang][text]; return; }
+                try {
+                    const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=fr|${lang}`);
+                    const d = await r.json();
+                    const t = d?.responseData?.translatedText || text;
+                    cache[lang][text] = t;
+                    results[text] = t;
+                } catch { results[text] = text; }
+            }));
+        }
+
+        nodes.forEach(el => {
+            const orig = el.dataset.orig || el.textContent.trim();
+            if (results[orig]) el.textContent = results[orig];
+        });
+
+        showOverlay(false);
+    };
+
+    function restoreOriginals() {
+        document.querySelectorAll('[data-translate][data-orig]').forEach(el => { el.textContent = el.dataset.orig; });
+        applyLangUI('fr');
+    }
+
+    function showOverlay(on, text) {
+        const el = document.getElementById('a11yTranslating');
+        if (!el) return;
+        el.classList.toggle('visible', on);
+        if (text) document.getElementById('a11yTranslatingText').textContent = text;
+    }
+
+    function applyLangUI(lang) {
+        const t = UI[lang] || UI.fr;
+        ttsLang = lang === 'en' ? 'en-GB' : lang === 'es' ? 'es-ES' : 'fr-FR';
+        /* lang buttons */
+        ['fr','en','es'].forEach(l => {
+            document.getElementById('a11yLang' + l.charAt(0).toUpperCase() + l.slice(1))
+                ?.classList.toggle('active', l === lang);
+        });
+        /* widget i18n spans */
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const k = el.dataset.i18n;
+            if (t[k]) el.textContent = t[k];
+        });
+        /* dark label */
+        const label = document.getElementById('a11yDarkLabel');
+        if (label) label.textContent = darkMode ? t.lightMode : t.darkMode;
+        /* hover button */
+        const hSpan = document.querySelector('#a11yHoverBtn [data-i18n="hover"]');
+        if (hSpan) hSpan.textContent = hoverMode ? t.hoverOn : t.hoverOff;
+    }
+
+    /* ── TTS ── */
+    function getVoice() {
+        const voices = window.speechSynthesis?.getVoices() || [];
+        return voices.find(v => v.lang === ttsLang && v.localService)
+            || voices.find(v => v.lang.startsWith(ttsLang.split('-')[0]))
+            || null;
+    }
+    function speak(text) {
+        if (!window.speechSynthesis) return;
+        text = text.trim();
+        if (!text || text === lastSpokenText) return;
+        lastSpokenText = text;
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang  = ttsLang; utt.rate = 1.0; utt.pitch = 1.05;
+        const v   = getVoice(); if (v) utt.voice = v;
+        utt.onend = utt.onerror = () => { setTtsBar(false); lastSpokenText = ''; };
+        window.speechSynthesis.speak(utt);
+    }
+    function setTtsBar(on, text) {
+        const bar = document.getElementById('a11yTtsBar');
+        if (!bar) return;
+        bar.classList.toggle('visible', on);
+        if (text !== undefined) document.getElementById('a11yTtsBarText').textContent = text;
+    }
+    window.a11yStopTts = function () {
+        window.speechSynthesis?.cancel();
+        clearTimeout(idleTimer); clearTimeout(leaveTimer);
+        clearHighlight(); lastSpokenText = ''; setTtsBar(false);
+        if (hoverMode) {
+            hoverMode = false;
+            document.body.classList.remove('a11y-hover-mode');
+            const btn   = document.getElementById('a11yHoverBtn');
+            const span  = btn?.querySelector('[data-i18n="hover"]');
+            if (span) span.textContent = UI[currentLang].hoverOff;
+            btn?.classList.remove('active');
+            btn?.setAttribute('aria-pressed','false');
+        }
+    };
+
+    /* ── hover read ── */
+    function extractText(el) {
+        const tag = el.tagName.toLowerCase();
+        if (['html','body','main','header','footer','nav','section','div','ul','ol','li','form','article'].includes(tag))
+            return el.getAttribute('aria-label') || '';
+        if (el.getAttribute('aria-label')) return el.getAttribute('aria-label');
+        if (el.getAttribute('title'))       return el.getAttribute('title');
+        if (tag === 'img')                  return el.alt || '';
+        if (['input','select','textarea'].includes(tag)) {
+            const lbl = el.id ? document.querySelector(`label[for="${el.id}"]`) : null;
+            return [(lbl ? lbl.textContent.trim() : ''), el.value || el.placeholder || ''].filter(Boolean).join(' : ');
+        }
+        const text = el.textContent.replace(/\s+/g,' ').trim();
+        return text.length > 160 ? text.substring(0,160)+'…' : text;
+    }
+    function highlight(el)   { clearHighlight(); lastTarget = el; el.classList.add('a11y-hover-highlight'); }
+    function clearHighlight() { if (lastTarget) { lastTarget.classList.remove('a11y-hover-highlight'); lastTarget = null; } }
+
+    window.a11yToggleHover = function () {
+        hoverMode = !hoverMode;
+        const btn  = document.getElementById('a11yHoverBtn');
+        const span = btn?.querySelector('[data-i18n="hover"]');
+        const t    = UI[currentLang];
+        btn?.classList.toggle('active', hoverMode);
+        btn?.setAttribute('aria-pressed', String(hoverMode));
+        if (span) span.textContent = hoverMode ? t.hoverOn : t.hoverOff;
+        document.body.classList.toggle('a11y-hover-mode', hoverMode);
+        if (!hoverMode) { clearHighlight(); clearTimeout(idleTimer); clearTimeout(leaveTimer); window.speechSynthesis?.cancel(); setTtsBar(false); lastSpokenText=''; }
+    };
+
+    document.addEventListener('mouseover', e => {
+        if (!hoverMode || e.target.closest('.a11y-fab')) return;
+        const el = e.target, text = extractText(el);
+        if (!text || el === lastTarget) return;
+        clearTimeout(idleTimer); clearTimeout(leaveTimer);
+        highlight(el);
+        idleTimer = setTimeout(() => {
+            if (!hoverMode) return;
+            setTtsBar(true, text.length > 45 ? text.substring(0,45)+'…' : text);
+            speak(text);
+        }, 400);
+    });
+    document.addEventListener('mouseout', e => {
+        if (!hoverMode || e.target.closest('.a11y-fab')) return;
+        clearTimeout(idleTimer);
+        clearTimeout(leaveTimer);
+        leaveTimer = setTimeout(clearHighlight, 150);
+    });
+
+})();
+</script>

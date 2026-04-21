@@ -57,6 +57,78 @@ class BudgetController extends AbstractController
         ]);
     }
 
+    /* ════════════════════════════════════════════════════════
+       DÉPENSE CRUD  (must be declared BEFORE /{id} wildcard routes)
+    ════════════════════════════════════════════════════════ */
+
+    #[Route('/depense/{id}/edit', name: 'app_depense_edit', methods: ['POST'])]
+    public function editDepense(
+        int $id,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        DepenseRepository $depenseRepository,
+        CurrencyService $currencyService
+    ): Response {
+        $depense = $depenseRepository->find($id);
+        if (!$depense) {
+            $this->addFlash('error', 'Dépense introuvable.');
+            return $this->redirectToRoute('app_budget_index');
+        }
+
+        $budget = $depense->getBudget();
+        $budgetId = $budget?->getIdBudget();
+        $oldDevise = $depense->getDeviseDepense() ?? $budget->getDeviseBudget();
+        $oldMontant = $depense->getMontantDepense();
+
+        $errors = $this->hydrateDepense($depense, $request);
+        if (!empty($errors)) {
+            foreach ($errors as $err) { $this->addFlash('error', $err); }
+            return $this->redirectToRoute('app_budget_show', ['id' => $budgetId]);
+        }
+
+        $newDevise = $depense->getDeviseDepense();
+        $budgetDevise = $budget->getDeviseBudget();
+
+        if ($newDevise && $newDevise !== $budgetDevise && $oldMontant > 0) {
+            try {
+                $converted = $currencyService->convert($newDevise, $budgetDevise, $depense->getMontantDepense());
+                $depense->setMontantDepense($converted['converted']);
+                $depense->setDeviseDepense($budgetDevise);
+                $this->addFlash('info', sprintf('Montant converti de %s vers %s', $newDevise, $budgetDevise));
+            } catch (\Exception $e) {
+                $this->addFlash('warning', 'La devise ' . $newDevise . ' n\'a pas pu être convertie.');
+            }
+        } elseif (!$newDevise) {
+            $depense->setDeviseDepense($budgetDevise);
+        }
+
+        $entityManager->flush();
+        $this->addFlash('success', 'Dépense modifiée avec succès !');
+        return $this->redirectToRoute('app_budget_show', ['id' => $budgetId]);
+    }
+
+    #[Route('/depense/{id}/delete', name: 'app_depense_delete', methods: ['POST'])]
+    public function deleteDepense(
+        int $id,
+        EntityManagerInterface $entityManager,
+        DepenseRepository $depenseRepository
+    ): Response {
+        $depense = $depenseRepository->find($id);
+        if (!$depense) {
+            $this->addFlash('error', 'Dépense introuvable.');
+            return $this->redirectToRoute('app_budget_index');
+        }
+        $budgetId = $depense->getBudget()?->getIdBudget();
+        $entityManager->remove($depense);
+        $entityManager->flush();
+        $this->addFlash('success', 'Dépense supprimée avec succès !');
+        return $this->redirectToRoute('app_budget_show', ['id' => $budgetId]);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       BUDGET SHOW / EDIT / DELETE  (wildcard /{id} routes — keep AFTER specific routes)
+    ════════════════════════════════════════════════════════ */
+
     #[Route('/{id}', name: 'app_budget_show', methods: ['GET'])]
     public function show(
         Budget $budget,
@@ -186,7 +258,7 @@ class BudgetController extends AbstractController
     }
 
     /* ════════════════════════════════════════════════════════
-       DÉPENSE CRUD
+       DÉPENSE CRUD — new
     ════════════════════════════════════════════════════════ */
 
     #[Route('/{budgetId}/depense/new', name: 'app_depense_new', methods: ['POST'])]
@@ -234,70 +306,6 @@ class BudgetController extends AbstractController
         $entityManager->flush();
         
         $this->addFlash('success', 'Dépense ajoutée avec succès !');
-        return $this->redirectToRoute('app_budget_show', ['id' => $budgetId]);
-    }
-
-    #[Route('/depense/{id}/edit', name: 'app_depense_edit', methods: ['POST'])]
-    public function editDepense(
-        int $id,
-        Request $request,
-        EntityManagerInterface $entityManager,
-        DepenseRepository $depenseRepository,
-        CurrencyService $currencyService
-    ): Response {
-        $depense = $depenseRepository->find($id);
-        if (!$depense) {
-            $this->addFlash('error', 'Dépense introuvable.');
-            return $this->redirectToRoute('app_budget_index');
-        }
-        
-        $budget = $depense->getBudget();
-        $budgetId = $budget?->getIdBudget();
-        $oldDevise = $depense->getDeviseDepense() ?? $budget->getDeviseBudget();
-        $oldMontant = $depense->getMontantDepense();
-        
-        $errors = $this->hydrateDepense($depense, $request);
-        if (!empty($errors)) {
-            foreach ($errors as $err) { $this->addFlash('error', $err); }
-            return $this->redirectToRoute('app_budget_show', ['id' => $budgetId]);
-        }
-        
-        $newDevise = $depense->getDeviseDepense();
-        $budgetDevise = $budget->getDeviseBudget();
-        
-        if ($newDevise && $newDevise !== $budgetDevise && $oldMontant > 0) {
-            try {
-                $converted = $currencyService->convert($newDevise, $budgetDevise, $depense->getMontantDepense());
-                $depense->setMontantDepense($converted['converted']);
-                $depense->setDeviseDepense($budgetDevise);
-                $this->addFlash('info', sprintf('Montant converti de %s vers %s', $newDevise, $budgetDevise));
-            } catch (\Exception $e) {
-                $this->addFlash('warning', 'La devise ' . $newDevise . ' n\'a pas pu être convertie.');
-            }
-        } elseif (!$newDevise) {
-            $depense->setDeviseDepense($budgetDevise);
-        }
-        
-        $entityManager->flush();
-        $this->addFlash('success', 'Dépense modifiée avec succès !');
-        return $this->redirectToRoute('app_budget_show', ['id' => $budgetId]);
-    }
-
-    #[Route('/depense/{id}/delete', name: 'app_depense_delete', methods: ['POST'])]
-    public function deleteDepense(
-        int $id,
-        EntityManagerInterface $entityManager,
-        DepenseRepository $depenseRepository
-    ): Response {
-        $depense = $depenseRepository->find($id);
-        if (!$depense) {
-            $this->addFlash('error', 'Dépense introuvable.');
-            return $this->redirectToRoute('app_budget_index');
-        }
-        $budgetId = $depense->getBudget()?->getIdBudget();
-        $entityManager->remove($depense);
-        $entityManager->flush();
-        $this->addFlash('success', 'Dépense supprimée avec succès !');
         return $this->redirectToRoute('app_budget_show', ['id' => $budgetId]);
     }
 
@@ -497,6 +505,392 @@ class BudgetController extends AbstractController
         }
         
         return $recommendations;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       AI EXTERNE — OpenRouter (Mistral / Llama)
+    ════════════════════════════════════════════════════════ */
+
+    private function callOpenRouter(string $prompt, string $apiKey): string
+    {
+        // Free models on OpenRouter — tried in order until one responds
+        $models = [
+            'meta-llama/llama-3.3-70b-instruct:free',
+            'google/gemma-3-27b-it:free',
+            'google/gemma-3-12b-it:free',
+            'meta-llama/llama-3.2-3b-instruct:free',
+        ];
+
+        $lastError = 'No model tried';
+
+        foreach ($models as $model) {
+            $payload = json_encode([
+                'model'    => $model,
+                'messages' => [
+                    [
+                        'role'    => 'user',
+                        'content' => 'Tu es un assistant de gestion de budget voyage. Réponds en français, max 120 mots, sois précis et concis. ' . $prompt,
+                    ],
+                ],
+                'max_tokens'  => 350,
+                'temperature' => 0.5,
+            ]);
+
+            $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST           => true,
+                CURLOPT_HTTPHEADER     => [
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $apiKey,
+                    'HTTP-Referer: https://travelmate.local',
+                    'X-Title: TravelMate',
+                ],
+                CURLOPT_POSTFIELDS     => $payload,
+                CURLOPT_TIMEOUT        => 25,
+                CURLOPT_SSL_VERIFYPEER => false,
+            ]);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr  = curl_error($ch);
+            curl_close($ch);
+
+            if ($curlErr) { $lastError = 'cURL: ' . $curlErr; continue; }
+
+            $data = json_decode($response, true);
+
+            // Skip unavailable models
+            if ($httpCode === 404) {
+                $lastError = 'Model not found: ' . $model;
+                continue;
+            }
+
+            // Provider error on this model — try next
+            if (isset($data['error'])) {
+                $lastError = $data['error']['message'] ?? ('Error on ' . $model);
+                continue;
+            }
+
+            $content = $data['choices'][0]['message']['content'] ?? null;
+            if ($content !== null && trim($content) !== '') {
+                return trim($content);
+            }
+
+            $lastError = 'Empty response from ' . $model;
+        }
+
+        throw new \RuntimeException('All models failed. Last: ' . $lastError);
+    }
+
+    #[Route('/{id}/ai/estimate', name: 'app_budget_ai_estimate_trip', methods: ['POST'])]
+    public function aiEstimateTrip(
+        Budget $budget,
+        Request $request,
+        #[Autowire('%env(OPENROUTER_API_KEY)%')] string $apiKey
+    ): JsonResponse {
+        $data    = json_decode($request->getContent(), true) ?? [];
+        $dest    = htmlspecialchars($data['destination'] ?? 'destination inconnue', ENT_QUOTES);
+        $days    = (int)($data['days'] ?? 7);
+        $people  = (int)($data['people'] ?? 2);
+        $devise  = $budget->getDeviseBudget() ?? 'TND';
+        $budgetTotal = $budget->getMontantTotal();
+
+        $prompt = "Voyage à {$dest}, {$days} jours, {$people} personne(s). Budget disponible : {$budgetTotal} {$devise}. "
+                . "Donne : 1) coût total estimé 2) coût par jour par personne 3) budget suffisant ou non 4) un conseil pratique.";
+
+        try {
+            $result = $this->callOpenRouter($prompt, $apiKey);
+            return new JsonResponse(['result' => $result]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/{id}/ai/predict-overrun', name: 'app_budget_ai_predict_overrun', methods: ['POST'])]
+    public function aiPredictOverrun(
+        Budget $budget,
+        Request $request,
+        #[Autowire('%env(OPENROUTER_API_KEY)%')] string $apiKey
+    ): JsonResponse {
+        $data      = json_decode($request->getContent(), true) ?? [];
+        $daysLeft  = (int)($data['days_left'] ?? 0);
+        $devise    = $budget->getDeviseBudget() ?? 'TND';
+
+        $totalSpent = 0;
+        $depenses   = [];
+        foreach ($budget->getDepenses() as $d) {
+            $totalSpent += $d->getMontantDepense();
+            $depenses[]  = $d->getCategorieDepense() . ':' . round($d->getMontantDepense(), 0);
+        }
+        $restant = $budget->getMontantTotal() - $totalSpent;
+        $pct     = $budget->getMontantTotal() > 0
+            ? round(($totalSpent / $budget->getMontantTotal()) * 100, 1) : 0;
+
+        $prompt = "Budget voyage : {$budget->getMontantTotal()} {$devise}. "
+                . "Dépensé : {$totalSpent} {$devise} ({$pct}%). "
+                . "Restant : {$restant} {$devise}. "
+                . "Jours restants : {$daysLeft}. "
+                . "Catégories : " . implode(', ', array_slice($depenses, 0, 5)) . ". "
+                . "Risque de dépassement (Faible/Modéré/Élevé/Critique) ? Projection finale ? Un conseil.";
+
+        try {
+            $result = $this->callOpenRouter($prompt, $apiKey);
+            return new JsonResponse(['result' => $result]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/{id}/ai/recommend-trip', name: 'app_budget_ai_recommend_trip', methods: ['POST'])]
+    public function aiRecommendTrip(
+        Budget $budget,
+        Request $request,
+        #[Autowire('%env(OPENROUTER_API_KEY)%')] string $apiKey
+    ): JsonResponse {
+        $data   = json_decode($request->getContent(), true) ?? [];
+        $style  = htmlspecialchars($data['style'] ?? 'plage', ENT_QUOTES);
+        $devise = $budget->getDeviseBudget() ?? 'TND';
+
+        $totalSpent = 0;
+        foreach ($budget->getDepenses() as $d) $totalSpent += $d->getMontantDepense();
+        $restant = $budget->getMontantTotal() - $totalSpent;
+        $budgetDispo = $restant > 100 ? $restant : $budget->getMontantTotal();
+
+        $prompt = "Avec un budget de {$budgetDispo} {$devise} et un style de voyage '{$style}', "
+                . "recommande UN voyage complet. Inclus : destination précise, durée idéale, "
+                . "hébergement suggéré, 3 activités incontournables, et estimation du coût total. "
+                . "Sois spécifique et pratique.";
+
+        try {
+            $result = $this->callOpenRouter($prompt, $apiKey);
+            return new JsonResponse(['result' => $result]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /* ════════════════════════════════════════════════════════
+       GAMIFICATION — computed from Budget + Depense only
+    ════════════════════════════════════════════════════════ */
+
+    #[Route('/{id}/gamification', name: 'app_budget_gamification', methods: ['GET'])]
+    public function gamification(Budget $budget, BudgetRepository $budgetRepository): JsonResponse
+    {
+        $depenses    = $budget->getDepenses()->toArray();
+        $totalBudget = (float) $budget->getMontantTotal();
+        $devise      = $budget->getDeviseBudget() ?? 'TND';
+
+        // ── Total spent ──────────────────────────────────────────
+        $totalSpent = array_sum(array_map(fn($d) => (float)$d->getMontantDepense(), $depenses));
+        $restant    = $totalBudget - $totalSpent;
+        $pct        = $totalBudget > 0 ? ($totalSpent / $totalBudget) * 100 : 0;
+
+        // ── Daily budget (assume 30-day budget by default) ───────
+        // Infer duration from first/last expense date
+        $dates = array_filter(array_map(fn($d) => $d->getDateCreation(), $depenses));
+        usort($dates, fn($a, $b) => $a <=> $b);
+        $firstDate = $dates[0] ?? new \DateTime();
+        $lastDate  = $dates[count($dates) - 1] ?? new \DateTime();
+        $daySpan   = max(1, (int)$firstDate->diff($lastDate)->days + 1);
+        $dailyBudget = $totalBudget / max($daySpan, 1);
+
+        // ── Group spending by day ────────────────────────────────
+        $byDay = [];
+        foreach ($depenses as $d) {
+            $day = $d->getDateCreation()?->format('Y-m-d') ?? date('Y-m-d');
+            $byDay[$day] = ($byDay[$day] ?? 0) + (float)$d->getMontantDepense();
+        }
+        ksort($byDay);
+
+        // ── Savings streak (consecutive days under daily budget) ─
+        $streak = 0;
+        $maxStreak = 0;
+        foreach ($byDay as $spent) {
+            if ($spent <= $dailyBudget) {
+                $streak++;
+                $maxStreak = max($maxStreak, $streak);
+            } else {
+                $streak = 0;
+            }
+        }
+        // Current streak = streak at end of sorted days
+        $currentStreak = $streak;
+
+        // ── Achievements ─────────────────────────────────────────
+        $allBudgets = $budgetRepository->findAll();
+        $achievements = [];
+
+        // 1. First budget created
+        if (count($allBudgets) >= 1) {
+            $achievements[] = [
+                'id'     => 'first_budget',
+                'title'  => 'Premier budget',
+                'desc'   => 'Vous avez créé votre premier budget',
+                'icon'   => 'star',
+                'color'  => '#f59e0b',
+                'earned' => true,
+            ];
+        }
+
+        // 2. Under budget (budget not exceeded)
+        if ($restant >= 0) {
+            $achievements[] = [
+                'id'     => 'under_budget',
+                'title'  => 'Budget maîtrisé',
+                'desc'   => 'Vous restez dans les limites du budget',
+                'icon'   => 'shield',
+                'color'  => '#10b981',
+                'earned' => true,
+            ];
+        }
+
+        // 3. Savings streak >= 3 days
+        if ($maxStreak >= 3) {
+            $achievements[] = [
+                'id'     => 'streak_3',
+                'title'  => 'Série de 3 jours',
+                'desc'   => "{$maxStreak} jours consécutifs sous le budget journalier",
+                'icon'   => 'fire',
+                'color'  => '#f97316',
+                'earned' => true,
+            ];
+        } else {
+            $achievements[] = [
+                'id'     => 'streak_3',
+                'title'  => 'Série de 3 jours',
+                'desc'   => 'Restez sous le budget 3 jours de suite',
+                'icon'   => 'fire',
+                'color'  => '#9ca3af',
+                'earned' => false,
+                'progress' => $maxStreak,
+                'target'   => 3,
+            ];
+        }
+
+        // 4. Saved 20%+ of budget
+        $savedPct = $totalBudget > 0 ? ($restant / $totalBudget) * 100 : 0;
+        if ($savedPct >= 20) {
+            $achievements[] = [
+                'id'     => 'saver_20',
+                'title'  => 'Économe',
+                'desc'   => 'Économisé plus de 20% du budget',
+                'icon'   => 'piggy',
+                'color'  => '#3b82f6',
+                'earned' => true,
+            ];
+        } else {
+            $achievements[] = [
+                'id'     => 'saver_20',
+                'title'  => 'Économe',
+                'desc'   => 'Économisez 20% du budget total',
+                'icon'   => 'piggy',
+                'color'  => '#9ca3af',
+                'earned' => false,
+                'progress' => max(0, round($savedPct)),
+                'target'   => 20,
+            ];
+        }
+
+        // 5. 10+ expenses logged
+        if (count($depenses) >= 10) {
+            $achievements[] = [
+                'id'     => 'tracker_10',
+                'title'  => 'Suivi rigoureux',
+                'desc'   => '10 dépenses enregistrées',
+                'icon'   => 'list',
+                'color'  => '#8b5cf6',
+                'earned' => true,
+            ];
+        } else {
+            $achievements[] = [
+                'id'     => 'tracker_10',
+                'title'  => 'Suivi rigoureux',
+                'desc'   => 'Enregistrez 10 dépenses',
+                'icon'   => 'list',
+                'color'  => '#9ca3af',
+                'earned' => false,
+                'progress' => count($depenses),
+                'target'   => 10,
+            ];
+        }
+
+        // 6. Multi-budget user (3+ budgets)
+        if (count($allBudgets) >= 3) {
+            $achievements[] = [
+                'id'     => 'multi_budget',
+                'title'  => 'Voyageur expérimenté',
+                'desc'   => '3 budgets créés',
+                'icon'   => 'globe',
+                'color'  => '#2f7f79',
+                'earned' => true,
+            ];
+        } else {
+            $achievements[] = [
+                'id'     => 'multi_budget',
+                'title'  => 'Voyageur expérimenté',
+                'desc'   => 'Créez 3 budgets',
+                'icon'   => 'globe',
+                'color'  => '#9ca3af',
+                'earned' => false,
+                'progress' => count($allBudgets),
+                'target'   => 3,
+            ];
+        }
+
+        // ── Budget challenge vs previous budget ──────────────────
+        $challenge = null;
+        $userBudgets = array_filter($allBudgets, fn($b) => $b->getIdBudget() !== $budget->getIdBudget());
+        if (!empty($userBudgets)) {
+            // Find previous budget with most expenses
+            usort($userBudgets, fn($a, $b) => $b->getDepenses()->count() <=> $a->getDepenses()->count());
+            $prevBudget = reset($userBudgets);
+            $prevSpent  = array_sum(array_map(
+                fn($d) => (float)$d->getMontantDepense(),
+                $prevBudget->getDepenses()->toArray()
+            ));
+            $prevTotal  = (float)$prevBudget->getMontantTotal();
+            $prevPct    = $prevTotal > 0 ? ($prevSpent / $prevTotal) * 100 : 100;
+            $targetPct  = max(0, $prevPct - 20); // challenge: spend 20% less
+            $currentPct = $pct;
+            $winning    = $currentPct <= $targetPct;
+
+            $challenge = [
+                'prev_budget'  => $prevBudget->getLibelleBudget(),
+                'prev_pct'     => round($prevPct, 1),
+                'target_pct'   => round($targetPct, 1),
+                'current_pct'  => round($currentPct, 1),
+                'winning'      => $winning,
+                'gap'          => round($currentPct - $targetPct, 1),
+            ];
+        }
+
+        // ── Score (0–100) ─────────────────────────────────────────
+        $earnedCount = count(array_filter($achievements, fn($a) => $a['earned']));
+        $totalCount  = count($achievements);
+        $score = (int) round(
+            ($earnedCount / max($totalCount, 1)) * 60   // 60% from badges
+            + ($currentStreak * 5)                       // 5pts per streak day
+            + ($restant >= 0 ? 20 : 0)                  // 20pts for staying under
+        );
+        $score = min(100, $score);
+
+        return new JsonResponse([
+            'score'          => $score,
+            'current_streak' => $currentStreak,
+            'max_streak'     => $maxStreak,
+            'daily_budget'   => round($dailyBudget, 2),
+            'devise'         => $devise,
+            'achievements'   => $achievements,
+            'challenge'      => $challenge,
+            'stats'          => [
+                'total_spent'  => round($totalSpent, 2),
+                'restant'      => round($restant, 2),
+                'pct'          => round($pct, 1),
+                'nb_depenses'  => count($depenses),
+                'nb_days'      => $daySpan,
+            ],
+        ]);
     }
 
     private function hydrateDepense(Depense $depense, Request $request): array

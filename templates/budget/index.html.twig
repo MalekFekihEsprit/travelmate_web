@@ -5,11 +5,61 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
+/* ── BUDGET PAGE ─────────────────────── */
+.budget-page { display: grid; gap: 1.75rem; }
+
+/* ── HERO ────────────────────────────── */
+.budget-hero-wrap {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+    gap: 1.4rem;
+    padding: 2rem;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top left, rgba(221,191,140,.28), transparent 30%),
+        linear-gradient(135deg, rgba(255,253,249,.98), rgba(243,234,223,.92));
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 18px 40px rgba(71,48,35,.06);
+}
+.budget-hero-wrap__content { position: relative; z-index: 1; }
+.budget-hero-wrap__eyebrow {
+    display: inline-flex; align-items: center; gap: .5rem;
+    margin-bottom: .8rem; color: var(--color-primary);
+    font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+}
+.budget-hero-wrap__title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 3vw, 3rem);
+    line-height: 1.05; margin-bottom: .85rem;
+}
+.budget-hero-wrap__text { color: var(--color-text-muted); max-width: 58ch; font-size: 1rem; }
+.budget-hero-wrap__actions {
+    display: flex; align-items: center; gap: .85rem;
+    margin-top: 1.25rem; flex-wrap: wrap;
+}
+.budget-hero-wrap__stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; align-content: start;
+}
+.budget-stat {
+    padding: 1rem; border: 1px solid rgba(231,220,205,.85);
+    border-radius: var(--radius-lg); background: rgba(255,255,255,.62);
+}
+.budget-stat strong {
+    display: block; font-family: 'Fraunces', serif;
+    font-size: 1.45rem; color: var(--color-text);
+}
+.budget-stat span { color: var(--color-text-muted); font-size: .82rem; }
+.budget-stat--over strong { color: #dc2626; }
+.budget-stat--ok strong { color: #059669; }
+
 /* ── TOOLBAR ─────────────────────────── */
 .toolbar {
     display: flex; flex-wrap: wrap; align-items: center; gap: .75rem;
-    margin-bottom: 1.5rem; padding: 1rem 1.25rem;
-    background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    background: rgba(255,253,249,.94); border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl); box-shadow: 0 18px 40px rgba(71,48,35,.06);
 }
 .toolbar__left  { display:flex; flex-wrap:wrap; gap:.6rem; flex:1; min-width:0; align-items:center; }
 .toolbar__right { display:flex; flex-wrap:wrap; gap:.6rem; flex-shrink:0; align-items:center; }
@@ -20,6 +70,7 @@
     border-radius:999px; padding:.48rem 1rem; min-width:240px;
 }
 .search-field:focus-within { border-color:rgba(196,111,75,.45); box-shadow:0 0 0 3px rgba(196,111,75,.1); }
+.search-field__icon { color: var(--color-text-muted); flex-shrink: 0; }
 .search-field__input { border:none; outline:none; background:transparent; font:inherit; font-size:.88rem; color:var(--color-text); width:100%; }
 .search-field__input::placeholder { color:var(--color-text-muted); }
 .search-clear {
@@ -107,7 +158,11 @@
 
 /* ── SUMMARY BAR ─────────────────────── */
 .summary-bar { display:grid; grid-template-columns:repeat(auto-fit, minmax(155px,1fr)); gap:.85rem; margin-bottom:1.75rem; }
-.summary-card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:.95rem 1.15rem; }
+.summary-card {
+    background: rgba(255,253,249,.94); border:1px solid var(--color-border);
+    border-radius: var(--radius-lg); padding:.95rem 1.15rem;
+    box-shadow: 0 4px 12px rgba(71,48,35,.04);
+}
 .summary-card__label { font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--color-text-muted); margin-bottom:.2rem; }
 .summary-card__value { font-family:'Fraunces',serif; font-size:1.4rem; font-weight:600; color:var(--color-primary); line-height:1.1; }
 .summary-card__sub { font-size:.74rem; color:var(--color-text-muted); margin-top:.1rem; }
@@ -128,10 +183,11 @@
 /* ── CARD ────────────────────────────── */
 .act-card {
     display:flex; flex-direction:column;
-    background:var(--color-surface); border:1px solid var(--color-border);
+    background: rgba(255,253,249,.94); border:1px solid var(--color-border);
     border-radius:var(--radius-lg); overflow:hidden;
     transition:transform .2s, box-shadow .2s;
     cursor:pointer; position:relative;
+    box-shadow: 0 4px 12px rgba(71,48,35,.04);
 }
 .act-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px var(--color-shadow); }
 .act-card.selected { border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(196,111,75,.18); }
@@ -156,11 +212,27 @@
 .act-card.selected .card-checkbox::after { display:block; }
 
 .act-card__img-wrap {
-    position:relative; height:110px;
-    background:linear-gradient(135deg, #f5ede3 0%, rgba(221,191,140,.3) 100%);
-    display:flex; align-items:center; justify-content:center;
+    position:relative; height:185px;
+    overflow: hidden;
+    background: linear-gradient(145deg, rgba(196,111,75,.22), rgba(47,127,121,.18));
 }
-.act-card__img-placeholder { font-size:2.2rem; }
+.act-card__img-wrap::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(22,18,15,.05) 0%, rgba(22,18,15,.55) 100%);
+}
+.act-card__img-wrap img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 400ms ease;
+}
+.act-card:hover .act-card__img-wrap img { transform: scale(1.06); }
+.act-card__img-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(255,255,255,.55);
+    color: var(--color-primary);
+}
 .act-card__badges { position:absolute; top:.55rem; right:.55rem; display:flex; gap:.3rem; }
 .act-card__body { flex:1; padding:.9rem 1rem 1rem; }
 .act-card__name { font-weight:700; font-size:.97rem; color:var(--color-text); }
@@ -184,11 +256,11 @@
     width:32px; height:32px; border-radius:50%;
     display:inline-flex; align-items:center; justify-content:center;
     font-size:.85rem; text-decoration:none; border:1.5px solid var(--color-border);
-    background:var(--color-bg); cursor:pointer;
+    background:var(--color-bg); cursor:pointer; color: var(--color-text-muted);
 }
 .act-card__btn--view   { background:var(--color-primary); color:#fff; border-color:var(--color-primary); }
-.act-card__btn--edit:hover   { border-color:var(--color-primary); background:rgba(196,111,75,.1); }
-.act-card__btn--delete:hover { border-color:#dc2626; background:#fee2e2; }
+.act-card__btn--edit:hover   { border-color:var(--color-primary); background:rgba(196,111,75,.1); color: var(--color-primary); }
+.act-card__btn--delete:hover { border-color:#dc2626; background:#fee2e2; color: #dc2626; }
 
 .badge { display:inline-flex; padding:.18rem .55rem; border-radius:999px; font-size:.68rem; font-weight:700; }
 .badge--cat { background:rgba(255,253,249,.92); color:var(--color-primary-dark); border:1px solid rgba(196,111,75,.2); }
@@ -199,46 +271,113 @@
 
 .empty-state { grid-column:1/-1; text-align:center; padding:4rem 1rem; color:var(--color-text-muted); }
 
-/* hero */
+/* hero — full-width background image */
 .act-hero {
-    border-radius:var(--radius-xl); overflow:hidden;
-    min-height:200px; display:flex; align-items:stretch; margin-bottom:1.75rem;
-    background:linear-gradient(135deg, #3b2a1a 0%, var(--color-primary) 100%);
+    position: relative;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+    padding: 2.5rem 2.5rem;
 }
-.act-hero__content { flex:1; padding:1.8rem 2rem; color:#fff; }
-.act-hero__title { font-family:'Fraunces',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:600; }
+/* background image layer */
+.act-hero__bg {
+    position: absolute; inset: 0; z-index: 0;
+}
+.act-hero__bg img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 6s ease;
+}
+.act-hero:hover .act-hero__bg img { transform: scale(1.04); }
+/* dark gradient overlay so text is readable */
+.act-hero__overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(
+        105deg,
+        rgba(22,14,8,.78) 0%,
+        rgba(22,14,8,.55) 55%,
+        rgba(22,14,8,.15) 100%
+    );
+}
+.act-hero__content {
+    position: relative; z-index: 2;
+    max-width: 620px;
+    color: #fff;
+}
+.act-hero__eyebrow {
+    display: inline-flex; align-items: center; gap: .5rem;
+    margin-bottom: .8rem;
+    font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    color: rgba(255,255,255,.75);
+}
+.act-hero__title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    line-height: 1.05; margin-bottom: .85rem;
+    color: #fff;
+}
+.act-hero__text { color: rgba(255,255,255,.75); max-width: 52ch; font-size: .95rem; }
+.act-hero__actions { display: flex; align-items: center; gap: .85rem; margin-top: 1.4rem; flex-wrap: wrap; }
 .btn-hero-primary {
-    display:inline-flex; align-items:center; gap:.4rem;
-    padding:.55rem 1.25rem; background:#fff; color:var(--color-primary-dark);
-    border-radius:999px; font-weight:700; text-decoration:none;
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .65rem 1.4rem; border-radius: 999px; font-weight: 700; font-size: .92rem;
+    background: var(--color-primary); color: #fff; text-decoration: none;
+    box-shadow: 0 4px 14px rgba(196,111,75,.45); transition: background .18s, transform .18s;
 }
+.btn-hero-primary:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
+.btn-hero-ghost {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .65rem 1.4rem; border-radius: 999px; font-weight: 600; font-size: .92rem;
+    background: rgba(255,255,255,.15); color: #fff;
+    border: 1.5px solid rgba(255,255,255,.35); text-decoration: none; transition: all .18s;
+    backdrop-filter: blur(4px);
+}
+.btn-hero-ghost:hover { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.6); }
+/* stats — bottom right corner */
 .act-hero__stats {
-    display:flex; flex-direction:column;
-    justify-content:center; align-items:center;
-    padding:1.5rem 2.5rem; color:#fff;
-    border-left:1px solid rgba(255,255,255,.15);
+    position: absolute; bottom: 1.5rem; right: 1.75rem; z-index: 2;
+    display: flex; gap: 1.25rem; align-items: flex-end;
 }
-.hero-stat__num   { font-family:'Fraunces',serif; font-size:2.6rem; font-weight:600; }
-.hero-stat__label { font-size:.76rem; text-transform:uppercase; opacity:.65; }
+.hero-stat {
+    text-align: right;
+}
+.hero-stat strong {
+    display: block; font-family: 'Fraunces', serif;
+    font-size: 1.8rem; color: #fff; line-height: 1;
+}
+.hero-stat span { color: rgba(255,255,255,.65); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+@media (max-width: 700px) {
+    .act-hero { padding: 1.75rem 1.25rem 5rem; min-height: 280px; }
+    .act-hero__stats { bottom: 1rem; right: 1rem; gap: .85rem; }
+    .hero-stat strong { font-size: 1.4rem; }
+}
 
 /* detail panel */
 .detail-panel {
     display:none;
-    background:var(--color-surface); border:1px solid var(--color-border);
+    background: rgba(255,253,249,.94); border:1px solid var(--color-border);
     border-radius:var(--radius-lg); overflow:hidden;
     position:sticky; top:1.5rem; max-height:85vh; overflow-y:auto;
+    box-shadow: 0 4px 12px rgba(71,48,35,.04);
 }
 .detail-panel.visible { display:block; }
 
 .dp-header {
     display:flex; align-items:center; justify-content:space-between;
-    padding:1rem 1.25rem; background:linear-gradient(135deg,#3b2a1a,var(--color-primary));
-    color:#fff;
+    padding:1rem 1.25rem;
+    background:
+        radial-gradient(circle at top left, rgba(221,191,140,.28), transparent 40%),
+        linear-gradient(135deg, rgba(255,253,249,.98), rgba(243,234,223,.92));
+    border-bottom: 1px solid var(--color-border);
 }
+.dp-header__title { font-family:'Fraunces',serif; font-size:1rem; font-weight:600; color:var(--color-text); }
 .dp-close {
     width:28px; height:28px; border-radius:50%;
-    border:1.5px solid rgba(255,255,255,.4); background:rgba(255,255,255,.1);
-    cursor:pointer;
+    border:1.5px solid var(--color-border); background:var(--color-bg);
+    cursor:pointer; color:var(--color-text-muted); font-size:.9rem;
+    display:flex; align-items:center; justify-content:center;
 }
 .dp-progress-wrap { padding:.85rem 1.15rem; border-bottom:1px solid var(--color-border); }
 .dp-progress-track { height:6px; background:#e5e7eb; border-radius:99px; overflow:hidden; }
@@ -280,8 +419,9 @@
 .pagination-wrap {
     display: flex; align-items: center; justify-content: center;
     gap: .5rem; margin-top: 2rem; padding: 1.25rem;
-    background: var(--color-surface); border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg); flex-wrap: wrap;
+    background: rgba(255,253,249,.94); border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl); flex-wrap: wrap;
+    box-shadow: 0 4px 12px rgba(71,48,35,.04);
 }
 .pag-btn {
     min-width: 36px; height: 36px; padding: 0 .6rem;
@@ -300,7 +440,7 @@
 }
 .modal-overlay.open { display:flex; }
 .modal {
-    background:var(--color-surface); border-radius:var(--radius-xl);
+    background: rgba(255,253,249,.98); border-radius:var(--radius-xl);
     border:1px solid var(--color-border);
     width:100%; max-width:440px;
 }
@@ -308,9 +448,11 @@
     display:flex; align-items:center; justify-content:space-between;
     padding:1.1rem 1.5rem; border-bottom:1px solid var(--color-border);
 }
+.modal__title { font-family:'Fraunces',serif; font-size:1.05rem; font-weight:600; color:var(--color-text); }
 .modal__close {
     width:30px; height:30px; border-radius:50%; border:1.5px solid var(--color-border);
-    background:var(--color-bg); cursor:pointer;
+    background:var(--color-bg); cursor:pointer; color:var(--color-text-muted);
+    display:flex; align-items:center; justify-content:center;
 }
 .modal__body { padding:1.5rem; text-align:center; }
 .modal__footer {
@@ -332,12 +474,27 @@
 
 {% block body %}
 
-{# Flash messages #}
-{% for msg in app.flashes('success') %}
-    <div style="background:#d1fae5;color:#065f46;padding:.8rem 1.15rem;border-radius:var(--radius-md);margin-bottom:1rem;">
-        ✅ {{ msg }}
-    </div>
-{% endfor %}
+{# Flash messages — toast stack pattern #}
+{% set successFlashes = app.flashes('success') %}
+{% set errorFlashes   = app.flashes('error') %}
+{% if successFlashes is not empty or errorFlashes is not empty %}
+<div class="destinations-toast-stack" aria-live="polite" aria-atomic="true">
+    {% for message in successFlashes %}
+        <div class="destinations-flash destinations-flash--success" data-destinations-toast>
+            <strong class="destinations-flash__title">Opération réussie</strong>
+            <div class="destinations-flash__message">{{ message }}</div>
+            <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer">×</button>
+        </div>
+    {% endfor %}
+    {% for message in errorFlashes %}
+        <div class="destinations-flash destinations-flash--error" data-destinations-toast>
+            <strong class="destinations-flash__title">Erreur</strong>
+            <div class="destinations-flash__message">{{ message }}</div>
+            <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer">×</button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 {# PRE-COMPUTE #}
 {% set grandTotal = 0 %}
@@ -351,43 +508,64 @@
     {% if tot > budget.montantTotal %}{% set countOver = countOver + 1 %}{% endif %}
 {% endfor %}
 
-{# HERO #}
+{# HERO — full-width background image #}
 <section class="act-hero">
+    {# Background image #}
+    <div class="act-hero__bg">
+        <img src="https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1400&q=85&auto=format&fit=crop"
+             alt="" aria-hidden="true" loading="eager">
+    </div>
+    <div class="act-hero__overlay"></div>
+
+    {# Text content #}
     <div class="act-hero__content">
-        <span style="font-size:.76rem;text-transform:uppercase;opacity:.7;">Gestion financière</span>
-        <h1 class="act-hero__title">Gérez vos budgets de voyage</h1>
-        <p style="opacity:.8;">Suivez vos dépenses, contrôlez vos coûts et profitez de vos voyages sans stress financier.</p>
-        <div style="margin-top:.4rem;">
-            <a href="{{ path('app_budget_new') }}" class="btn-hero-primary">+ Nouveau budget</a>
+        <span class="act-hero__eyebrow" data-translate>Gestion financière</span>
+        <h1 class="act-hero__title" data-translate>Gérez vos budgets de voyage</h1>
+        <p class="act-hero__text" data-translate>Suivez vos dépenses, contrôlez vos coûts et profitez de vos voyages sans stress financier.</p>
+        <div class="act-hero__actions">
+            <a href="{{ path('app_budget_new') }}" class="btn-hero-primary" data-translate>Nouveau budget</a>
+            <a href="#budgetGrid" class="btn-hero-ghost" data-translate>Voir mes budgets</a>
         </div>
     </div>
+
+    {# Stats — bottom right #}
     <div class="act-hero__stats">
-        <div class="hero-stat__num">{{ budgets|length }}</div>
-        <div class="hero-stat__label">Budgets</div>
+        <div class="hero-stat">
+            <strong>{{ budgets|length }}</strong>
+            <span data-translate>Budgets</span>
+        </div>
+        <div class="hero-stat">
+            <strong style="color:{% if countOver > 0 %}#f87171{% else %}#6ee7b7{% endif %}">{{ countOver }}</strong>
+            <span data-translate>Dépassés</span>
+        </div>
+        <div class="hero-stat">
+            <strong>{{ grandTotal|number_format(0,',',' ') }}</strong>
+            <span data-translate>Budget total</span>
+        </div>
     </div>
 </section>
 
 {# SUMMARY BAR #}
 <div class="summary-bar">
     <div class="summary-card">
-        <div class="summary-card__label">Budget total</div>
+        <div class="summary-card__label" data-translate>Budget total</div>
         <div class="summary-card__value">{{ grandTotal|number_format(2, ',', ' ') }}</div>
-        <div class="summary-card__sub">toutes devises</div>
+        <div class="summary-card__sub" data-translate>toutes devises</div>
     </div>
     <div class="summary-card">
-        <div class="summary-card__label">Total dépensé</div>
+        <div class="summary-card__label" data-translate>Total dépensé</div>
         <div class="summary-card__value" style="color:var(--color-text)">{{ grandSpent|number_format(2, ',', ' ') }}</div>
-        <div class="summary-card__sub">sur tous les budgets</div>
+        <div class="summary-card__sub" data-translate>sur tous les budgets</div>
     </div>
     <div class="summary-card">
-        <div class="summary-card__label">Restant estimé</div>
+        <div class="summary-card__label" data-translate>Restant estimé</div>
         <div class="summary-card__value" style="color:var(--color-secondary)">{{ (grandTotal - grandSpent)|number_format(2, ',', ' ') }}</div>
-        <div class="summary-card__sub">solde global</div>
+        <div class="summary-card__sub" data-translate>solde global</div>
     </div>
     <div class="summary-card">
-        <div class="summary-card__label">Budgets dépassés</div>
+        <div class="summary-card__label" data-translate>Budgets dépassés</div>
         <div class="summary-card__value" style="color:{% if countOver > 0 %}#dc2626{% else %}var(--color-secondary){% endif %}">{{ countOver }}</div>
-        <div class="summary-card__sub">sur {{ budgets|length }} budgets</div>
+        <div class="summary-card__sub" data-translate>sur {{ budgets|length }} budgets</div>
     </div>
 </div>
 
@@ -396,34 +574,34 @@
     <div class="toolbar__left">
         <!-- Search -->
         <div class="search-field">
-            <span>🔍</span>
+            <svg class="search-field__icon" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="2"/>
+                <path d="M13 13L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
             <input type="search" id="searchInput" class="search-field__input" placeholder="Nom, voyage, devise…" autocomplete="off">
-            <button class="search-clear" id="searchClear">✕</button>
+            <button class="search-clear" id="searchClear">×</button>
         </div>
 
-        <!-- Voyage Filter - DROPDOWN (liste déroulante) -->
+        <!-- Voyage Filter -->
         <div class="filter-group">
-            <span class="filter-label">Voyage :</span>
             <select id="voyageSelect" class="voyage-select">
                 <option value="all">Tous les voyages</option>
             </select>
         </div>
 
-        <!-- Devise Filter (multi-select chips) -->
+        <!-- Devise Filter -->
         <div class="filter-group">
-            <span class="filter-label">Devise :</span>
             <div class="filter-chips" id="deviseChipsContainer">
                 <button class="chip active" data-devise="all">Toutes</button>
             </div>
         </div>
 
-        <!-- Statut Filter (multi-select chips) -->
+        <!-- Statut Filter -->
         <div class="filter-group">
-            <span class="filter-label">Statut :</span>
             <div class="filter-chips" id="statutChipsContainer">
                 <button class="chip active" data-statut="all">Tous</button>
-                <button class="chip chip--ok" data-statut="ok">✔ Contrôlé</button>
-                <button class="chip chip--over" data-statut="over">⚠ Dépassé</button>
+                <button class="chip chip--ok" data-statut="ok">Contrôlé</button>
+                <button class="chip chip--over" data-statut="over">Dépassé</button>
             </div>
         </div>
     </div>
@@ -439,7 +617,7 @@
             <option value="depenses-desc">Nb dépenses ↓</option>
             <option value="depenses-asc">Nb dépenses ↑</option>
         </select>
-        <button class="btn-export" id="resetFiltersBtn">⟳ Réinitialiser</button>
+        <button class="btn-export" id="resetFiltersBtn">Réinitialiser</button>
     </div>
 </div>
 
@@ -450,9 +628,9 @@
         budget(s) sélectionné(s)
     </div>
     <div class="selection-bar__actions">
-        <button class="btn-sel btn-sel--select-all" id="btnSelectAll">☑ Tout sélectionner</button>
-        <button class="btn-sel btn-sel--cancel" id="btnCancelSel">✕ Annuler</button>
-        <button class="btn-sel btn-sel--delete" id="btnDeleteSel">🗑️ Supprimer la sélection</button>
+        <button class="btn-sel btn-sel--select-all" id="btnSelectAll">Tout sélectionner</button>
+        <button class="btn-sel btn-sel--cancel" id="btnCancelSel">× Annuler</button>
+        <button class="btn-sel btn-sel--delete" id="btnDeleteSel">Supprimer la sélection</button>
     </div>
 </div>
 
@@ -512,7 +690,26 @@
                     </div>
 
                     <div class="act-card__img-wrap">
-                        <div class="act-card__img-placeholder">💰</div>
+                        {# Photo based on voyage destination name for relevance #}
+                        {% set destQuery = budget.voyage ? budget.voyage.titreVoyage|url_encode : 'travel+budget' %}
+                        {% set imgSeed = budget.idBudget % 10 %}
+                        {% set destPhotos = [
+                            'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1488085061387-422e29b40080?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=500&q=75&auto=format&fit=crop',
+                            'https://images.unsplash.com/photo-1548013146-72479768bada?w=500&q=75&auto=format&fit=crop'
+                        ] %}
+                        <img src="{{ destPhotos[imgSeed] }}"
+                             alt="{{ budget.voyage ? budget.voyage.titreVoyage : budget.libelleBudget }}"
+                             loading="lazy"
+                             onerror="this.style.display='none'">
+                        <div class="act-card__img-placeholder" style="display:none"></div>
                         <div class="act-card__badges">
                             <span class="badge badge--cat">{{ budget.deviseBudget ?? 'TND' }}</span>
                             {% if isOver %}<span class="badge badge--trending">Dépassé</span>{% endif %}
@@ -522,12 +719,14 @@
                     <div class="act-card__body">
                         <div class="act-card__name">{{ budget.libelleBudget }}</div>
                         {% if budget.voyage %}
-                            <div class="act-card__location">📍 {{ budget.voyage.titreVoyage }}</div>
+                            <div class="act-card__location">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                {{ budget.voyage.titreVoyage }}
+                            </div>
                         {% endif %}
-                        <div class="act-card__tags">
-                            <span class="tag">{{ budget.depenses|length }} dépenses</span>
+                        <div class="act-card__tags">                            <span class="tag">{{ budget.depenses|length }} dépenses</span>
                             <span class="tag {{ isOver ? 'tag--difficile' : 'tag--facile' }}">
-                                {{ isOver ? '⚠ Dépassé' : '✔ Contrôlé' }}
+                                {{ isOver ? 'Dépassé' : 'Contrôlé' }}
                             </span>
                         </div>
                         <div class="budget-progress">
@@ -545,16 +744,22 @@
                                 </div>
                             </div>
                             <div class="act-card__actions" onclick="event.stopPropagation()">
-                                <a href="{{ path('app_budget_show', {id: budget.idBudget}) }}" class="act-card__btn act-card__btn--view">→</a>
-                                <a href="{{ path('app_budget_edit', {id: budget.idBudget}) }}" class="act-card__btn act-card__btn--edit">✏️</a>
-                                <button class="act-card__btn act-card__btn--delete" onclick="confirmDeleteOne(this)">🗑️</button>
+                                <a href="{{ path('app_budget_show', {id: budget.idBudget}) }}" class="act-card__btn act-card__btn--view" title="Voir">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </a>
+                                <a href="{{ path('app_budget_edit', {id: budget.idBudget}) }}" class="act-card__btn act-card__btn--edit" title="Modifier">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </a>
+                                <button class="act-card__btn act-card__btn--delete" onclick="confirmDeleteOne(this)" title="Supprimer">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             {% else %}
                 <div class="empty-state">
-                    <div style="font-size:3rem;">💸</div>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-text-muted);margin-bottom:.75rem"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
                     <div style="font-weight:700;">Aucun budget pour l'instant</div>
                     <p>Créez votre premier budget pour commencer à suivre vos dépenses.</p>
                 </div>
@@ -562,7 +767,7 @@
         </div>
 
         <div id="noResults" style="display:none;text-align:center;padding:3rem 1rem;">
-            <div style="font-size:2.5rem;">🔍</div>
+            <svg width="40" height="40" viewBox="0 0 20 20" fill="none" style="color:var(--color-text-muted);margin-bottom:.75rem"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M13 13L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             <div style="font-weight:700;">Aucun résultat</div>
             <p>Essayez de modifier vos filtres ou votre recherche.</p>
         </div>
@@ -574,7 +779,7 @@
     <div class="detail-panel" id="detailPanel">
         <div class="dp-header">
             <span class="dp-header__title" id="dp-title">—</span>
-            <button class="dp-close" onclick="closeDetailPanel()">✕</button>
+            <button class="dp-close" onclick="closeDetailPanel()" aria-label="Fermer">×</button>
         </div>
         <div class="dp-progress-wrap">
             <div class="dp-progress-track">
@@ -601,16 +806,18 @@
 {# Bulk delete modal #}
 <div class="modal-overlay" id="modal-bulk-delete" onclick="if(event.target===this)closeBulkModal()">
     <div class="modal">
-        <div class="modal__header"><span class="modal__title">🗑️ Suppression groupée</span><button class="modal__close" onclick="closeBulkModal()">✕</button></div>
+        <div class="modal__header">
+            <span class="modal__title">Suppression groupée</span>
+            <button class="modal__close" onclick="closeBulkModal()" aria-label="Fermer">×</button>
+        </div>
         <div class="modal__body">
-            <div style="font-size:2.5rem;">⚠️</div>
-            <div style="font-weight:700;">Confirmer la suppression</div>
+            <div style="font-weight:700;margin-bottom:.5rem;">Confirmer la suppression</div>
             <p>Supprimer <strong id="bulk-count" style="color:#dc2626"></strong> budget(s) ?<br>Cette action est irréversible.</p>
             <div id="bulk-names" style="background:#f3f4f6;border-radius:8px;padding:.75rem;text-align:left;font-size:.82rem;max-height:120px;overflow-y:auto;"></div>
         </div>
         <div class="modal__footer">
             <button class="btn-modal-cancel" onclick="closeBulkModal()">Annuler</button>
-            <button class="btn-modal-submit--danger" onclick="executeBulkDelete()">🗑️ Supprimer tout</button>
+            <button class="btn-modal-submit--danger" onclick="executeBulkDelete()">Supprimer tout</button>
         </div>
     </div>
 </div>
@@ -1040,8 +1247,8 @@ function openDetailPanel(card) {
 
     document.getElementById('dp-actions').innerHTML = `
         <a href="${card.dataset.urlShow}" class="dp-btn dp-btn--view">→ Voir le détail complet</a>
-        <a href="${card.dataset.urlEdit}" class="dp-btn dp-btn--edit">✏️ Modifier le budget</a>
-        <button class="dp-btn dp-btn--delete" onclick="confirmDeleteOneByCard(document.querySelector('.act-card.active-detail'))">🗑️ Supprimer ce budget</button>
+        <a href="${card.dataset.urlEdit}" class="dp-btn dp-btn--edit">Modifier le budget</a>
+        <button class="dp-btn dp-btn--delete" onclick="confirmDeleteOneByCard(document.querySelector('.act-card.active-detail'))">Supprimer ce budget</button>
     `;
 
     document.getElementById('budgetLayout').classList.add('with-detail');

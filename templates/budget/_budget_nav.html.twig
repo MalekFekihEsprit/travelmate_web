@@ -1,0 +1,78 @@
+{# ══ BUDGET FRONT-OFFICE NAV ══ #}
+{% set _route = app.request.attributes.get('_route') %}
+<style>
+.budget-nav {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    width: fit-content;
+}
+.budget-nav__link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .48rem 1rem;
+    border-radius: 999px;
+    font-size: .84rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: background .15s, color .15s;
+    white-space: nowrap;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+.budget-nav__link:hover {
+    background: var(--color-hover);
+    color: var(--color-primary);
+}
+.budget-nav__link.is-active {
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 600;
+}
+.budget-nav__sep {
+    width: 1px;
+    height: 18px;
+    background: var(--color-border);
+    flex-shrink: 0;
+}
+@media (max-width: 600px) {
+    .budget-nav { border-radius: var(--radius-lg); padding: .4rem; }
+    .budget-nav__link { font-size: .8rem; padding: .42rem .75rem; }
+}
+</style>
+
+<nav class="budget-nav" aria-label="Navigation budget">
+    <a href="{{ path('app_budget_index') }}"
+       class="budget-nav__link {{ _route == 'app_budget_index' ? 'is-active' : '' }}"
+       data-translate>Mes budgets</a>
+
+    <a href="{{ path('app_budget_new') }}"
+       class="budget-nav__link {{ _route == 'app_budget_new' ? 'is-active' : '' }}"
+       data-translate>Nouveau budget</a>
+
+    {% if _route == 'app_budget_show' and budget is defined %}
+        <span class="budget-nav__sep" aria-hidden="true"></span>
+        <span class="budget-nav__link is-active" aria-current="page">
+            {{ budget.libelleBudget|length > 22 ? budget.libelleBudget|slice(0,22)~'…' : budget.libelleBudget }}
+        </span>
+        <a href="{{ path('app_budget_edit', {id: budget.idBudget}) }}"
+           class="budget-nav__link" data-translate>Modifier</a>
+    {% endif %}
+
+    {% if _route == 'app_budget_edit' and budget is defined %}
+        <span class="budget-nav__sep" aria-hidden="true"></span>
+        <a href="{{ path('app_budget_show', {id: budget.idBudget}) }}"
+           class="budget-nav__link" data-translate>Détail</a>
+        <span class="budget-nav__link is-active" aria-current="page" data-translate>Modifier</span>
+    {% endif %}
+</nav>
