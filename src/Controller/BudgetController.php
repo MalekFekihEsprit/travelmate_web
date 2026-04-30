@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Budget;
 use App\Entity\Depense;
 use App\Form\BudgetType;
+use App\Entity\User;
 use App\Repository\BudgetRepository;
 use App\Repository\VoyageRepository;
 use App\Repository\DepenseRepository;
@@ -39,8 +40,9 @@ class BudgetController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager, VoyageRepository $voyageRepository): Response
     {
         $budget = new Budget();
-        if ($this->getUser()) {
-            $budget->setUser($this->getUser());
+        $user = $this->getUser();
+        if ($user instanceof User) {
+            $budget->setUser($user);
         }
         $form = $this->createForm(BudgetType::class, $budget);
         $form->handleRequest($request);

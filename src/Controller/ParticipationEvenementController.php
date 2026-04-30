@@ -39,7 +39,7 @@ class ParticipationEvenementController extends AbstractController
         // Récupère l'utilisateur connecté
         $user = $this->getUser();
 
-        if (!$user) {
+        if (!$user instanceof User) {
             $this->addFlash('error', 'Vous devez être connecté pour rejoindre un événement.');
             return $this->redirectToRoute('app_evenement_show', ['id' => $id]);
         }

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Destination;
+use App\Entity\User;
 use App\Form\DestinationType;
 use App\Repository\DestinationRepository;
 use App\Repository\UserRepository;
@@ -188,8 +189,10 @@ class DestinationAdminController extends AbstractController
                 }
             }
 
-            $user = $this->getUser() ?? $userRepository->find(2);
-            if ($user) {
+            $currentUser = $this->getUser();
+            $user = $currentUser instanceof User ? $currentUser : $userRepository->find(2);
+
+            if ($user instanceof User) {
                 $destination->setUser($user);
             }
 

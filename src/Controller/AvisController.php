@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Avis;
+use App\Entity\User;
 use App\Repository\ActiviteRepository;
 use App\Service\ProfanityCheckerService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,7 +34,8 @@ class AvisController extends AbstractController
 
         // Vérifie que l'utilisateur est connecté
         $user = $this->getUser();
-        if (!$user) {
+
+        if (!$user instanceof User) {
             $this->addFlash('error', 'Vous devez être connecté pour laisser un avis.');
             return $this->redirectToRoute('app_activite_show', ['id' => $id]);
         }

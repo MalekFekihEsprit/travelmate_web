@@ -304,8 +304,10 @@ public function testVich(
             }
 
             // Assign user
-            $user = $this->getUser() ?? $userRepository->find(2);
-            if (!$user) {
+            $currentUser = $this->getUser();
+            $user = $currentUser instanceof User ? $currentUser : $userRepository->find(2);
+
+            if (!$user instanceof User) {
                 $this->addFlash('error', 'Aucun utilisateur n\'a été trouvé');
                 return $this->render('destination/new.html.twig', [
                     'destination' => $destination,
