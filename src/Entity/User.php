@@ -243,6 +243,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** @var Collection<int, Budget> */
     #[ORM\OneToMany(targetEntity: Budget::class, mappedBy: 'user')]
     private Collection $budgets;
 
@@ -251,9 +252,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getBudgets(): Collection
     {
-        if (!$this->budgets instanceof Collection) {
-            $this->budgets = new ArrayCollection();
-        }
         return $this->budgets;
     }
 
@@ -271,6 +269,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** @var Collection<int, DeleteNotification> */
     #[ORM\OneToMany(targetEntity: DeleteNotification::class, mappedBy: 'user')]
     private Collection $deleteNotifications;
 
@@ -279,9 +278,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getDeleteNotifications(): Collection
     {
-        if (!$this->deleteNotifications instanceof Collection) {
-            $this->deleteNotifications = new ArrayCollection();
-        }
         return $this->deleteNotifications;
     }
 
@@ -300,6 +296,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
     
 
+    /** @var Collection<int, Destination> */
     #[ORM\OneToMany(targetEntity: Destination::class, mappedBy: 'user')]
     private Collection $destinations;
 
@@ -308,9 +305,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getDestinations(): Collection
     {
-        if (!$this->destinations instanceof Collection) {
-            $this->destinations = new ArrayCollection();
-        }
         return $this->destinations;
     }
 
@@ -328,6 +322,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** @var Collection<int, Hebergement> */
     #[ORM\OneToMany(targetEntity: Hebergement::class, mappedBy: 'user')]
     private Collection $hebergements;
 
@@ -336,9 +331,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getHebergements(): Collection
     {
-        if (!$this->hebergements instanceof Collection) {
-            $this->hebergements = new ArrayCollection();
-        }
         return $this->hebergements;
     }
 
@@ -356,6 +348,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** @var Collection<int, Paiement> */
     #[ORM\OneToMany(targetEntity: Paiement::class, mappedBy: 'user')]
     private Collection $paiements;
 
@@ -364,9 +357,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getPaiements(): Collection
     {
-        if (!$this->paiements instanceof Collection) {
-            $this->paiements = new ArrayCollection();
-        }
         return $this->paiements;
     }
 
@@ -384,12 +374,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /** @var Collection<int, Participation> */
     #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $participations;
 
+    /** @var Collection<int, NoteDestination> */
     #[ORM\OneToMany(targetEntity: NoteDestination::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $notesDestination;
 
+    /** @var Collection<int, FavoriteDestination> */
     #[ORM\OneToMany(targetEntity: FavoriteDestination::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $favoriteDestinations;
 
@@ -546,7 +539,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getDateNaissance(): ?\DateTime
+    public function getDateNaissance(): ?\DateTimeInterface
     {
         return $this->date_naissance;
     }
@@ -630,7 +623,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTime
+    public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->created_at;
     }

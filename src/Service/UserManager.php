@@ -36,7 +36,6 @@ class UserManager
             throw new \InvalidArgumentException('La date de naissance doit être dans le passé.');
         }
 
-        // Âge minimum : 13 ans
         $age = $today->diff($user->getDate_naissance())->y;
         if ($age < 13) {
             throw new \InvalidArgumentException('L\'utilisateur doit avoir au moins 13 ans.');
@@ -46,7 +45,8 @@ class UserManager
             throw new \InvalidArgumentException('Le mot de passe est obligatoire.');
         }
 
-        if (mb_strlen($user->getMot_de_passe()) < 8) {
+        // FIX 1: cast to string before mb_strlen to avoid null error
+        if (mb_strlen((string) $user->getMot_de_passe()) < 8) {
             throw new \InvalidArgumentException('Le mot de passe doit contenir au moins 8 caractères.');
         }
 
@@ -60,6 +60,7 @@ class UserManager
 
     /**
      * Crée un User.
+     * @param array<string, mixed> $data
      */
     public function create(array $data): User
     {
@@ -79,6 +80,7 @@ class UserManager
 
     /**
      * Met à jour un User.
+     * @param array<string, mixed> $data
      */
     public function update(User $user, array $data): User
     {
@@ -95,7 +97,7 @@ class UserManager
     }
 
     /**
-     * Retourne l'image de profil (logique métier centralisée).
+     * Retourne l'image de profil.
      */
     public function getProfileImage(User $user): string
     {
@@ -103,12 +105,13 @@ class UserManager
     }
 
     /**
-     * Vérifie si le téléphone est correctement formaté (sans espaces).
+     * Vérifie si le téléphone est correctement formaté.
      */
     public function validateTelephone(string $telephone): bool
     {
         $clean = preg_replace('/\s+/', '', $telephone);
-        if (!preg_match('/^\+?[0-9]{8,15}$/', $clean)) {
+        // FIX 2: cast to string because preg_replace can return null
+        if (!preg_match('/^\+?[0-9]{8,15}$/', (string) $clean)) {
             throw new \InvalidArgumentException('Le numéro de téléphone n\'est pas valide.');
         }
         return true;

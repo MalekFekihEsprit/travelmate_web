@@ -15,7 +15,7 @@ class UserRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, User::class);
     }
-
+    /** @return array<mixed> */
     public function searchForAdmin(?string $term, ?string $role = null): array
     {
         $qb = $this->createQueryBuilder('u');
@@ -85,7 +85,7 @@ class UserRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
-
+    /** @return array<mixed> */
     public function getRegistrationsWindowByDay(int $days = 7, int $offsetDays = 0): array
     {
         $offsetDays = max(0, $offsetDays);
@@ -100,12 +100,12 @@ class UserRepository extends ServiceEntityRepository
 
         return $this->getRegistrationsWindowByDateRange($startDate, $endDate);
     }
-
+    /** @return array<mixed> */
     public function getRegistrationsByDayExtended(int $days = 30, int $offsetDays = 0): array
     {
         return $this->getRegistrationsWindowByDay($days, $offsetDays);
     }
-
+    /** @return array<mixed> */
     public function getRegistrationGrowth(): array
     {
         $last30 = $this->getRegistrationsByDayExtended(30, 0);
@@ -121,6 +121,7 @@ class UserRepository extends ServiceEntityRepository
     /**
      * Méthode principale utilisée par le contrôleur stats AJAX.
      */
+    /** @return array<mixed> */
     public function getRegistrationsWindowByDateRange(\DateTimeImmutable $startDate, \DateTimeImmutable $endDate): array
     {
         $startDate = $startDate->setTime(0, 0, 0);
@@ -163,12 +164,13 @@ class UserRepository extends ServiceEntityRepository
     /**
      * Alias de compatibilité si ailleurs tu appelles encore l’ancien nom.
      */
+    /** @return array<mixed> */
     public function getRegistrationsByDateRange(\DateTimeImmutable $startDate, \DateTimeImmutable $endDate): array
     {
         return $this->getRegistrationsWindowByDateRange($startDate, $endDate);
     }
 
-    private function calculatePercentageChange($old, $new): float
+    public function calculatePercentageChange(float $old, float $new): float
     {
         if ($old == 0) {
             return $new > 0 ? 100 : 0;
@@ -177,6 +179,7 @@ class UserRepository extends ServiceEntityRepository
         return round((($new - $old) / $old) * 100, 1);
     }
 
+    /** @return array<mixed> */
     public function getAgeDistribution(): array
     {
         $users = $this->createQueryBuilder('u')
@@ -280,7 +283,7 @@ class UserRepository extends ServiceEntityRepository
 
         return $birthdate ? $birthdate->diff(new \DateTime())->y : null;
     }
-
+    /** @return array<mixed> */
     public function getUsersByBirthYear(): array
     {
         $users = $this->createQueryBuilder('u')
@@ -306,7 +309,7 @@ class UserRepository extends ServiceEntityRepository
 
         return $birthYears;
     }
-
+    /** @return array<mixed> */
     public function findVerifiedUsersWithFaceEmbedding(): array
     {
         return $this->createQueryBuilder('u')

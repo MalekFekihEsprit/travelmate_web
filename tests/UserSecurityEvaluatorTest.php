@@ -15,10 +15,10 @@ class UserSecurityEvaluatorTest extends TestCase
         $user->setPrenom('Malek');
         $user->setEmail('malek@test.com');
         $user->setTelephone('+216 12 345 678');
-        $user->setDateNaissance(new \DateTime('2000-01-01'));
-        $user->setIsVerified(true);
-        $user->setPhotoFileName('profile.jpg');
-        $user->setFaceEmbedding('[0.1,0.2,0.3]');
+        $user->setDate_naissance(new \DateTime('2000-01-01'));
+        $user->setIs_verified(true);
+        $user->setPhoto_file_name('profile.jpg');
+        $user->setFace_embedding('[0.1,0.2,0.3]');
         $user->setFailedLoginAttempts(0);
 
         $evaluator = new UserSecurityEvaluator();
@@ -32,8 +32,8 @@ class UserSecurityEvaluatorTest extends TestCase
         $user->setNom('Fekih');
         $user->setPrenom('Malek');
         $user->setEmail('malek@test.com');
-        $user->setDateNaissance(new \DateTime('2000-01-01'));
-        $user->setIsVerified(true);
+        $user->setDate_naissance(new \DateTime('2000-01-01'));
+        $user->setIs_verified(true);
         $user->setFailedLoginAttempts(3);
 
         $evaluator = new UserSecurityEvaluator();
@@ -68,7 +68,7 @@ class UserSecurityEvaluatorTest extends TestCase
         $user->setPrenom('Aya');
         $user->setEmail('aya@test.com');
         $user->setTelephone('+216 99 999 999');
-        $user->setDateNaissance(new \DateTime('2001-05-10'));
+        $user->setDate_naissance(new \DateTime('2001-05-10'));
 
         $evaluator = new UserSecurityEvaluator();
 

@@ -18,15 +18,15 @@ class UserSecurityEvaluator
             $score += 10;
         }
 
-        if ($user->getPhotoFileName() || $user->getPhotoUrl()) {
+        if ($user->getPhoto_file_name() || $user->getPhoto_url()) {
             $score += 10;
         }
 
-        if ($user->getFaceEmbedding()) {
+        if ($user->getFace_embedding()) {
             $score += 20;
         }
 
-        if ($user->getNom() && $user->getPrenom() && $user->getDateNaissance()) {
+        if ($user->getNom() && $user->getPrenom() && $user->getDate_naissance()) {
             $score += 20;
         }
 
@@ -56,7 +56,7 @@ class UserSecurityEvaluator
             !empty($user->getNom()) &&
             !empty($user->getPrenom()) &&
             !empty($user->getEmail()) &&
-            $user->getDateNaissance() !== null &&
+            $user->getDate_naissance() !== null &&
             !empty($user->getTelephone());
     }
 }
