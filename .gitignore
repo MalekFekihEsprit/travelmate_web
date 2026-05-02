@@ -33,4 +33,7 @@ phpstan.neon
 face_env/
 venv/
 env/
-.env.test
+.env.test.env
+env.local
+.env
+env.local
