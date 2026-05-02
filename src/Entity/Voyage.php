@@ -128,9 +128,6 @@ class Voyage
      */
     public function getBudgets(): Collection
     {
-        if (!$this->budgets instanceof Collection) {
-            $this->budgets = new ArrayCollection();
-        }
         return $this->budgets;
     }
 
@@ -156,9 +153,6 @@ class Voyage
      */
     public function getItineraires(): Collection
     {
-        if (!$this->itineraires instanceof Collection) {
-            $this->itineraires = new ArrayCollection();
-        }
         return $this->itineraires;
     }
 
@@ -184,9 +178,6 @@ class Voyage
      */
     public function getPaiements(): Collection
     {
-        if (!$this->paiements instanceof Collection) {
-            $this->paiements = new ArrayCollection();
-        }
         return $this->paiements;
     }
 
@@ -213,9 +204,6 @@ class Voyage
      */
     public function getActivites(): Collection
     {
-        if (!$this->activites instanceof Collection) {
-            $this->activites = new ArrayCollection();
-        }
         return $this->activites;
     }
 
@@ -255,10 +243,6 @@ class Voyage
      */
     public function getParticipations(): Collection
     {
-        if (!$this->participations instanceof Collection) {
-            $this->participations = new ArrayCollection();
-        }
-
         return $this->participations;
     }
 
@@ -347,24 +331,24 @@ class Voyage
         return $this;
     }
 
-    public function getDateDebut(): ?\DateTime
+    public function getDateDebut(): ?\DateTimeInterface
     {
         return $this->date_debut;
     }
 
-    public function setDateDebut(\DateTime $date_debut): static
+    public function setDateDebut(\DateTimeInterface $date_debut): static
     {
         $this->date_debut = $date_debut;
 
         return $this;
     }
 
-    public function getDateFin(): ?\DateTime
-    {
-        return $this->date_fin;
-    }
+    public function getDateFin(): ?\DateTimeInterface
+{
+    return $this->date_fin;
+}
 
-    public function setDateFin(\DateTime $date_fin): static
+    public function setDateFin(\DateTimeInterface $date_fin): static
     {
         $this->date_fin = $date_fin;
 

@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Participation;
 use App\Entity\User;
 use App\Entity\Voyage;
+use App\Repository\ParticipationRepository;
 
 /**
  * Service métier pour la gestion des participations.
