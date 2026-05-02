@@ -403,10 +403,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getParticipations(): Collection
     {
-        if (!$this->participations instanceof Collection) {
-            $this->participations = new ArrayCollection();
-        }
-
         return $this->participations;
     }
 
@@ -478,10 +474,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getNotesDestination(): Collection
     {
-        if (!$this->notesDestination instanceof Collection) {
-            $this->notesDestination = new ArrayCollection();
-        }
-
         return $this->notesDestination;
     }
 
@@ -511,10 +503,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getFavoriteDestinations(): Collection
     {
-        if (!$this->favoriteDestinations instanceof Collection) {
-            $this->favoriteDestinations = new ArrayCollection();
-        }
-
         return $this->favoriteDestinations;
     }
 
