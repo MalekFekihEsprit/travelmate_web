@@ -1,8 +1,13 @@
 parameters:
-    level: 5
-    paths:
-        - bin/
-        - config/
-        - public/
-        - src/
-        - tests/
+        level: 5
+        paths:
+                - bin/
+                - config/
+                - public/
+                - src/
+                - tests/
+        ignoreErrors:
+                - message: '#Property App\\Entity\\DestinationVoyageNotification::\$id_notification \(int\|null\) is never assigned int so it can be removed from the property type\.#'
+                - message: '#Property App\\Entity\\FavoriteDestination::\$id_favorite_destination \(int\|null\) is never assigned int so it can be removed from the property type\.#'
+                - message: '#Property App\\Entity\\Hebergement::\$idHebergement \(int\|null\) is never assigned int so it can be removed from the property type\.#'
+                - message: '#Property App\\Entity\\NoteDestination::\$id_note_destination \(int\|null\) is never assigned int so it can be removed from the property type\.#'

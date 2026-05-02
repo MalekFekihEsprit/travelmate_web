@@ -454,9 +454,6 @@ class Destination
 
     public function getHebergements(): Collection
     {
-        if (!$this->hebergements instanceof Collection) {
-            $this->hebergements = new ArrayCollection();
-        }
         return $this->hebergements;
     }
 
@@ -476,9 +473,6 @@ class Destination
 
     public function getVoyages(): Collection
     {
-        if (!$this->voyages instanceof Collection) {
-            $this->voyages = new ArrayCollection();
-        }
         return $this->voyages;
     }
 
@@ -498,9 +492,6 @@ class Destination
 
     public function getNotesDestination(): Collection
     {
-        if (!$this->notesDestination instanceof Collection) {
-            $this->notesDestination = new ArrayCollection();
-        }
         return $this->notesDestination;
     }
 
@@ -528,10 +519,6 @@ class Destination
      */
     public function getFavoriteDestinations(): Collection
     {
-        if (!$this->favoriteDestinations instanceof Collection) {
-            $this->favoriteDestinations = new ArrayCollection();
-        }
-
         return $this->favoriteDestinations;
     }
 

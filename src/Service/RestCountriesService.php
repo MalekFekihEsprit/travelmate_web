@@ -46,7 +46,7 @@ class RestCountriesService
 
             $data = $response->toArray();
             
-            if (empty($data) || !is_array($data)) {
+            if ($data === []) {
                 return null;
             }
 
@@ -96,7 +96,7 @@ class RestCountriesService
 
             $data = $response->toArray();
             
-            if (empty($data) || !is_array($data)) {
+            if ($data === []) {
                 $this->cca2Cache[$normalizedName] = null;
                 return null;
             }
@@ -166,7 +166,7 @@ class RestCountriesService
     {
         if (isset($country['currencies']) && is_array($country['currencies']) && !empty($country['currencies'])) {
             $currencyCodes = array_keys($country['currencies']);
-            return $currencyCodes[0] ?? 'N/A';
+            return $currencyCodes[0];
         }
 
         return 'N/A';

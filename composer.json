@@ -16,9 +16,12 @@
         "php": "^8.0",
         "doctrine/orm": "^2.14",
         "doctrine/doctrine-bundle": "^2.10",
+        "symfony/form": "^7.4",
+        "symfony/dom-crawler": "^7.4",
         "symfony/validator": "^6.0",
         "symfony/doctrine-bridge": "^6.0",
         "doctrine/collections": "^2.0",
+        "vich/uploader-bundle": "^2.9",
         "symfony/http-client": "^6.0"
     },
     "require-dev": {

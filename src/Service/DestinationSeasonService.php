@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use Psr\Log\LoggerInterface;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class DestinationSeasonService
@@ -35,7 +34,7 @@ class DestinationSeasonService
             }
 
             return $this->calculateBestSeason($monthlyData, $latitude);
-        } catch (TransportExceptionInterface|\Throwable $exception) {
+        } catch (\Throwable $exception) {
             $this->logger->warning('Failed to determine best season, using hemisphere fallback.', [
                 'latitude' => $latitude,
                 'longitude' => $longitude,
@@ -121,7 +120,7 @@ class DestinationSeasonService
         $monthlyData = [];
 
         for ($month = 1; $month <= 12; $month++) {
-            if (isset($monthMap[$month]) && $monthMap[$month]['count'] > 0) {
+            if (isset($monthMap[$month])) {
                 $monthlyData[] = [
                     'monthNumber' => $month,
                     'temperature' => $monthMap[$month]['sumTemp'] / $monthMap[$month]['count'],

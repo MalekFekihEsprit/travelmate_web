@@ -17,8 +17,6 @@ class YouTubeVideoService
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
         private readonly string $apiKey,
-        private readonly int $minDurationSeconds = 30,
-        private readonly int $maxDurationSeconds = 240,
     ) {}
 
     public function fetchVideoUrl(string $city, string $country): ?string

@@ -31,7 +31,7 @@ class HebergementController extends AbstractController
         $destinationOptionsMap = [];
 
         foreach ($allDestinations as $destination) {
-            if ($destination && $destination->getIdDestination()) {
+            if ($destination->getIdDestination()) {
                 $destinationOptionsMap[$destination->getIdDestination()] = [
                     'id' => $destination->getIdDestination(),
                     'name' => $destination->getNomDestination() ?? 'Destination',

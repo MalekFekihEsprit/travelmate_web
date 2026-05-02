@@ -94,8 +94,6 @@ services:
     App\Service\YouTubeVideoService:
         arguments:
             $apiKey: '%env(YOUTUBE_API_KEY)%'
-            $minDurationSeconds: 30
-            $maxDurationSeconds: 240
 
     App\Service\DestinationAiSuggestionService:
         arguments:
