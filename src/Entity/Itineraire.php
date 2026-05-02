@@ -113,9 +113,6 @@ class Itineraire
      */
     public function getEtapes(): Collection
     {
-        if (!$this->etapes instanceof Collection) {
-            $this->etapes = new ArrayCollection();
-        }
         return $this->etapes;
     }
 

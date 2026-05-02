@@ -251,10 +251,7 @@ class CerebrasItinerarySuggestionService
         $lines = [];
 
         foreach ($voyage->getActivites()->toArray() as $activite) {
-            if (!$activite instanceof Activite) {
-                continue;
-            }
-
+        
             $parts = array_filter([
                 $activite->getNom(),
                 $activite->getLieu() ? 'lieu: ' . $activite->getLieu() : null,

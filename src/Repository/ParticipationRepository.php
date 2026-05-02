@@ -47,14 +47,14 @@ class ParticipationRepository extends ServiceEntityRepository
             ->andWhere('participation.voyage = :voyage')
             ->setParameter('voyage', $voyage);
 
-        $name = trim((string) ($filters['name'] ?? ''));
+        $name = trim($filters['name']);
         if ($name !== '') {
             $queryBuilder
                 ->andWhere('LOWER(user.nom) LIKE :name')
                 ->setParameter('name', '%'.mb_strtolower($name).'%');
         }
 
-        match ((string) ($filters['sort'] ?? 'name_asc')) {
+        match ($filters['sort']) {
             'name_desc' => $queryBuilder->orderBy('user.nom', 'DESC')->addOrderBy('user.prenom', 'DESC'),
             'role_asc' => $queryBuilder->orderBy('participation.role_participation', 'ASC')->addOrderBy('user.id', 'ASC'),
             'role_desc' => $queryBuilder->orderBy('participation.role_participation', 'DESC')->addOrderBy('user.id', 'ASC'),

@@ -258,36 +258,4 @@ Génère un objet par jour de l'itinéraire. Le champ image_prompt doit être un
 
         return $slides;
     }
-
-    private function generateAndSaveImage(string $prompt, ?int $itineraireId, int $jour): string
-    {
-        if ($prompt === '') {
-            return '';
-        }
-
-        $dir = $this->projectDir . '/public/slides';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $hash = substr(md5($prompt), 0, 8);
-        $webpFilename = sprintf('slide_%d_%d_%s.webp', $itineraireId ?? 0, $jour, $hash);
-        if (file_exists($dir . '/' . $webpFilename)) {
-            return '/slides/' . $webpFilename;
-        }
-
-        try {
-            $result = $this->stabilityImageService->generateFromPrompt($prompt);
-            if ($result['status'] === 'ok' && isset($result['image_base64'])) {
-                file_put_contents($dir . '/' . $webpFilename, base64_decode($result['image_base64']));
-                return '/slides/' . $webpFilename;
-            }
-        } catch (\Throwable) {}
-
-        $encodedPrompt = rawurlencode(mb_substr($prompt, 0, 400));
-        $seed = abs(crc32($prompt)) % 9999999;
-
-        return 'https://image.pollinations.ai/prompt/' . $encodedPrompt
-            . '?width=1280&height=720&nologo=true&model=flux-schnell&seed=' . $seed;
-    }
 }
