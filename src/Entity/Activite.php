@@ -159,7 +159,6 @@ class Activite
     /** @return Collection<int, Etape> */
     public function getEtapes(): Collection
     {
-        if (!$this->etapes instanceof Collection) $this->etapes = new ArrayCollection();
         return $this->etapes;
     }
 
@@ -180,7 +179,6 @@ class Activite
     /** @return Collection<int, Avis> */
     public function getAvis(): Collection
     {
-        if (!$this->avis instanceof Collection) $this->avis = new ArrayCollection();
         return $this->avis;
     }
 
@@ -218,7 +216,6 @@ class Activite
     /** @return Collection<int, Voyage> */
     public function getVoyages(): Collection
     {
-        if (!$this->voyages instanceof Collection) $this->voyages = new ArrayCollection();
         return $this->voyages;
     }
 
@@ -242,7 +239,6 @@ class Activite
     /** @return Collection<int, Reservation> */
     public function getReservations(): Collection
     {
-        if (!$this->reservations instanceof Collection) $this->reservations = new ArrayCollection();
         return $this->reservations;
     }
 

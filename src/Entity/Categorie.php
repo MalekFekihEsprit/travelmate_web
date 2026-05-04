@@ -166,9 +166,6 @@ class Categorie
      */
     public function getActivites(): Collection
     {
-        if (!$this->activites instanceof Collection) {
-            $this->activites = new ArrayCollection();
-        }
         return $this->activites;
     }
 

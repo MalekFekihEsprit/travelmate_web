@@ -15,7 +15,7 @@ class Evenement
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    private ?int $id;
 
     public function getId(): ?int { return $this->id; }
 
@@ -136,7 +136,6 @@ class Evenement
     /** @return Collection<int, Participationevenement> */
     public function getParticipations(): Collection
     {
-        if (!$this->participations instanceof Collection) $this->participations = new ArrayCollection();
         return $this->participations;
     }
 
