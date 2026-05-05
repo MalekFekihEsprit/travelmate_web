@@ -14,7 +14,8 @@ class Reservation
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Activite::class, inversedBy: 'reservations')]
+    // ✅ FIX : cascade: ['persist'] ajouté pour résoudre "Required Association Without Cascade"
+    #[ORM\ManyToOne(targetEntity: Activite::class, inversedBy: 'reservations', cascade: ['persist'])]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Activite $activite = null;
 
@@ -33,11 +34,13 @@ class Reservation
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $commentaire = null;
 
-    #[ORM\Column(type: 'float')]
-    private ?float $montantTotal = null;
+    // ✅ FIX : decimal au lieu de float pour les montants monétaires
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    private ?string $montantTotal = null;
 
-    #[ORM\Column(type: 'float')]
-    private ?float $acompte = null;
+    // ✅ FIX : decimal au lieu de float pour les montants monétaires
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    private ?string $acompte = null;
 
     #[ORM\Column(type: 'string', length: 50)]
     private ?string $statutPaiement = 'en_attente';
@@ -68,7 +71,6 @@ class Reservation
         $this->dateReservation = new \DateTime();
     }
 
-    // Getters et Setters
     public function getId(): ?int { return $this->id; }
 
     public function getActivite(): ?Activite { return $this->activite; }
@@ -89,11 +91,12 @@ class Reservation
     public function getCommentaire(): ?string { return $this->commentaire; }
     public function setCommentaire(?string $commentaire): self { $this->commentaire = $commentaire; return $this; }
 
-    public function getMontantTotal(): ?float { return $this->montantTotal; }
-    public function setMontantTotal(float $montantTotal): self { $this->montantTotal = $montantTotal; return $this; }
+    // ✅ Retourne string car decimal est stocké comme string par Doctrine
+    public function getMontantTotal(): ?string { return $this->montantTotal; }
+    public function setMontantTotal(string $montantTotal): self { $this->montantTotal = $montantTotal; return $this; }
 
-    public function getAcompte(): ?float { return $this->acompte; }
-    public function setAcompte(float $acompte): self { $this->acompte = $acompte; return $this; }
+    public function getAcompte(): ?string { return $this->acompte; }
+    public function setAcompte(string $acompte): self { $this->acompte = $acompte; return $this; }
 
     public function getStatutPaiement(): ?string { return $this->statutPaiement; }
     public function setStatutPaiement(string $statutPaiement): self { $this->statutPaiement = $statutPaiement; return $this; }
@@ -120,7 +123,6 @@ class Reservation
     public function setTransactionId(?string $transactionId): self { $this->transactionId = $transactionId; return $this; }
 
     public function getNomComplet(): string { return trim($this->prenom . ' ' . $this->nom); }
-
     public function isConfirmee(): bool { return $this->statutPaiement === 'confirme'; }
 
     public function generateCodeConfirmation(): string

@@ -74,11 +74,9 @@ class Activite
     public function getLieu(): ?string { return $this->lieu; }
     public function setLieu(?string $lieu): self { $this->lieu = $lieu; return $this; }
 
-    /** Latitude WGS84 (optionnel) — pour filtre « alentours » précis sur la carte front-office. */
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $latitude = null;
 
-    /** Longitude WGS84 (optionnel). */
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $longitude = null;
 
@@ -147,45 +145,45 @@ class Activite
     )]
     private Collection $voyages;
 
+    // ✅ FIX : initialisé ici directement (PHP 8.1+) pour éviter COLLECTION_UNINITIALIZED
+    #[ORM\OneToMany(mappedBy: 'activite', targetEntity: Reservation::class)]
+    private Collection $reservations;
+
     public function __construct()
     {
-        $this->etapes  = new ArrayCollection();
-        $this->avis    = new ArrayCollection();
-        $this->voyages = new ArrayCollection();
+        $this->etapes       = new ArrayCollection();
+        $this->avis         = new ArrayCollection();
+        $this->voyages      = new ArrayCollection();
+        // ✅ FIX CRITIQUE : $reservations initialisé dans le constructeur
+        $this->reservations = new ArrayCollection();
     }
 
     // ── Etapes ───────────────────────────────────────────────────────────────
 
     /** @return Collection<int, Etape> */
-    public function getEtapes(): Collection
-    {
-        return $this->etapes;
-    }
+    public function getEtapes(): Collection { return $this->etapes; }
 
     public function addEtape(Etape $etape): self
     {
-        if (!$this->getEtapes()->contains($etape)) $this->getEtapes()->add($etape);
+        if (!$this->etapes->contains($etape)) $this->etapes->add($etape);
         return $this;
     }
 
     public function removeEtape(Etape $etape): self
     {
-        $this->getEtapes()->removeElement($etape);
+        $this->etapes->removeElement($etape);
         return $this;
     }
 
     // ── Avis ─────────────────────────────────────────────────────────────────
 
     /** @return Collection<int, Avis> */
-    public function getAvis(): Collection
-    {
-        return $this->avis;
-    }
+    public function getAvis(): Collection { return $this->avis; }
 
     public function addAvi(Avis $avi): self
     {
-        if (!$this->getAvis()->contains($avi)) {
-            $this->getAvis()->add($avi);
+        if (!$this->avis->contains($avi)) {
+            $this->avis->add($avi);
             $avi->setActivite($this);
         }
         return $this;
@@ -193,59 +191,46 @@ class Activite
 
     public function removeAvi(Avis $avi): self
     {
-        $this->getAvis()->removeElement($avi);
+        $this->avis->removeElement($avi);
         return $this;
     }
 
     public function getMoyenneNotes(): float
     {
-        $avis = $this->getAvis();
-        if ($avis->isEmpty()) return 0.0;
+        if ($this->avis->isEmpty()) return 0.0;
         $total = 0;
-        foreach ($avis as $a) $total += $a->getNote();
-        return round($total / $avis->count(), 1);
+        foreach ($this->avis as $a) $total += $a->getNote();
+        return round($total / $this->avis->count(), 1);
     }
 
-    public function getMoyenneAvis(): float
-    {
-        return $this->getMoyenneNotes();
-    }
+    public function getMoyenneAvis(): float { return $this->getMoyenneNotes(); }
 
     // ── Voyages ──────────────────────────────────────────────────────────────
 
     /** @return Collection<int, Voyage> */
-    public function getVoyages(): Collection
-    {
-        return $this->voyages;
-    }
+    public function getVoyages(): Collection { return $this->voyages; }
 
     public function addVoyage(Voyage $voyage): self
     {
-        if (!$this->getVoyages()->contains($voyage)) $this->getVoyages()->add($voyage);
+        if (!$this->voyages->contains($voyage)) $this->voyages->add($voyage);
         return $this;
     }
 
     public function removeVoyage(Voyage $voyage): self
     {
-        $this->getVoyages()->removeElement($voyage);
+        $this->voyages->removeElement($voyage);
         return $this;
     }
 
-    // ── Réservations ────────────────────────────────────────────────────────────
-
-    #[ORM\OneToMany(mappedBy: 'activite', targetEntity: Reservation::class)]
-    private Collection $reservations;
+    // ── Réservations ─────────────────────────────────────────────────────────
 
     /** @return Collection<int, Reservation> */
-    public function getReservations(): Collection
-    {
-        return $this->reservations;
-    }
+    public function getReservations(): Collection { return $this->reservations; }
 
     public function addReservation(Reservation $reservation): self
     {
-        if (!$this->getReservations()->contains($reservation)) {
-            $this->getReservations()->add($reservation);
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
             $reservation->setActivite($this);
         }
         return $this;
@@ -253,7 +238,7 @@ class Activite
 
     public function removeReservation(Reservation $reservation): self
     {
-        if ($this->getReservations()->removeElement($reservation)) {
+        if ($this->reservations->removeElement($reservation)) {
             if ($reservation->getActivite() === $this) {
                 $reservation->setActivite(null);
             }
@@ -261,8 +246,5 @@ class Activite
         return $this;
     }
 
-    public function getReservationCount(): int
-    {
-        return $this->getReservations()->count();
-    }
+    public function getReservationCount(): int { return $this->reservations->count(); }
 }
