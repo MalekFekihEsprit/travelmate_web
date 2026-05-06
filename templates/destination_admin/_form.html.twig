@@ -272,7 +272,7 @@
     'attr': {
         'class': 'admin-form',
         'novalidate': 'novalidate',
-        'onsubmit': confirm_message is defined and confirm_message ? 'return validateForm() && confirm("' ~ confirm_message|e('js') ~ '");' : 'return validateForm();'
+        'onsubmit': confirm_message is defined and confirm_message ? 'return confirm("' ~ confirm_message|e('js') ~ '");' : ''
     }
 }) }}
 

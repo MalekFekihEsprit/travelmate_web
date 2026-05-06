@@ -12,7 +12,7 @@
         <div class="alert alert-danger" style="margin-bottom: 1rem;">{{ message }}</div>
     {% endfor %}
 
-    <div class="destination-detail__header {{ destination.imageName ? 'destination-detail__header--with-photo' : '' }}"{% if destination.imageName %} style="background-image: linear-gradient(145deg, rgba(28, 20, 14, 0.62), rgba(196, 111, 75, 0.62)), url('{{ asset('uploads/destinations/' ~ destination.imageName) }}');"{% endif %}>
+    <div class="destination-detail__header {{ destination.imageName ? 'destination-detail__header--with-photo' : '' }}"{% if destination.imageName %}{% set destinationHeaderImage = destination.imageName starts with 'http' ? destination.imageName : asset('uploads/destinations/' ~ destination.imageName) %} style="background-image: linear-gradient(145deg, rgba(28, 20, 14, 0.62), rgba(196, 111, 75, 0.62)), url('{{ destinationHeaderImage }}');"{% endif %}>
         <div class="destination-detail__header-top">
             <div class="destination-detail__flag-rating">
                 {% if destination.flagDestination %}

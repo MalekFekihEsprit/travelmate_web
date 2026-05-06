@@ -155,7 +155,12 @@
                      data-destination-id="{{ hebergement.destination ? hebergement.destination.idDestination : '' }}">
 
                     <div class="destination-card__image-wrapper">
-                        <div class="destination-card__image-placeholder">🏨</div>
+                        {% if hebergement.imageName %}
+                            {% set hebergementImageSrc = hebergement.imageName starts with 'http' ? hebergement.imageName : asset('uploads/hebergements/' ~ hebergement.imageName) %}
+                            <img src="{{ hebergementImageSrc }}" alt="{{ hebergement.nomHebergement }}" class="destination-card__image">
+                        {% else %}
+                            <div class="destination-card__image-placeholder">🏨</div>
+                        {% endif %}
                     </div>
                     <div class="destination-card__content">
                         <h3 class="destination-card__title">{{ hebergement.nomHebergement }}</h3>

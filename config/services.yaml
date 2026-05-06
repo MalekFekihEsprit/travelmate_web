@@ -87,10 +87,6 @@ services:
         arguments:
             $accessKey: '%env(UNSPLASH_ACCESS_KEY)%'
 
-    App\Service\DestinationImageFetcherService:
-        arguments:
-            $projectDir: '%kernel.project_dir%'
-
     App\Service\YouTubeVideoService:
         arguments:
             $apiKey: '%env(YOUTUBE_API_KEY)%'

@@ -4,19 +4,13 @@ namespace App\Service;
 
 use App\Entity\Destination;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\File\File;
 
 class DestinationImageFetcherService
 {
-    private string $uploadDir;
-
     public function __construct(
         private readonly UnsplashImageService $unsplashService,
-        private readonly ImageDownloaderService $imageDownloader,
         private readonly LoggerInterface $logger,
-        string $projectDir,
     ) {
-        $this->uploadDir = $projectDir . '/public/uploads/destinations/';
     }
 
     public function fetchAndAssign(Destination $destination): bool
@@ -35,30 +29,38 @@ class DestinationImageFetcherService
             return false;
         }
 
-        $file = $this->imageDownloader->download($imageUrl);
-
-        if ($file === null) {
-            $this->logger->warning('Failed to download image: ' . $imageUrl);
+        $canonicalUrl = $this->canonicalizeRemoteImageUrl($imageUrl);
+        if ($canonicalUrl === '') {
+            $this->logger->warning('Empty canonical image URL derived from: ' . $imageUrl);
             return false;
         }
 
-        // Generate a unique filename
-        $filename = uniqid('dest_', true) . '.' . $file->getExtension();
-
-        // Make sure upload dir exists
-        if (!is_dir($this->uploadDir)) {
-            mkdir($this->uploadDir, 0755, true);
+        // Many DB schemas still have image_name as VARCHAR(255). Keep it safe.
+        if (mb_strlen($canonicalUrl) > 255) {
+            $this->logger->warning('Canonical image URL too long for image_name: ' . $canonicalUrl);
+            return false;
         }
 
-        // Move the file manually to the upload directory
-        $file->move($this->uploadDir, $filename);
-
-        // Tell the entity about the stored filename
-        $destination->setImageName($filename);
+        // Persist the remote image URL directly (no download).
+        $destination->setImageName($canonicalUrl);
         $destination->setUpdatedAt(new \DateTimeImmutable());
 
-        $this->logger->info('Image saved: ' . $filename);
+        $this->logger->info('Destination image URL saved: ' . $canonicalUrl);
 
         return true;
+    }
+
+    private function canonicalizeRemoteImageUrl(string $url): string
+    {
+        $trimmed = trim($url);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        // Drop query string + fragment to keep URLs short and stable.
+        $trimmed = explode('#', $trimmed, 2)[0];
+        $trimmed = explode('?', $trimmed, 2)[0];
+
+        return trim($trimmed);
     }
 }

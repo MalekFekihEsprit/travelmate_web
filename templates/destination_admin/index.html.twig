@@ -817,7 +817,8 @@
                                 >
                                     <div class="destination-cell">
                                     {% if destination.imageName %}
-                                        <img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" class="destination-cell__image" alt="{{ destination.nomDestination }}">
+                                        {% set destinationImageSrc = destination.imageName starts with 'http' ? destination.imageName : asset('uploads/destinations/' ~ destination.imageName) %}
+                                        <img src="{{ destinationImageSrc }}" class="destination-cell__image" alt="{{ destination.nomDestination }}">
                                     {% elseif destination.flagDestination %}
                                         <img src="{{ destination.flagDestination }}" class="destination-cell__image" alt="{{ destination.nomDestination }}">
                                     {% else %}

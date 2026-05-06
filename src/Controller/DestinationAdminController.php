@@ -221,9 +221,15 @@ class DestinationAdminController extends AbstractController
             return $this->redirectToRoute('app_admin_destinations');
         }
 
+        // Turbo requires non-GET form submissions to either redirect on success
+        // or return a 422 status when re-rendering validation errors.
+        $statusCode = $form->isSubmitted() && !$form->isValid()
+            ? Response::HTTP_UNPROCESSABLE_ENTITY
+            : Response::HTTP_OK;
+
         return $this->render('destination_admin/new.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response('', $statusCode));
     }
 
     #[Route('/{id}/edit', name: 'app_admin_destinations_edit', methods: ['GET', 'POST'], requirements: ['id' => '\\d+'])]

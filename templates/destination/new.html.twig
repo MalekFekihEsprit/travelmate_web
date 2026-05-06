@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle destination | TravelMate{% endblock %}
+
+{% block body %}
+<section class="destinations-page" style="max-width: 980px; margin: 0 auto; padding: 2rem 1rem;">
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger" style="margin-bottom: 1rem;">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('warning') %}
+        <div class="alert alert-warning" style="margin-bottom: 1rem;">{{ message }}</div>
+    {% endfor %}
+
+    <div style="display: grid; gap: .4rem; margin-bottom: 1.25rem;">
+        <span style="opacity: .8; font-weight: 700; letter-spacing: .08em; font-size: .75rem;">DESTINATIONS</span>
+        <h1 style="margin: 0;">Ajouter une destination</h1>
+        <p style="margin: 0; opacity: .8;">Renseignez les informations. L'image sera récupérée automatiquement (lien sauvegardé, pas de téléchargement).</p>
+    </div>
+
+    <div class="card" style="background: #fff; border-radius: 16px; padding: 1.25rem; box-shadow: 0 10px 30px rgba(0,0,0,.06);">
+        {{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+                {{ form_row(form.pays_destination) }}
+            </div>
+            <div>
+                {{ form_row(form.nom_destination) }}
+            </div>
+            <div style="grid-column: 1 / -1;">
+                {{ form_row(form.description_destination) }}
+            </div>
+            <div>
+                {{ form_row(form.climat_destination) }}
+            </div>
+            <div>
+                {{ form_row(form.saison_destination) }}
+            </div>
+        </div>
+
+        <div style="display:flex; gap: .75rem; margin-top: 1.25rem;">
+            <button type="submit" class="btn btn--primary">Ajouter</button>
+            <a href="{{ path('app_destination_index') }}" class="btn btn--ghost">Annuler</a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</section>
+{% endblock %}
+

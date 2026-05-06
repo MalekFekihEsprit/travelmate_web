@@ -209,7 +209,8 @@
                 >
                     <div class="destination-card__image-wrapper">
                         {% if destination.imageName %}
-                            <img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" alt="{{ destination.nomDestination }}" class="destination-card__image">
+                            {% set destinationImageSrc = destination.imageName starts with 'http' ? destination.imageName : asset('uploads/destinations/' ~ destination.imageName) %}
+                            <img src="{{ destinationImageSrc }}" alt="{{ destination.nomDestination }}" class="destination-card__image">
                         {% else %}
                             <div class="destination-card__image-placeholder">🌍</div>
                         {% endif %}

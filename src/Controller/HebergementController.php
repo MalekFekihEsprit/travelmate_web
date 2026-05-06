@@ -6,7 +6,6 @@ use App\Entity\Hebergement;
 use App\Repository\DestinationRepository;
 use App\Repository\HebergementRepository;
 use App\Service\HebergementScraperService;
-use App\Service\ImageDownloaderService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -149,8 +148,7 @@ class HebergementController extends AbstractController
     public function saveSelectedHebergements(
         Request $request,
         EntityManagerInterface $em,
-        DestinationRepository $destinationRepository,
-        ImageDownloaderService $imageDownloader
+        DestinationRepository $destinationRepository
     ): JsonResponse {
         $payload = json_decode($request->getContent(), true);
  
@@ -183,11 +181,12 @@ class HebergementController extends AbstractController
                 $hebergement->setLongitudeHebergement(isset($data['longitude']) ? (float) $data['longitude'] : null);
                 $hebergement->setDestination($destination);
  
-                // Download image and hand it to VichUploader
-                if (!empty($data['image_url'])) {
-                    $file = $imageDownloader->download((string) $data['image_url']);
-                    if ($file !== null) {
-                        $hebergement->setImageFile($file);
+                // Save image URL directly (no download).
+                if (!empty($data['image_url']) && is_string($data['image_url'])) {
+                    $url = $this->canonicalizeRemoteImageUrl($data['image_url']);
+                    if ($url !== '' && mb_strlen($url) <= 255) {
+                        $hebergement->setImageName($url);
+                        $hebergement->setUpdatedAt(new \DateTimeImmutable());
                     }
                 }
  
@@ -205,6 +204,19 @@ class HebergementController extends AbstractController
             'saved'   => $saved,
             'errors'  => $errors,
         ]);
+    }
+
+    private function canonicalizeRemoteImageUrl(string $url): string
+    {
+        $trimmed = trim($url);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        $trimmed = explode('#', $trimmed, 2)[0];
+        $trimmed = explode('?', $trimmed, 2)[0];
+
+        return trim($trimmed);
     }
 
     #[Route('/{id_hebergement}', name: 'app_hebergement_show', methods: ['GET'], requirements: ['id_hebergement' => '\d+'])]

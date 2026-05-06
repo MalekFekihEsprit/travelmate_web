@@ -1,6 +1,7 @@
 <div class="destination-overview">
     {% if destination.imageName %}
-        <img src="{{ asset('uploads/destinations/' ~ destination.imageName) }}" alt="{{ destination.nomDestination }}" class="destination-overview__flag">
+        {% set destinationImageSrc = destination.imageName starts with 'http' ? destination.imageName : asset('uploads/destinations/' ~ destination.imageName) %}
+        <img src="{{ destinationImageSrc }}" alt="{{ destination.nomDestination }}" class="destination-overview__flag">
     {% elseif destination.flagDestination %}
         <img src="{{ destination.flagDestination }}" alt="{{ destination.nomDestination }}" class="destination-overview__flag">
     {% else %}

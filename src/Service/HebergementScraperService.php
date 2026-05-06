@@ -30,11 +30,17 @@ class HebergementScraperService
 
         $hotels = $this->fetchHotels($destination, $maxResults);
 
-        if (empty($hotels)) {
-            return $this->buildFallbackData($destination);
+        if ($hotels !== []) {
+            return $hotels;
         }
 
-        return $hotels;
+        // RapidAPI frequently fails (403 "not subscribed", etc.). Use Booking.com HTML scraping fallback.
+        $fallbackHotels = $this->fetchHotelsFromBookingHtml($destination, $maxResults);
+        if ($fallbackHotels !== []) {
+            return $fallbackHotels;
+        }
+
+        return $this->buildFallbackData($destination);
     }
 
     private function fetchHotels(string $destination, int $maxResults): array
@@ -43,32 +49,39 @@ class HebergementScraperService
             $checkIn = (new \DateTimeImmutable('+7 days'))->format('Y-m-d');
             $checkOut = (new \DateTimeImmutable('+9 days'))->format('Y-m-d');
 
-            $query = [
-                // Common RapidAPI hotel provider params
-                'query' => $destination,
-                'destination' => $destination,
-                'location' => $destination,
-                'city_name' => $destination,
-                'adults_number' => 2,
-                'room_number' => 1,
-                'checkin_date' => $checkIn,
-                'checkout_date' => $checkOut,
-                'arrival_date' => $checkIn,
-                'departure_date' => $checkOut,
-                'currency_code' => $this->rapidApiCurrency,
-                'currency' => $this->rapidApiCurrency,
-                'locale' => $this->rapidApiLanguage,
-                'languagecode' => $this->rapidApiLanguage,
-            ];
+            // Booking.com RapidAPI expects a destination id + type.
+            // If we call a generic/base URL, RapidAPI may route to a different product (cars, etc.).
+            $destinationMeta = $this->resolveBookingDestination($destination);
+            if ($destinationMeta === null) {
+                return [];
+            }
 
-            $response = $this->httpClient->request('GET', $this->rapidApiUrl, [
+            $response = $this->httpClient->request('GET', $this->buildRapidApiUrl('/v1/hotels/search'), [
                 'headers' => [
                     'x-rapidapi-key' => $this->rapidApiKey,
                     'x-rapidapi-host' => $this->rapidApiHost,
                 ],
-                'query' => $query,
+                'query' => [
+                    'dest_id' => $destinationMeta['dest_id'],
+                    'dest_type' => $destinationMeta['dest_type'],
+                    'arrival_date' => $checkIn,
+                    'departure_date' => $checkOut,
+                    'adults_number' => 2,
+                    'room_number' => 1,
+                    'order_by' => 'popularity',
+                    'filter_by_currency' => $this->rapidApiCurrency,
+                    'locale' => $this->rapidApiLanguage,
+                    'units' => 'metric',
+                ],
                 'timeout' => 25,
             ]);
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode >= 400) {
+                $body = $response->getContent(false);
+                $preview = mb_substr(trim((string) $body), 0, 500);
+                throw new \RuntimeException(sprintf('RapidAPI hotels/search failed (%d): %s', $statusCode, $preview));
+            }
 
             $payload = $response->toArray(false);
             $rawHotels = $this->extractHotelList($payload);
@@ -111,6 +124,203 @@ class HebergementScraperService
             $this->logger->error('RapidAPI hotels error: ' . $e->getMessage());
             return [];
         }
+    }
+
+    /**
+     * Best-effort HTML scraping fallback for Booking.com search results.
+     *
+     * @return array<int, array{name:string,type:string,price:?float,address:string,rating:?float,latitude:?float,longitude:?float,image_url:?string}>
+     */
+    private function fetchHotelsFromBookingHtml(string $destination, int $maxResults): array
+    {
+        try {
+            $checkIn = (new \DateTimeImmutable('+7 days'))->format('Y-m-d');
+            $checkOut = (new \DateTimeImmutable('+9 days'))->format('Y-m-d');
+
+            $url = sprintf(
+                'https://www.booking.com/searchresults.html?ss=%s&checkin=%s&checkout=%s&group_adults=2&no_rooms=1&lang=fr',
+                urlencode($destination),
+                $checkIn,
+                $checkOut
+            );
+
+            $response = $this->httpClient->request('GET', $url, [
+                'timeout' => 30,
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language' => 'fr-FR,fr;q=0.9,en;q=0.8',
+                    'Cache-Control' => 'no-cache',
+                    'Pragma' => 'no-cache',
+                ],
+            ]);
+
+            $html = $response->getContent(false);
+            if (!is_string($html) || trim($html) === '') {
+                return [];
+            }
+
+            $lowerHtml = mb_strtolower($html);
+            if (str_contains($lowerHtml, 'captcha') || str_contains($lowerHtml, 'robot')) {
+                $this->logger->warning('Booking.com HTML scraping blocked by captcha/robot page.');
+                return [];
+            }
+
+            $crawler = new \Symfony\Component\DomCrawler\Crawler($html);
+            $cards = $crawler->filter('[data-testid="property-card"]');
+            if ($cards->count() === 0) {
+                // Older markup fallback
+                $cards = $crawler->filter('.sr_property_block');
+            }
+
+            $results = [];
+            foreach ($cards as $node) {
+                if (count($results) >= $maxResults) {
+                    break;
+                }
+
+                $card = new \Symfony\Component\DomCrawler\Crawler($node);
+
+                $name = trim((string) ($card->filter('[data-testid="title"]')->first()->text('') ?: $card->filter('h3')->first()->text('')));
+                if ($name === '') {
+                    $name = 'Hôtel';
+                }
+
+                $address = trim((string) $card->filter('[data-testid="address"]')->first()->text(''));
+                if ($address === '') {
+                    $address = 'Adresse non disponible, ' . $destination;
+                }
+
+                // Rating: try review score first.
+                $rating = null;
+                $scoreText = trim((string) $card->filter('[data-testid="review-score"]')->first()->text(''));
+                if ($scoreText !== '') {
+                    if (preg_match('/([0-9]+[\\.,]?[0-9]*)/', $scoreText, $m)) {
+                        $val = (float) str_replace(',', '.', $m[1]);
+                        // Booking is typically /10; convert to /5.
+                        $rating = $val > 5 ? round($val / 2, 1) : round($val, 1);
+                    }
+                }
+
+                // Price: attempt to find a number with currency.
+                $price = null;
+                $priceText = trim((string) $card->filter('[data-testid="price-and-discounted-price"]')->first()->text(''));
+                if ($priceText === '') {
+                    $priceText = trim((string) $card->filter('[data-testid="price"]')->first()->text(''));
+                }
+                if ($priceText !== '') {
+                    if (preg_match('/([0-9][0-9\\s]*)(?:[\\.,]([0-9]{1,2}))?/', $priceText, $m)) {
+                        $intPart = (float) str_replace(' ', '', $m[1]);
+                        $decPart = isset($m[2]) ? (float) ('0.' . $m[2]) : 0.0;
+                        $price = $intPart + $decPart;
+                    }
+                }
+
+                // Image: booking often uses <img src=...> or data-src.
+                $imageUrl = null;
+                $img = $card->filter('img')->first();
+                if ($img->count() > 0) {
+                    $src = trim((string) $img->attr('data-src'));
+                    if ($src === '') {
+                        $src = trim((string) $img->attr('src'));
+                    }
+                    if ($src !== '') {
+                        $imageUrl = $src;
+                    }
+                }
+
+                $results[] = [
+                    'name' => $name,
+                    'type' => $this->guessType($name),
+                    'price' => $price,
+                    'address' => $address,
+                    'rating' => $rating,
+                    'latitude' => null,
+                    'longitude' => null,
+                    'image_url' => $imageUrl,
+                ];
+            }
+
+            return $results;
+        } catch (\Throwable $e) {
+            $this->logger->error('Booking.com HTML scrape error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Resolve Booking.com destination to dest_id/dest_type using the locations endpoint.
+     *
+     * @return array{dest_id: string, dest_type: string}|null
+     */
+    private function resolveBookingDestination(string $destination): ?array
+    {
+        try {
+            $response = $this->httpClient->request('GET', $this->buildRapidApiUrl('/v1/hotels/locations'), [
+                'headers' => [
+                    'x-rapidapi-key' => $this->rapidApiKey,
+                    'x-rapidapi-host' => $this->rapidApiHost,
+                ],
+                'query' => [
+                    'name' => $destination,
+                    'locale' => $this->rapidApiLanguage,
+                ],
+                'timeout' => 20,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode >= 400) {
+                $body = $response->getContent(false);
+                $preview = mb_substr(trim((string) $body), 0, 500);
+                $this->logger->error(sprintf('RapidAPI hotels/locations failed (%d): %s', $statusCode, $preview));
+                return null;
+            }
+
+            $payload = $response->toArray(false);
+            if (!is_array($payload) || $payload === []) {
+                return null;
+            }
+
+            // Usually the payload is a list.
+            foreach ($payload as $candidate) {
+                if (!is_array($candidate)) {
+                    continue;
+                }
+
+                $destId = $this->pickString($candidate, ['dest_id', 'destId', 'id']);
+                $destType = $this->pickString($candidate, ['dest_type', 'destType', 'type']);
+
+                if ($destId !== null && $destType !== null) {
+                    return ['dest_id' => $destId, 'dest_type' => $destType];
+                }
+            }
+
+            // Fallback: try first item if it resembles Booking format.
+            $first = $payload[0] ?? null;
+            if (is_array($first)) {
+                $destId = $this->pickString($first, ['dest_id', 'destId', 'id']);
+                $destType = $this->pickString($first, ['dest_type', 'destType', 'type']);
+                if ($destId !== null && $destType !== null) {
+                    return ['dest_id' => $destId, 'dest_type' => $destType];
+                }
+            }
+
+            return null;
+        } catch (\Throwable $e) {
+            $this->logger->error('RapidAPI locations error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function buildRapidApiUrl(string $path): string
+    {
+        $base = rtrim(trim($this->rapidApiUrl), '/');
+        if ($base === '') {
+            return $path;
+        }
+
+        // Avoid double slashes.
+        return $base . '/' . ltrim($path, '/');
     }
 
     /**

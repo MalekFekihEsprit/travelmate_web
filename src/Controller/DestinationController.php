@@ -26,7 +26,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Service\UnsplashImageService;
-use App\Service\ImageDownloaderService;
 
 
 
@@ -203,42 +202,23 @@ final class DestinationController extends AbstractController
 #[Route('/test-vich', name: 'app_destination_test_vich', methods: ['GET'])]
 public function testVich(
     EntityManagerInterface $entityManager,
-    ImageDownloaderService $imageDownloader,
 ): Response {
     $destination = new \App\Entity\Destination();
     $destination->setNom_destination('VichTest');
     $destination->setPays_destination('France');
     $destination->setScore_destination(0.0);
 
-    // Download a real image
-    $file = $imageDownloader->download(
-        'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800'
-    );
-
-    dump('File downloaded: ', $file?->getPathname(), $file?->getSize());
-
-    $destination->setImageFile($file);
-
-    dump('imageFile after set: ', $destination->getImageFile());
-    dump('imageName after set: ', $destination->getImageName());
-    dump('updatedAt after set: ', $destination->getUpdatedAt());
+    // Store a remote URL instead of downloading anything.
+    $destination->setImageName('https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800');
+    $destination->setUpdatedAt(new \DateTimeImmutable());
 
     $entityManager->persist($destination);
 
-    dump('imageName after persist: ', $destination->getImageName());
-
     $entityManager->flush();
-
-    dump('imageName after flush: ', $destination->getImageName());
-
-    $uploadDir = '%kernel.project_dir%/public/uploads/destinations/';
-    $files = glob('/Users/neyrouzchekir/PISymfony/Esprit-PIDEV-3A9-2526-TravelMate/public/uploads/destinations/*');
 
     return new Response(json_encode([
         'image_name'      => $destination->getImageName(),
         'updated_at'      => $destination->getUpdatedAt()?->format('Y-m-d H:i:s'),
-        'files_in_dir'    => $files,
-        'file_downloaded' => $file?->getPathname(),
     ]));
 }
     #[Route('/new', name: 'app_destination_new', methods: ['GET', 'POST'])]
@@ -274,7 +254,7 @@ public function testVich(
                 return $this->render('destination/new.html.twig', [
                     'destination' => $destination,
                     'form'        => $form,
-                ]);
+                ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
             }
 
             // Fetch country data (currency, flag, languages)
@@ -347,7 +327,7 @@ public function testVich(
                 return $this->render('destination/new.html.twig', [
                     'destination' => $destination,
                     'form'        => $form,
-                ]);
+                ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
 

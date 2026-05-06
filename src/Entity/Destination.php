@@ -218,7 +218,7 @@ class Destination
 
     // ── VichUploader image fields ─────────────────────────────────────────────
 
-    #[ORM\Column(name: 'image_name', type: Types::STRING, length: 255, nullable: true)]
+    #[ORM\Column(name: 'image_name', type: Types::STRING, length: 2048, nullable: true)]
     private ?string $imageName = null;
 
     #[Vich\UploadableField(mapping: 'destination_images', fileNameProperty: 'imageName')]
