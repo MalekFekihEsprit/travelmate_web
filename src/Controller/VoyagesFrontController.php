@@ -144,17 +144,7 @@ class VoyagesFrontController extends AbstractController
         $form = $this->createForm(VoyageType::class, $voyage);
         $form->handleRequest($request);
 
-        $formNonce = $request->isMethod('POST')
-            ? (string) $request->request->get('_voyage_form_nonce', '')
-            : $this->createFormNonce($request, $formScope);
-
         if ($form->isSubmitted() && $form->isValid()) {
-            if (!$this->consumeFormNonce($request, $formScope, $formNonce)) {
-                $this->addFlash('warning', 'Cette soumission a deja ete traitee.');
-
-                return $this->redirectToRoute('app_voyages');
-            }
-
             $entityManager->persist($voyage);
 
             // Notify users who favorited this destination that a new voyage was created.
@@ -194,7 +184,6 @@ class VoyagesFrontController extends AbstractController
             'submit_label' => 'Enregistrer le voyage',
             'has_destinations' => $destinationRepository->count([]) > 0,
             'has_activites' => $activiteRepository->count([]) > 0,
-            'form_nonce' => $formNonce !== '' ? $formNonce : $this->createFormNonce($request, $formScope),
         ]);
     }
 
@@ -204,27 +193,14 @@ class VoyagesFrontController extends AbstractController
         EntityManagerInterface $entityManager,
         DestinationRepository $destinationRepository,
         ActiviteRepository $activiteRepository,
-        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] Voyage $voyage
+        #[MapEntity] Voyage $voyage
     ): Response {
-        $formScope = 'voyage_edit_'.$voyage->getIdVoyage();
         $form = $this->createForm(VoyageType::class, $voyage);
         $form->handleRequest($request);
 
-        $formNonce = $request->isMethod('POST')
-            ? (string) $request->request->get('_voyage_form_nonce', '')
-            : $this->createFormNonce($request, $formScope);
-
         if ($form->isSubmitted() && $form->isValid()) {
-            if (!$this->consumeFormNonce($request, $formScope, $formNonce)) {
-                $this->addFlash('warning', 'Cette soumission a deja ete traitee.');
-
-                return $this->redirectToRoute('app_voyages');
-            }
-
             $entityManager->flush();
-
             $this->addFlash('success', 'Le voyage a ete modifie avec succes.');
-
             return $this->redirectToRoute('app_voyages');
         }
 
@@ -234,8 +210,7 @@ class VoyagesFrontController extends AbstractController
             'page_description' => 'Mettez a jour les informations du voyage .',
             'submit_label' => 'Mettre a jour',
             'has_destinations' => $destinationRepository->count([]) > 0,
-            'has_activites' => $activiteRepository->count([]) > 0,
-            'form_nonce' => $formNonce !== '' ? $formNonce : $this->createFormNonce($request, $formScope),
+            'has_activites' => $activiteRepository->count([]) > 0
         ]);
     }
 
@@ -587,72 +562,4 @@ class VoyagesFrontController extends AbstractController
         );
     }
 
-    private function createFormNonce(Request $request, string $scope): string
-    {
-        $session = $request->getSession();
-        $nonces = $session->get('voyage_form_nonces', []);
-
-        if (!is_array($nonces)) {
-            $nonces = [];
-        }
-
-        $this->pruneExpiredNonces($nonces);
-
-        $nonce = bin2hex(random_bytes(16));
-        $nonces[$scope] ??= [];
-        $nonces[$scope][$nonce] = time();
-
-        $session->set('voyage_form_nonces', $nonces);
-
-        return $nonce;
-    }
-
-    private function consumeFormNonce(Request $request, string $scope, string $nonce): bool
-    {
-        if ($nonce === '') {
-            return false;
-        }
-
-        $session = $request->getSession();
-        $nonces = $session->get('voyage_form_nonces', []);
-
-        if (!is_array($nonces) || !isset($nonces[$scope][$nonce])) {
-            return false;
-        }
-
-        unset($nonces[$scope][$nonce]);
-
-        if ($nonces[$scope] === []) {
-            unset($nonces[$scope]);
-        }
-
-        $session->set('voyage_form_nonces', $nonces);
-
-        return true;
-    }
-
-    /**
-     * @param array<string, array<string, int>> $nonces
-     */
-    private function pruneExpiredNonces(array &$nonces): void
-    {
-        $threshold = time() - 3600;
-
-        foreach ($nonces as $scope => $scopeNonces) {
-            if (!is_array($scopeNonces)) {
-                unset($nonces[$scope]);
-                continue;
-            }
-
-            foreach ($scopeNonces as $nonce => $createdAt) {
-                if (!is_int($createdAt) || $createdAt < $threshold) {
-                    unset($nonces[$scope][$nonce]);
-                }
-            }
-
-            if ($nonces[$scope] === []) {
-                unset($nonces[$scope]);
-            }
-        }
-    }
 }

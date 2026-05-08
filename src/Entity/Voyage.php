@@ -174,4 +174,49 @@ class Voyage
                 ->addViolation();
         }
     }
+
+
+    public function getId_voyage(): ?int
+    {
+        return $this->id_voyage;
+    }
+
+    public function setId_voyage(int $id_voyage): self
+    {
+        $this->id_voyage = $id_voyage;
+        return $this;
+    }
+
+    public function getTitre_voyage(): ?string
+    {
+        return $this->titre_voyage;
+    }
+
+    public function setTitre_voyage(string $titre_voyage): self
+    {
+        $this->titre_voyage = $titre_voyage;
+        return $this;
+    }
+
+    public function getDate_debut(): ?\DateTimeInterface
+    {
+        return $this->date_debut;
+    }
+
+    public function setDate_debut(\DateTimeInterface $date_debut): self
+    {
+        $this->date_debut = $date_debut;
+        return $this;
+    }
+
+    public function getDate_fin(): ?\DateTimeInterface
+    {
+        return $this->date_fin;
+    }
+
+    public function setDate_fin(\DateTimeInterface $date_fin): self
+    {
+        $this->date_fin = $date_fin;
+        return $this;
+    }
 }

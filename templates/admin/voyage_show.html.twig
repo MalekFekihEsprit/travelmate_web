@@ -1,6 +1,6 @@
 {% extends 'base_admin.html.twig' %}
 
-{% block title %}{{ voyage.titreVoyage }} | Administration{% endblock %}
+{% block title %}{{ voyage.titre_voyage }} | Administration{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -214,7 +214,7 @@
         <section class="admin-voyage-show-hero">
             <div class="admin-voyage-show-header">
                 <span class="admin-voyage-show-eyebrow">Consultation</span>
-                <h1 class="admin-voyage-show-title">{{ voyage.titreVoyage }}</h1>
+                <h1 class="admin-voyage-show-title">{{ voyage.titre_voyage }}</h1>
                 <p class="admin-voyage-show-subtitle">
                     {% if voyage.destination %}
                         {{ voyage.destination.nomDestination }}{% if voyage.destination.paysDestination %}, {{ voyage.destination.paysDestination }}{% endif %}
@@ -239,7 +239,7 @@
             <aside class="admin-voyage-show-qr">
                 <h2 class="admin-voyage-show-panel__title">QR public</h2>
                 <div class="admin-voyage-show-qr__frame">
-                    <img src="{{ qr_data_uri }}" alt="Code QR du voyage {{ voyage.titreVoyage }}">
+                    <img src="{{ qr_data_uri }}" alt="Code QR du voyage {{ voyage.titre_voyage }}">
                 </div>
                 <p class="admin-voyage-show-qr__text">
                     Ce QR code est genere localement et contient les informations principales du voyage, sans dependre d'un service externe.
@@ -253,7 +253,7 @@
                 <div class="admin-voyage-show-stats">
                     <div class="admin-voyage-show-stat">
                         <span>Date de debut</span>
-                        <strong>{{ voyage.dateDebut ? voyage.dateDebut|date('d/m/Y') : '-' }}</strong>
+                        <strong>{{ voyage.date_debut ? voyage.date_debut|date('d/m/Y') : '-' }}</strong>
                     </div>
                     <div class="admin-voyage-show-stat">
                         <span>Date de fin</span>
