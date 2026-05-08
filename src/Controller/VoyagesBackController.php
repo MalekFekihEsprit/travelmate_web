@@ -23,6 +23,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Twig\Environment;
+use Symfony\Component\Form\FormView;
 
 final class VoyagesBackController extends AbstractController
 {
@@ -34,20 +35,24 @@ final class VoyagesBackController extends AbstractController
 		DestinationRepository $destinationRepository
 	): Response {
 		$search = trim((string) $request->query->get('search', ''));
-		$editingVoyage = null;
 		$editId = $request->query->getInt('edit');
-
+		
+		$editingVoyage = null;
+		$editForm = null;
+		
 		if ($editId > 0) {
 			$editingVoyage = $voyageRepository->find($editId);
+			if ($editingVoyage) {
+				$editForm = $this->createForm(VoyageType::class, $editingVoyage)->createView();
+			}
 		}
 
 		return $this->renderAdminVoyagesPage(
 			request: $request,
 			voyages: $this->findBackOfficeVoyages($voyageRepository, $search),
 			destinations: $destinationRepository->findBy([], ['nom_destination' => 'ASC']),
-			voyageForm: $editingVoyage instanceof Voyage ? $editingVoyage : new Voyage(),
-			editingVoyage: $editingVoyage instanceof Voyage ? $editingVoyage : null,
-			formErrors: [],
+			editingVoyage: $editingVoyage,
+			editForm: $editForm,          // pass the form view
 			budgetRepository: $budgetRepository
 		);
 	}
@@ -66,16 +71,7 @@ final class VoyagesBackController extends AbstractController
 		$form = $this->createForm(VoyageType::class, $voyage);
 		$form->handleRequest($request);
 
-		$formNonce = $request->isMethod('POST')
-			? (string) $request->request->get('_voyage_form_nonce', '')
-			: $this->createFormNonce($request, $formScope);
-
 		if ($form->isSubmitted() && $form->isValid()) {
-			if (!$this->consumeFormNonce($request, $formScope, $formNonce)) {
-				$this->addFlash('warning', 'Cette soumission a deja ete traitee.');
-
-				return $this->redirectToRoute('app_admin_voyages');
-			}
 
 			$entityManager->persist($voyage);
 			$entityManager->flush();
@@ -87,7 +83,6 @@ final class VoyagesBackController extends AbstractController
 
 		return $this->render('admin/voyage_form.html.twig', [
 			'form' => $form->createView(),
-			'form_nonce' => $formNonce !== '' ? $formNonce : $this->createFormNonce($request, $formScope),
 			'has_destinations' => $destinationRepository->count([]) > 0,
 			'has_activites' => $activiteRepository->count([]) > 0,
 			'page_title' => 'Ajouter un voyage',
@@ -193,165 +188,99 @@ final class VoyagesBackController extends AbstractController
 		return $response;
 	}
 
-	#[Route('/admin/voyages/creer', name: 'app_admin_voyages_create', methods: ['POST'])]
-	public function create(
-		Request $request,
-		EntityManagerInterface $entityManager,
-		BudgetRepository $budgetRepository,
-		DestinationRepository $destinationRepository,
-		VoyageRepository $voyageRepository,
-		ValidatorInterface $validator
-	): Response {
-		if (!$this->isCsrfTokenValid('admin_voyage_create', (string) $request->request->get('_token'))) {
-			$this->addFlash('error', 'La requete d\'ajout est invalide.');
+    #[Route('/admin/voyages/creer', name: 'app_admin_voyages_create', methods: ['POST'])]
+    public function create(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        DestinationRepository $destinationRepository
+    ): Response {
+        $voyage = new Voyage();
+        $form = $this->createForm(VoyageType::class, $voyage);
+        $form->handleRequest($request);
 
-			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-		}
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($voyage);
+            $entityManager->flush();
+            $this->addFlash('success', 'Le voyage a été ajouté avec succès.');
+        } else {
+            foreach ($form->getErrors(true) as $error) {
+                $this->addFlash('error', $error->getMessage());
+            }
+        }
 
-		if (!$this->consumeFormNonce($request, 'admin_voyage_create', (string) $request->request->get('_submission_nonce', ''))) {
-			if ($this->wasActionHandledRecently($request, 'admin_voyage_create')) {
-				return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-			}
+        return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
+    }
 
-			$this->addFlash('warning', 'Cette soumission a deja ete traitee.');
-
-			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-		}
-
-		$voyage = new Voyage();
-		$formErrors = $this->hydrateVoyageFromRequest($request, $voyage, $destinationRepository, $validator);
-
-		if ($formErrors !== []) {
-			return $this->renderAdminVoyagesPage(
-				request: $request,
-				voyages: $this->findBackOfficeVoyages($voyageRepository, $this->extractRedirectSearch($request)),
-				destinations: $destinationRepository->findBy([], ['nom_destination' => 'ASC']),
-				voyageForm: $voyage,
-				editingVoyage: null,
-				formErrors: $formErrors,
-				budgetRepository: $budgetRepository
-			);
-		}
-
-		$entityManager->persist($voyage);
-		$entityManager->flush();
-		$this->markActionHandled($request, 'admin_voyage_create');
-
-		$this->addFlash('success', 'Le voyage a ete ajoute avec succes.');
-
-		return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-	}
-
-	#[Route('/admin/voyages/{id_voyage}/modifier', name: 'app_admin_voyages_update', requirements: ['id_voyage' => '\\d+'], methods: ['GET', 'POST'])]
-	public function update(
-		Request $request,
-		EntityManagerInterface $entityManager,
-		DestinationRepository $destinationRepository,
-		ActiviteRepository $activiteRepository,
-		#[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] ?Voyage $voyage = null
-	): Response {
-		if (!$voyage instanceof Voyage) {
-			$this->addFlash('warning', 'Ce voyage est introuvable ou a deja ete supprime.');
-
-			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-		}
-
-		$formScope = 'admin_voyage_form_edit_'.$voyage->getIdVoyage();
-		$form = $this->createForm(VoyageType::class, $voyage);
-		$form->handleRequest($request);
-
-		$formNonce = $request->isMethod('POST')
-			? (string) $request->request->get('_voyage_form_nonce', '')
-			: $this->createFormNonce($request, $formScope);
-
-		if ($form->isSubmitted() && $form->isValid()) {
-			if (!$this->consumeFormNonce($request, $formScope, $formNonce)) {
-				$this->addFlash('warning', 'Cette soumission a deja ete traitee.');
-
-				return $this->redirectToRoute('app_admin_voyages');
-			}
-
-			$entityManager->flush();
-			$this->addFlash('success', 'Le voyage a ete modifie avec succes.');
-
+	#[Route('/admin/voyages/{id_voyage}/modifier', name: 'app_admin_voyages_update', methods: ['POST'])]
+	public function update(Request $request, EntityManagerInterface $entityManager, #[MapEntity] ?Voyage $voyage = null): Response
+	{
+		if (!$voyage) {
+			$this->addFlash('warning', 'Voyage introuvable.');
 			return $this->redirectToRoute('app_admin_voyages');
 		}
 
-		return $this->render('admin/voyage_form.html.twig', [
-			'form' => $form->createView(),
-			'form_nonce' => $formNonce !== '' ? $formNonce : $this->createFormNonce($request, $formScope),
-			'has_destinations' => $destinationRepository->count([]) > 0,
-			'has_activites' => $activiteRepository->count([]) > 0,
-			'page_title' => 'Modifier le voyage',
-			'page_text' => 'Mettez a jour le voyage selectionne depuis une page dediee qui reutilise le formulaire VoyageType.',
-			'submit_label' => 'Mettre a jour le voyage',
-		]);
+		$form = $this->createForm(VoyageType::class, $voyage);
+		$form->handleRequest($request);
+
+		if ($form->isSubmitted() && $form->isValid()) {
+			$entityManager->flush();
+			$this->addFlash('success', 'Voyage modifié avec succès.');
+			return $this->redirectToRoute('app_admin_voyages');
+		}
+
+		// On errors, redirect back with edit parameter to reopen modal
+		foreach ($form->getErrors(true) as $error) {
+			$this->addFlash('error', $error->getMessage());
+		}
+		return $this->redirectToRoute('app_admin_voyages', ['edit' => $voyage->getIdVoyage()]);
 	}
 
-	#[Route('/admin/voyages/{id_voyage}/supprimer', name: 'app_admin_voyages_delete', requirements: ['id_voyage' => '\\d+'], methods: ['POST'])]
-	public function delete(
-		Request $request,
-		EntityManagerInterface $entityManager,
-		#[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] ?Voyage $voyage = null
-	): Response {
-		if (!$voyage instanceof Voyage) {
-			$this->addFlash('warning', 'Ce voyage est introuvable ou a deja ete supprime.');
+	
+    #[Route('/admin/voyages/{id_voyage}/supprimer', name: 'app_admin_voyages_delete', requirements: ['id_voyage' => '\\d+'], methods: ['POST'])]
+    public function delete(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        #[MapEntity(mapping: ['id_voyage' => 'id_voyage'])] ?Voyage $voyage = null
+    ): Response {
+        if (!$voyage) {
+            $this->addFlash('warning', 'Voyage introuvable.');
+            return $this->redirectToRoute('app_admin_voyages');
+        }
 
-			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-		}
+        if (!$this->isCsrfTokenValid('delete' . $voyage->getIdVoyage(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('app_admin_voyages');
+        }
 
-		if (!$this->isCsrfTokenValid('admin_voyage_delete_'.$voyage->getIdVoyage(), (string) $request->request->get('_token'))) {
-			$this->addFlash('error', 'La requete de suppression est invalide.');
+        // Remove related entities (same as your original delete logic)
+        foreach ($voyage->getParticipations() as $participation) {
+            $entityManager->remove($participation);
+        }
+        foreach ($voyage->getActivites() as $activite) {
+            $voyage->removeActivite($activite);
+        }
+        foreach ($voyage->getBudgets() as $budget) {
+            foreach ($budget->getDepenses() as $depense) {
+                $entityManager->remove($depense);
+            }
+            $entityManager->remove($budget);
+        }
+        foreach ($voyage->getItineraires() as $itineraire) {
+            foreach ($itineraire->getEtapes() as $etape) {
+                $entityManager->remove($etape);
+            }
+            $entityManager->remove($itineraire);
+        }
+        foreach ($voyage->getPaiements() as $paiement) {
+            $entityManager->remove($paiement);
+        }
 
-			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-		}
+        $entityManager->remove($voyage);
+        $entityManager->flush();
 
-		if (!$this->consumeFormNonce($request, 'admin_voyage_delete_'.$voyage->getIdVoyage(), (string) $request->request->get('_submission_nonce', ''))) {
-			if ($this->wasActionHandledRecently($request, 'admin_voyage_delete_'.$voyage->getIdVoyage())) {
-				return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-			}
-
-			$this->addFlash('warning', 'Cette suppression a deja ete traitee.');
-
-			return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-		}
-
-		foreach ($voyage->getParticipations()->toArray() as $participation) {
-			$entityManager->remove($participation);
-		}
-
-		foreach ($voyage->getActivites()->toArray() as $activite) {
-			$voyage->removeActivite($activite);
-		}
-
-		foreach ($voyage->getBudgets()->toArray() as $budget) {
-			foreach ($budget->getDepenses()->toArray() as $depense) {
-				$entityManager->remove($depense);
-			}
-
-			$entityManager->remove($budget);
-		}
-
-		foreach ($voyage->getItineraires()->toArray() as $itineraire) {
-			foreach ($itineraire->getEtapes()->toArray() as $etape) {
-				$entityManager->remove($etape);
-			}
-
-			$entityManager->remove($itineraire);
-		}
-
-		foreach ($voyage->getPaiements()->toArray() as $paiement) {
-			$entityManager->remove($paiement);
-		}
-
-		$entityManager->remove($voyage);
-		$entityManager->flush();
-		$this->markActionHandled($request, 'admin_voyage_delete_'.$voyage->getIdVoyage());
-
-		$this->addFlash('success', 'Le voyage a ete supprime avec succes.');
-
-		return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
-	}
+        $this->addFlash('success', 'Voyage supprimé.');
+        return $this->redirectToRoute('app_admin_voyages', $this->buildRedirectQuery($request));
+    }
 
 	/**
 	 * @return Voyage[]
@@ -397,62 +326,6 @@ final class VoyagesBackController extends AbstractController
 	/**
 	 * @return list<string>
 	 */
-	private function hydrateVoyageFromRequest(
-		Request $request,
-		Voyage $voyage,
-		DestinationRepository $destinationRepository,
-		ValidatorInterface $validator
-	): array {
-		$voyage->setTitreVoyage(trim((string) $request->request->get('titre_voyage', '')));
-		$voyage->setStatut(trim((string) $request->request->get('statut', '')));
-
-		$destinationId = $request->request->getInt('destination_id');
-		$destination = $destinationId > 0 ? $destinationRepository->find($destinationId) : null;
-		$voyage->setDestination($destination instanceof Destination ? $destination : null);
-
-		$dateDebut = $this->parseDate((string) $request->request->get('date_debut', ''));
-		$dateFin = $this->parseDate((string) $request->request->get('date_fin', ''));
-
-		$voyage->setDateDebut($dateDebut ?? new \DateTime('today'));
-		$voyage->setDateFin($dateFin ?? new \DateTime('today'));
-
-		$errors = [];
-
-		if (!$dateDebut instanceof \DateTimeInterface) {
-			$errors[] = 'La date de debut est obligatoire.';
-		}
-
-		if (!$dateFin instanceof \DateTimeInterface) {
-			$errors[] = 'La date de fin est obligatoire.';
-		}
-
-		if ($destinationId > 0 && !$destination instanceof Destination) {
-			$errors[] = 'La destination selectionnee est introuvable.';
-		}
-
-		foreach ($validator->validate($voyage) as $violation) {
-			$errors[] = $violation->getMessage();
-		}
-
-		return array_values(array_unique(array_filter($errors)));
-	}
-
-	private function parseDate(string $value): ?\DateTime
-	{
-		$value = trim($value);
-
-		if ($value === '') {
-			return null;
-		}
-
-		$date = \DateTime::createFromFormat('Y-m-d', $value);
-
-		return $date instanceof \DateTime ? $date : null;
-	}
-
-	/**
-	 * @return list<string>
-	 */
 	private function buildVoyageExportRow(Voyage $voyage, ?array $budgetSummary = null): array
 	{
 		$destination = $voyage->getDestination();
@@ -493,43 +366,25 @@ final class VoyagesBackController extends AbstractController
 	/**
 	 * @param Voyage[] $voyages
 	 * @param Destination[] $destinations
-	 * @param list<string> $formErrors
 	 */
 	private function renderAdminVoyagesPage(
 		Request $request,
 		array $voyages,
 		array $destinations,
-		Voyage $voyageForm,
 		?Voyage $editingVoyage,
-		array $formErrors,
+		?FormView $editForm,
 		BudgetRepository $budgetRepository
 	): Response {
-		$formScope = $editingVoyage instanceof Voyage
-			? 'admin_voyage_update_'.$editingVoyage->getIdVoyage()
-			: 'admin_voyage_create';
-
-		$deleteNonces = [];
-		foreach ($voyages as $voyage) {
-			$voyageId = $voyage->getIdVoyage();
-
-			if ($voyageId === null) {
-				continue;
-			}
-
-			$deleteNonces[$voyageId] = $this->createFormNonce($request, 'admin_voyage_delete_'.$voyageId);
-		}
-
 		return $this->render('admin/voyages_back.html.twig', [
 			'voyages' => $voyages,
 			'budget_summaries' => $budgetRepository->findVoyageBudgetSummaries($voyages),
 			'destinations' => $destinations,
-			'voyage_form' => $voyageForm,
 			'editing_voyage' => $editingVoyage,
+			'form' => $editForm,    
+			'edit_form' => $editForm,                     // ← the template uses 'form'
 			'status_options' => Voyage::getAvailableStatuts(),
 			'status_stats' => $this->buildStatusStats($voyages),
-			'form_errors' => $formErrors,
-			'form_nonce' => $this->createFormNonce($request, $formScope),
-			'delete_nonces' => $deleteNonces,
+			'form_errors' => []
 		]);
 	}
 
@@ -596,116 +451,4 @@ final class VoyagesBackController extends AbstractController
 		];
 	}
 
-	private function createFormNonce(Request $request, string $scope): string
-	{
-		$session = $request->getSession();
-		$nonces = $session->get('admin_voyage_form_nonces', []);
-
-		if (!is_array($nonces)) {
-			$nonces = [];
-		}
-
-		$this->pruneExpiredNonces($nonces);
-
-		$nonce = bin2hex(random_bytes(16));
-		$nonces[$scope] ??= [];
-		$nonces[$scope][$nonce] = time();
-
-		$session->set('admin_voyage_form_nonces', $nonces);
-
-		return $nonce;
-	}
-
-	private function consumeFormNonce(Request $request, string $scope, string $nonce): bool
-	{
-		if ($nonce === '') {
-			return false;
-		}
-
-		$session = $request->getSession();
-		$nonces = $session->get('admin_voyage_form_nonces', []);
-
-		if (!is_array($nonces) || !isset($nonces[$scope][$nonce])) {
-			return false;
-		}
-
-		unset($nonces[$scope][$nonce]);
-
-		if ($nonces[$scope] === []) {
-			unset($nonces[$scope]);
-		}
-
-		$session->set('admin_voyage_form_nonces', $nonces);
-
-		return true;
-	}
-
-	private function markActionHandled(Request $request, string $scope): void
-	{
-		$session = $request->getSession();
-		$handledActions = $session->get('admin_voyage_recent_actions', []);
-
-		if (!is_array($handledActions)) {
-			$handledActions = [];
-		}
-
-		$this->pruneExpiredHandledActions($handledActions);
-		$handledActions[$scope] = time();
-
-		$session->set('admin_voyage_recent_actions', $handledActions);
-	}
-
-	private function wasActionHandledRecently(Request $request, string $scope): bool
-	{
-		$session = $request->getSession();
-		$handledActions = $session->get('admin_voyage_recent_actions', []);
-
-		if (!is_array($handledActions)) {
-			return false;
-		}
-
-		$this->pruneExpiredHandledActions($handledActions);
-		$session->set('admin_voyage_recent_actions', $handledActions);
-
-		return isset($handledActions[$scope]);
-	}
-
-	/**
-	 * @param array<string, array<string, int>> $nonces
-	 */
-	private function pruneExpiredNonces(array &$nonces): void
-	{
-		$threshold = time() - 3600;
-
-		foreach ($nonces as $scope => $scopeNonces) {
-			if (!is_array($scopeNonces)) {
-				unset($nonces[$scope]);
-				continue;
-			}
-
-			foreach ($scopeNonces as $nonce => $createdAt) {
-				if (!is_int($createdAt) || $createdAt < $threshold) {
-					unset($nonces[$scope][$nonce]);
-				}
-			}
-
-			if ($nonces[$scope] === []) {
-				unset($nonces[$scope]);
-			}
-		}
-	}
-
-	/**
-	 * @param array<string, int> $handledActions
-	 */
-	private function pruneExpiredHandledActions(array &$handledActions): void
-	{
-		$threshold = time() - 10;
-
-		foreach ($handledActions as $scope => $handledAt) {
-			if (!is_int($handledAt) || $handledAt < $threshold) {
-				unset($handledActions[$scope]);
-			}
-		}
-	}
 }

@@ -662,61 +662,50 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-
-                <form
-                    method="post"
-                    action="{{ path('app_admin_voyages_update', {'id_voyage': editing_voyage.idVoyage}) }}"
-                    class="admin-voyages-form"
-                >
-                    <input type="hidden" name="_token" value="{{ csrf_token('admin_voyage_update_' ~ editing_voyage.idVoyage) }}">
-                    <input type="hidden" name="_submission_nonce" value="{{ form_nonce }}">
+                {{ form_start(edit_form, {
+                    'action': path('app_admin_voyages_update', {'id_voyage': editing_voyage.idVoyage}),
+                    'attr': {'class': 'admin-voyages-form'}
+                }) }}
+                    {# The CSRF token and other hidden fields are added automatically #}
                     <input type="hidden" name="current_search" value="{{ app.request.query.get('search', '') }}">
 
                     <div class="admin-voyages-form__grid">
                         <div class="admin-voyages-field">
-                            <label class="admin-voyages-label" for="admin-voyage-title">Titre</label>
-                            <input id="admin-voyage-title" class="admin-voyages-input" type="text" name="titre_voyage" value="{{ voyage_form.titreVoyage ?? '' }}" placeholder="Titre du voyage" required>
+                            {{ form_label(form.titre_voyage, 'Titre', {'label_attr': {'class': 'admin-voyages-label'}}) }}
+                            {{ form_widget(form.titre_voyage, {'attr': {'class': 'admin-voyages-input', 'placeholder': 'Titre du voyage'}}) }}
+                            {{ form_errors(form.titre_voyage) }}
                         </div>
 
                         <div class="admin-voyages-field">
-                            <label class="admin-voyages-label" for="admin-voyage-status">Statut</label>
-                            <select id="admin-voyage-status" class="admin-voyages-select" name="statut" required>
-                                <option value="">Choisir un statut</option>
-                                {% for status in status_options %}
-                                    <option value="{{ status }}" {{ voyage_form.statut == status ? 'selected' : '' }}>{{ status }}</option>
-                                {% endfor %}
-                            </select>
+                            {{ form_label(form.statut, 'Statut', {'label_attr': {'class': 'admin-voyages-label'}}) }}
+                            {{ form_widget(form.statut, {'attr': {'class': 'admin-voyages-select'}}) }}
+                            {{ form_errors(form.statut) }}
                         </div>
 
                         <div class="admin-voyages-field">
-                            <label class="admin-voyages-label" for="admin-voyage-start">Debut</label>
-                            <input id="admin-voyage-start" class="admin-voyages-input" type="date" name="date_debut" value="{{ voyage_form.dateDebut ? voyage_form.dateDebut|date('Y-m-d') : '' }}" required>
+                            {{ form_label(form.date_debut, 'Debut', {'label_attr': {'class': 'admin-voyages-label'}}) }}
+                            {{ form_widget(form.date_debut, {'attr': {'class': 'admin-voyages-input', 'type': 'date'}}) }}
+                            {{ form_errors(form.date_debut) }}
                         </div>
 
                         <div class="admin-voyages-field">
-                            <label class="admin-voyages-label" for="admin-voyage-end">Fin</label>
-                            <input id="admin-voyage-end" class="admin-voyages-input" type="date" name="date_fin" value="{{ voyage_form.dateFin ? voyage_form.dateFin|date('Y-m-d') : '' }}" required>
+                            {{ form_label(form.date_fin, 'Fin', {'label_attr': {'class': 'admin-voyages-label'}}) }}
+                            {{ form_widget(form.date_fin, {'attr': {'class': 'admin-voyages-input', 'type': 'date'}}) }}
+                            {{ form_errors(form.date_fin) }}
                         </div>
 
-                        <div class="admin-voyages-field admin-voyages-field--readonly">
-                            <label class="admin-voyages-label" for="admin-voyage-destination-id">ID destination</label>
-                            <input id="admin-voyage-destination-id" class="admin-voyages-input" type="text" value="{{ voyage_form.destination ? voyage_form.destination.idDestination : '' }}" readonly>
-                        </div>
-
+                        {# Destination field - this will be a dropdown entity type #}
                         <div class="admin-voyages-field">
-                            <label class="admin-voyages-label" for="admin-voyage-destination">Destination</label>
-                            <select id="admin-voyage-destination" class="admin-voyages-select" name="destination_id" required>
-                                <option value="">Choisir une destination</option>
-                                {% for destination in destinations %}
-                                    <option
-                                        value="{{ destination.idDestination }}"
-                                        data-destination-id="{{ destination.idDestination }}"
-                                        {{ voyage_form.destination and voyage_form.destination.idDestination == destination.idDestination ? 'selected' : '' }}
-                                    >
-                                        {{ destination.nomDestination }}{% if destination.paysDestination %} - {{ destination.paysDestination }}{% endif %}
-                                    </option>
-                                {% endfor %}
-                            </select>
+                            {{ form_label(form.destination, 'Destination', {'label_attr': {'class': 'admin-voyages-label'}}) }}
+                            {{ form_widget(form.destination, {'attr': {'class': 'admin-voyages-select'}}) }}
+                            {{ form_errors(form.destination) }}
+                        </div>
+
+                        {# Activites field - if you want checkboxes #}
+                        <div class="admin-voyages-field">
+                            {{ form_label(form.activites, 'Activites', {'label_attr': {'class': 'admin-voyages-label'}}) }}
+                            {{ form_widget(form.activites, {'attr': {'class': 'admin-voyages-checkboxes'}}) }}
+                            {{ form_errors(form.activites) }}
                         </div>
                     </div>
 
@@ -726,9 +715,8 @@
                                 <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M13.5 8.5L16.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                            <span>Mettre a jour</span>
+                            <span>Mettre à jour</span>
                         </button>
-
                         <a href="{{ path('app_admin_voyages') }}" class="admin-action-btn admin-action-btn--ghost">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -736,7 +724,7 @@
                             <span>Annuler</span>
                         </a>
                     </div>
-                </form>
+                {{ form_end(edit_form) }}
             {% else %}
                 <div class="admin-voyages-form__actions">
                     <a href="{{ path('app_admin_voyages_new') }}" class="admin-action-btn admin-action-btn--primary">
@@ -840,7 +828,7 @@
                                                 </svg>
                                             </a>
 
-                                            <a href="{{ path('app_admin_voyages_update', {'id_voyage': voyage.idVoyage}) }}" class="admin-voyages-icon admin-voyages-icon--edit" title="Modifier" aria-label="Modifier le voyage {{ voyage.titreVoyage }}">
+                                            <a href="{{ path('app_admin_voyages', {'edit': voyage.idVoyage}) }}" class="admin-voyages-icon admin-voyages-icon--edit" title="Modifier" aria-label="Modifier le voyage {{ voyage.titreVoyage }}">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                                     <path d="M4 20H8L18.5 9.5C19.3284 8.67157 19.3284 7.32843 18.5 6.5C17.6716 5.67157 16.3284 5.67157 15.5 6.5L5 17V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                     <path d="M13.5 8.5L16.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -848,8 +836,7 @@
                                             </a>
 
                                             <form method="post" action="{{ path('app_admin_voyages_delete', {'id_voyage': voyage.idVoyage}) }}" onsubmit="return confirm('Supprimer ce voyage ?');" data-admin-delete-form>
-                                                <input type="hidden" name="_token" value="{{ csrf_token('admin_voyage_delete_' ~ voyage.idVoyage) }}">
-                                                <input type="hidden" name="_submission_nonce" value="{{ delete_nonces[voyage.idVoyage] ?? '' }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ voyage.idVoyage) }}">
                                                 <input type="hidden" name="current_search" value="{{ app.request.query.get('search', '') }}">
                                                 <button type="submit" class="admin-voyages-icon admin-voyages-icon--delete" title="Supprimer" aria-label="Supprimer le voyage {{ voyage.titreVoyage }}" data-admin-delete-submit>
                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
