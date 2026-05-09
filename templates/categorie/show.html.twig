@@ -299,7 +299,6 @@
 
 {% block body %}
 
-{% include '_travelmate_mymemory_translate.html.twig' %}
 
 {# ── Image mapping catégorie ─────────────────────────────────────────── #}
 {% set imageMap = {
@@ -486,19 +485,5 @@
 
 {% block javascripts %}
 {{ parent() }}
-<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
-<script>
-(function () {
-    function bootTranslate() {
-        if (window.TravelMateTranslate) {
-            TravelMateTranslate.init({ sourceLang: 'fr' });
-        }
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bootTranslate);
-    } else {
-        bootTranslate();
-    }
-})();
-</script>
+
 {% endblock %}

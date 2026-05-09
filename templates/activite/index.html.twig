@@ -557,7 +557,6 @@
 
 {% block body %}
 
-{% include '_travelmate_mymemory_translate.html.twig' %}
 
 {# ════════════════════════════════════════
    HERO
@@ -812,21 +811,7 @@
 
 {% block javascripts %}
 {{ parent() }}
-<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
-<script>
-(function () {
-    function bootTranslate() {
-        if (window.TravelMateTranslate) {
-            TravelMateTranslate.init({ sourceLang: 'fr' });
-        }
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bootTranslate);
-    } else {
-        bootTranslate();
-    }
-})();
-</script>
+
 <script>window.TRAVELMATE_NOMINATIM_EMAIL = '';</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="{{ asset('js/activite-list-filters.js') }}"></script>

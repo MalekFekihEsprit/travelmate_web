@@ -1067,7 +1067,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
 {% block body %}
 
-{% include '_travelmate_mymemory_translate.html.twig' %}
 
 {# ── Breadcrumb ─────────────────────────────────────────────────────────── #}
 <nav class="breadcrumb" aria-label="Fil d'Ariane">
@@ -1826,20 +1825,5 @@ document.addEventListener('keydown', function (e) {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="{{ asset('js/geocoding-service.js') }}"></script>
 <script src="{{ asset('js/public-geo-map-toggle.js') }}"></script>
-<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
 
-<script>
-(function () {
-    function bootTranslate() {
-        if (window.TravelMateTranslate) {
-            TravelMateTranslate.init({ sourceLang: 'fr' });
-        }
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bootTranslate);
-    } else {
-        bootTranslate();
-    }
-})();
-</script>
 {% endblock %}

@@ -80,13 +80,15 @@
             opts = opts || {};
             this.sourceLang = opts.sourceLang || 'fr';
             this.storageKey = opts.storageKey || 'travelmate_lang';
+            this.cacheKey   = opts.cacheKey   || 'travelmate_cache';
             var r = opts.root || opts.rootSelector;
             this.root = typeof r === 'string' ? document.querySelector(r) : (r || document);
             if (!this.root) {
                 this.root = document;
             }
             this.currentLang = localStorage.getItem(this.storageKey) || this.sourceLang;
-            this.translationCache = {};
+            this.translateAll = !!opts.translateAll;
+            this.translationCache = this._loadCache();
             this.originalTexts = new Map();
 
             this._exposeGlobals();
@@ -104,26 +106,79 @@
 
         _exposeGlobals: function () {
             var self = this;
-            global.setLanguage = function (lang) {
-                return self.setLanguage(lang);
-            };
+            // Override the standalone versions with full library versions
             global.toggleLangPanel = function () {
                 self.toggleLangPanel();
+            };
+            global.setLanguage = function (lang) {
+                return self.setLanguage(lang);
             };
         },
 
         _bindOutsideClick: function () {
             var self = this;
             document.addEventListener('click', function (e) {
-                if (!e.target.closest('#langSwitcher')) {
+                var wrapper = document.getElementById('navbarLang') || document.getElementById('langSwitcher');
+                if (!wrapper || !wrapper.contains(e.target)) {
                     self.closeLangPanel();
                 }
             });
         },
 
+        _loadCache: function () {
+            try {
+                var raw = localStorage.getItem(this.cacheKey);
+                return raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                return {};
+            }
+        },
+
+        _saveCache: function () {
+            try {
+                // keep cache under ~200KB — drop oldest half if over limit
+                var json = JSON.stringify(this.translationCache);
+                if (json.length > 180000) {
+                    var keys = Object.keys(this.translationCache);
+                    var half = Math.floor(keys.length / 2);
+                    for (var k = 0; k < half; k++) { delete this.translationCache[keys[k]]; }
+                    json = JSON.stringify(this.translationCache);
+                }
+                localStorage.setItem(this.cacheKey, json);
+            } catch (e) { /* quota exceeded — ignore */ }
+        },
+
+        _applyEl: function (el, text) {
+            if (!el || text == null) return;
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.setAttribute('placeholder', text);
+            } else {
+                el.textContent = text;
+            }
+        },
+
+        _getElements: function () {
+            if (!this.translateAll) {
+                return Array.from(this.root.querySelectorAll('[data-translate="true"]'));
+            }
+            // translateAll mode : collect every leaf text element on the page
+            return Array.from(this.root.querySelectorAll(
+                'h1,h2,h3,h4,h5,h6,p,li,td,th,caption,label,span,small,strong,em,b,i,dt,dd,button,a'
+            )).filter(function (el) {
+                // leaf elements only (no child elements)
+                if (el.children.length > 0) return false;
+                var text = el.textContent.trim();
+                // skip empty, single-char, or purely numeric strings
+                if (!text || text.length < 2 || /^[\d\s\W]+$/.test(text)) return false;
+                // skip elements inside the lang panel, chatbot button, or explicitly excluded zones
+                if (el.closest('#navbarLang, .chat-fab, [data-no-translate], script, noscript')) return false;
+                return true;
+            });
+        },
+
         saveOriginals: function () {
             var self = this;
-            this.root.querySelectorAll('[data-translate="true"]').forEach(function (el) {
+            this._getElements().forEach(function (el) {
                 if (self.originalTexts.has(el)) {
                     return;
                 }
@@ -242,42 +297,53 @@
 
             this.saveOriginals();
 
-            var all = Array.from(this.root.querySelectorAll('[data-translate="true"]'));
-
-            var uniqueTexts = [];
-            var seen = {};
-            all.forEach(function (el) {
-                var o = TravelMateTranslate.originalTexts.get(el);
-                if (o && !seen[o]) {
-                    seen[o] = true;
-                    uniqueTexts.push(o);
-                }
-            });
-
-            for (var i = 0; i < uniqueTexts.length; i++) {
-                await this.translateText(uniqueTexts[i], lang);
-            }
-
+            var all = this._getElements();
             var self = this;
+            var memLang = MYMEMORY_TARGET[lang] || lang;
+
+            // ── 1. Apply cached translations immediately (instant feedback) ──
             all.forEach(function (el) {
                 var original = self.originalTexts.get(el);
-                if (original == null) {
+                if (!original) return;
+                if (lang === self.sourceLang) {
+                    self._applyEl(el, original);
                     return;
                 }
-                var memLang = MYMEMORY_TARGET[lang] || lang;
                 var cacheKey = original + '|' + memLang;
-                var translated = lang === self.sourceLang
-                    ? original
-                    : (self.translationCache[cacheKey] || original);
-
-                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                    el.setAttribute('placeholder', translated);
-                } else if (el.tagName === 'OPTION') {
-                    el.textContent = translated;
-                } else {
-                    el.textContent = translated;
+                if (self.translationCache[cacheKey]) {
+                    self._applyEl(el, self.translationCache[cacheKey]);
                 }
             });
+
+            // ── 2. Collect texts not yet cached ──────────────────────────────
+            var toTranslate = [];
+            var seen = {};
+            all.forEach(function (el) {
+                var original = self.originalTexts.get(el);
+                if (!original || lang === self.sourceLang) return;
+                var cacheKey = original + '|' + memLang;
+                if (!self.translationCache[cacheKey] && !seen[original]) {
+                    seen[original] = true;
+                    toTranslate.push(original);
+                }
+            });
+
+            // ── 3. Translate uncached texts and apply each one immediately ───
+            for (var i = 0; i < toTranslate.length; i++) {
+                var text = toTranslate[i];
+                await this.translateText(text, lang);
+                var cacheKey2 = text + '|' + memLang;
+                var translated = this.translationCache[cacheKey2] || text;
+                // apply to all matching elements right away
+                all.forEach(function (el) {
+                    if (self.originalTexts.get(el) === text) {
+                        self._applyEl(el, translated);
+                    }
+                });
+            }
+
+            // ── 4. Persist cache to localStorage ─────────────────────────────
+            this._saveCache();
 
             document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
             document.documentElement.setAttribute('lang', lang);
@@ -296,22 +362,39 @@
             document.querySelectorAll('.lang-option').forEach(function (btn) {
                 btn.classList.toggle('is-active', btn.dataset.lang === lang);
             });
+            // If switching back to source language, restore originals immediately
+            if (lang === this.sourceLang) {
+                var self = this;
+                this._getElements().forEach(function (el) {
+                    var original = self.originalTexts.get(el);
+                    if (original) self._applyEl(el, original);
+                });
+                document.documentElement.setAttribute('dir', 'ltr');
+                document.documentElement.setAttribute('lang', lang);
+                this.closeLangPanel();
+                return;
+            }
             await this.translatePage(lang);
             this.closeLangPanel();
         },
 
         toggleLangPanel: function () {
-            var panel = document.getElementById('langPanel');
-            if (panel) {
-                panel.classList.toggle('is-open');
-            }
+            var panel   = document.getElementById('langPanel');
+            var wrapper = document.getElementById('navbarLang');
+            var btn     = document.getElementById('langToggleBtn');
+            if (!panel) return;
+            var isOpen = panel.classList.toggle('is-open');
+            if (wrapper) wrapper.classList.toggle('is-open', isOpen);
+            if (btn)     btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         },
 
         closeLangPanel: function () {
-            var panel = document.getElementById('langPanel');
-            if (panel) {
-                panel.classList.remove('is-open');
-            }
+            var panel   = document.getElementById('langPanel');
+            var wrapper = document.getElementById('navbarLang');
+            var btn     = document.getElementById('langToggleBtn');
+            if (panel)   panel.classList.remove('is-open');
+            if (wrapper) wrapper.classList.remove('is-open');
+            if (btn)     btn.setAttribute('aria-expanded', 'false');
         }
     };
 

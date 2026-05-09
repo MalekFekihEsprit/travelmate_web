@@ -250,7 +250,6 @@
 {% endblock %}
 
 {% block body %}
-{% include '_travelmate_mymemory_translate.html.twig' %}
 {# Breadcrumb #}
 <nav class="breadcrumb">
     <a href="{{ path('app_home') }}" data-translate="true">Accueil</a>
@@ -547,20 +546,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="{{ asset('js/geocoding-service.js') }}"></script>
 <script src="{{ asset('js/public-geo-map-toggle.js') }}"></script>
-<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
 <script>
-(function () {
-    function bootTranslate() {
-        if (window.TravelMateTranslate) {
-            TravelMateTranslate.init({ sourceLang: 'fr' });
-        }
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bootTranslate);
-    } else {
-        bootTranslate();
-    }
-})();
 
 // ── Seat Map — rendu côté Twig, aucun JS nécessaire ────────
 

@@ -402,7 +402,6 @@
 
 {% block body %}
 
-{% include '_travelmate_mymemory_translate.html.twig' %}
 
 {# ═══════ HERO ═══════ #}
 <section class="eve-hero">
@@ -679,21 +678,7 @@
 
 {% block javascripts %}
 {{ parent() }}
-<script src="{{ asset('js/travelmate-mymemory-translate.js') }}"></script>
-<script>
-(function () {
-    function bootTranslate() {
-        if (window.TravelMateTranslate) {
-            TravelMateTranslate.init({ sourceLang: 'fr' });
-        }
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bootTranslate);
-    } else {
-        bootTranslate();
-    }
-})();
-</script>
+
 <script>
 (function() {
     const searchInput = document.getElementById('searchInput');
