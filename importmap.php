@@ -15,7 +15,7 @@ return [
         'version' => '7.3.0',
     ],
     'chart.js' => [
-        'url' => 'https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.js',
+        'path' => './assets/vendor/chart.js',
     ],
     '@kurkle/color' => [
         'version' => '0.3.4',

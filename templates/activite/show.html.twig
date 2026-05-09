@@ -753,63 +753,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .resa-guarantee svg { flex-shrink: 0; color: var(--color-secondary); }
 
 /* ══════════════════════════════════════════════════════
-   BOUTON MESSAGERIE FLOTTANT
-══════════════════════════════════════════════════════ */
-.chat-fab {
-    position: fixed;
-    bottom: 2rem;
-    left: 2rem;
-    z-index: 500;
-    display: flex;
-    align-items: center;
-    gap: 0;
-    cursor: pointer;
-}
-.chat-fab__btn {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    background: #3b2a20;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-    position: relative;
-}
-.chat-fab__btn:hover {
-    transform: scale(1.07);
-    box-shadow: 0 10px 32px rgba(0,0,0,0.25);
-}
-.chat-fab__dot {
-    position: absolute;
-    top: 2px; right: 2px;
-    width: 12px; height: 12px;
-    background: #22c55e;
-    border-radius: 50%;
-    border: 2px solid #3b2a20;
-}
-.chat-fab__tooltip {
-    position: absolute;
-    left: 66px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #3b2a20;
-    color: #fff;
-    padding: 0.4rem 0.85rem;
-    border-radius: var(--radius-md);
-    font-size: 0.82rem;
-    font-weight: 500;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--transition-fast);
-}
-.chat-fab:hover .chat-fab__tooltip { opacity: 1; }
-
-/* ══════════════════════════════════════════════════════
    BLOC MÉTÉO DANS LA SIDEBAR
 ══════════════════════════════════════════════════════ */
 .weather-widget {
@@ -1535,17 +1478,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     </aside>
 
 </div>{# /show-layout #}
-
-{# ── Bouton messagerie flottant ─────────────────────────────────────────── #}
-<div class="chat-fab">
-    <button type="button" class="chat-fab__btn" aria-label="Contacter le support">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="chat-fab__dot"></span>
-    </button>
-    <div class="chat-fab__tooltip" data-translate="true">Une question ? On vous répond</div>
-</div>
 
 {# ══════════════════════════════════════════════════════════════════════════
    SECTION RECOMMANDATIONS IA — "Vous pourriez aussi aimer"
