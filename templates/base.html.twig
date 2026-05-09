@@ -34,16 +34,24 @@
        Adapte les routes Symfony selon ton projet
     ------------------------------------------ #}
     {% set currentRoute = app.request.attributes.get('_route') %}
-    {% set availableRoutes = ['app_home', 'app_destination_index', 'app_destination_show', 'app_hebergement_index', 'app_hebergement_show'] %}
-    {% set navItems = [
-        { label: 'Accueil',        route: 'app_home',    href: path('app_home') },
-        { label: 'Destinations',   route: 'app_destination_index',          href: path('app_destination_index') },
-        { label: 'Hébergements',   route: 'app_hebergement_index',          href: path('app_hebergement_index') },
-        { label: 'Catégories',     route: 'app_categories',          href: path('app_categories') },
-        { label: 'Activités',      route: 'app_activites',          href: path('app_activites') },
-        { label: 'Événements',     route: 'app_evenements',         href: path('app_evenements') },
-        { label: 'Voyages',        route: 'app_voyages',            href: path('app_voyages') },
-        { label: 'Budgets',        route: null,          href: null }
+
+    {# Détection active élargie par famille de routes #}
+    {% set isDestination   = currentRoute in ['app_destination_index', 'app_destination_show'] %}
+    {% set isHebergement   = currentRoute in ['app_hebergement_index', 'app_hebergement_show'] %}
+    {% set isEvenement     = currentRoute in ['app_evenements', 'app_evenement_show'] %}
+    {% set isVoyage        = currentRoute in ['app_voyages', 'app_voyages_show', 'app_voyages_participants', 'app_itineraires_index', 'app_itineraires_create', 'app_etapes_jour', 'app_etapes_create'] %}
+    {% set isBudget        = currentRoute starts with 'app_budget' %}
+    {% set isActivite      = currentRoute starts with 'app_activit' or currentRoute in ['app_categories', 'app_categorie_show'] %}
+
+    {% set navBeforeItems = [
+        { label: 'Accueil',        route: 'app_home',              href: path('app_home'),              active: currentRoute == 'app_home' },
+        { label: 'Destinations',   route: 'app_destination_index', href: path('app_destination_index'), active: isDestination },
+        { label: 'Hébergements',   route: 'app_hebergement_index', href: path('app_hebergement_index'), active: isHebergement },
+    ] %}
+    {% set navAfterItems = [
+        { label: 'Événements',     route: 'app_evenements',        href: path('app_evenements'),        active: isEvenement },
+        { label: 'Voyages',        route: 'app_voyages',           href: path('app_voyages'),           active: isVoyage },
+        { label: 'Budgets',        route: 'app_budget_index',      href: path('app_budget_index'),      active: isBudget },
     ] %}
 
     <header class="app-navbar">
@@ -65,19 +73,42 @@
             {# Navigation principale #}
             <div class="nav-wrap">
                 <nav class="main-nav" aria-label="Navigation principale">
-                    {% for item in navItems %}
-                        {% if item.href %}
-                            <a
-                                href="{{ item.href }}"
-                                class="main-nav__link {{ currentRoute == item.route ? 'is-active' : '' }}"
-                            >
-                                {{ item.label }}
+                    {% for item in navBeforeItems %}
+                        <a href="{{ item.href }}" class="main-nav__link {{ item.active ? 'is-active' : '' }}">{{ item.label }}</a>
+                    {% endfor %}
+
+                    {# Activités + Catégories fusionnées en dropdown #}
+                    <div class="nav-dropdown">
+                        <button type="button"
+                                class="main-nav__link nav-dropdown__trigger {{ isActivite ? 'is-active' : '' }}"
+                                aria-haspopup="true" aria-expanded="false">
+                            Activités
+                            <svg class="nav-dropdown__chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <div class="nav-dropdown__menu" role="menu">
+                            <a href="{{ path('app_activites') }}"
+                               class="nav-dropdown__choice {{ currentRoute starts with 'app_activit' ? 'is-active' : '' }}"
+                               role="menuitem">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 6h16M4 10h16M4 14h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                </svg>
+                                Toutes les activités
                             </a>
-                        {% else %}
-                            <span class="main-nav__link is-disabled" aria-disabled="true">
-                                {{ item.label }}
-                            </span>
-                        {% endif %}
+                            <a href="{{ path('app_categories') }}"
+                               class="nav-dropdown__choice {{ currentRoute in ['app_categories', 'app_categorie_show'] ? 'is-active' : '' }}"
+                               role="menuitem">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                                </svg>
+                                Par catégorie
+                            </a>
+                        </div>
+                    </div>
+
+                    {% for item in navAfterItems %}
+                        <a href="{{ item.href }}" class="main-nav__link {{ item.active ? 'is-active' : '' }}">{{ item.label }}</a>
                     {% endfor %}
                 </nav>
             </div>
@@ -407,6 +438,39 @@
             .then(function (d) { setBadge(d.count); if (open) renderList(d.notifications || []); })
             .catch(function () {});
     }, 60000);
+})();
+
+// ── Nav dropdown Activités ──────────────────────────────────────────────
+(function () {
+    var dropdowns = document.querySelectorAll('.nav-dropdown');
+    dropdowns.forEach(function (dd) {
+        var trigger = dd.querySelector('.nav-dropdown__trigger');
+        if (!trigger) return;
+
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isOpen = dd.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+    });
+
+    document.addEventListener('click', function () {
+        dropdowns.forEach(function (dd) {
+            dd.classList.remove('is-open');
+            var trigger = dd.querySelector('.nav-dropdown__trigger');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            dropdowns.forEach(function (dd) {
+                dd.classList.remove('is-open');
+                var trigger = dd.querySelector('.nav-dropdown__trigger');
+                if (trigger) { trigger.setAttribute('aria-expanded', 'false'); trigger.focus(); }
+            });
+        }
+    });
 })();
 </script>
 
