@@ -49,7 +49,7 @@ class Hebergement
     #[ORM\JoinColumn(name: 'added_by', referencedColumnName: 'id')]
     private ?User $user = null;
 
-    #[ORM\Column(name: 'image_name', type: Types::STRING, length: 255, nullable: true)]
+    #[ORM\Column(name: 'image_name', type: Types::STRING, length: 2048, nullable: true)]
     private ?string $imageName = null;
 
     #[Vich\UploadableField(mapping: 'hebergement_images', fileNameProperty: 'imageName')]

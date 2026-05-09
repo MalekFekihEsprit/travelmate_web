@@ -86,7 +86,7 @@ services:
 
     App\Service\UnsplashImageService:
         arguments:
-            $accessKey: '%env(UNSPLASH_ACCESS_KEY)%'
+            $accessKeys: '%env(UNSPLASH_ACCESS_KEYS)%'
 
     App\Service\YouTubeVideoService:
         arguments:

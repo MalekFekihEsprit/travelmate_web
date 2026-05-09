@@ -6,6 +6,7 @@ use App\Entity\Hebergement;
 use App\Repository\DestinationRepository;
 use App\Repository\HebergementRepository;
 use App\Service\HebergementScraperService;
+use App\Service\UnsplashImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -160,7 +161,8 @@ class HebergementController extends AbstractController
     public function saveSelectedHebergements(
         Request $request,
         EntityManagerInterface $em,
-        DestinationRepository $destinationRepository
+        DestinationRepository $destinationRepository,
+        UnsplashImageService $unsplashImageService
     ): JsonResponse {
         $payload = json_decode($request->getContent(), true);
  
@@ -177,6 +179,9 @@ class HebergementController extends AbstractController
         if ($destination === null) {
             return $this->json(['error' => 'Destination introuvable.'], Response::HTTP_BAD_REQUEST);
         }
+
+        $destinationName = trim((string) $destination->getNomDestination());
+        $destinationCountry = trim((string) ($destination->getPaysDestination() ?? ''));
  
         $saved  = 0;
         $errors = [];
@@ -193,13 +198,17 @@ class HebergementController extends AbstractController
                 $hebergement->setLongitudeHebergement(isset($data['longitude']) ? (float) $data['longitude'] : null);
                 $hebergement->setDestination($destination);
  
-                // Save image URL directly (no download).
-                if (!empty($data['image_url']) && is_string($data['image_url'])) {
-                    $url = $this->canonicalizeRemoteImageUrl($data['image_url']);
-                    if ($url !== '' && mb_strlen($url) <= 255) {
-                        $hebergement->setImageName($url);
-                        $hebergement->setUpdatedAt(new \DateTimeImmutable());
-                    }
+                $imageUrl = $this->resolveHebergementImageUrl(
+                    $unsplashImageService,
+                    (string) ($data['name'] ?? ''),
+                    $destinationName,
+                    $destinationCountry,
+                    isset($data['image_url']) && is_string($data['image_url']) ? $data['image_url'] : null,
+                );
+
+                if ($imageUrl !== null && $imageUrl !== '' && mb_strlen($imageUrl) <= 2048) {
+                    $hebergement->setImageName($imageUrl);
+                    $hebergement->setUpdatedAt(new \DateTimeImmutable());
                 }
  
                 $em->persist($hebergement);
@@ -229,6 +238,50 @@ class HebergementController extends AbstractController
         $trimmed = explode('?', $trimmed, 2)[0];
 
         return trim($trimmed);
+    }
+
+    private function resolveHebergementImageUrl(
+        UnsplashImageService $unsplashImageService,
+        string $hebergementName,
+        string $destinationName,
+        string $destinationCountry,
+        ?string $fallbackUrl = null
+    ): ?string {
+        $queries = array_values(array_filter(array_unique([
+            $this->buildUnsplashQuery($hebergementName, $destinationName, $destinationCountry),
+            $this->buildUnsplashQuery($hebergementName, $destinationName, ''),
+            $this->buildUnsplashQuery($hebergementName, '', $destinationCountry),
+            $this->buildUnsplashQuery('', $destinationName, $destinationCountry),
+            $this->buildUnsplashQuery('', $destinationName, ''),
+            $this->buildUnsplashQuery($hebergementName, '', ''),
+        ])));
+
+        foreach ($queries as $query) {
+            $imageUrl = $unsplashImageService->findPhotoUrl($query);
+            if ($imageUrl !== null && $imageUrl !== '') {
+                return $this->canonicalizeRemoteImageUrl($imageUrl);
+            }
+        }
+
+        if ($fallbackUrl !== null) {
+            $fallbackUrl = $this->canonicalizeRemoteImageUrl($fallbackUrl);
+            if ($fallbackUrl !== '') {
+                return $fallbackUrl;
+            }
+        }
+
+        return null;
+    }
+
+    private function buildUnsplashQuery(string $hebergementName, string $destinationName, string $destinationCountry): string
+    {
+        $parts = array_values(array_filter([
+            trim($hebergementName),
+            trim($destinationName),
+            trim($destinationCountry),
+        ]));
+
+        return trim(preg_replace('/\s+/', ' ', implode(' - ', $parts)) ?? '');
     }
 
     #[Route('/{id_hebergement}', name: 'app_hebergement_show', methods: ['GET'], requirements: ['id_hebergement' => '\d+'])]

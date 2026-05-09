@@ -12,7 +12,7 @@ class UnsplashImageService
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
-        private readonly string $accessKey,
+        private readonly string $accessKeys,
     ) {}
 
     /**
@@ -21,32 +21,45 @@ class UnsplashImageService
      */
     public function findPhotoUrl(string $query): ?string
     {
+        $keys = array_values(array_filter(array_map('trim', preg_split('/[;,\n]+/', $this->accessKeys) ?: [])));
+        if ($keys === []) {
+            $this->logger->warning('Unsplash: no access keys configured.');
+            return null;
+        }
+
         try {
-            $response = $this->httpClient->request('GET', self::API_URL, [
-                'headers' => [
-                    'Authorization' => 'Client-ID ' . $this->accessKey,
-                ],
-                'query' => [
-                    'query'          => $query,
-                    'per_page'       => 1,
-                    'orientation'    => 'landscape',
-                    'content_filter' => 'high',
-                ],
-            ]);
+            foreach ($keys as $accessKey) {
+                try {
+                    $response = $this->httpClient->request('GET', self::API_URL, [
+                        'headers' => [
+                            'Authorization' => 'Client-ID ' . $accessKey,
+                        ],
+                        'query' => [
+                            'query'          => $query,
+                            'per_page'       => 1,
+                            'orientation'    => 'landscape',
+                            'content_filter' => 'high',
+                        ],
+                    ]);
 
-            $data = $response->toArray();
+                    $data = $response->toArray();
+                    $url = $data['results'][0]['urls']['regular'] ?? null;
 
-            $url = $data['results'][0]['urls']['regular'] ?? null;
+                    if ($url !== null) {
+                        return $url;
+                    }
 
-            if ($url === null) {
-                $this->logger->warning('Unsplash: no results for query: ' . $query);
+                    $this->logger->warning('Unsplash: no results for query: ' . $query);
+                } catch (\Throwable $keyException) {
+                    $this->logger->warning('Unsplash key failed, trying next key: ' . $keyException->getMessage());
+                }
             }
-
-            return $url;
 
         } catch (\Throwable $e) {
             $this->logger->error('Unsplash API error: ' . $e->getMessage());
             return null;
         }
+
+        return null;
     }
 }

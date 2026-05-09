@@ -4,10 +4,16 @@
 
 {% block body %}
 <section class="destination-detail">
+    {% set hebergementHeaderImage = hebergement.imageName
+        ? (hebergement.imageName starts with 'http' ? hebergement.imageName : asset('uploads/hebergements/' ~ hebergement.imageName))
+        : (hebergement.destination and hebergement.destination.imageName
+            ? (hebergement.destination.imageName starts with 'http' ? hebergement.destination.imageName : asset('uploads/destinations/' ~ hebergement.destination.imageName))
+            : null) %}
     <div class="destination-detail__header">
-        <div class="destination-detail__flag-rating">
-            <div style="font-size: 5rem;">🏨</div>
-        </div>
+        {% if hebergementHeaderImage %}
+            <img src="{{ hebergementHeaderImage }}" alt="{{ hebergement.nomHebergement }}" class="destination-detail__header-image">
+        {% endif %}
+        <div class="destination-detail__header-overlay"></div>
         <h1>{{ hebergement.nomHebergement }}</h1>
         <p style="color: rgba(255, 255, 255, 0.85); font-size: 1.1rem;">
             {% if hebergement.destination %}
@@ -55,12 +61,28 @@
     text-align: center;
     margin-bottom: 3rem;
     padding: 3.5rem 2.5rem;
-    background: var(--color-primary);
+    background: linear-gradient(145deg, rgba(28, 20, 14, 0.65), rgba(196, 111, 75, 0.55));
     border-radius: 20px;
     color: white;
     box-shadow: 0 20px 60px rgba(196, 111, 75, 0.25);
     position: relative;
     overflow: hidden;
+}
+
+.destination-detail__header-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.destination-detail__header-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, rgba(28, 20, 14, 0.45), rgba(196, 111, 75, 0.35));
+    z-index: 0;
 }
 
 .destination-detail__header h1 {
@@ -71,23 +93,6 @@
     color: white;
     position: relative;
     z-index: 1;
-}
-
-.destination-detail__flag-rating {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
-}
-
-.destination-detail__flag-image {
-    width: 120px;
-    height: 120px;
-    border-radius: 16px;
-    box-shadow: 0 12px 40px rgba(196, 111, 75, 0.35);
-    object-fit: cover;
-    border: 4px solid white;
 }
 
 .destination-detail__grid {
