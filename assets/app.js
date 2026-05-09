@@ -1,6 +1,6 @@
 import './bootstrap.js';
 import './styles/app.css';
-
+import './styles/base.css';
 document.addEventListener('DOMContentLoaded', function () {
     const toggleButtons = document.querySelectorAll('.toggle-password');
 

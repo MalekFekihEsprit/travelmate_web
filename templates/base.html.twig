@@ -24,96 +24,96 @@
         {{ importmap('app') }}
     {% endblock %}
     {% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('styles/base.css') }}">
+        {{ importmap('app') }}
     {% endblock %}
     <style>
-    /* ── Traduction dans la navbar ── */
-    .navbar-lang {
-        position: relative;
-    }
-    .navbar-lang__btn {
-        color: var(--color-text-muted);
-        transition: color var(--transition-fast), background var(--transition-fast);
-    }
-    .navbar-lang__btn:hover,
-    .navbar-lang.is-open .navbar-lang__btn {
-        color: var(--color-primary);
-        background: var(--color-hover);
-        border-radius: 50%;
-    }
-    .navbar-lang__panel {
-        display: none;
-        position: absolute;
-        top: calc(100% + 10px);
-        right: 0;
-        min-width: 190px;
-        background: #fff;
-        border: 1px solid rgba(196,111,75,0.15);
-        border-radius: 14px;
-        padding: 0.5rem 0.5rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.13);
-        z-index: 9999;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-    .navbar-lang__panel.is-open { display: flex; }
-    .navbar-lang__panel-title {
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #b0a09a;
-        padding: 0.2rem 0.5rem 0.4rem;
-    }
-    .lang-option {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.48rem 0.75rem;
-        border-radius: 8px;
-        border: none;
-        background: transparent;
-        font: inherit;
-        font-size: 0.88rem;
-        color: #3d322d;
-        cursor: pointer;
-        transition: background 150ms ease, color 150ms ease;
-        text-align: left;
-        width: 100%;
-    }
-    .lang-option:hover { background: rgba(196,111,75,0.08); }
-    .lang-option.is-active {
-        background: rgba(196,111,75,0.12);
-        color: var(--color-primary, #c46f4b);
-        font-weight: 600;
-    }
-    .lang-option__flag { font-size: 1.1rem; flex-shrink: 0; }
-    .lang-option__label { flex: 1; }
-    .lang-option__check {
-        font-size: 0.8rem;
-        color: var(--color-primary, #c46f4b);
-        display: none;
-    }
-    .lang-option.is-active .lang-option__check { display: block; }
-    .translate-loading-bar {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        height: 3px;
-        background: var(--color-primary, #c46f4b);
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: transform 0.3s ease;
-        z-index: 99999;
-        border-radius: 0 999px 999px 0;
-    }
-    .translate-loading-bar.is-loading { transform: scaleX(0.7); }
-    .translate-loading-bar.is-done    { transform: scaleX(1); transition: transform 0.15s ease; }
-    [data-theme="dark"] .navbar-lang__panel {
-        background: #2a2320;
-        border-color: rgba(196,111,75,0.2);
-    }
-    [data-theme="dark"] .lang-option { color: #d4c4bc; }
-    [data-theme="dark"] .lang-option:hover { background: rgba(196,111,75,0.12); }
+        /* ── Traduction dans la navbar ── */
+        .navbar-lang {
+            position: relative;
+        }
+        .navbar-lang__btn {
+            color: var(--color-text-muted);
+            transition: color var(--transition-fast), background var(--transition-fast);
+        }
+        .navbar-lang__btn:hover,
+        .navbar-lang.is-open .navbar-lang__btn {
+            color: var(--color-primary);
+            background: var(--color-hover);
+            border-radius: 50%;
+        }
+        .navbar-lang__panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 190px;
+            background: #fff;
+            border: 1px solid rgba(196,111,75,0.15);
+            border-radius: 14px;
+            padding: 0.5rem 0.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+            z-index: 9999;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .navbar-lang__panel.is-open { display: flex; }
+        .navbar-lang__panel-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #b0a09a;
+            padding: 0.2rem 0.5rem 0.4rem;
+        }
+        .lang-option {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.48rem 0.75rem;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            font: inherit;
+            font-size: 0.88rem;
+            color: #3d322d;
+            cursor: pointer;
+            transition: background 150ms ease, color 150ms ease;
+            text-align: left;
+            width: 100%;
+        }
+        .lang-option:hover { background: rgba(196,111,75,0.08); }
+        .lang-option.is-active {
+            background: rgba(196,111,75,0.12);
+            color: var(--color-primary, #c46f4b);
+            font-weight: 600;
+        }
+        .lang-option__flag { font-size: 1.1rem; flex-shrink: 0; }
+        .lang-option__label { flex: 1; }
+        .lang-option__check {
+            font-size: 0.8rem;
+            color: var(--color-primary, #c46f4b);
+            display: none;
+        }
+        .lang-option.is-active .lang-option__check { display: block; }
+        .translate-loading-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--color-primary, #c46f4b);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+            z-index: 99999;
+            border-radius: 0 999px 999px 0;
+        }
+        .translate-loading-bar.is-loading { transform: scaleX(0.7); }
+        .translate-loading-bar.is-done    { transform: scaleX(1); transition: transform 0.15s ease; }
+        [data-theme="dark"] .navbar-lang__panel {
+            background: #2a2320;
+            border-color: rgba(196,111,75,0.2);
+        }
+        [data-theme="dark"] .lang-option { color: #d4c4bc; }
+        [data-theme="dark"] .lang-option:hover { background: rgba(196,111,75,0.12); }
     </style>
 </head>
 <body>
