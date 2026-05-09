@@ -155,8 +155,16 @@
                      data-destination-id="{{ hebergement.destination ? hebergement.destination.idDestination : '' }}">
 
                     <div class="destination-card__image-wrapper">
+                        {% set hebergementImageSrc = null %}
                         {% if hebergement.imageName %}
                             {% set hebergementImageSrc = hebergement.imageName starts with 'http' ? hebergement.imageName : asset('uploads/hebergements/' ~ hebergement.imageName) %}
+                        {% elseif hebergement.destination and hebergement.destination.imageName %}
+                            {% set hebergementImageSrc = hebergement.destination.imageName starts with 'http'
+                                ? hebergement.destination.imageName
+                                : asset('uploads/destinations/' ~ hebergement.destination.imageName) %}
+                        {% endif %}
+
+                        {% if hebergementImageSrc %}
                             <img src="{{ hebergementImageSrc }}" alt="{{ hebergement.nomHebergement }}" class="destination-card__image">
                         {% else %}
                             <div class="destination-card__image-placeholder">🏨</div>
@@ -387,20 +395,18 @@ function closeHebergementModal() {
     function closeModal() { overlay.hidden = true; }
 
     // ── Fetch scrape results ──────────────────────────────────────────────────
-    function getSelectedDestinationName() {
+    function getSelectedDestinationId() {
         const destinationFilter = document.getElementById('destinationFilter');
-        const selectedText = destinationFilter?.options[destinationFilter.selectedIndex]?.textContent?.trim() || '';
-        if (!selectedText || selectedText.toLowerCase().includes('toutes les destinations')) {
+        const selectedValue = destinationFilter?.value || '';
+        if (!selectedValue || selectedValue === '0') {
             return '';
         }
 
-        return selectedText.includes(' - ')
-            ? selectedText.split(' - ')[0].trim()
-            : selectedText;
+        return selectedValue;
     }
 
     function startScrape() {
-        const dest = getSelectedDestinationName();
+        const dest = getSelectedDestinationId();
         if (!dest) {
             showStatus('Veuillez sélectionner une destination.', 'error');
             return;
@@ -412,7 +418,7 @@ function closeHebergementModal() {
         scrapedItems = [];
         selectedIndices.clear();
 
-        fetch(`${SCRAPE_URL}?destination=${encodeURIComponent(dest)}`)
+        fetch(`${SCRAPE_URL}?destination_id=${encodeURIComponent(dest)}`)
             .then(r => r.json())
             .then(data => {
                 setStartLoading(false);

@@ -117,10 +117,22 @@ class HebergementController extends AbstractController
      * The frontend renders the results as selectable cards.
      */
     #[Route('/scrape', name: 'app_hebergement_scrape', methods: ['GET'])]
-    public function scrapeHebergements( Request $request, HebergementScraperService $scraperService): JsonResponse {
+    public function scrapeHebergements(
+        Request $request,
+        HebergementScraperService $scraperService,
+        DestinationRepository $destinationRepository
+    ): JsonResponse {
+        $destinationId = $request->query->getInt('destination_id', 0);
         $destination = trim((string) $request->query->get('destination', 'Paris'));
         $maxResults = max(1, min(40, (int) $request->query->get('max', 20)));
  
+        if ($destinationId > 0) {
+            $selectedDestination = $destinationRepository->find($destinationId);
+            if ($selectedDestination !== null && $selectedDestination->getNomDestination()) {
+                $destination = $selectedDestination->getNomDestination();
+            }
+        }
+
         if ($destination === '') {
             return $this->json(['error' => 'Veuillez fournir une destination.'], Response::HTTP_BAD_REQUEST);
         }
@@ -142,7 +154,7 @@ class HebergementController extends AbstractController
      * POST /hebergement/save-scraped
      *
      * Receives a JSON body: { "items": [ {...}, ... ] }
-     * Creates Hebergement entities, downloads images, persists everything.
+        * Creates Hebergement entities and stores the remote image URL directly.
      */
     #[Route('/save-scraped', name: 'app_hebergement_save_scraped', methods: ['POST'])]
     public function saveSelectedHebergements(

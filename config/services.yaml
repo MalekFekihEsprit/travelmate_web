@@ -81,7 +81,8 @@ services:
             $rapidApiHost: '%env(RAPIDAPI_HOST)%'
             $rapidApiUrl: '%env(RAPIDAPI_URL)%'
             $rapidApiCurrency: '%env(RAPIDAPI_CURRENCY)%'
-            $rapidApiLanguage: '%env(RAPIDAPI_LANGUAGE)%'
+            $rapidApiLocale: '%env(RAPIDAPI_LOCALE)%'
+            $rapidApiDomain: '%env(RAPIDAPI_DOMAIN)%'
 
     App\Service\UnsplashImageService:
         arguments:
