@@ -6,7 +6,9 @@
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('vendor/leaflet/leaflet.css') }}" />
     <style>
-/* Destinations index — hero (aligné sur la page Événements) */
+/* ─────────────────────────────────────────────────────────────────────────
+   HERO — aligné sur la page Événements
+   ───────────────────────────────────────────────────────────────────────── */
 .eve-hero {
     position: relative;
     height: 480px;
@@ -129,35 +131,615 @@
     .hero-stat__label { font-size: 0.65rem; }
 }
 
-        .destinations-page .destinations-grid {
-            display: grid !important;
-            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-            gap: 2rem !important;
-            align-items: stretch;
-        }
+/* ─────────────────────────────────────────────────────────────────────────
+   GRILLE DESTINATIONS — corrigée (pas de scope parent cassé)
+   ───────────────────────────────────────────────────────────────────────── */
+.destinations-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding: 2rem 0;
+    align-items: stretch;
+}
+.destinations-grid > .destination-card {
+    width: 100%;
+    min-width: 0;
+}
+@media (max-width: 1024px) {
+    .destinations-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 640px) {
+    .destinations-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
 
-        .destinations-page .destinations-grid > .destination-card {
-            width: 100% !important;
-            min-width: 0;
-        }
+/* ─────────────────────────────────────────────────────────────────────────
+   CARTES DESTINATIONS — Design moderne
+   ───────────────────────────────────────────────────────────────────────── */
+.destination-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e8eaed;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+    transition: transform .25s cubic-bezier(.22,1,.36,1),
+                box-shadow .25s cubic-bezier(.22,1,.36,1),
+                border-color .2s;
+    position: relative;
+    outline: none;
+}
+.destination-card:hover,
+.destination-card:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+    border-color: #d0d3d8;
+}
+.destination-card:focus-visible {
+    outline: 2px solid var(--color-primary, #c46f4b);
+    outline-offset: 2px;
+}
 
-        @media (max-width: 1024px) {
-            .destinations-page .destinations-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            }
-        }
+/* ── Image ── */
+.destination-card__image-wrapper {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background: #f4f5f7;
+    flex-shrink: 0;
+}
+.destination-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .5s cubic-bezier(.22,1,.36,1);
+}
+.destination-card:hover .destination-card__image {
+    transform: scale(1.04);
+}
+.destination-card__image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f0f2f5 0%, #e8eaed 100%);
+    color: #b0b7c3;
+}
 
-        @media (max-width: 768px) {
-            .destinations-page .destinations-grid {
-                grid-template-columns: 1fr !important;
-                gap: 1.2rem !important;
-            }
-        }
+/* ── Pill région ── */
+.destination-card__region-pill {
+    position: absolute;
+    top: .85rem;
+    left: .85rem;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: 999px;
+    padding: .25rem .75rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #374151;
+    box-shadow: 0 1px 4px rgba(0,0,0,.10);
+    pointer-events: none;
+}
+
+/* ── Bouton favori ── */
+.destination-card__favorite-form {
+    position: absolute;
+    top: .75rem;
+    right: .75rem;
+    margin: 0;
+}
+.destination-card__favorite-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .2s, color .2s, transform .2s;
+    color: #c0c4ce;
+    box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+.destination-card__favorite-btn:hover {
+    background: #fff;
+    color: #e11d48;
+    transform: scale(1.1);
+}
+.destination-card__favorite-btn.is-favorite {
+    background: #fff0f3;
+    color: #e11d48;
+    border-color: #fecdd3;
+}
+
+/* ── Contenu ── */
+.destination-card__content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.1rem 1.25rem;
+    gap: .35rem;
+}
+
+/* ── En-tête titre + note ── */
+.destination-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .1rem;
+}
+.destination-card__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+    margin: 0;
+    flex: 1;
+    letter-spacing: -.01em;
+}
+.destination-card__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    background: #fef9ec;
+    border: 1px solid #fde68a;
+    border-radius: 999px;
+    padding: .2rem .55rem;
+    font-size: .78rem;
+    font-weight: 700;
+    color: #92400e;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.destination-card__rating svg { color: #f59e0b; }
+
+/* ── Pays ── */
+.destination-card__location {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--color-primary, #c46f4b);
+    letter-spacing: .01em;
+    margin: 0;
+}
+.destination-card__location svg { flex-shrink: 0; }
+
+/* ── Description ── */
+.destination-card__description {
+    font-size: .78rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.55;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* ── Footer tags + CTA ── */
+.destination-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: .85rem;
+    border-top: 1px solid #f3f4f6;
+    gap: .5rem;
+}
+.destination-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    flex: 1;
+}
+.destination-card__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    border-radius: 999px;
+    padding: .22rem .6rem;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    white-space: nowrap;
+}
+.destination-card__tag--climate {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+.destination-card__tag--season {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+.destination-card__cta {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--color-primary, #c46f4b);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background .2s, transform .2s;
+    box-shadow: 0 2px 8px rgba(196,111,75,.3);
+}
+.destination-card:hover .destination-card__cta {
+    background: var(--color-primary-dark, #a85a3a);
+    transform: translateX(2px);
+}
+
+/* ── Empty state ── */
+.destinations-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    padding: 5rem 2rem;
+    text-align: center;
+}
+.destinations-empty__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #f4f5f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #b0b7c3;
+    margin-bottom: .5rem;
+}
+.destinations-empty__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+}
+.destinations-empty__text {
+    font-size: .875rem;
+    color: #9ca3af;
+    margin: 0;
+    max-width: 320px;
+    line-height: 1.6;
+}
+.destinations-empty__action {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: .5rem;
+    padding: .7rem 1.4rem;
+    border-radius: 999px;
+    background: var(--color-primary, #c46f4b);
+    color: #fff;
+    font-size: .875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s, transform .2s;
+    box-shadow: 0 2px 10px rgba(196,111,75,.28);
+}
+.destinations-empty__action:hover {
+    background: var(--color-primary-dark, #a85a3a);
+    transform: translateY(-1px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TOOLBAR
+   ───────────────────────────────────────────────────────────────────────── */
+.destinations-toolbar-wrapper {
+    margin-bottom: 1.5rem;
+}
+.toolbar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.toolbar-header__text {}
+.toolbar-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 .15rem;
+}
+.toolbar-subtitle {
+    font-size: .8rem;
+    color: #9ca3af;
+    margin: 0;
+}
+.toolbar-map-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 1.1rem;
+    border-radius: 999px;
+    background: var(--color-primary, #c46f4b);
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s, transform .2s;
+    box-shadow: 0 2px 8px rgba(196,111,75,.28);
+    flex-shrink: 0;
+}
+.toolbar-map-btn:hover { background: var(--color-primary-dark, #a85a3a); transform: translateY(-1px); }
+.toolbar-map-btn__icon { font-size: 1rem; }
+
+.destinations-toolbar {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #e8eaed;
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.toolbar-search {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex: 1;
+    min-width: 160px;
+}
+.toolbar-search__icon { color: #9ca3af; flex-shrink: 0; }
+.toolbar-search__input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: .875rem;
+    color: #111827;
+    width: 100%;
+}
+.toolbar-search__input::placeholder { color: #b0b7c3; }
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: #e8eaed;
+    flex-shrink: 0;
+}
+.toolbar-filters {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.filter-group {}
+.toolbar-filter__select {
+    border: 1px solid #e8eaed;
+    border-radius: 8px;
+    padding: .4rem .75rem;
+    font: inherit;
+    font-size: .8rem;
+    color: #374151;
+    background: #f9fafb;
+    cursor: pointer;
+    outline: none;
+    transition: border-color .2s;
+}
+.toolbar-filter__select:focus { border-color: var(--color-primary, #c46f4b); }
+.toolbar-info { flex-shrink: 0; }
+.toolbar-count { font-size: .82rem; color: #6b7280; }
+.toolbar-count strong { color: #111827; font-weight: 600; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TOASTS / FLASH
+   ───────────────────────────────────────────────────────────────────────── */
+.destinations-toast-stack {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    max-width: 340px;
+}
+.destinations-flash {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .85rem 1rem;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #e8eaed;
+    box-shadow: 0 4px 16px rgba(0,0,0,.1);
+    font-size: .85rem;
+    line-height: 1.4;
+    animation: flashIn .22s ease;
+}
+.destinations-flash.is-hiding { animation: flashOut .22s ease forwards; }
+@keyframes flashIn  { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:none; } }
+@keyframes flashOut { to   { opacity:0; transform:translateX(20px); } }
+.destinations-flash--success { border-left: 3px solid #22c55e; }
+.destinations-flash--warning { border-left: 3px solid #f59e0b; }
+.destinations-flash--error   { border-left: 3px solid #ef4444; }
+.destinations-flash__title { font-weight: 700; color: #111827; display: block; margin-bottom: .1rem; }
+.destinations-flash__message { color: #6b7280; }
+.destinations-flash__close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.destinations-flash__close:hover { color: #374151; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   MODAL DESTINATION
+   ───────────────────────────────────────────────────────────────────────── */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.modal.active { display: flex; }
+.modal-content {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 860px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,.2);
+}
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    z-index: 10;
+    background: rgba(255,255,255,.85);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: color .2s, background .2s;
+}
+.modal-close:hover { color: #111827; background: #fff; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   MAP OVERLAY
+   ───────────────────────────────────────────────────────────────────────── */
+.map-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+}
+.map-overlay.is-open { opacity: 1; pointer-events: auto; }
+.map-overlay__panel {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,.22);
+    transform: scale(.96) translateY(20px);
+    transition: transform .3s cubic-bezier(.22,1,.36,1);
+}
+.map-overlay.is-open .map-overlay__panel { transform: none; }
+.map-overlay__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255,255,255,.9);
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #374151;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    z-index: 10;
+    transition: background .2s, color .2s;
+}
+.map-overlay__close:hover { background: #fff; color: #111827; }
+.map-overlay__header {
+    padding: 1.5rem 1.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.map-overlay__eyebrow {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--color-primary, #c46f4b);
+    display: block;
+    margin-bottom: .25rem;
+}
+.map-overlay__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+.map-overlay__legend { font-size: .78rem; color: #9ca3af; }
+.map-overlay__map {
+    flex: 1;
+    min-height: 400px;
+}
+.destination-map-tooltip {
+    font-family: 'Outfit', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,.14);
+}
     </style>
 {% endblock %}
 
 {% block body %}
 <section class="destinations-page">
+
+    {# ── Hero ── #}
     <section class="eve-hero">
         <div class="eve-hero__bg"></div>
         <div class="eve-hero__content">
@@ -194,9 +776,10 @@
         </div>
     </section>
 
+    {# ── Flash messages ── #}
     {% set successFlashes = app.flashes('success') %}
     {% set warningFlashes = app.flashes('warning') %}
-    {% set errorFlashes = app.flashes('error') %}
+    {% set errorFlashes   = app.flashes('error') %}
 
     {% if successFlashes is not empty or warningFlashes is not empty or errorFlashes is not empty %}
         <div class="destinations-toast-stack" aria-live="polite" aria-atomic="true">
@@ -204,28 +787,27 @@
                 <div class="destinations-flash destinations-flash--success" data-destinations-toast>
                     <strong class="destinations-flash__title">Opération réussie</strong>
                     <div class="destinations-flash__message">{{ message }}</div>
-                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer">×</button>
                 </div>
             {% endfor %}
-
             {% for message in warningFlashes %}
                 <div class="destinations-flash destinations-flash--warning" data-destinations-toast>
                     <strong class="destinations-flash__title">Attention</strong>
                     <div class="destinations-flash__message">{{ message }}</div>
-                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer">×</button>
                 </div>
             {% endfor %}
-
             {% for message in errorFlashes %}
                 <div class="destinations-flash destinations-flash--error" data-destinations-toast>
                     <strong class="destinations-flash__title">Action impossible</strong>
                     <div class="destinations-flash__message">{{ message }}</div>
-                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer la notification">×</button>
+                    <button type="button" class="destinations-flash__close" data-destinations-toast-close aria-label="Fermer">×</button>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
 
+    {# ── Toolbar ── #}
     <div class="destinations-toolbar-wrapper" id="liste-destinations">
         <div class="toolbar-header toolbar-header--with-map">
             <div class="toolbar-header__text">
@@ -240,15 +822,15 @@
 
         <div class="destinations-toolbar">
             <div class="toolbar-search">
-                <svg class="toolbar-search__icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="toolbar-search__icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="2"/>
                     <path d="M13 13L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
                 <input type="text" id="destSearch" placeholder="Rechercher une destination..." class="toolbar-search__input">
             </div>
-            
+
             <div class="toolbar-divider"></div>
-            
+
             <div class="toolbar-filters">
                 <div class="filter-group">
                     <select id="regionFilter" class="toolbar-filter__select" aria-label="Filtrer par région">
@@ -294,7 +876,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                
+
                 <div class="filter-group">
                     <select id="ratingSort" class="toolbar-filter__select" aria-label="Trier les destinations">
                         <option value="default">Par défaut</option>
@@ -306,25 +888,26 @@
 
                 <div class="filter-group">
                     <select id="favoriteFilter" class="toolbar-filter__select" aria-label="Filtrer les favoris">
-                        <option value="all">Tous les destinations</option>
+                        <option value="all">Toutes les destinations</option>
                         <option value="favorites">Mes favoris</option>
                         <option value="non-favorites">Non favoris</option>
                     </select>
                 </div>
             </div>
-            
+
             <div class="toolbar-divider"></div>
-            
+
             <div class="toolbar-info">
                 <span class="toolbar-count"><strong id="destCount">{{ destinations|length }}</strong> résultat{{ destinations|length > 1 ? 's' : '' }}</span>
             </div>
         </div>
     </div>
 
+    {# ── Grille destinations ── #}
     {% if destinations is not empty %}
         <div class="destinations-grid" id="destinationsContainer">
             {% for destination in destinations %}
-                <div
+                <article
                     class="destination-card"
                     onclick="openDestinationModal({{ destination.idDestination }})"
                     data-region="{{ destination.regionDestination ?? 'Sans région' }}"
@@ -333,13 +916,22 @@
                     data-rating="{{ average_scores[destination.idDestination]|default(destination.scoreDestination ?? '') }}"
                     data-name="{{ destination.nomDestination }}"
                     data-favorite="{{ favorite_destination_ids[destination.idDestination]|default(false) ? '1' : '0' }}"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Voir {{ destination.nomDestination }}"
                 >
                     <div class="destination-card__image-wrapper">
                         {% if destination.imageName %}
                             {% set destinationImageSrc = destination.imageName starts with 'http' ? destination.imageName : asset('uploads/destinations/' ~ destination.imageName) %}
-                            <img src="{{ destinationImageSrc }}" alt="{{ destination.nomDestination }}" class="destination-card__image">
+                            <img src="{{ destinationImageSrc }}" alt="{{ destination.nomDestination }}" class="destination-card__image" loading="lazy">
                         {% else %}
-                            <div class="destination-card__image-placeholder">🌍</div>
+                            <div class="destination-card__image-placeholder">
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="1.5"/></svg>
+                            </div>
+                        {% endif %}
+
+                        {% if destination.regionDestination %}
+                            <div class="destination-card__region-pill">{{ destination.regionDestination }}</div>
                         {% endif %}
 
                         <form method="post" action="{{ path('app_destination_favorite_toggle', {'id_destination': destination.idDestination}) }}" class="destination-card__favorite-form">
@@ -351,57 +943,69 @@
                                 title="{{ favorite_destination_ids[destination.idDestination]|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
                                 onclick="event.stopPropagation();"
                             >
-                                ♥
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                             </button>
                         </form>
                     </div>
 
                     <div class="destination-card__content">
-                    <h3 class="destination-card__title">{{ destination.nomDestination }}</h3>
-                    <p class="destination-card__location">
-                        📍 {{ destination.paysDestination }}
-                        {% if destination.regionDestination %}
-                            <span class="destination-card__region">{{ destination.regionDestination }}</span>
-                        {% endif %}
-                    </p>
-                    
-                    {% if destination.descriptionDestination %}
-                        <p class="destination-card__description">
-                            {{ destination.descriptionDestination|slice(0, 90) }}{% if destination.descriptionDestination|length > 90 %}...{% endif %}
-                        </p>
-                    {% endif %}
+                        <div class="destination-card__header">
+                            <h3 class="destination-card__title">{{ destination.nomDestination }}</h3>
+                            {% set averageScore = average_scores[destination.idDestination]|default(destination.scoreDestination) %}
+                            {% if averageScore is not null %}
+                                <div class="destination-card__rating">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                    <span>{{ averageScore|number_format(1, '.', '') }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
 
-                    <div class="destination-card__meta">
-                        {% set averageScore = average_scores[destination.idDestination]|default(destination.scoreDestination) %}
-                        {% if averageScore is not null %}
-                            <span class="destination-card__badge destination-card__badge--season">
-                                <span class="badge-icon">⭐</span>{{ averageScore|number_format(2, '.', '') }}/5
-                            </span>
+                        <p class="destination-card__location">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            {{ destination.paysDestination }}
+                        </p>
+
+                        {% if destination.descriptionDestination %}
+                            <p class="destination-card__description">{{ destination.descriptionDestination|slice(0, 90) }}{% if destination.descriptionDestination|length > 90 %}…{% endif %}</p>
                         {% endif %}
-                        {% if destination.climatDestination %}
-                            <span class="destination-card__badge destination-card__badge--climate">
-                                <span class="badge-icon">🌡️</span>{{ destination.climatDestination }}
-                            </span>
-                        {% endif %}
-                        {% if destination.saisonDestination %}
-                            <span class="destination-card__badge destination-card__badge--season">
-                                <span class="badge-icon">📅</span>{{ destination.saisonDestination }}
-                            </span>
-                        {% endif %}
+
+                        <div class="destination-card__footer">
+                            <div class="destination-card__tags">
+                                {% if destination.climatDestination %}
+                                    <span class="destination-card__tag destination-card__tag--climate">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 9V3m0 0L9 6m3-3l3 3M6.6 18a6 6 0 1 1 10.8 0"/></svg>
+                                        {{ destination.climatDestination }}
+                                    </span>
+                                {% endif %}
+                                {% if destination.saisonDestination %}
+                                    <span class="destination-card__tag destination-card__tag--season">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        {{ destination.saisonDestination }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="destination-card__cta">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                </div>
+                </article>
             {% endfor %}
         </div>
     {% else %}
         <div class="destinations-empty">
-            <div class="destinations-empty__icon">🗺️</div>
-            <p>Aucune destination trouvée</p>
-            <a href="{{ path('app_destination_new') }}" class="btn btn--primary">Créer la première destination</a>
+            <div class="destinations-empty__icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <h3 class="destinations-empty__title">Aucune destination trouvée</h3>
+            <p class="destinations-empty__text">Ajustez vos filtres ou créez la première destination.</p>
+            <a href="{{ path('app_destination_new') }}" class="destinations-empty__action">Créer une destination</a>
         </div>
     {% endif %}
-</section>
 
+</section>{# fin .destinations-page #}
+
+{# ── Map overlay ── #}
 <div id="mapOverlay" class="map-overlay" aria-hidden="true">
     <div class="map-overlay__panel" role="dialog" aria-modal="true" aria-label="Carte des destinations">
         <button type="button" class="map-overlay__close" id="closeMapBtn" aria-label="Fermer la carte" onclick="closeMapOverlay(); return false;">×</button>
@@ -416,15 +1020,14 @@
     </div>
 </div>
 
-<!-- Modal pour afficher les détails -->
+{# ── Modal détail ── #}
 <div id="destinationModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeDestinationModal()">&times;</span>
-        <div id="modalBody">
-            <!-- Le contenu sera chargé dynamiquement -->
-        </div>
+        <div id="modalBody"></div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block javascripts %}
@@ -454,23 +1057,16 @@ function buildDestinationLabel(item) {
 }
 
 function clearMapMarkers() {
-    if (!destinationsMapInstance) {
-        return;
-    }
-
+    if (!destinationsMapInstance) return;
     destinationsMapMarkers.forEach(function (marker) {
         destinationsMapInstance.removeLayer(marker);
     });
-
     destinationsMapMarkers = [];
 }
 
 function initDestinationsMap() {
     const mapEl = document.getElementById('destinationsMap');
-
-    if (!mapEl) {
-        return;
-    }
+    if (!mapEl) return;
 
     if (typeof L === 'undefined') {
         mapEl.innerHTML = '<div style="padding: 2rem; text-align: center; color: #7a5a4a; font-weight: 600;">La carte n\'a pas pu se charger. Veuillez rafraîchir la page.</div>';
@@ -480,8 +1076,7 @@ function initDestinationsMap() {
     if (!destinationsMapInstance) {
         mapEl.innerHTML = '';
     }
-    
-    // Create custom marker icon using SVG data URL
+
     if (!window.customMarkerIcon) {
         window.customMarkerIcon = L.icon({
             iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNSAwQzUuNTk2IDAgMCA1LjU5NiAwIDEyLjVDMCAyNS41IDEyLjUgNDEgMTIuNSA0MUMxMi41IDQxIDI1IDI1LjUgMjUgMTIuNUMyNSA1LjU5NiAxOS40MDQgMCAxMi41IDBaTTEyLjUgMTYuNUM5LjE2IDE2LjUgNi41IDEzLjg0IDYuNSAxMC41QzYuNSA3LjE2IDkuMTYgNC41IDEyLjUgNC41QzE1Ljg0IDQuNSAxOC41IDcuMTYgMTguNSAxMC41QzE4LjUgMTMuODQgMTUuODQgMTYuNSAxMi41IDE2LjVaIiBmaWxsPSIjQzg0QzNDIi8+PC9zdmc+',
@@ -493,14 +1088,13 @@ function initDestinationsMap() {
             popupAnchor: [1, -34]
         });
     }
-    
+
     if (!destinationsMapInstance) {
         try {
             destinationsMapInstance = L.map(mapEl, {
                 scrollWheelZoom: true,
                 zoomControl: true
             });
-
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
@@ -512,7 +1106,7 @@ function initDestinationsMap() {
     }
 
     clearMapMarkers();
-    
+
     if (destinationsMapData.length === 0) {
         destinationsMapInstance.setView([28.0339, 1.6596], 2);
         destinationsMapInstance.invalidateSize();
@@ -520,14 +1114,10 @@ function initDestinationsMap() {
     }
 
     const bounds = [];
-
     destinationsMapData.forEach(function (item) {
         const lat = parseFloat(item.lat);
         const lng = parseFloat(item.lng);
-
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-            return;
-        }
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
         const marker = L.marker([lat, lng], { icon: window.customMarkerIcon }).addTo(destinationsMapInstance);
         marker.bindTooltip(buildDestinationLabel(item), {
@@ -536,14 +1126,11 @@ function initDestinationsMap() {
             opacity: 0.96,
             className: 'destination-map-tooltip'
         });
-        marker.on('click', function () {
-            window.location.href = item.url;
-        });
-
+        marker.on('click', function () { window.location.href = item.url; });
         destinationsMapMarkers.push(marker);
         bounds.push([lat, lng]);
     });
-    
+
     if (bounds.length === 1) {
         destinationsMapInstance.setView(bounds[0], 6);
     } else if (bounds.length > 0) {
@@ -552,52 +1139,35 @@ function initDestinationsMap() {
         destinationsMapInstance.setView([28.0339, 1.6596], 2);
     }
 
-    window.setTimeout(function () {
-        destinationsMapInstance.invalidateSize();
-    }, 80);
-    
-    window.setTimeout(function () {
-        destinationsMapInstance.invalidateSize();
-    }, 260);
+    window.setTimeout(function () { destinationsMapInstance.invalidateSize(); }, 80);
+    window.setTimeout(function () { destinationsMapInstance.invalidateSize(); }, 260);
 }
 
 function openMapOverlay() {
     const overlay = document.getElementById('mapOverlay');
-    if (!overlay) {
-        return;
-    }
-
+    if (!overlay) return;
     overlay.classList.add('is-open');
     overlay.setAttribute('aria-hidden', 'false');
     document.body.classList.add('is-map-open');
-
     window.requestAnimationFrame(function () {
-        window.requestAnimationFrame(function () {
-            initDestinationsMap();
-        });
+        window.requestAnimationFrame(function () { initDestinationsMap(); });
     });
-
-    window.setTimeout(function () {
-        initDestinationsMap();
-    }, 220);
+    window.setTimeout(function () { initDestinationsMap(); }, 220);
 }
 
 function closeMapOverlay() {
     const overlay = document.getElementById('mapOverlay');
-    if (!overlay) {
-        return;
-    }
-
+    if (!overlay) return;
     overlay.classList.remove('is-open');
     overlay.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('is-map-open');
 }
 
 function openDestinationModal(destinationId) {
-    const modal = document.getElementById('destinationModal');
+    const modal    = document.getElementById('destinationModal');
     const modalBody = document.getElementById('modalBody');
     currentDestinationModalId = destinationId;
-    
+
     fetch(`{{ path('app_destination_show', {'id_destination': '__ID__'}) }}`.replace('__ID__', destinationId), {
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
     })
@@ -615,52 +1185,43 @@ function closeDestinationModal() {
     currentDestinationModalId = null;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Hero scroll
     document.querySelector('.js-hero-scroll-target')?.addEventListener('click', function (e) {
         e.preventDefault();
         document.getElementById('liste-destinations')?.scrollIntoView({ behavior: 'smooth' });
     });
 
-    const modal = document.getElementById('destinationModal');
-    const modalBody = document.getElementById('modalBody');
+    // Map buttons
+    const modal      = document.getElementById('destinationModal');
+    const modalBody  = document.getElementById('modalBody');
     const mapOverlay = document.getElementById('mapOverlay');
     const openMapBtn = document.getElementById('openMapBtn');
     const closeMapBtn = document.getElementById('closeMapBtn');
 
-    if (openMapBtn) {
-        openMapBtn.addEventListener('click', openMapOverlay);
-    }
-
-    if (closeMapBtn) {
-        closeMapBtn.addEventListener('click', closeMapOverlay);
-    }
+    if (openMapBtn)  openMapBtn.addEventListener('click', openMapOverlay);
+    if (closeMapBtn) closeMapBtn.addEventListener('click', closeMapOverlay);
 
     if (mapOverlay) {
         mapOverlay.addEventListener('click', function (event) {
-            if (event.target === mapOverlay) {
-                closeMapOverlay();
-            }
+            if (event.target === mapOverlay) closeMapOverlay();
         });
     }
 
     document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-            closeMapOverlay();
-        }
+        if (event.key === 'Escape') closeMapOverlay();
     });
 
-    window.onclick = function(event) {
-        if (event.target === modal) {
-            closeDestinationModal();
-        }
-    }
+    window.onclick = function (event) {
+        if (event.target === modal) closeDestinationModal();
+    };
 
+    // Modal form submit (rating / favorites)
     if (modalBody) {
         modalBody.addEventListener('submit', function (event) {
             const form = event.target;
-            if (!(form instanceof HTMLFormElement)) {
-                return;
-            }
+            if (!(form instanceof HTMLFormElement)) return;
 
             if (form.hasAttribute('data-destination-favorite-form')) {
                 event.preventDefault();
@@ -669,133 +1230,92 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: new FormData(form),
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 })
-                    .then(function (response) {
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(function (data) {
                         const button = form.querySelector('.destination-detail__favorite-btn');
-                        if (!button || typeof data.is_favorite === 'undefined') {
-                            return;
-                        }
+                        if (!button || typeof data.is_favorite === 'undefined') return;
                         button.classList.toggle('is-favorite', data.is_favorite);
                         button.setAttribute('aria-label', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
-                        button.setAttribute('title', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+                        button.setAttribute('title',      data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
                     })
-                    .catch(function () {
-                        form.submit();
-                    });
+                    .catch(function () { form.submit(); });
                 return;
             }
 
-            if (!form.classList.contains('destination-rating-form')) {
-                return;
-            }
+            if (!form.classList.contains('destination-rating-form')) return;
 
-            // Keep rating submission inside modal so the user stays on destination index page.
             event.preventDefault();
-
             fetch(form.action, {
                 method: 'POST',
                 body: new FormData(form),
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
-                .then(function (response) {
-                    return response.text();
-                })
+                .then(response => response.text())
                 .then(function (html) {
                     modalBody.innerHTML = html;
-                    if (modal) {
-                        modal.classList.add('active');
-                    }
+                    if (modal) modal.classList.add('active');
                 })
-                .catch(function () {
-                    console.error('Erreur lors de la soumission de la note.');
-                });
+                .catch(function () { console.error('Erreur lors de la soumission de la note.'); });
         });
     }
 
-    // Gestion des toasts
+    // Toasts
     var toasts = document.querySelectorAll('[data-destinations-toast]');
 
     function hideToast(toast) {
-        if (!toast || toast.classList.contains('is-hiding')) {
-            return;
-        }
-
+        if (!toast || toast.classList.contains('is-hiding')) return;
         toast.classList.add('is-hiding');
-        window.setTimeout(function () {
-            toast.remove();
-        }, 220);
+        window.setTimeout(function () { toast.remove(); }, 220);
     }
 
     toasts.forEach(function (toast) {
         var closeButton = toast.querySelector('[data-destinations-toast-close]');
-
         if (closeButton) {
-            closeButton.addEventListener('click', function () {
-                hideToast(toast);
-            });
+            closeButton.addEventListener('click', function () { hideToast(toast); });
         }
-
-        window.setTimeout(function () {
-            hideToast(toast);
-        }, 4200);
+        window.setTimeout(function () { hideToast(toast); }, 4200);
     });
 
-    // Search functionality
-    const searchInput = document.getElementById('destSearch');
-    const regionFilter = document.getElementById('regionFilter');
-    const seasonFilter = document.getElementById('seasonFilter');
-    const ratingSort = document.getElementById('ratingSort');
+    // ── Filtres & tri ──
+    const searchInput    = document.getElementById('destSearch');
+    const regionFilter   = document.getElementById('regionFilter');
+    const seasonFilter   = document.getElementById('seasonFilter');
+    const climateFilter  = document.getElementById('climateFilter');
+    const ratingSort     = document.getElementById('ratingSort');
     const favoriteFilter = document.getElementById('favoriteFilter');
-    const countDisplay = document.getElementById('destCount');
-    
+    const countDisplay   = document.getElementById('destCount');
+
     function applyFiltersAndSort() {
-        const searchTerm = (searchInput?.value || '').toLowerCase();
-        const selectedRegion = regionFilter?.value || '';
-        const selectedSeason = seasonFilter?.value || '';
-        const sortOption = ratingSort?.value || 'default';
-        const selectedFavoriteFilter = favoriteFilter?.value || 'all';
-        
+        const searchTerm           = (searchInput?.value || '').toLowerCase();
+        const selectedRegion       = regionFilter?.value  || '';
+        const selectedSeason       = seasonFilter?.value  || '';
+        const selectedClimate      = climateFilter?.value || '';
+        const sortOption           = ratingSort?.value    || 'default';
+        const selectedFavorite     = favoriteFilter?.value || 'all';
+
         const container = document.getElementById('destinationsContainer');
         if (!container) return;
-        
-        let allCards = Array.from(container.querySelectorAll('.destination-card'));
+
+        let allCards     = Array.from(container.querySelectorAll('.destination-card'));
         let visibleCards = [];
-        
-        // Apply filters
-        allCards.forEach(function(card) {
+
+        allCards.forEach(function (card) {
             let matches = true;
-            
-            // Filter by search term
+
             if (searchTerm) {
-                const title = card.querySelector('.destination-card__title')?.textContent.toLowerCase() || '';
-                const location = card.querySelector('.destination-card__location')?.textContent.toLowerCase() || '';
+                const title       = card.querySelector('.destination-card__title')?.textContent.toLowerCase()       || '';
+                const location    = card.querySelector('.destination-card__location')?.textContent.toLowerCase()    || '';
                 const description = card.querySelector('.destination-card__description')?.textContent.toLowerCase() || '';
                 matches = title.includes(searchTerm) || location.includes(searchTerm) || description.includes(searchTerm);
             }
-            
-            // Filter by region
-            if (matches && selectedRegion) {
-                matches = card.getAttribute('data-region') === selectedRegion;
-            }
 
-            // Filter by season
-            if (matches && selectedSeason) {
-                matches = card.getAttribute('data-season') === selectedSeason;
-            }
+            if (matches && selectedRegion)  matches = card.getAttribute('data-region')  === selectedRegion;
+            if (matches && selectedSeason)  matches = card.getAttribute('data-season')  === selectedSeason;
+            if (matches && selectedClimate) matches = card.getAttribute('data-climate') === selectedClimate;
 
-            // Filter by favorites
-            if (matches && selectedFavoriteFilter === 'favorites') {
-                matches = card.getAttribute('data-favorite') === '1';
-            }
+            if (matches && selectedFavorite === 'favorites')     matches = card.getAttribute('data-favorite') === '1';
+            if (matches && selectedFavorite === 'non-favorites') matches = card.getAttribute('data-favorite') !== '1';
 
-            if (matches && selectedFavoriteFilter === 'non-favorites') {
-                matches = card.getAttribute('data-favorite') !== '1';
-            }
-            
             if (matches) {
                 visibleCards.push(card);
                 card.style.display = '';
@@ -803,95 +1323,66 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.style.display = 'none';
             }
         });
-        
-        // Sort visible cards
-        visibleCards.sort(function(a, b) {
+
+        visibleCards.sort(function (a, b) {
             const ratingA = parseFloat(a.getAttribute('data-rating')) || 0;
             const ratingB = parseFloat(b.getAttribute('data-rating')) || 0;
-            const nameA = a.getAttribute('data-name') || '';
-            const nameB = b.getAttribute('data-name') || '';
-            
+            const nameA   = a.getAttribute('data-name') || '';
+            const nameB   = b.getAttribute('data-name') || '';
+
             if (sortOption === 'rating-desc') {
                 if (ratingA === 0 && ratingB === 0) return 0;
                 if (ratingA === 0) return 1;
                 if (ratingB === 0) return -1;
                 return ratingB - ratingA;
-            } else if (sortOption === 'rating-asc') {
+            }
+            if (sortOption === 'rating-asc') {
                 if (ratingA === 0 && ratingB === 0) return 0;
                 if (ratingA === 0) return 1;
                 if (ratingB === 0) return -1;
                 return ratingA - ratingB;
-            } else if (sortOption === 'name') {
-                return nameA.localeCompare(nameB);
             }
+            if (sortOption === 'name') return nameA.localeCompare(nameB);
             return 0;
         });
-        
-        // Update DOM order for visible cards
-        visibleCards.forEach(function(card) {
-            container.appendChild(card);
-        });
-        
-        // Update count
-        if (countDisplay) {
-            countDisplay.textContent = visibleCards.length;
-        }
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', applyFiltersAndSort);
-    }
-    if (regionFilter) {
-        regionFilter.addEventListener('change', applyFiltersAndSort);
-    }
-    if (seasonFilter) {
-        seasonFilter.addEventListener('change', applyFiltersAndSort);
-    }
-    if (ratingSort) {
-        ratingSort.addEventListener('change', applyFiltersAndSort);
-    }
-    if (favoriteFilter) {
-        favoriteFilter.addEventListener('change', applyFiltersAndSort);
+
+        visibleCards.forEach(function (card) { container.appendChild(card); });
+
+        if (countDisplay) countDisplay.textContent = visibleCards.length;
     }
 
+    if (searchInput)    searchInput.addEventListener('input', applyFiltersAndSort);
+    if (regionFilter)   regionFilter.addEventListener('change', applyFiltersAndSort);
+    if (seasonFilter)   seasonFilter.addEventListener('change', applyFiltersAndSort);
+    if (climateFilter)  climateFilter.addEventListener('change', applyFiltersAndSort);
+    if (ratingSort)     ratingSort.addEventListener('change', applyFiltersAndSort);
+    if (favoriteFilter) favoriteFilter.addEventListener('change', applyFiltersAndSort);
+
+    // ── Favoris sur les cartes ──
     document.querySelectorAll('.destination-card__favorite-form').forEach(function (form) {
         form.addEventListener('submit', function (event) {
             event.preventDefault();
-
             const button = form.querySelector('.destination-card__favorite-btn');
-            const card = form.closest('.destination-card');
-            if (!button || !card) {
-                return;
-            }
+            const card   = form.closest('.destination-card');
+            if (!button || !card) return;
 
             fetch(form.action, {
                 method: 'POST',
                 body: new FormData(form),
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
-                .then(function (response) {
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(function (data) {
-                    if (!data || typeof data.is_favorite === 'undefined') {
-                        return;
-                    }
-
+                    if (!data || typeof data.is_favorite === 'undefined') return;
                     card.setAttribute('data-favorite', data.is_favorite ? '1' : '0');
                     button.classList.toggle('is-favorite', data.is_favorite);
                     button.setAttribute('aria-label', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
-                    button.setAttribute('title', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
-
+                    button.setAttribute('title',      data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
                     applyFiltersAndSort();
                 })
-                .catch(function () {
-                    form.submit();
-                });
+                .catch(function () { form.submit(); });
         });
     });
 });
 </script>
 {% endblock %}
-

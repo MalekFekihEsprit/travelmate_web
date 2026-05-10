@@ -270,6 +270,14 @@
     display:flex; align-items:center; justify-content:center;
     font-size:1.1rem; flex-shrink:0;
 }
+.dep-icon svg { flex-shrink:0; }
+.dep-icon--hebergement  svg { color:#d97706; }
+.dep-icon--transport    svg { color:#3b82f6; }
+.dep-icon--restauration svg { color:#059669; }
+.dep-icon--loisirs      svg { color:#7c3aed; }
+.dep-icon--achats       svg { color:#db2777; }
+.dep-icon--sante        svg { color:#dc2626; }
+.dep-icon--default      svg { color:var(--color-primary); }
 .dep-icon--hebergement  { background:#fef3c7; }
 .dep-icon--transport    { background:#dbeafe; }
 .dep-icon--restauration { background:#d1fae5; }
@@ -466,7 +474,7 @@
     width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
     background: linear-gradient(135deg, #8b5cf6, #ec4899);
     display: flex; align-items: center; justify-content: center;
-    font-size: .9rem;
+    font-size: .9rem; color: #fff;
 }
 .wyr-header__title { font-size: .84rem; font-weight: 700; color: var(--color-text); }
 .wyr-header__sub   { font-size: .7rem; color: var(--color-text-muted); }
@@ -495,7 +503,7 @@
 .wyr-option.chosen-a { border-color: #8b5cf6; background: rgba(139,92,246,.08); }
 .wyr-option.chosen-b { border-color: #ec4899; background: rgba(236,72,153,.08); }
 .wyr-option.winner   { border-color: #10b981; background: rgba(16,185,129,.08); }
-.wyr-option__emoji   { font-size: 1.6rem; line-height: 1; }
+.wyr-option__emoji   { font-size: 1.6rem; line-height: 1; display:flex; align-items:center; justify-content:center; color:var(--color-text-muted); }
 .wyr-option__label   { font-size: .78rem; font-weight: 700; color: var(--color-text); }
 .wyr-option__saving  { font-size: .72rem; color: var(--color-text-muted); }
 .wyr-option__saving strong { color: #10b981; }
@@ -570,7 +578,7 @@
     background: linear-gradient(135deg, rgba(249,115,22,.06), transparent);
 }
 .gami-streak__icon {
-    font-size: 1.6rem; line-height: 1;
+    font-size: 1.6rem; line-height: 1; display:flex; align-items:center;
 }
 .gami-streak__info { flex: 1; }
 .gami-streak__num {
@@ -888,7 +896,7 @@
                 </span>
             </div>
             <div class="budget-hero__actions">
-                <a href="{{ path('app_budget_index') }}" class="budget-hero__back" data-translate>← Retour</a>
+                <a href="{{ path('app_budget_index') }}" class="budget-hero__back" data-translate><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Retour</a>
                 <a href="{{ path('app_budget_edit', {id: budget.idBudget}) }}" class="budget-hero__back" data-translate>Modifier</a>
             </div>
         </div>
@@ -963,9 +971,7 @@
                     Dépenses
                     <span class="section-card__badge" id="dep-total-count">{{ budget.depenses|length }}</span>
                 </span>
-                <button class="btn-add-dep" onclick="openModal('modal-add')" data-translate>
-                    + Ajouter une dépense
-                </button>
+                <button class="btn-add-dep" onclick="openModal('modal-add')" data-translate><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ajouter une dépense</button>
             </div>
 
             {# Dep Toolbar #}
@@ -999,9 +1005,9 @@
                     dépense(s) sélectionnée(s)
                 </div>
                 <div class="dep-sel-actions">
-                    <button class="btn-dep-sel btn-dep-sel--all" id="btnDepSelAll">Tout sélect.</button>
-                    <button class="btn-dep-sel btn-dep-sel--cancel" id="btnDepSelCancel">× Annuler</button>
-                    <button class="btn-dep-sel btn-dep-sel--delete" id="btnDepSelDelete">Supprimer</button>
+                    <button class="btn-dep-sel btn-dep-sel--all" id="btnDepSelAll"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Tout sélect.</button>
+                    <button class="btn-dep-sel btn-dep-sel--cancel" id="btnDepSelCancel"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Annuler</button>
+                    <button class="btn-dep-sel btn-dep-sel--delete" id="btnDepSelDelete"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Supprimer</button>
                 </div>
             </div>
             {% endif %}
@@ -1027,14 +1033,7 @@
             <ul class="dep-list" id="depList">
             {% for d in budget.depenses %}
                 {% set cat = d.categorieDepense|lower %}
-                {% set iconMap = {
-                    'hébergement':'H','hebergement':'H',
-                    'transport':'T','restauration':'R',
-                    'nourriture':'R','loisirs':'L',
-                    'activité':'L','achats':'A',
-                    'shopping':'A','santé':'S','sante':'S'
-                } %}
-                {% set icon = iconMap[cat] ?? 'D' %}
+
                 {% set iconCls = cat in ['hébergement','hebergement'] ? 'dep-icon--hebergement'
                     : (cat == 'transport' ? 'dep-icon--transport'
                     : (cat in ['restauration','nourriture'] ? 'dep-icon--restauration'
@@ -1059,7 +1058,23 @@
                     data-edit-url="{{ path('app_depense_edit', {id: d.idDepense}) }}">
 
                     <div class="dep-check-wrap" onclick="toggleDepSel(this.closest('.dep-item'))" title="Sélectionner"></div>
-                    <div class="dep-icon {{ iconCls }}" style="font-size:.72rem;font-weight:700;color:var(--color-text-muted)">{{ icon }}</div>
+                    <div class="dep-icon {{ iconCls }}">
+                        {% if cat in ['hébergement','hebergement'] %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        {% elseif cat == 'transport' %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        {% elseif cat in ['restauration','nourriture'] %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                        {% elseif cat in ['loisirs','activité'] %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        {% elseif cat in ['achats','shopping'] %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        {% elseif cat in ['santé','sante'] %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        {% else %}
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        {% endif %}
+                    </div>
                     <div class="dep-body">
                         <div class="dep-label">{{ d.libelleDepense }}</div>
                         <div class="dep-meta">
@@ -1216,7 +1231,7 @@
         {# ── WOULD YOU RATHER ── #}
         <div class="wyr-panel" id="wyrPanel">
             <div class="wyr-header">
-                <div class="wyr-header__icon">🎲</div>
+                <div class="wyr-header__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/><circle cx="16" cy="8" r="1.2" fill="currentColor"/><circle cx="8" cy="16" r="1.2" fill="currentColor"/></svg></div>
                 <div>
                     <div class="wyr-header__title">Would You Rather?</div>
                     <div class="wyr-header__sub">Explore les compromis de ton budget</div>
@@ -1225,14 +1240,14 @@
             <div class="wyr-question" id="wyrQuestion">Chargement…</div>
             <div class="wyr-options">
                 <div class="wyr-option" id="wyrOptA" onclick="wyrChoose('a')">
-                    <div class="wyr-option__emoji" id="wyrEmojiA">✂️</div>
+                    <div class="wyr-option__emoji" id="wyrEmojiA"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div>
                     <div class="wyr-option__label" id="wyrLabelA">Option A</div>
                     <div class="wyr-option__saving" id="wyrSavingA"></div>
                     <div class="wyr-option__bar" id="wyrBarA" style="width:0%;background:#8b5cf6"></div>
                 </div>
                 <div class="wyr-or">ou</div>
                 <div class="wyr-option" id="wyrOptB" onclick="wyrChoose('b')">
-                    <div class="wyr-option__emoji" id="wyrEmojiB">🚫</div>
+                    <div class="wyr-option__emoji" id="wyrEmojiB"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
                     <div class="wyr-option__label" id="wyrLabelB">Option B</div>
                     <div class="wyr-option__saving" id="wyrSavingB"></div>
                     <div class="wyr-option__bar" id="wyrBarB" style="width:0%;background:#ec4899"></div>
@@ -1267,7 +1282,7 @@
 
             {# Streak #}
             <div class="gami-streak" id="gamiStreak">
-                <div class="gami-streak__icon">🔥</div>
+                <div class="gami-streak__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
                 <div class="gami-streak__info">
                     <div class="gami-streak__num" id="gamiStreakNum">—</div>
                     <div class="gami-streak__label" id="gamiStreakLabel">Chargement…</div>
@@ -2164,7 +2179,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const btn = document.getElementById('depExportCsvBtn');
             const orig = btn.innerHTML;
-            btn.innerHTML = '✓ Excel créé !';
+            btn.innerHTML = '&#10003; Excel créé !';
             setTimeout(() => { btn.innerHTML = orig; }, 2000);
 
         } catch (err) {
@@ -2229,7 +2244,7 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text('✦ TravelMate', 14, 11);
+            doc.text('TravelMate', 14, 11);
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             doc.text('Rapport de Dépenses', 14, 20.5);
@@ -2360,7 +2375,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const btn = document.getElementById('depExportPdfBtn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '✓ PDF créé !';
+            btn.innerHTML = '&#10003; PDF créé !';
             setTimeout(() => { btn.innerHTML = originalText; }, 2000);
         } catch (error) {
             console.error('Erreur export PDF:', error);
@@ -2452,12 +2467,12 @@ function loadInflationByCurrency() {
             }
             if (d.success) {
                 const rate = d.inflation_rate;
-                const rateIcon = rate > 5 ? '⚠️' : (rate > 0 ? '📈' : '📉');
+                const rateIcon = rate > 5 ? '▲' : (rate > 0 ? '↑' : '↓');
                 widget.innerHTML = `
                     <div class="inflation-did-you-know">Taux d'inflation - ${d.country}</div>
                     <div class="inflation-rate-big">${rate}%</div>
                     <div class="inflation-country-label">${d.currency_name} (${d.currency}) · ${d.year} · ${d.source}</div>
-                    ${d.is_estimated ? '<div style="font-size:0.7rem;color:#d97706;margin-bottom:0.5rem;">⚠️ Estimation basée sur les données disponibles</div>' : ''}
+                    ${d.is_estimated ? '<div style="font-size:0.7rem;color:#d97706;margin-bottom:0.5rem;">&#9888; Estimation basée sur les données disponibles</div>' : ''}
                     <div class="inflation-insight" style="margin-top:0.75rem;">
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
                             <span style="font-size:1.2rem;">${rateIcon}</span>
@@ -2465,7 +2480,7 @@ function loadInflationByCurrency() {
                         </div>
                         <p style="margin:0 0 0.5rem;font-size:0.82rem;">${d.advice}</p>
                         <div style="margin-top:0.75rem;padding:0.6rem;background:rgba(196,111,75,.08);border-radius:8px;">
-                            <div style="font-size:0.7rem;font-weight:700;margin-bottom:0.3rem;">📊 Impact financier</div>
+                            <div style="font-size:0.7rem;font-weight:700;margin-bottom:0.3rem;">Impact financier</div>
                             <div style="font-size:0.78rem;">
                                 <div>Budget actuel : ${d.budget_impact.original_budget.toLocaleString('fr-FR')} ${d.currency}</div>
                                 <div>Perte de pouvoir d'achat : <strong style="color:#dc2626;">-${d.budget_impact.purchasing_power_loss.toLocaleString('fr-FR')} ${d.currency}</strong></div>
@@ -2474,7 +2489,7 @@ function loadInflationByCurrency() {
                         </div>
                         ${d.recommendations && d.recommendations.length > 0 ? `
                         <div style="margin-top:0.75rem;">
-                            <div style="font-size:0.7rem;font-weight:700;margin-bottom:0.3rem;">💡 Recommandations</div>
+                            <div style="font-size:0.7rem;font-weight:700;margin-bottom:0.3rem;">Recommandations</div>
                             <ul style="margin:0;padding-left:1rem;font-size:0.75rem;color:var(--color-text-muted);">
                                 ${d.recommendations.map(r => `<li>${r}</li>`).join('')}
                             </ul>
@@ -2514,13 +2529,13 @@ function loadInflation(country) {
                 const prevYear = d.year ? parseInt(d.year) - 1 : '—';
                 deltaHtml = `<span class="inflation-delta inflation-delta--${cls}">${arrow} ${sign}${delta}% vs ${prevYear}</span>`;
                 if (delta > 5) {
-                    insight = `⚠️ L'inflation a fortement progressé de <strong>+${delta}%</strong> par rapport à l'année précédente. Prévoyez un budget plus généreux pour cette destination.`;
+                    insight = `&#9888; L'inflation a fortement progressé de <strong>+${delta}%</strong> par rapport à l'année précédente. Prévoyez un budget plus généreux pour cette destination.`;
                 } else if (delta > 2) {
-                    insight = `📈 L'inflation a augmenté de <strong>+${delta}%</strong>. Les prix ont progressé — ajustez votre budget en conséquence.`;
+                    insight = `↑ L'inflation a augmenté de <strong>+${delta}%</strong>. Les prix ont progressé — ajustez votre budget en conséquence.`;
                 } else if (delta < -1) {
-                    insight = `📉 Bonne nouvelle : l'inflation a baissé de <strong>${delta}%</strong>. Cette destination est plus abordable que l'an dernier.`;
+                    insight = `↓ Bonne nouvelle : l'inflation a baissé de <strong>${delta}%</strong>. Cette destination est plus abordable que l'an dernier.`;
                 } else {
-                    insight = `✅ L'inflation est stable à <strong>${rate !== null ? rate + '%' : 'N/A'}</strong> pour cette destination.`;
+                    insight = `&#10003; L'inflation est stable à <strong>${rate !== null ? rate + '%' : 'N/A'}</strong> pour cette destination.`;
                 }
             }
             body.innerHTML = `
@@ -2570,19 +2585,19 @@ async function executeConvertAll() {
         const result = await response.json();
         if (result.success) {
             if (progressBar) progressBar.style.width = '100%';
-            if (progressText) progressText.textContent = '✓ ' + result.message;
+            if (progressText) progressText.textContent = '&#10003; ' + result.message;
             setTimeout(() => {
                 closeConvertModal();
                 window.location.reload();
             }, 1500);
         } else {
-            if (progressText) progressText.textContent = '❌ ' + (result.error || 'Erreur lors de la conversion');
+            if (progressText) progressText.textContent = '&#215; ' + (result.error || 'Erreur lors de la conversion');
             if (progressBar) progressBar.style.backgroundColor = '#dc2626';
             if (submitBtn) submitBtn.disabled = false;
             if (cancelBtn) cancelBtn.disabled = false;
         }
     } catch (error) {
-        if (progressText) progressText.textContent = '❌ Erreur réseau. Veuillez réessayer.';
+        if (progressText) progressText.textContent = '&#215; Erreur réseau. Veuillez réessayer.';
         if (progressBar) progressBar.style.backgroundColor = '#dc2626';
         if (submitBtn) submitBtn.disabled = false;
         if (cancelBtn) cancelBtn.disabled = false;
@@ -2789,10 +2804,10 @@ window.runRecommendation = function () {
         // Generic always-available dilemmas
         dilemmas.push({
             q: 'Tu dois économiser. Lequel choisis-tu ?',
-            a: { emoji:'✂️', label:'Réduire TOUTES les dépenses de 10%',
+            a: { emoji:`<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='6' cy='6' r='3'/><circle cx='6' cy='18' r='3'/><line x1='20' y1='4' x2='8.12' y2='15.88'/><line x1='14.47' y1='14.48' x2='20' y2='20'/><line x1='8.12' y1='8.12' x2='12' y2='12'/></svg>`, label:'Réduire TOUTES les dépenses de 10%',
                  saving: BUDGET_TOTAL * 0.10,
                  detail: `Économie de ${fmt(BUDGET_TOTAL * 0.10)} ${DEVISE} — effort réparti sur tout.` },
-            b: { emoji:'🎯', label:'Supprimer la dépense la plus chère',
+            b: { emoji:`<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><circle cx='12' cy='12' r='6'/><circle cx='12' cy='12' r='2'/></svg>`, label:'Supprimer la dépense la plus chère',
                  saving: cats[0] ? cats[0][1] : 0,
                  detail: cats[0] ? `Supprimer "${cats[0][0]}" (${fmt(cats[0][1])} ${DEVISE}) — effort concentré.` : 'Aucune dépense.' }
         });
@@ -2817,10 +2832,10 @@ window.runRecommendation = function () {
             const avgDep = topAmt / Math.max(1, document.querySelectorAll(`.dep-item[data-cat="${topCat.toLowerCase()}"]`).length || 1);
             dilemmas.push({
                 q: `Pour ${topCat}, tu préfères…`,
-                a: { emoji:'📉', label:`Moins de sorties, même qualité`,
+                a: { emoji:`<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 18 13.5 8.5 8.5 13.5 1 6'/><polyline points='17 18 23 18 23 12'/></svg>`, label:`Moins de sorties, même qualité`,
                      saving: topAmt * 0.3,
                      detail: `Réduire la fréquence de 30% → économie de ${fmt(topAmt * 0.3)} ${DEVISE}.` },
-                b: { emoji:'💸', label:`Même fréquence, moins cher`,
+                b: { emoji:`<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='6' width='20' height='12' rx='2'/><circle cx='12' cy='12' r='2'/><path d='M6 12h.01M18 12h.01'/></svg>`, label:`Même fréquence, moins cher`,
                      saving: topAmt * 0.25,
                      detail: `Choisir des options moins chères → économie de ${fmt(topAmt * 0.25)} ${DEVISE}.` }
             });
@@ -2828,20 +2843,20 @@ window.runRecommendation = function () {
 
         dilemmas.push({
             q: 'Pour le prochain voyage, tu préfères…',
-            a: { emoji:'🏨', label:'Hôtel moins cher, plus d\'activités',
+            a: { emoji:`<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>`, label:'Hôtel moins cher, plus d\'activités',
                  saving: BUDGET_TOTAL * 0.15,
                  detail: `Économiser 15% sur l'hébergement (${fmt(BUDGET_TOTAL * 0.15)} ${DEVISE}) pour plus d'expériences.` },
-            b: { emoji:'🍽️', label:'Moins de restos, hôtel confort',
+            b: { emoji:`<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 8h1a4 4 0 0 1 0 8h-1'/><path d='M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z'/><line x1='6' y1='1' x2='6' y2='4'/><line x1='10' y1='1' x2='10' y2='4'/><line x1='14' y1='1' x2='14' y2='4'/></svg>`, label:'Moins de restos, hôtel confort',
                  saving: BUDGET_TOTAL * 0.12,
                  detail: `Réduire la restauration de 12% (${fmt(BUDGET_TOTAL * 0.12)} ${DEVISE}) pour un meilleur hébergement.` }
         });
 
         dilemmas.push({
             q: 'Si tu devais couper 20% du budget…',
-            a: { emoji:'🚌', label:'Transports en commun uniquement',
+            a: { emoji:`<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='3' width='20' height='14' rx='2'/><path d='M8 21l1-4H6l1 4'/><path d='M16 21l1-4h-3l1 4'/><path d='M2 8h20'/><path d='M2 12h20'/><circle cx='7' cy='15.5' r='1.5'/><circle cx='17' cy='15.5' r='1.5'/></svg>`, label:'Transports en commun uniquement',
                  saving: BUDGET_TOTAL * 0.20,
                  detail: `Zéro taxi/Uber → économie de ${fmt(BUDGET_TOTAL * 0.20)} ${DEVISE}. Plus d'aventure, moins de confort.` },
-            b: { emoji:'🛍️', label:'Zéro shopping souvenirs',
+            b: { emoji:`<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/><line x1='3' y1='6' x2='21' y2='6'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>`, label:'Zéro shopping souvenirs',
                  saving: BUDGET_TOTAL * 0.08,
                  detail: `Pas d'achats → économie de ${fmt(BUDGET_TOTAL * 0.08)} ${DEVISE}. Les souvenirs sont dans les photos.` }
         });
@@ -2850,9 +2865,16 @@ window.runRecommendation = function () {
     }
 
     function catEmoji(cat) {
-        const map = { 'Hébergement':'🏨','Transport':'🚗','Restauration':'🍽️',
-                      'Loisirs':'🎭','Achats':'🛍️','Santé':'💊','Autre':'💸' };
-        return map[cat] || '💰';
+        const map = {
+            'Hébergement': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+            'Transport':   `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+            'Restauration':`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+            'Loisirs':     `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+            'Achats':      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+            'Santé':       `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+            'Autre':       `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`
+        };
+        return map[cat] || `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`;
     }
 
     /* ── State ── */
@@ -2866,11 +2888,11 @@ window.runRecommendation = function () {
         chosen = null;
 
         document.getElementById('wyrQuestion').textContent = d.q;
-        document.getElementById('wyrEmojiA').textContent   = d.a.emoji;
+        document.getElementById('wyrEmojiA').innerHTML    = d.a.emoji;
         document.getElementById('wyrLabelA').textContent   = d.a.label;
         document.getElementById('wyrSavingA').innerHTML    = d.a.saving > 0
             ? `Économie : <strong>+${fmt(d.a.saving)} ${DEVISE}</strong>` : '';
-        document.getElementById('wyrEmojiB').textContent   = d.b.emoji;
+        document.getElementById('wyrEmojiB').innerHTML   = d.b.emoji;
         document.getElementById('wyrLabelB').textContent   = d.b.label;
         document.getElementById('wyrSavingB').innerHTML    = d.b.saving > 0
             ? `Économie : <strong>+${fmt(d.b.saving)} ${DEVISE}</strong>` : '';
@@ -2914,7 +2936,7 @@ window.runRecommendation = function () {
         const res = document.getElementById('wyrResult');
         const bigger = opt.saving >= other.saving;
         res.className = 'wyr-result visible wyr-result--' + side;
-        res.innerHTML = `<strong>${bigger ? '✓ Meilleur choix financièrement !' : 'Choix émotionnel !'}</strong><br>${opt.detail}`;
+        res.innerHTML = `<strong>${bigger ? '&#10003; Meilleur choix financièrement !' : 'Choix émotionnel !'}</strong><br>${opt.detail}`;
     };
 
     window.wyrNext = function () {
@@ -2937,8 +2959,12 @@ window.runRecommendation = function () {
 <script>
 (function () {
     const ICONS = {
-        star:   '⭐', shield: '🛡️', fire: '🔥',
-        piggy:  '🐷', list:   '📋', globe: '🌍'
+        star:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+        shield: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+        fire:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+        piggy:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9c0-1.1-.9-2-2-2h-1V5c0-1.7-1.3-3-3-3S10 3.3 10 5v2H9C7.9 7 7 7.9 7 9v1H5.5C4.1 10 3 11.1 3 12.5v.5C3 15.4 5.6 17 9 17v.5c0 .3.2.5.5.5h5c.3 0 .5-.2.5-.5V17c3.4 0 6-1.6 6-4.5V12c0-1.4-1.1-2.5-2.5-2.5H19V9z"/><circle cx="15" cy="9" r="1" fill="currentColor"/></svg>`,
+        list:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+        globe:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`
     };
 
     fetch('{{ path("app_budget_gamification", {id: budget.idBudget}) }}')
@@ -2973,7 +2999,7 @@ window.runRecommendation = function () {
                 container.innerHTML = data.achievements.map(a => `
                     <div class="gami-badge ${a.earned ? 'gami-badge--earned' : 'gami-badge--locked'}">
                         <div class="gami-badge__icon" style="background:${a.earned ? a.color + '22' : 'var(--color-border)'};color:${a.earned ? a.color : '#9ca3af'}">
-                            ${ICONS[a.icon] ?? '🏅'}
+                            ${ICONS[a.icon] ?? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8.56 2.75 4.13 6.03 1.49 10.55"/><polyline points="15.44 2.75 19.87 6.03 22.51 10.55"/><path d="M12 8v4l3 3"/></svg>`}
                         </div>
                         <div class="gami-badge__text">
                             <div class="gami-badge__name">${a.title}</div>
@@ -2986,7 +3012,7 @@ window.runRecommendation = function () {
                                 <div class="gami-badge__progress-label">${a.progress} / ${a.target}</div>
                             </div>` : ''}
                         </div>
-                        ${a.earned ? `<div class="gami-badge__check">✓</div>` : ''}
+                        ${a.earned ? `<div class="gami-badge__check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>` : ''}
                     </div>`).join('');
             }
 
@@ -3006,7 +3032,7 @@ window.runRecommendation = function () {
                 document.getElementById('gamiChallengeLeft').textContent =
                     `Actuel : ${ch.current_pct}%`;
                 document.getElementById('gamiChallengeStatus').textContent =
-                    ch.winning ? '✓ Défi réussi !' : `Écart : +${ch.gap}%`;
+                    ch.winning ? '&#10003; Défi réussi !' : `Écart : +${ch.gap}%`;
             }
         })
         .catch(() => {});

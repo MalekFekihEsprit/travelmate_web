@@ -83,6 +83,10 @@ services:
             $rapidApiCurrency: '%env(RAPIDAPI_CURRENCY)%'
             $rapidApiLocale: '%env(RAPIDAPI_LOCALE)%'
             $rapidApiDomain: '%env(RAPIDAPI_DOMAIN)%'
+    
+    App\Service\WikimediaImageService:
+        arguments:
+            $pexelsApiKey: '%env(PEXELS_API_KEY)%'
 
     App\Service\UnsplashImageService:
         arguments:

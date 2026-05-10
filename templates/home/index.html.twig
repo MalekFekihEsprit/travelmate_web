@@ -2,83 +2,1276 @@
 
 {% block title %}Accueil | TravelMate{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ═══════════════════════════════════════════════════════
+   TRAVELMATE — PAGE ACCUEIL
+   Thème : Clair · Chaud · Crème/Orangé
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  --home-orange:      #c4673a;
+  --home-orange-mid:  #d4794b;
+  --home-orange-soft: rgba(196, 103, 58, 0.12);
+  --home-cream:       #fdf8f2;
+  --home-cream-2:     #f5ede0;
+  --home-cream-3:     #efe4d4;
+  --home-warm:        #8a6040;
+  --home-warm-muted:  rgba(90, 55, 25, 0.48);
+  --home-border:      rgba(196, 150, 100, 0.22);
+  --home-serif:       'Cormorant Garamond', Georgia, serif;
+  --home-sans:        'Outfit', sans-serif;
+  --home-radius:      20px;
+  --home-shadow:      0 18px 48px rgba(90, 55, 25, 0.09);
+}
+
+/* La page d'accueil se scroll normalement — pas de overflow:hidden */
+body.home-page {
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--home-cream);
+}
+
+/* ───────────────────────────────────────────────
+   GRAIN — très léger, chaleureux
+   ─────────────────────────────────────────────── */
+.home-grain {
+  position: fixed; inset: 0;
+  z-index: 9997;
+  pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px;
+  animation: home-grain-anim 0.6s steps(2) infinite;
+}
+@keyframes home-grain-anim {
+  0%,100%{ transform:translate(0,0); }
+  25%    { transform:translate(-1%,-2%); }
+  75%    { transform:translate(2%,1%); }
+}
+
+/* ═══════════════════════════════════════════════
+   INTRO OVERLAY — VIDÉO PLEIN ÉCRAN
+   ═══════════════════════════════════════════════ */
+#home-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: #0a0500;
+  overflow: hidden;
+  /* Bloque le scroll pendant l'intro */
+  touch-action: none;
+}
+#home-intro.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 1.1s cubic-bezier(.16,1,.3,1), visibility 0s linear 1.1s;
+}
+
+/* La vidéo occupe tout l'écran */
+#intro-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* Vignette douce sur les bords */
+#intro-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 45%, rgba(10,5,0,0.38) 100%),
+    linear-gradient(to bottom, rgba(10,5,0,0.12) 0%, transparent 20%, transparent 75%, rgba(10,5,0,0.25) 100%);
+}
+
+/* Barre de progression synchronisée sur la vidéo */
+#intro-progress-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px; width: 0;
+  z-index: 10;
+  background: linear-gradient(90deg, #c4673a, #f0a060);
+  box-shadow: 0 0 10px rgba(196,103,58,0.65);
+}
+
+/* Logo TravelMate centré pendant l'intro */
+#intro-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  text-align: center;
+  opacity: 0;
+  animation: home-fade 1.2s ease 0.3s forwards;
+}
+#intro-logo-name {
+  font-family: var(--home-serif);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 300;
+  color: var(--home-cream);
+  letter-spacing: 0.12em;
+  text-shadow: 0 2px 40px rgba(0,0,0,0.5);
+}
+#intro-logo-name b {
+  color: #f0a060;
+  font-weight: 300;
+}
+#intro-logo-sub {
+  font-family: var(--home-sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: rgba(253,248,242,0.55);
+  margin-top: 8px;
+}
+
+/* Bouton Passer */
+#intro-skip-btn {
+  position: absolute;
+  bottom: 30px; right: 34px;
+  z-index: 10;
+  background: rgba(253,248,242,0.08);
+  border: 1px solid rgba(253,248,242,0.2);
+  color: rgba(253,248,242,0.65);
+  font-family: var(--home-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border-radius: 40px;
+  cursor: pointer;
+  opacity: 1;
+  transition: all .3s;
+}
+#intro-skip-btn:hover {
+  background: rgba(196,103,58,0.28);
+  border-color: rgba(196,103,58,0.55);
+  color: #fff;
+}
+
+/* Scroll hint — apparaît vers la fin de la vidéo */
+#intro-scroll-hint {
+  position: absolute;
+  bottom: 34px; left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+#intro-scroll-hint.show {
+  animation: home-fade .8s ease forwards;
+}
+.intro-scroll-label {
+  font-family: var(--home-sans);
+  font-size: 0.6rem;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: rgba(253,248,242,0.6);
+}
+.intro-scroll-bar {
+  width: 1px;
+  height: 44px;
+  background: linear-gradient(to bottom, #f0a060, transparent);
+  animation: intro-bar-anim 1.5s ease-in-out infinite;
+}
+@keyframes intro-bar-anim {
+  0%  { transform:scaleY(0); transform-origin:top; }
+  50% { transform:scaleY(1); transform-origin:top; }
+  51% { transform:scaleY(1); transform-origin:bottom; }
+  100%{ transform:scaleY(0); transform-origin:bottom; }
+}
+
+@keyframes home-fade { to { opacity:1; } }
+@keyframes home-fade-up {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   HERO — Vidéo fin.mp4 en background (boucle)
+   ═══════════════════════════════════════════════ */
+.home-cinematic-hero {
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 7vw 9vh;
+}
+
+/* Vidéo hero en background, en boucle silencieuse */
+#hero-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.52) saturate(1.15) sepia(0.12);
+  transform: scale(1.05);
+  will-change: transform;
+  z-index: 0;
+}
+
+/* Vignette chaude */
+.hch-vignette {
+  position: absolute; inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(to bottom,
+      rgba(253,235,200,0.05) 0%,
+      transparent 25%,
+      transparent 45%,
+      rgba(90,48,20,0.72) 100%
+    );
+}
+
+/* Badge live */
+.hch-badge {
+  position: absolute; top:40px; right:7vw;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(253,248,242,0.15);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(253,248,242,0.25);
+  border-radius: 50px;
+  padding: 10px 18px;
+  z-index: 2;
+  opacity: 0;
+  animation: home-fade-up .8s ease 1.2s both;
+}
+.hch-badge-dot {
+  width: 7px; height: 7px;
+  background: #7ed9a0;
+  border-radius: 50%;
+  animation: hch-blink 2s ease infinite;
+}
+@keyframes hch-blink {
+  0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(126,217,160,0.5); }
+  50%{ opacity:.65; box-shadow:0 0 0 6px rgba(126,217,160,0); }
+}
+.hch-badge-text {
+  font-family: var(--home-sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(253,248,242,0.85);
+}
+
+/* Contenu hero */
+.hch-content {
+  position: relative; z-index: 2;
+  max-width: 800px;
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+.hch-content.vis { opacity:1; transform:translateY(0); }
+
+.hch-eyebrow {
+  font-family: var(--home-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: #f0b070;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.hch-eyebrow::before {
+  content: '';
+  display: block;
+  width: 36px; height: 1px;
+  background: #f0b070;
+}
+
+.hch-title {
+  font-family: var(--home-serif);
+  font-size: clamp(3rem, 6.5vw, 7rem);
+  font-weight: 300;
+  line-height: 0.96;
+  color: var(--home-cream);
+  letter-spacing: -0.01em;
+  margin-bottom: 26px;
+  text-shadow: 0 2px 30px rgba(40,20,5,0.4);
+}
+.hch-title em { font-style: italic; color: #f5c080; }
+
+.hch-desc {
+  font-family: var(--home-sans);
+  font-size: 0.92rem;
+  line-height: 1.78;
+  color: rgba(253,248,242,0.75);
+  max-width: 450px;
+  margin-bottom: 38px;
+  letter-spacing: 0.025em;
+}
+
+.hch-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+
+/* Bouton primaire — orange chaleureux */
+.hch-btn-primary {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--home-orange);
+  color: #fff;
+  font-family: var(--home-sans);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 15px 30px;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all .3s cubic-bezier(.16,1,.3,1);
+  position: relative; overflow: hidden;
+  box-shadow: 0 8px 30px rgba(196,103,58,0.4);
+}
+.hch-btn-primary::before {
+  content: '';
+  position: absolute; inset:0;
+  background: rgba(255,255,255,0.12);
+  transform: translateX(-110%);
+  transition: transform .4s cubic-bezier(.16,1,.3,1);
+}
+.hch-btn-primary:hover::before { transform:translateX(0); }
+.hch-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 50px rgba(196,103,58,0.5);
+  color: #fff;
+}
+
+/* Bouton fantôme clair */
+.hch-btn-ghost {
+  font-family: var(--home-sans);
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(253,248,242,0.7);
+  text-decoration: none;
+  display: flex; align-items: center; gap: 10px;
+  transition: color .3s;
+}
+.hch-btn-ghost:hover { color: var(--home-cream); }
+.hch-btn-ghost-arrow {
+  width: 34px; height: 1px;
+  background: currentColor; position: relative;
+  transition: width .3s;
+}
+.hch-btn-ghost:hover .hch-btn-ghost-arrow { width: 52px; }
+.hch-btn-ghost-arrow::after {
+  content: '';
+  position: absolute; right:0; top:-3px;
+  width:6px; height:6px;
+  border-right: 1px solid currentColor;
+  border-top: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION ÉDITORIALE
+   ═══════════════════════════════════════════════ */
+.home-editorial {
+  position: relative;
+  height: 100vh;
+  display: flex; align-items: center;
+  overflow: hidden;
+}
+.hed-bg {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.38) saturate(1.3) sepia(0.2);
+  transform: scale(1.03);
+  transition: transform .9s ease;
+}
+.home-editorial:hover .hed-bg { transform: scale(1.0); }
+
+.hed-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(90,45,15,0.62) 0%,
+    rgba(150,80,30,0.15) 50%,
+    transparent 75%
+  );
+}
+
+.hed-content {
+  position: relative; z-index: 2;
+  padding: 0 8vw; width: 100%;
+}
+.hed-num {
+  font-family: var(--home-sans);
+  font-size: 0.66rem; letter-spacing: 0.44em;
+  color: #f0b070; margin-bottom: 22px;
+}
+.hed-headline {
+  font-family: var(--home-serif);
+  font-size: clamp(3.5rem, 9vw, 11rem);
+  font-weight: 300; line-height: 0.9;
+  color: var(--home-cream);
+  letter-spacing: -0.02em; text-transform: uppercase;
+  text-shadow: 0 4px 40px rgba(40,15,5,0.5);
+}
+.hed-headline .hed-dim {
+  font-style: italic;
+  color: rgba(253,235,200,0.42);
+}
+.hed-sub {
+  font-family: var(--home-sans);
+  font-size: 0.82rem; letter-spacing: 0.14em;
+  color: rgba(253,248,242,0.65);
+  margin-top: 28px; text-transform: uppercase;
+  max-width: 360px; line-height: 1.85;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION DESTINATIONS
+   ═══════════════════════════════════════════════ */
+.home-destinations {
+  padding: 110px 6vw 100px;
+  background: var(--home-cream);
+  position: relative;
+  overflow: hidden;
+}
+.home-destinations::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--home-border), transparent);
+}
+.home-destinations::after {
+  content: '';
+  position: absolute;
+  top: -80px; right: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(196,103,58,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hdest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.hdest-label {
+  font-family: var(--home-sans);
+  font-size: 0.64rem; letter-spacing: 0.44em;
+  text-transform: uppercase; color: var(--home-orange);
+  margin-bottom: 12px;
+}
+.hdest-title {
+  font-family: var(--home-serif);
+  font-size: clamp(2.2rem, 4vw, 4.5rem);
+  font-weight: 300;
+  color: #2a1a0a;
+  line-height: 1.08;
+}
+.hdest-title em { font-style: italic; color: rgba(42,26,10,0.42); }
+.hdest-link {
+  font-family: var(--home-sans);
+  font-size: 0.72rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--home-orange);
+  text-decoration: none; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(196,103,58,0.3);
+  padding-bottom: 3px;
+  transition: border-color .3s, gap .3s;
+  white-space: nowrap;
+}
+.hdest-link:hover { border-color: var(--home-orange); gap: 16px; }
+
+/* ── LA GRILLE — identique au preview ── */
+.hdest-grid {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr 1fr;
+  grid-template-rows: 460px 280px;
+  gap: 4px;
+  border-radius: var(--home-radius);
+  overflow: hidden;
+  box-shadow: var(--home-shadow);
+}
+.hdest-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--home-cream-3);
+}
+/* La première carte occupe les 2 lignes */
+.hdest-card:first-child { grid-row: span 2; }
+
+.hdest-card-img {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.58) saturate(1.1);
+  transform: scale(1.05);
+  transition: transform .8s cubic-bezier(.16,1,.3,1), filter .7s;
+}
+.hdest-card:hover .hdest-card-img {
+  transform: scale(1);
+  filter: brightness(0.72) saturate(1.2);
+}
+.hdest-card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(50,22,5,0.88) 0%, transparent 52%);
+}
+.hdest-card-body {
+  position: absolute; bottom:0; left:0; right:0;
+  padding: 24px 22px;
+  transform: translateY(6px);
+  transition: transform .4s cubic-bezier(.16,1,.3,1);
+}
+.hdest-card:hover .hdest-card-body { transform: translateY(0); }
+.hdest-card-tag {
+  font-family: var(--home-sans);
+  font-size: 0.57rem; letter-spacing: 0.32em;
+  text-transform: uppercase; color: #f0b070;
+  margin-bottom: 6px;
+}
+.hdest-card-name {
+  font-family: var(--home-serif);
+  font-size: 1.75rem; font-weight: 300;
+  color: var(--home-cream); line-height: 1.05;
+}
+.hdest-card:first-child .hdest-card-name { font-size: 2.8rem; }
+.hdest-card-meta {
+  font-family: var(--home-sans);
+  font-size: 0.63rem; letter-spacing: 0.1em;
+  color: rgba(253,248,242,0.62); margin-top: 7px;
+  opacity: 0; transform: translateY(5px);
+  transition: opacity .4s .1s, transform .4s .1s;
+}
+.hdest-card:hover .hdest-card-meta { opacity:1; transform:translateY(0); }
+
+/* ═══════════════════════════════════════════════
+   STATISTIQUES
+   ═══════════════════════════════════════════════ */
+.home-stats {
+  padding: 110px 8vw;
+  background: var(--home-cream-2);
+  position: relative;
+  overflow: hidden;
+}
+.home-stats::before {
+  content: '';
+  position: absolute; bottom:-110px; left:-110px;
+  width: 460px; height: 460px;
+  background: radial-gradient(circle, rgba(196,103,58,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hstats-label {
+  font-family: var(--home-sans);
+  font-size: 0.65rem; letter-spacing: 0.44em;
+  text-transform: uppercase; color: var(--home-orange);
+  margin-bottom: 52px;
+}
+.hstats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 800px;
+}
+.hstat-item {
+  padding-right: 46px; margin-right: 46px;
+  border-right: 1px solid var(--home-border);
+}
+.hstat-item:last-child { border:none; padding:0; margin:0; }
+.hstat-num {
+  font-family: var(--home-serif);
+  font-size: clamp(3rem, 5.5vw, 5.5rem);
+  font-weight: 300; color: #2a1a0a;
+  line-height: 1; margin-bottom: 10px;
+}
+.hstat-num span { color: var(--home-orange); }
+.hstat-desc {
+  font-family: var(--home-sans);
+  font-size: 0.7rem; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--home-warm-muted);
+  line-height: 1.65;
+}
+
+/* ═══════════════════════════════════════════════
+   FONCTIONNEMENT
+   ═══════════════════════════════════════════════ */
+.home-how {
+  padding: 120px 7vw;
+  background: var(--home-cream);
+  position: relative;
+  overflow: hidden;
+}
+.home-how::before {
+  content: '';
+  position: absolute; top:-100px; right:-100px;
+  width: 460px; height: 460px;
+  background: radial-gradient(circle, rgba(196,103,58,0.055) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hhow-title {
+  font-family: var(--home-serif);
+  font-size: clamp(2rem, 4.5vw, 5rem);
+  font-weight: 300; color: #2a1a0a;
+  line-height: 1.05; margin-bottom: 70px;
+}
+.hhow-title em { font-style: italic; color: rgba(42,26,10,0.38); }
+.hhow-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--home-border);
+  border-radius: var(--home-radius);
+  overflow: hidden;
+  box-shadow: var(--home-shadow);
+}
+.hhow-step {
+  background: #fffaf4;
+  padding: 40px 32px;
+  position: relative;
+  transition: background .4s;
+  overflow: hidden;
+}
+.hhow-step::after {
+  content: '';
+  position: absolute; bottom:0; left:0;
+  width:0; height:3px;
+  background: var(--home-orange);
+  transition: width .5s cubic-bezier(.16,1,.3,1);
+}
+.hhow-step:hover { background: rgba(196,103,58,0.04); }
+.hhow-step:hover::after { width: 100%; }
+.hhow-step-num {
+  font-family: var(--home-serif);
+  font-size: 3.5rem; font-weight: 300;
+  color: rgba(196,103,58,0.12);
+  line-height: 1; margin-bottom: 24px;
+  transition: color .4s;
+}
+.hhow-step:hover .hhow-step-num { color: rgba(196,103,58,0.22); }
+.hhow-step-icon {
+  width: 42px; height: 42px;
+  border: 1px solid rgba(196,103,58,0.25);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; color: var(--home-orange);
+  transition: border-color .3s, background .3s;
+}
+.hhow-step:hover .hhow-step-icon {
+  border-color: var(--home-orange);
+  background: rgba(196,103,58,0.08);
+}
+.hhow-step-title {
+  font-family: var(--home-serif);
+  font-size: 1.3rem; font-weight: 400;
+  color: #2a1a0a; margin-bottom: 12px; line-height: 1.2;
+}
+.hhow-step-desc {
+  font-family: var(--home-sans);
+  font-size: 0.8rem; line-height: 1.75;
+  color: var(--home-warm-muted); letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════
+   CTA FINAL
+   ═══════════════════════════════════════════════ */
+.home-cta {
+  position: relative;
+  height: 90vh;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; overflow: hidden;
+}
+.hcta-bg {
+  position: absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=2000&q=85');
+  background-size: cover;
+  background-position: center 38%;
+  filter: brightness(0.38) saturate(1.2) sepia(0.25);
+  transform: scale(1.03);
+}
+.hcta-overlay {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 15%, rgba(70,30,5,0.55) 100%),
+    linear-gradient(to bottom, rgba(253,235,200,0.06) 0%, transparent 50%);
+}
+.hcta-content {
+  position: relative; z-index: 2;
+  max-width: 820px; padding: 0 36px;
+}
+.hcta-pre {
+  font-family: var(--home-sans);
+  font-size: 0.67rem; letter-spacing: 0.44em;
+  text-transform: uppercase; color: #f0b070; margin-bottom: 26px;
+}
+.hcta-title {
+  font-family: var(--home-serif);
+  font-size: clamp(2.8rem, 6.5vw, 6.5rem);
+  font-weight: 300; color: var(--home-cream); line-height: 1.0; margin-bottom: 26px;
+  text-shadow: 0 4px 30px rgba(40,15,5,0.45);
+}
+.hcta-title em { font-style: italic; color: #f5c080; }
+.hcta-sub {
+  font-family: var(--home-sans);
+  font-size: 0.88rem; letter-spacing: 0.055em;
+  color: rgba(253,248,242,0.68); margin-bottom: 46px; line-height: 1.78;
+}
+.hcta-actions { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════
+   SCROLL REVEAL — classe unique "sr" + "vis"
+   ═══════════════════════════════════════════════ */
+.sr {
+  opacity: 0;
+  transform: translateY(44px);
+  transition: opacity .85s cubic-bezier(.16,1,.3,1),
+              transform .85s cubic-bezier(.16,1,.3,1);
+}
+.sr.left  { transform: translateX(-44px); }
+.sr.right { transform: translateX(44px); }
+/* "vis" est la classe ajoutée par le JS — unifiée partout */
+.sr.vis { opacity:1; transform:translate(0,0); }
+.sr-d1 { transition-delay: .1s; }
+.sr-d2 { transition-delay: .22s; }
+.sr-d3 { transition-delay: .35s; }
+.sr-d4 { transition-delay: .48s; }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  .hdest-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+  .hdest-card:first-child { grid-row: auto; }
+  .hhow-steps { grid-template-columns: 1fr 1fr; }
+  .hstats-grid { grid-template-columns: 1fr; gap: 36px; }
+  .hstat-item {
+    border-right: none;
+    border-bottom: 1px solid var(--home-border);
+    padding-bottom: 28px; margin-bottom: 28px;
+    padding-right: 0; margin-right: 0;
+  }
+  .hstat-item:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+}
+@media (max-width: 640px) {
+  .hhow-steps { grid-template-columns: 1fr; }
+  .hdest-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+  .hdest-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .hdest-card:first-child .hdest-card-name { font-size: 2.2rem; }
+}
+</style>
+{% endblock %}
+
 {% block body %}
-    <section class="home-hero">
-        <div class="home-hero__content">
-            <div class="home-hero__text">
-                <span class="home-hero__eyebrow">Explorez autrement avec TravelMate</span>
+<script>document.body.classList.add('home-page');</script>
 
-                <h1 class="home-hero__title">
-                    Organisez vos voyages,
-                    partagez vos idées,
-                    créez des souvenirs inoubliables.
-                </h1>
+<!-- ═══ GRAIN léger ═══ -->
+<div class="home-grain"></div>
 
-                <p class="home-hero__description">
-                    TravelMate vous aide à planifier chaque étape de votre aventure :
-                    destinations, hébergements, activités, budgets et voyages en groupe,
-                    dans un espace simple, inspirant et agréable à utiliser.
-                </p>
+<!-- ═══════════════════════════════════════════
+     INTRO — Vidéo plein écran (/public/fin.mp4)
+     Se ferme automatiquement à la fin de la vidéo
+     ou sur clic du bouton "Passer"
+     ═══════════════════════════════════════════ -->
+<div id="home-intro">
 
-                <div class="home-hero__actions">
-                    <a href="{{ path('app_voyages') }}" class="btn btn--primary">
-                        Commencer un voyage
-                    </a>
+  <video
+    id="intro-video"
+    muted
+    autoplay
+    playsinline
+    preload="auto"
+  >
+    <source src="/videos/fin.mp4" type="video/mp4">
+  </video>
 
-                    <a href="{{ path('app_home') }}"{# path('app_destinations') #} class="btn btn--ghost">
-                        Découvrir les destinations
-                    </a>
-                </div>
+  <div id="intro-vignette"></div>
 
-                <div class="home-hero__highlights">
-                    <div class="hero-highlight">
-                        <span class="hero-highlight__icon">✈️</span>
-                        <span>Planification claire</span>
-                    </div>
-                    <div class="hero-highlight">
-                        <span class="hero-highlight__icon">🤝</span>
-                        <span>Voyages collaboratifs</span>
-                    </div>
-                    <div class="hero-highlight">
-                        <span class="hero-highlight__icon">💰</span>
-                        <span>Budgets mieux maîtrisés</span>
-                    </div>
-                </div>
-            </div>
+  <!-- Logo centré visible pendant l'intro -->
+  <div id="intro-logo">
+    <div id="intro-logo-name">Travel<b>Mate</b></div>
+    <div id="intro-logo-sub">Voyages Collaboratifs</div>
+  </div>
 
-            <div class="home-hero__media">
-                <div class="hero-visual-card">
-                    <img
-                        src="{{ asset('images/hero-img2.jpg') }}"
-                        alt="Voyage inspirant TravelMate"
-                        class="hero-visual-card__image"
-                    >
+  <!-- Barre de progression -->
+  <div id="intro-progress-bar"></div>
 
-                    <div class="hero-visual-card__badge hero-visual-card__badge--top">
-                        <span>🌍</span>
-                        <div>
-                            <strong>Inspirez votre prochain départ</strong>
-                            <small>Des idées, des plans, une seule plateforme</small>
-                        </div>
-                    </div>
+  <!-- Bouton Passer -->
+  <button id="intro-skip-btn" type="button" onclick="window._skipIntro && window._skipIntro()">Passer</button>
 
-                    <div class="hero-visual-card__badge hero-visual-card__badge--bottom">
-                        <span>📌</span>
-                        <div>
-                            <strong>Destinations, activités, budgets</strong>
-                            <small>Tout votre voyage, au même endroit</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- Scroll hint (apparaît à la fin) -->
+  <div id="intro-scroll-hint" onclick="window._skipIntro && window._skipIntro()">
+    <span class="intro-scroll-label">Défiler</span>
+    <div class="intro-scroll-bar"></div>
+  </div>
 
-    {# Ton contenu d'accueil ensuite #}
-    <section class="surface-card" style="margin-top: 2rem;">
-        <h2 style="margin-bottom: .75rem;">Bienvenue sur TravelMate</h2>
-        <p style="color: var(--color-text-muted);">
-            Ici tu peux ajouter le contenu principal de ta page d’accueil.
-        </p>
-    </section>
+</div>
+
+{# ── SCRIPT INTRO INLINE — doit être exécuté dès que le DOM est prêt,
+   avant tout importmap/bundle, pour que skipIntro() soit disponible
+   au moment où l'utilisateur clique sur "Passer" ── #}
+<script>
+(function () {
+  'use strict';
+
+  // Bloque le scroll pendant l'intro
+  document.body.style.overflow = 'hidden';
+
+  var introEl    = document.getElementById('home-intro');
+  var introVideo = document.getElementById('intro-video');
+  var progBar    = document.getElementById('intro-progress-bar');
+  var scrollHint = document.getElementById('intro-scroll-hint');
+  var skipBtn    = document.getElementById('intro-skip-btn');
+  var introDone  = false;
+  var safetyTimer = null;
+
+  function skipIntro() {
+    if (introDone) return;
+    introDone = true;
+
+    if (safetyTimer) clearTimeout(safetyTimer);
+
+    // Stoppe la vidéo proprement
+    if (introVideo) {
+      try { introVideo.pause(); } catch(e) {}
+      introVideo.removeAttribute('src');
+      try { introVideo.load(); } catch(e) {}
+    }
+
+    // Réactive le scroll AVANT la transition
+    document.body.style.overflow  = '';
+    document.body.style.touchAction = '';
+
+    // Fade-out overlay intro
+    introEl.classList.add('hidden');
+
+    // Lance la vidéo hero de fond
+    var hv = document.getElementById('hero-bg-video');
+    if (hv) {
+      hv.muted = true;
+      hv.load();
+      hv.play().catch(function(){});
+    }
+
+    // Après la transition CSS (1.1s) : retire l'overlay et révèle le hero
+    setTimeout(function () {
+      introEl.style.display = 'none';
+      var hc = document.getElementById('hch-content');
+      if (hc) hc.classList.add('vis');
+
+      // Ré-observe tous les éléments .sr pas encore visibles
+      // (l'observer initial les a ratés car l'intro bloquait la vue)
+      document.dispatchEvent(new CustomEvent('introEnded'));
+    }, 1150);
+  }
+
+  // Expose globalement pour les onclick inline (au cas où)
+  window._skipIntro = skipIntro;
+
+  // Attache les listeners dès que le script s'exécute
+  if (skipBtn)    skipBtn.addEventListener('click', skipIntro);
+  if (scrollHint) scrollHint.addEventListener('click', skipIntro);
+
+  // Timer de sécurité : 12s max quoi qu'il arrive
+  safetyTimer = setTimeout(function () {
+    if (!introDone) skipIntro();
+  }, 12000);
+
+  if (introVideo) {
+    // Barre de progression
+    introVideo.addEventListener('timeupdate', function () {
+      if (!introVideo.duration || introVideo.duration === Infinity) return;
+      var pct = (introVideo.currentTime / introVideo.duration) * 100;
+      if (progBar) progBar.style.width = pct + '%';
+      if (pct >= 88 && scrollHint) scrollHint.classList.add('show');
+    });
+
+    // Fin naturelle de la vidéo → skip automatique après 0.5s
+    introVideo.addEventListener('ended', function () {
+      if (scrollHint) scrollHint.classList.add('show');
+      setTimeout(skipIntro, 500);
+    });
+
+    // Erreur → skip après 1s
+    introVideo.addEventListener('error', function () {
+      console.warn('[Intro] Erreur vidéo, skip automatique');
+      setTimeout(function () { if (!introDone) skipIntro(); }, 1000);
+    });
+
+    // Lance la lecture (la vidéo a déjà autoplay + muted dans le HTML,
+    // mais on force aussi via JS pour les navigateurs récalcitrants)
+    var p = introVideo.play();
+    if (p && typeof p.then === 'function') {
+      p.catch(function (err) {
+        console.warn('[Intro] Autoplay bloqué :', err);
+        // Autoplay refusé même muet → affiche quand même le skip btn
+        // et laisse l'utilisateur cliquer, ou le safety timer fera le skip
+        if (skipBtn) skipBtn.style.opacity = '1';
+      });
+    }
+  } else {
+    // Pas de vidéo dans le DOM → skip direct
+    skipIntro();
+  }
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════
+     HERO — Vidéo fin.mp4 en fond, boucle
+     "L'aventure commence ici."
+     ═══════════════════════════════════════════ -->
+<section class="home-cinematic-hero">
+
+  {# Vidéo hero en background, en boucle silencieuse — finn.mp4 #}
+  <video
+    id="hero-bg-video"
+    muted
+    loop
+    playsinline
+    preload="none"
+  >
+    <source src="/videos/finn.mp4" type="video/mp4">
+  </video>
+
+  <div class="hch-vignette"></div>
+
+  <div class="hch-badge">
+    <div class="hch-badge-dot"></div>
+    <span class="hch-badge-text">2 400+ voyageurs actifs</span>
+  </div>
+
+  <div class="hch-content" id="hch-content">
+    <p class="hch-eyebrow">Voyages Collaboratifs</p>
+    <h1 class="hch-title">
+      L'aventure<br>
+      commence <em>ici.</em>
+    </h1>
+    <p class="hch-desc">
+      Planifiez, partagez et vivez des voyages uniques avec vos proches.
+      TravelMate réunit tout ce dont vous avez besoin — en un seul espace clair et agréable.
+    </p>
+    <div class="hch-actions">
+      {% if app.user %}
+        <a href="{{ path('app_voyages') }}" class="hch-btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Créer mon voyage
+        </a>
+      {% else %}
+        <a href="{{ path('app_register') }}" class="hch-btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Créer mon compte
+        </a>
+      {% endif %}
+      <a href="{{ path('app_destination_index') }}" class="hch-btn-ghost">
+        <span class="hch-btn-ghost-arrow"></span>
+        Explorer les destinations
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ÉDITORIALE 1 — "Voyager, c'est vivre"
+     ═══════════════════════════════════════════ -->
+<section class="home-editorial">
+  <div class="hed-bg"
+       style="background-image:url('https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=2000&q=80');
+              background-position:center 35%;">
+  </div>
+  <div class="hed-overlay"></div>
+  <div class="hed-content">
+    <div class="hed-num sr">— 01</div>
+    <h2 class="hed-headline sr sr-d1">
+      Voyager<br>
+      <span class="hed-dim">c'est vivre</span>
+    </h2>
+    <p class="hed-sub sr sr-d2">
+      Chaque destination est une page blanche.<br>
+      Écrivez-la ensemble avec TravelMate.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     DESTINATIONS — Grille 5 cartes
+     ═══════════════════════════════════════════ -->
+<section class="home-destinations">
+  <div class="hdest-header">
+    <div>
+      <div class="hdest-label sr">Nos destinations</div>
+      <h2 class="hdest-title sr sr-d1">
+        Des endroits<br>
+        <em>qui inspirent</em>
+      </h2>
+    </div>
+    <a href="{{ path('app_destination_index') }}" class="hdest-link sr sr-d2">
+      Voir toutes les destinations →
+    </a>
+  </div>
+
+  <div class="hdest-grid">
+    <!-- Carte 1 — grande (span 2 lignes) -->
+    <div class="hdest-card sr">
+      <div class="hdest-card-img"
+           style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80')"></div>
+      <div class="hdest-card-overlay"></div>
+      <div class="hdest-card-body">
+        <div class="hdest-card-tag">Incontournable</div>
+        <div class="hdest-card-name">Santorini,<br>Grèce</div>
+        <div class="hdest-card-meta">142 voyages · Depuis 890 €</div>
+      </div>
+    </div>
+    <!-- Carte 2 -->
+    <div class="hdest-card sr sr-d1">
+      <div class="hdest-card-img"
+           style="background-image:url('https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=900&q=80')"></div>
+      <div class="hdest-card-overlay"></div>
+      <div class="hdest-card-body">
+        <div class="hdest-card-tag">Asie</div>
+        <div class="hdest-card-name">Kyoto,<br>Japon</div>
+        <div class="hdest-card-meta">89 voyages · Depuis 1 290 €</div>
+      </div>
+    </div>
+    <!-- Carte 3 -->
+    <div class="hdest-card sr sr-d2">
+      <div class="hdest-card-img"
+           style="background-image:url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=900&q=80')"></div>
+      <div class="hdest-card-overlay"></div>
+      <div class="hdest-card-body">
+        <div class="hdest-card-tag">Nature</div>
+        <div class="hdest-card-name">Islande</div>
+        <div class="hdest-card-meta">67 voyages · Depuis 1 050 €</div>
+      </div>
+    </div>
+    <!-- Carte 4 -->
+    <div class="hdest-card sr sr-d1">
+      <div class="hdest-card-img"
+           style="background-image:url('https://images.unsplash.com/photo-1501854140801-50d01698950b?w=900&q=80')"></div>
+      <div class="hdest-card-overlay"></div>
+      <div class="hdest-card-body">
+        <div class="hdest-card-tag">Amérique du Sud</div>
+        <div class="hdest-card-name">Brésil</div>
+        <div class="hdest-card-meta">54 voyages · Depuis 1 180 €</div>
+      </div>
+    </div>
+    <!-- Carte 5 -->
+    <div class="hdest-card sr sr-d2">
+      <div class="hdest-card-img"
+           style="background-image:url('https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=900&q=80')"></div>
+      <div class="hdest-card-overlay"></div>
+      <div class="hdest-card-body">
+        <div class="hdest-card-tag">Europe</div>
+        <div class="hdest-card-name">Venise,<br>Italie</div>
+        <div class="hdest-card-meta">203 voyages · Depuis 620 €</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ÉDITORIALE 2 — "Organisez ensemble"
+     ═══════════════════════════════════════════ -->
+<section class="home-editorial">
+  <div class="hed-bg"
+       style="background-image:url('https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=2000&q=80');
+              background-position:center 55%;">
+  </div>
+  <div class="hed-overlay" style="background:linear-gradient(135deg,rgba(80,38,10,0.7) 0%,transparent 72%)"></div>
+  <div class="hed-content">
+    <div class="hed-num sr">— 02</div>
+    <h2 class="hed-headline sr sr-d1">
+      Organisez<br>
+      <span class="hed-dim">ensemble</span>
+    </h2>
+    <p class="hed-sub sr sr-d2">
+      Budgets partagés, itinéraires collaboratifs,<br>
+      hébergements groupés. Zéro friction.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     STATISTIQUES
+     ═══════════════════════════════════════════ -->
+<section class="home-stats">
+  <div class="hstats-label sr">TravelMate en chiffres</div>
+  <div class="hstats-grid">
+    <div class="hstat-item sr sr-d1">
+      <div class="hstat-num" data-count="2" data-suffix="K+">2<span>K+</span></div>
+      <div class="hstat-desc">Voyageurs<br>actifs</div>
+    </div>
+    <div class="hstat-item sr sr-d2">
+      <div class="hstat-num" data-count="140" data-suffix="+">140<span>+</span></div>
+      <div class="hstat-desc">Destinations<br>disponibles</div>
+    </div>
+    <div class="hstat-item sr sr-d3">
+      <div class="hstat-num" data-count="98" data-suffix="%">98<span>%</span></div>
+      <div class="hstat-desc">Satisfaction<br>utilisateurs</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FONCTIONNEMENT
+     ═══════════════════════════════════════════ -->
+<section class="home-how">
+  <h2 class="hhow-title sr">
+    Comment<br>
+    ça <em>fonctionne</em>
+  </h2>
+  <div class="hhow-steps">
+    <div class="hhow-step sr">
+      <div class="hhow-step-num">01</div>
+      <div class="hhow-step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      </div>
+      <div class="hhow-step-title">Créez votre voyage</div>
+      <div class="hhow-step-desc">Définissez destination, dates et budget. Invitez vos compagnons de route en quelques secondes.</div>
+    </div>
+    <div class="hhow-step sr sr-d1">
+      <div class="hhow-step-num">02</div>
+      <div class="hhow-step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="hhow-step-title">Planifiez ensemble</div>
+      <div class="hhow-step-desc">Chaque membre contribue aux activités, hébergements et itinéraires. Tout est synchronisé en temps réel.</div>
+    </div>
+    <div class="hhow-step sr sr-d2">
+      <div class="hhow-step-num">03</div>
+      <div class="hhow-step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      </div>
+      <div class="hhow-step-title">Gérez le budget</div>
+      <div class="hhow-step-desc">Suivez les dépenses, répartissez les coûts et gardez le contrôle total sur vos finances de voyage.</div>
+    </div>
+    <div class="hhow-step sr sr-d3">
+      <div class="hhow-step-num">04</div>
+      <div class="hhow-step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 19-7z"/></svg>
+      </div>
+      <div class="hhow-step-title">Partez l'esprit léger</div>
+      <div class="hhow-step-desc">Tous vos documents, réservations et plans réunis au même endroit. Plus qu'à vivre l'aventure.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CTA FINAL
+     ═══════════════════════════════════════════ -->
+<section class="home-cta">
+  <div class="hcta-bg"></div>
+  <div class="hcta-overlay"></div>
+  <div class="hcta-content">
+    <p class="hcta-pre sr">Prêt pour l'aventure ?</p>
+    <h2 class="hcta-title sr sr-d1">
+      Votre prochain voyage<br>
+      commence <em>aujourd'hui.</em>
+    </h2>
+    <p class="hcta-sub sr sr-d2">
+      Rejoignez des milliers de voyageurs qui planifient ensemble.<br>
+      Gratuit, collaboratif, sans limite.
+    </p>
+    <div class="hcta-actions sr sr-d3">
+      {% if app.user %}
+        <a href="{{ path('app_voyages') }}" class="hch-btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Créer un voyage
+        </a>
+      {% else %}
+        <a href="{{ path('app_register') }}" class="hch-btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Créer mon compte
+        </a>
+      {% endif %}
+      <a href="{{ path('app_destination_index') }}" class="hch-btn-ghost">
+        <span class="hch-btn-ghost-arrow"></span>
+        Explorer les destinations
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+// ════════════════════════════════════════════════
+//   TRAVELMATE — HOMEPAGE JS (parallax + reveal)
+//   NB : le JS de l'intro vidéo est un <script> inline
+//        placé juste après #home-intro dans le HTML,
+//        pour s'exécuter avant tout importmap/bundle.
+// ════════════════════════════════════════════════
+
+// ── PARALLAX HERO léger sur la vidéo ─────────────────────────────────────
+var heroVid = document.getElementById('hero-bg-video');
+window.addEventListener('scroll', function () {
+  var y = window.scrollY;
+  if (heroVid && y < window.innerHeight * 1.2) {
+    heroVid.style.transform = 'scale(1.05) translateY(' + (y * 0.22) + 'px)';
+  }
+}, { passive: true });
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────────────
+// Classe CSS cible : "vis" (cohérent avec tout le CSS de cette page)
+var srEls = document.querySelectorAll('.sr');
+var srObs = new IntersectionObserver(function (entries) {
+  entries.forEach(function (e) {
+    if (e.isIntersecting) {
+      e.target.classList.add('vis');
+      srObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+srEls.forEach(function (el) { srObs.observe(el); });
+
+// Quand l'intro se ferme, ré-observe tous les .sr pas encore visibles
+// (ils ont été observés pendant l'intro et potentiellement ratés)
+document.addEventListener('introEnded', function () {
+  var notYetVisible = document.querySelectorAll('.sr:not(.vis)');
+  notYetVisible.forEach(function (el) { srObs.observe(el); });
+  // Force un mini-scroll pour déclencher les observers sur les éléments déjà dans le viewport
+  window.dispatchEvent(new Event('scroll'));
+});
+
+// ── COUNT-UP STATS ────────────────────────────────────────────────────────
+function countUp(el, target, suffix, dur) {
+  dur = dur || 1800;
+  var start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    var p    = Math.min((ts - start) / dur, 1);
+    var ease = 1 - Math.pow(1 - p, 3);
+    el.innerHTML = Math.round(ease * target) + '<span>' + suffix + '</span>';
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+var statsSection = document.querySelector('.home-stats');
+var statsDone    = false;
+if (statsSection) {
+  new IntersectionObserver(function (entries) {
+    if (entries[0].isIntersecting && !statsDone) {
+      statsDone = true;
+      var nums = statsSection.querySelectorAll('.hstat-num');
+      if (nums[0]) setTimeout(function () { countUp(nums[0], 2,   'K+'); }, 200);
+      if (nums[1]) setTimeout(function () { countUp(nums[1], 140, '+');  }, 400);
+      if (nums[2]) setTimeout(function () { countUp(nums[2], 98,  '%'); }, 600);
+    }
+  }, { threshold: 0.3 }).observe(statsSection);
+}
+</script>
 {% endblock %}

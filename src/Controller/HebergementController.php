@@ -6,7 +6,7 @@ use App\Entity\Hebergement;
 use App\Repository\DestinationRepository;
 use App\Repository\HebergementRepository;
 use App\Service\HebergementScraperService;
-use App\Service\UnsplashImageService;
+use App\Service\WikimediaImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,8 +33,8 @@ class HebergementController extends AbstractController
         foreach ($allDestinations as $destination) {
             if ($destination->getIdDestination()) {
                 $destinationOptionsMap[$destination->getIdDestination()] = [
-                    'id' => $destination->getIdDestination(),
-                    'name' => $destination->getNomDestination() ?? 'Destination',
+                    'id'      => $destination->getIdDestination(),
+                    'name'    => $destination->getNomDestination() ?? 'Destination',
                     'country' => $destination->getPaysDestination() ?? '',
                 ];
             }
@@ -69,19 +69,18 @@ class HebergementController extends AbstractController
 
         usort($hebergements, static function ($left, $right) use ($sort): int {
             return match ($sort) {
-                'name' => strcmp(mb_strtolower($left->getNomHebergement() ?? ''), mb_strtolower($right->getNomHebergement() ?? '')),
-                'price-asc' => (float) ($left->getPrixNuitHebergement() ?? 0) <=> (float) ($right->getPrixNuitHebergement() ?? 0),
-                'price-desc' => (float) ($right->getPrixNuitHebergement() ?? 0) <=> (float) ($left->getPrixNuitHebergement() ?? 0),
+                'name'        => strcmp(mb_strtolower($left->getNomHebergement() ?? ''), mb_strtolower($right->getNomHebergement() ?? '')),
+                'price-asc'   => (float) ($left->getPrixNuitHebergement() ?? 0) <=> (float) ($right->getPrixNuitHebergement() ?? 0),
+                'price-desc'  => (float) ($right->getPrixNuitHebergement() ?? 0) <=> (float) ($left->getPrixNuitHebergement() ?? 0),
                 'rating-desc' => (float) ($right->getNoteHebergement() ?? 0) <=> (float) ($left->getNoteHebergement() ?? 0),
-                'rating-asc' => (float) ($left->getNoteHebergement() ?? 0) <=> (float) ($right->getNoteHebergement() ?? 0),
-                default => ($right->getIdHebergement() ?? 0) <=> ($left->getIdHebergement() ?? 0),
+                'rating-asc'  => (float) ($left->getNoteHebergement() ?? 0) <=> (float) ($right->getNoteHebergement() ?? 0),
+                default       => ($right->getIdHebergement() ?? 0) <=> ($left->getIdHebergement() ?? 0),
             };
         });
 
-        // Count unique types
-        $types = [];
+        $types        = [];
         $destinations = [];
-        
+
         foreach ($hebergements as $hebergement) {
             if ($hebergement->getTypeHebergement()) {
                 $types[$hebergement->getTypeHebergement()] = true;
@@ -92,31 +91,22 @@ class HebergementController extends AbstractController
         }
 
         return $this->render('hebergement/index.html.twig', [
-            'hebergements' => $hebergements,
-            'unique_types' => count($types),
-            'unique_destinations' => count($destinations),
-            'search' => $search,
-            'selected_type' => $typeFilter,
-            'selected_sort' => $sort,
-            'selected_destination' => $selectedDestination,
+            'hebergements'            => $hebergements,
+            'unique_types'            => count($types),
+            'unique_destinations'     => count($destinations),
+            'search'                  => $search,
+            'selected_type'           => $typeFilter,
+            'selected_sort'           => $sort,
+            'selected_destination'    => $selectedDestination,
             'selected_destination_id' => $destinationId,
-            'destination_options' => $destinationOptions,
+            'destination_options'     => $destinationOptions,
         ]);
     }
 
-    
-    
-
-// ──────────────────────────────────────────────────────────────────────────
-    // NEW: Scraping actions
     // ──────────────────────────────────────────────────────────────────────────
- 
-    /**
-     * GET /hebergement/scrape?destination=Paris
-     *
-     * Calls the scraper service and returns results as JSON.
-     * The frontend renders the results as selectable cards.
-     */
+    // Scraping actions
+    // ──────────────────────────────────────────────────────────────────────────
+
     #[Route('/scrape', name: 'app_hebergement_scrape', methods: ['GET'])]
     public function scrapeHebergements(
         Request $request,
@@ -124,9 +114,9 @@ class HebergementController extends AbstractController
         DestinationRepository $destinationRepository
     ): JsonResponse {
         $destinationId = $request->query->getInt('destination_id', 0);
-        $destination = trim((string) $request->query->get('destination', 'Paris'));
-        $maxResults = max(1, min(40, (int) $request->query->get('max', 20)));
- 
+        $destination   = trim((string) $request->query->get('destination', 'Paris'));
+        $maxResults    = max(1, min(40, (int) $request->query->get('max', 20)));
+
         if ($destinationId > 0) {
             $selectedDestination = $destinationRepository->find($destinationId);
             if ($selectedDestination !== null && $selectedDestination->getNomDestination()) {
@@ -137,35 +127,29 @@ class HebergementController extends AbstractController
         if ($destination === '') {
             return $this->json(['error' => 'Veuillez fournir une destination.'], Response::HTTP_BAD_REQUEST);
         }
- 
+
         try {
             $results = $scraperService->scrape($destination, $maxResults);
         } catch (\Throwable $e) {
             return $this->json(['error' => 'Erreur lors du scraping : ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
- 
+
         return $this->json([
             'success' => true,
             'count'   => count($results),
             'data'    => $results,
         ]);
     }
- 
-    /**
-     * POST /hebergement/save-scraped
-     *
-     * Receives a JSON body: { "items": [ {...}, ... ] }
-        * Creates Hebergement entities and stores the remote image URL directly.
-     */
+
     #[Route('/save-scraped', name: 'app_hebergement_save_scraped', methods: ['POST'])]
     public function saveSelectedHebergements(
         Request $request,
         EntityManagerInterface $em,
         DestinationRepository $destinationRepository,
-        UnsplashImageService $unsplashImageService
+        WikimediaImageService $wikimediaImageService
     ): JsonResponse {
         $payload = json_decode($request->getContent(), true);
- 
+
         if (!isset($payload['items']) || !is_array($payload['items'])) {
             return $this->json(['error' => 'Données invalides.'], Response::HTTP_BAD_REQUEST);
         }
@@ -180,12 +164,12 @@ class HebergementController extends AbstractController
             return $this->json(['error' => 'Destination introuvable.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $destinationName = trim((string) $destination->getNomDestination());
+        $destinationName    = trim((string) $destination->getNomDestination());
         $destinationCountry = trim((string) ($destination->getPaysDestination() ?? ''));
- 
+
         $saved  = 0;
         $errors = [];
- 
+
         foreach ($payload['items'] as $index => $data) {
             try {
                 $hebergement = new Hebergement();
@@ -197,29 +181,34 @@ class HebergementController extends AbstractController
                 $hebergement->setLatitudeHebergement(isset($data['latitude']) ? (float) $data['latitude'] : null);
                 $hebergement->setLongitudeHebergement(isset($data['longitude']) ? (float) $data['longitude'] : null);
                 $hebergement->setDestination($destination);
- 
+
+                // Récupère l'image : scraper d'abord, Wikimedia/Pexels en fallback
+                $scraperImageUrl = isset($data['image_url']) && is_string($data['image_url'])
+                    ? $this->sanitizeRemoteUrl($data['image_url'])
+                    : null;
+
                 $imageUrl = $this->resolveHebergementImageUrl(
-                    $unsplashImageService,
+                    $wikimediaImageService,
                     (string) ($data['name'] ?? ''),
                     $destinationName,
                     $destinationCountry,
-                    isset($data['image_url']) && is_string($data['image_url']) ? $data['image_url'] : null,
+                    $scraperImageUrl,
                 );
 
                 if ($imageUrl !== null && $imageUrl !== '' && mb_strlen($imageUrl) <= 2048) {
                     $hebergement->setImageName($imageUrl);
                     $hebergement->setUpdatedAt(new \DateTimeImmutable());
                 }
- 
+
                 $em->persist($hebergement);
                 ++$saved;
             } catch (\Throwable $e) {
                 $errors[] = sprintf('Élément %d : %s', $index, $e->getMessage());
             }
         }
- 
+
         $em->flush();
- 
+
         return $this->json([
             'success' => true,
             'saved'   => $saved,
@@ -227,62 +216,72 @@ class HebergementController extends AbstractController
         ]);
     }
 
-    private function canonicalizeRemoteImageUrl(string $url): string
+    // ──────────────────────────────────────────────────────────────────────────
+    // Private helpers
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function resolveHebergementImageUrl(
+        WikimediaImageService $wikimediaImageService,
+        string $hebergementName,
+        string $destinationName,
+        string $destinationCountry,
+        ?string $fallbackUrl = null
+    ): ?string {
+        // Essai 1 : nom de l'hôtel + ville
+        $url = $wikimediaImageService->findPhotoUrl($hebergementName, $destinationName);
+        if ($url !== null && $url !== '') {
+            return $url;
+        }
+
+        // Essai 2 : nom de l'hôtel + pays
+        if ($destinationCountry !== '') {
+            $url = $wikimediaImageService->findPhotoUrl($hebergementName, $destinationCountry);
+            if ($url !== null && $url !== '') {
+                return $url;
+            }
+        }
+
+        // Essai 3 : nom de l'hôtel seul
+        $url = $wikimediaImageService->findPhotoUrl($hebergementName);
+        if ($url !== null && $url !== '') {
+            return $url;
+        }
+
+        // Fallback : image fournie par le scraper (si présente et valide)
+        if ($fallbackUrl !== null && $fallbackUrl !== '') {
+            return $fallbackUrl;
+        }
+
+        return null;
+    }
+
+    /**
+     * Valide et nettoie une URL distante.
+     * IMPORTANT : on conserve le query string — les URLs Pexels/CDN en ont besoin.
+     * On supprime seulement le fragment (#...) qui ne sert à rien côté serveur.
+     */
+    private function sanitizeRemoteUrl(string $url): string
     {
         $trimmed = trim($url);
         if ($trimmed === '') {
             return '';
         }
 
+        // Supprime uniquement le fragment, PAS le query string
         $trimmed = explode('#', $trimmed, 2)[0];
-        $trimmed = explode('?', $trimmed, 2)[0];
+        $trimmed = trim($trimmed);
 
-        return trim($trimmed);
-    }
-
-    private function resolveHebergementImageUrl(
-        UnsplashImageService $unsplashImageService,
-        string $hebergementName,
-        string $destinationName,
-        string $destinationCountry,
-        ?string $fallbackUrl = null
-    ): ?string {
-        $queries = array_values(array_filter(array_unique([
-            $this->buildUnsplashQuery($hebergementName, $destinationName, $destinationCountry),
-            $this->buildUnsplashQuery($hebergementName, $destinationName, ''),
-            $this->buildUnsplashQuery($hebergementName, '', $destinationCountry),
-            $this->buildUnsplashQuery('', $destinationName, $destinationCountry),
-            $this->buildUnsplashQuery('', $destinationName, ''),
-            $this->buildUnsplashQuery($hebergementName, '', ''),
-        ])));
-
-        foreach ($queries as $query) {
-            $imageUrl = $unsplashImageService->findPhotoUrl($query);
-            if ($imageUrl !== null && $imageUrl !== '') {
-                return $this->canonicalizeRemoteImageUrl($imageUrl);
-            }
+        // Vérifie que c'est bien une URL HTTP(S)
+        if (!str_starts_with($trimmed, 'http://') && !str_starts_with($trimmed, 'https://')) {
+            return '';
         }
 
-        if ($fallbackUrl !== null) {
-            $fallbackUrl = $this->canonicalizeRemoteImageUrl($fallbackUrl);
-            if ($fallbackUrl !== '') {
-                return $fallbackUrl;
-            }
-        }
-
-        return null;
+        return $trimmed;
     }
 
-    private function buildUnsplashQuery(string $hebergementName, string $destinationName, string $destinationCountry): string
-    {
-        $parts = array_values(array_filter([
-            trim($hebergementName),
-            trim($destinationName),
-            trim($destinationCountry),
-        ]));
-
-        return trim(preg_replace('/\s+/', ' ', implode(' - ', $parts)) ?? '');
-    }
+    // ──────────────────────────────────────────────────────────────────────────
+    // Show
+    // ──────────────────────────────────────────────────────────────────────────
 
     #[Route('/{id_hebergement}', name: 'app_hebergement_show', methods: ['GET'], requirements: ['id_hebergement' => '\d+'])]
     public function show(Request $request, int $id_hebergement, HebergementRepository $hebergementRepository): Response
@@ -301,59 +300,61 @@ class HebergementController extends AbstractController
         return $this->render('hebergement/show.html.twig', $payload);
     }
 
+    // ──────────────────────────────────────────────────────────────────────────
+    // Debug
+    // ──────────────────────────────────────────────────────────────────────────
+
     #[Route('/scrape-debug', name: 'app_hebergement_scrape_debug', methods: ['GET'])]
-public function scrapeDebug(
-    Request $request,
-    \Symfony\Contracts\HttpClient\HttpClientInterface $httpClient,
-): Response {
-    $cookies     = trim((string) $request->query->get('cookies', ''));
-    $destination = trim((string) $request->query->get('destination', 'Paris'));
+    public function scrapeDebug(
+        Request $request,
+        \Symfony\Contracts\HttpClient\HttpClientInterface $httpClient,
+    ): Response {
+        $cookies     = trim((string) $request->query->get('cookies', ''));
+        $destination = trim((string) $request->query->get('destination', 'Paris'));
 
-    $checkin  = (new \DateTimeImmutable('tomorrow'))->format('Y-m-d');
-    $checkout = (new \DateTimeImmutable('+2 days'))->format('Y-m-d');
+        $checkin  = (new \DateTimeImmutable('tomorrow'))->format('Y-m-d');
+        $checkout = (new \DateTimeImmutable('+2 days'))->format('Y-m-d');
 
-    $url = sprintf(
-        'https://www.booking.com/searchresults.html?ss=%s&checkin=%s&checkout=%s&group_adults=2&no_rooms=1&lang=fr',
-        urlencode($destination),
-        $checkin,
-        $checkout,
-    );
+        $url = sprintf(
+            'https://www.booking.com/searchresults.html?ss=%s&checkin=%s&checkout=%s&group_adults=2&no_rooms=1&lang=fr',
+            urlencode($destination),
+            $checkin,
+            $checkout,
+        );
 
-    $headers = [
-        'User-Agent'      => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language' => 'fr-FR,fr;q=0.9',
-        'Cache-Control'   => 'no-cache',
-    ];
+        $headers = [
+            'User-Agent'      => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language' => 'fr-FR,fr;q=0.9',
+            'Cache-Control'   => 'no-cache',
+        ];
 
-    if ($cookies !== '') {
-        $headers['Cookie'] = $cookies;
+        if ($cookies !== '') {
+            $headers['Cookie'] = $cookies;
+        }
+
+        $response = $httpClient->request('GET', $url, [
+            'timeout' => 30,
+            'headers' => $headers,
+        ]);
+
+        $html       = $response->getContent(false);
+        $statusCode = $response->getStatusCode();
+        $length     = strlen($html);
+
+        $crawler    = new \Symfony\Component\DomCrawler\Crawler($html);
+        $cards1     = $crawler->filter('[data-testid="property-card"]')->count();
+        $cards2     = $crawler->filter('.sr_property_block')->count();
+        $hasCaptcha = str_contains($html, 'captcha') || str_contains($html, 'robot');
+
+        return new \Symfony\Component\HttpFoundation\JsonResponse([
+            'url'                   => $url,
+            'status_code'           => $statusCode,
+            'html_length'           => $length,
+            'has_captcha'           => $hasCaptcha,
+            'cards_found_strategy1' => $cards1,
+            'cards_found_strategy2' => $cards2,
+            'html_preview'          => substr($html, 0, 2000),
+        ]);
     }
-
-    $response = $httpClient->request('GET', $url, [
-        'timeout' => 30,
-        'headers' => $headers,
-    ]);
-
-    $html       = $response->getContent(false);
-    $statusCode = $response->getStatusCode();
-    $length     = strlen($html);
-
-    // Count how many property cards are found
-    $crawler    = new \Symfony\Component\DomCrawler\Crawler($html);
-    $cards1     = $crawler->filter('[data-testid="property-card"]')->count();
-    $cards2     = $crawler->filter('.sr_property_block')->count();
-    $hasCaptcha = str_contains($html, 'captcha') || str_contains($html, 'robot');
-
-    return new \Symfony\Component\HttpFoundation\JsonResponse([
-        'url'          => $url,
-        'status_code'  => $statusCode,
-        'html_length'  => $length,
-        'has_captcha'  => $hasCaptcha,
-        'cards_found_strategy1' => $cards1,
-        'cards_found_strategy2' => $cards2,
-        'html_preview' => substr($html, 0, 2000),
-    ]);
 }
-}
- 

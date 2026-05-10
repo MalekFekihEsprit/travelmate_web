@@ -265,7 +265,7 @@
         {# Image #}
         <div class="ev-show-img-wrap">
             {% if evenement.imagePath %}
-                <img src="{{ asset('uploads/evenements/' ~ evenement.imagePath) }}"
+                <img src="{{ evenement.imagePath }}"
                      alt="{{ evenement.titre }}" class="ev-show-img"
                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                 <div class="ev-show-img-placeholder" style="display:none"></div>

@@ -1085,7 +1085,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 <div class="gallery gallery--single" id="gallery">
     <div class="gallery__item" onclick="openLightbox(0)">
         {% if activite.imagePath %}
-            <img src="{{ asset(activite.imagePath) }}" alt="{{ activite.nom }}" loading="eager">
+            <img src="{{ activite.imagePath }}" alt="{{ activite.nom }}" loading="eager">
         {% else %}
             <div class="gallery__placeholder">
                 <svg width="52" height="52" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1571,7 +1571,7 @@ document.addEventListener('keydown', function (e) {
 (function () {
     var ACTIVITE_ID = {{ activite.id }};
     var ACTIVITE_NOM = {{ activite.nom|json_encode(15)|raw }};
-    var ASSET_BASE = {{ asset('')|json_encode(15)|raw }};
+    // ASSET_BASE supprimé : imagePath contient désormais une URL Cloudinary complète
 
     function getCatEmoji(cat) {
         cat = (cat || '').toLowerCase();
@@ -1610,7 +1610,7 @@ document.addEventListener('keydown', function (e) {
 
         grid.innerHTML = recs.map(function (rec) {
             var imgHtml = rec.imagePath
-                ? '<img src="' + ASSET_BASE + esc(rec.imagePath) + '" alt="' + esc(rec.nom) + '" loading="lazy">'
+                ? '<img src="' + esc(rec.imagePath) + '" alt="' + esc(rec.nom) + '" loading="lazy">'
                 : '<div class="sim-card__img-placeholder">' + getCatEmoji(rec.categorie) + '</div>';
 
             var matchPct = Math.round(rec.score * 10);

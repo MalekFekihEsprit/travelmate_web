@@ -6,15 +6,36 @@ use App\Entity\Evenement;
 use App\Form\EvenementType;
 use App\Repository\EvenementRepository;
 use App\Service\TicketmasterService;
+use Cloudinary\Cloudinary;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\String\Slugger\SluggerInterface;
 
 class EvenementController extends AbstractController
 {
+    // ════════════════════════════════════════════════════════════════════════
+    //  HELPER PRIVÉ — CLOUDINARY UPLOAD
+    // ════════════════════════════════════════════════════════════════════════
+
+    private function uploadToCloudinary(\Symfony\Component\HttpFoundation\File\UploadedFile $imageFile): ?string
+    {
+        $cloudinary = new Cloudinary($_ENV['CLOUDINARY_URL']);
+
+        $result = $cloudinary->uploadApi()->upload(
+            $imageFile->getRealPath(),
+            [
+                'folder'         => 'evenements',
+                'transformation' => [
+                    ['quality' => 'auto', 'fetch_format' => 'auto'],
+                ],
+            ]
+        );
+
+        return $result['secure_url'] ?? null;
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     //  FRONT OFFICE
     // ════════════════════════════════════════════════════════════════════════
@@ -62,8 +83,7 @@ class EvenementController extends AbstractController
     #[Route('/admin/evenement/new', name: 'app_evenement_new', methods: ['GET', 'POST'])]
     public function new(
         Request                $request,
-        EntityManagerInterface $entityManager,
-        SluggerInterface       $slugger
+        EntityManagerInterface $entityManager
     ): Response {
         $evenement = new Evenement();
         $form = $this->createForm(EvenementType::class, $evenement);
@@ -72,14 +92,10 @@ class EvenementController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
-                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename     = $slugger->slug($originalFilename);
-                $newFilename      = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
-                $imageFile->move(
-                    $this->getParameter('evenements_images_directory'),
-                    $newFilename
-                );
-                $evenement->setImagePath($newFilename);
+                $secureUrl = $this->uploadToCloudinary($imageFile);
+                if ($secureUrl) {
+                    $evenement->setImagePath($secureUrl);
+                }
             }
 
             $entityManager->persist($evenement);
@@ -98,8 +114,7 @@ class EvenementController extends AbstractController
     public function edit(
         Request                $request,
         Evenement              $evenement,
-        EntityManagerInterface $entityManager,
-        SluggerInterface       $slugger
+        EntityManagerInterface $entityManager
     ): Response {
         $form = $this->createForm(EvenementType::class, $evenement);
         $form->handleRequest($request);
@@ -107,14 +122,10 @@ class EvenementController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
-                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename     = $slugger->slug($originalFilename);
-                $newFilename      = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
-                $imageFile->move(
-                    $this->getParameter('evenements_images_directory'),
-                    $newFilename
-                );
-                $evenement->setImagePath($newFilename);
+                $secureUrl = $this->uploadToCloudinary($imageFile);
+                if ($secureUrl) {
+                    $evenement->setImagePath($secureUrl);
+                }
             }
 
             $entityManager->flush();

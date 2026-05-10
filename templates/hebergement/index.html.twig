@@ -151,13 +151,16 @@
     {% if hebergements is not empty %}
         <div class="destinations-grid" id="hebergementContainer">
             {% for hebergement in hebergements %}
-                <div class="destination-card"
+                <article class="destination-card"
                      onclick="openHebergementModal({{ hebergement.idHebergement }})"
                      data-type="{{ hebergement.typeHebergement ?? 'Sans type' }}"
                      data-price="{{ hebergement.prixNuitHebergement ?? 0 }}"
                      data-rating="{{ hebergement.noteHebergement ?? '' }}"
                      data-name="{{ hebergement.nomHebergement }}"
-                     data-destination-id="{{ hebergement.destination ? hebergement.destination.idDestination : '' }}">
+                     data-destination-id="{{ hebergement.destination ? hebergement.destination.idDestination : '' }}"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Voir {{ hebergement.nomHebergement }}">
 
                     <div class="destination-card__image-wrapper">
                         {% set hebergementImageSrc = null %}
@@ -170,44 +173,66 @@
                         {% endif %}
 
                         {% if hebergementImageSrc %}
-                            <img src="{{ hebergementImageSrc }}" alt="{{ hebergement.nomHebergement }}" class="destination-card__image">
+                            <img src="{{ hebergementImageSrc }}" alt="{{ hebergement.nomHebergement }}" class="destination-card__image" loading="lazy">
                         {% else %}
-                            <div class="destination-card__image-placeholder">🏨</div>
+                            <div class="destination-card__image-placeholder">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V21H3V9.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="9" y="14" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+                            </div>
+                        {% endif %}
+
+                        {% if hebergement.typeHebergement %}
+                            <div class="destination-card__type-pill">{{ hebergement.typeHebergement }}</div>
                         {% endif %}
                     </div>
+
                     <div class="destination-card__content">
-                        <h3 class="destination-card__title">{{ hebergement.nomHebergement }}</h3>
-                        <p class="destination-card__location">
-                            📍 {{ hebergement.adresseHebergement ?? 'Adresse non disponible' }}
-                        </p>
-                        {% if hebergement.destination %}
-                            <p class="destination-card__description">À {{ hebergement.destination.nomDestination }}</p>
-                        {% endif %}
-                        <div class="destination-card__meta">
-                            {% if hebergement.typeHebergement %}
-                                <span class="destination-card__badge destination-card__badge--climate">
-                                    <span class="badge-icon">🏠</span>{{ hebergement.typeHebergement }}
-                                </span>
-                            {% endif %}
-                            {% if hebergement.prixNuitHebergement is not null %}
-                                <span class="destination-card__badge destination-card__badge--climate">
-                                    <span class="badge-icon">💰</span>{{ hebergement.prixNuitHebergement }} €/nuit
-                                </span>
-                            {% endif %}
+                        <div class="destination-card__header">
+                            <h3 class="destination-card__title">{{ hebergement.nomHebergement }}</h3>
                             {% if hebergement.noteHebergement %}
-                                <span class="destination-card__badge destination-card__badge--season">
-                                    <span class="badge-icon">⭐</span>{{ hebergement.noteHebergement }}/5
-                                </span>
+                                <div class="destination-card__rating">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                                    <span>{{ hebergement.noteHebergement }}</span>
+                                </div>
                             {% endif %}
                         </div>
+
+                        {% if hebergement.destination %}
+                            <p class="destination-card__destination">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/></svg>
+                                {{ hebergement.destination.nomDestination }}{% if hebergement.destination.paysDestination %}, {{ hebergement.destination.paysDestination }}{% endif %}
+                            </p>
+                        {% endif %}
+
+                        {% if hebergement.adresseHebergement %}
+                            <p class="destination-card__address">{{ hebergement.adresseHebergement }}</p>
+                        {% endif %}
+
+                        <div class="destination-card__footer">
+                            {% if hebergement.prixNuitHebergement is not null %}
+                                <div class="destination-card__price">
+                                    <span class="destination-card__price-amount">{{ hebergement.prixNuitHebergement }} €</span>
+                                    <span class="destination-card__price-unit">/ nuit</span>
+                                </div>
+                            {% else %}
+                                <div class="destination-card__price destination-card__price--unknown">
+                                    <span class="destination-card__price-amount">Sur demande</span>
+                                </div>
+                            {% endif %}
+                            <div class="destination-card__cta">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </article>
             {% endfor %}
         </div>
     {% else %}
         <div class="destinations-empty">
-            <div class="destinations-empty__icon">🏨</div>
-            <p>Aucun hébergement trouvé</p>
+            <div class="destinations-empty__icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V21H3V9.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="9" y="14" width="6" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <h3 class="destinations-empty__title">Aucun hébergement trouvé</h3>
+            <p class="destinations-empty__text">Modifiez vos critères de recherche ou explorez une autre destination.</p>
         </div>
     {% endif %}
 </section>
@@ -349,6 +374,261 @@
     .eve-hero__stats { right: 1rem; bottom: 1.25rem; gap: 1rem; max-width: 200px; }
     .hero-stat__num { font-size: 1.25rem; }
     .hero-stat__label { font-size: 0.65rem; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   GRILLE HÉBERGEMENTS — Design professionnel & moderne
+   ───────────────────────────────────────────────────────────────────────── */
+
+.destinations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem 0;
+}
+
+/* ── Carte ── */
+.destination-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e8eaed;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+    transition: transform .25s cubic-bezier(.22,1,.36,1),
+                box-shadow .25s cubic-bezier(.22,1,.36,1),
+                border-color .2s;
+    position: relative;
+    outline: none;
+}
+.destination-card:hover,
+.destination-card:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+    border-color: #d0d3d8;
+}
+.destination-card:focus-visible {
+    outline: 2px solid var(--color-primary, #c46f4b);
+    outline-offset: 2px;
+}
+
+/* ── Image ── */
+.destination-card__image-wrapper {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background: #f4f5f7;
+    flex-shrink: 0;
+}
+.destination-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .5s cubic-bezier(.22,1,.36,1);
+}
+.destination-card:hover .destination-card__image {
+    transform: scale(1.04);
+}
+.destination-card__image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f0f2f5 0%, #e8eaed 100%);
+    color: #b0b7c3;
+}
+
+/* ── Type pill (overlay sur l'image) ── */
+.destination-card__type-pill {
+    position: absolute;
+    top: .85rem;
+    left: .85rem;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: 999px;
+    padding: .25rem .75rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #374151;
+    box-shadow: 0 1px 4px rgba(0,0,0,.10);
+}
+
+/* ── Contenu ── */
+.destination-card__content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.1rem 1.25rem 1.1rem;
+    gap: .35rem;
+}
+
+/* ── En-tête titre + note ── */
+.destination-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .15rem;
+}
+.destination-card__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+    margin: 0;
+    flex: 1;
+    letter-spacing: -.01em;
+}
+.destination-card__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    background: #fef9ec;
+    border: 1px solid #fde68a;
+    border-radius: 999px;
+    padding: .2rem .55rem;
+    font-size: .78rem;
+    font-weight: 700;
+    color: #92400e;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.destination-card__rating svg {
+    color: #f59e0b;
+}
+
+/* ── Destination ── */
+.destination-card__destination {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--color-primary, #c46f4b);
+    letter-spacing: .01em;
+    margin: 0;
+}
+.destination-card__destination svg {
+    flex-shrink: 0;
+    opacity: .85;
+}
+
+/* ── Adresse ── */
+.destination-card__address {
+    font-size: .78rem;
+    color: #9ca3af;
+    margin: 0;
+    line-height: 1.45;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    letter-spacing: .005em;
+}
+
+/* ── Footer prix + CTA ── */
+.destination-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: .85rem;
+    border-top: 1px solid #f3f4f6;
+}
+.destination-card__price {
+    display: flex;
+    align-items: baseline;
+    gap: .3rem;
+}
+.destination-card__price-amount {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -.02em;
+}
+.destination-card__price--unknown .destination-card__price-amount {
+    font-size: .88rem;
+    font-family: inherit;
+    font-weight: 500;
+    color: #9ca3af;
+}
+.destination-card__price-unit {
+    font-size: .75rem;
+    color: #9ca3af;
+    font-weight: 400;
+    letter-spacing: .01em;
+}
+.destination-card__cta {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--color-primary, #c46f4b);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background .2s, transform .2s;
+    box-shadow: 0 2px 8px rgba(196,111,75,.3);
+}
+.destination-card:hover .destination-card__cta {
+    background: var(--color-primary-dark, #a85a3a);
+    transform: translateX(2px);
+}
+
+/* ── Empty state ── */
+.destinations-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    padding: 5rem 2rem;
+    text-align: center;
+}
+.destinations-empty__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #f4f5f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #b0b7c3;
+    margin-bottom: .5rem;
+}
+.destinations-empty__title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+}
+.destinations-empty__text {
+    font-size: .875rem;
+    color: #9ca3af;
+    margin: 0;
+    max-width: 320px;
+    line-height: 1.6;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+    .destinations-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    .destination-card__image-wrapper { height: 180px; }
 }
 
         /* ── Suggest button (existing) ── */

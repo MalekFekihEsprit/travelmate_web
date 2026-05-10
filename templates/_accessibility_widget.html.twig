@@ -174,17 +174,25 @@
     </div>
 
     <div class="a11y-panel" id="a11yPanel" role="menu">
-        <div class="a11y-panel__label">♿ Accessibilité</div>
+        <div class="a11y-panel__label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-right:.3rem" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="4.5" r="1.75" fill="currentColor"/>
+                <path d="M9 8.5h6l-1 4h-4L9 8.5Z" fill="currentColor"/>
+                <path d="M10 12.5l-1.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M14 12.5l1.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M8.5 18h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>Accessibilité
+        </div>
 
-        <div class="a11y-panel__section">🔊 Lecture</div>
+        <div class="a11y-panel__section">Lecture</div>
         <button class="a11y-btn" id="a11yHoverBtn" onclick="a11yToggleHover()" aria-pressed="false">
-            🖱️ <span data-i18n="hover">Lire au survol</span>
+            <span data-i18n="hover">Lire au survol</span>
         </button>
         <button class="a11y-btn" onclick="a11yStopTts()">
-            ⏹ <span data-i18n="stop">Arrêter la lecture</span>
+            <span data-i18n="stop">Arrêter la lecture</span>
         </button>
 
-        <div class="a11y-panel__section">🎨 Affichage</div>
+        <div class="a11y-panel__section">Affichage</div>
         <button class="a11y-btn" id="a11yDarkBtn" onclick="a11yToggleDark()" aria-pressed="false">
             <span id="a11yDarkIcon">🌙</span> <span id="a11yDarkLabel" data-i18n="darkMode">Mode sombre</span>
         </button>
@@ -201,7 +209,15 @@
             aria-label="Ouvrir les options d'accessibilité"
             aria-expanded="false"
             aria-controls="a11yPanel"
-            onclick="a11yTogglePanel()">♿</button>
+            onclick="a11yTogglePanel()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="4.5" r="1.75" fill="currentColor"/>
+            <path d="M9 8.5h6l-1 4h-4L9 8.5Z" fill="currentColor"/>
+            <path d="M10 12.5l-1.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M14 12.5l1.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M8.5 18h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+    </button>
 </div>
 
 <script>

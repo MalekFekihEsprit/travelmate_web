@@ -6,13 +6,13 @@ use App\Entity\Activite;
 use App\Form\ActiviteType;
 use App\Repository\ActiviteRepository;
 use App\Repository\CategorieRepository;
+use Cloudinary\Cloudinary;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\String\Slugger\SluggerInterface;
 
 class ActiviteController extends AbstractController
 {
@@ -28,6 +28,31 @@ class ActiviteController extends AbstractController
     private const SCRIPT_AI_RECOMMENDER      = 'C:/Users/malek/projet web/ai_recommender/ai_recommender.py';
     private const SCRIPT_SIMILAR_RECOMMENDER = 'C:/Users/malek/projet web/ai_recommender/activity_recommender.py';
     private const SCRIPT_PRICE_SCRAPER       = 'C:/Users/malek/projet web/price_scraper/price_scraper.py';
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  HELPER PRIVÉ — CLOUDINARY UPLOAD
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Upload une image vers Cloudinary et retourne la secure_url.
+     * Retourne null en cas d'échec.
+     */
+    private function uploadToCloudinary(\Symfony\Component\HttpFoundation\File\UploadedFile $imageFile): ?string
+    {
+        $cloudinary = new Cloudinary($_ENV['CLOUDINARY_URL']);
+
+        $result = $cloudinary->uploadApi()->upload(
+            $imageFile->getRealPath(),
+            [
+                'folder'         => 'activites',
+                'transformation' => [
+                    ['quality' => 'auto', 'fetch_format' => 'auto'],
+                ],
+            ]
+        );
+
+        return $result['secure_url'] ?? null;
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     //  HELPER PRIVÉ — IA RECOMMANDATION (quiz / scoring)
@@ -322,7 +347,7 @@ class ActiviteController extends AbstractController
                 'nom'         => $act->getNom(),
                 'description' => $desc,
                 'categorie'   => $act->getCategorie()?->getNom() ?? '',
-                'imagePath'   => $act->getImagePath(),
+                'imagePath'   => $act->getImagePath(),   // contient désormais une URL Cloudinary
                 'budget'      => $act->getBudget(),
                 'lieu'        => $act->getLieu(),
                 'duree'       => $act->getDuree(),
@@ -395,8 +420,7 @@ class ActiviteController extends AbstractController
     #[Route('/admin/activite/new', name: 'app_activite_new', methods: ['GET', 'POST'])]
     public function new(
         Request                $request,
-        EntityManagerInterface $entityManager,
-        SluggerInterface       $slugger
+        EntityManagerInterface $entityManager
     ): Response {
         $activite = new Activite();
         $form = $this->createForm(ActiviteType::class, $activite);
@@ -405,14 +429,12 @@ class ActiviteController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
-                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename     = $slugger->slug($originalFilename);
-                $newFilename      = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
-                $imageFile->move(
-                    $this->getParameter('activites_images_directory'),
-                    $newFilename
-                );
-                $activite->setImagePath('uploads/activites/' . $newFilename);
+                // ── Upload vers Cloudinary ──────────────────────────────────
+                $secureUrl = $this->uploadToCloudinary($imageFile);
+                if ($secureUrl) {
+                    // On stocke directement l'URL Cloudinary dans la BDD
+                    $activite->setImagePath($secureUrl);
+                }
             }
 
             $entityManager->persist($activite);
@@ -456,8 +478,7 @@ class ActiviteController extends AbstractController
     public function edit(
         Request                $request,
         Activite               $activite,
-        EntityManagerInterface $entityManager,
-        SluggerInterface       $slugger
+        EntityManagerInterface $entityManager
     ): Response {
         $form = $this->createForm(ActiviteType::class, $activite);
         $form->handleRequest($request);
@@ -465,14 +486,12 @@ class ActiviteController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
-                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename     = $slugger->slug($originalFilename);
-                $newFilename      = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
-                $imageFile->move(
-                    $this->getParameter('activites_images_directory'),
-                    $newFilename
-                );
-                $activite->setImagePath('uploads/activites/' . $newFilename);
+                // ── Upload vers Cloudinary ──────────────────────────────────
+                $secureUrl = $this->uploadToCloudinary($imageFile);
+                if ($secureUrl) {
+                    // Remplace l'ancienne URL (locale ou Cloudinary) par la nouvelle
+                    $activite->setImagePath($secureUrl);
+                }
             }
 
             $entityManager->flush();

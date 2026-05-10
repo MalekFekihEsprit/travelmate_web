@@ -462,7 +462,7 @@
 
                     <div class="eve-card__img-wrap">
                         {% if evenement.imagePath %}
-                            <img src="{{ asset('uploads/evenements/' ~ evenement.imagePath) }}"
+                            <img src="{{ evenement.imagePath }}"
                                  alt="{{ evenement.titre }}"
                                  class="eve-card__img"
                                  onerror="this.style.display='none'">
