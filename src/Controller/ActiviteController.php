@@ -196,14 +196,9 @@ class ActiviteController extends AbstractController
 
     #[Route('/activites', name: 'app_activites', methods: ['GET'])]
     public function frontIndex(
-        Request             $request,
         ActiviteRepository  $activiteRepository,
         CategorieRepository $categorieRepository
     ): Response {
-        if ($this->getUser() && !$request->getSession()->get('quiz_completed', false)) {
-            return $this->redirectToRoute('app_quiz');
-        }
-
         $activites = $activiteRepository->findAll();
         $aiResult  = $this->getAiRankedActivities($activites);
 

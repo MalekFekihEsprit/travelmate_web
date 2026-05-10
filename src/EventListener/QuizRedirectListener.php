@@ -10,9 +10,7 @@ use Symfony\Bundle\SecurityBundle\Security;
 class QuizRedirectListener
 {
     private array $protectedRoutes = [
-        'app_activites',
         'app_categories',
-        'app_activite_show',
         'app_categorie_show',
     ];
 
