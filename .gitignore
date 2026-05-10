@@ -37,3 +37,6 @@ env/
 env.local
 .env
 env.local
+.env.download
+env.download
+/.env.download

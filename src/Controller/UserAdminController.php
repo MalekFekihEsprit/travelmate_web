@@ -328,6 +328,24 @@ class UserAdminController extends AbstractController
         $oldestAge = $userRepository->getOldestAge();
         $birthYears = $userRepository->getUsersByBirthYear();
         $totalWithAge = array_sum($ageDistribution) - ($ageDistribution['unknown'] ?? 0);
+        // Prepare data for manual age distribution chart
+        $ageLabels = [];
+        $ageValues = [];
+        foreach ($ageDistribution as $range => $count) {
+            if ($range === 'unknown') {
+                continue;
+            }
+            $label = match ($range) {
+                'under-18' => 'Moins de 18 ans',
+                default => $range . ' ans',
+            };
+            $ageLabels[] = $label;
+            $ageValues[] = $count;
+        }
+
+        // Prepare data for birth years chart
+        $birthYearsLabels = array_keys($birthYears);
+        $birthYearsValues = array_values($birthYears);
 
         // Format for display
         $windowStart = $startDate->format('d/m/Y');
@@ -520,6 +538,10 @@ class UserAdminController extends AbstractController
             'trend30Chart' => $trend30Chart,
             'ageDistributionChart' => $ageDistributionChart,
             'birthYearsChart' => $birthYearsChart,
+            'ageLabels' => $ageLabels,
+            'ageValues' => $ageValues,
+            'birthYearsLabels' => $birthYearsLabels,
+            'birthYearsValues' => $birthYearsValues,
         ]);
     }
 }

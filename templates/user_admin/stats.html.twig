@@ -222,7 +222,6 @@
             }
         }
 
-        /* In your admin.css file */
         .stat-card--chart {
             position: relative;
             min-height: 160px;
@@ -291,6 +290,18 @@
                 font-size: 1rem;
             }
         }
+
+        /* Additional rules from ChatGPT */
+        #prev-week:disabled,
+        #next-week:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .chart-box canvas {
+            max-height: 280px;
+            width: 100%;
+        }
     </style>
 {% endblock %}
 
@@ -304,7 +315,6 @@
                     Analyse complète de la répartition des rôles, de la vérification des comptes et de l’évolution des inscriptions.
                 </p>
             </div>
-
             <div class="admin-page-header__actions">
                 <a href="{{ path('app_admin_users') }}" class="btn btn--ghost">Retour à la liste</a>
             </div>
@@ -315,7 +325,7 @@
                 <h2 class="chart-title">Répartition des rôles</h2>
                 <p class="chart-subtitle">Vue globale des administrateurs et utilisateurs.</p>
                 <div class="chart-box chart-box--small">
-                    {{ render_chart(roleChart) }}
+                    <canvas id="roleChartCanvas" width="400" height="250"></canvas>
                 </div>
             </article>
 
@@ -323,7 +333,7 @@
                 <h2 class="chart-title">Vérification des comptes</h2>
                 <p class="chart-subtitle">Comptes activés et comptes en attente.</p>
                 <div class="chart-box chart-box--small">
-                    {{ render_chart(verificationChart) }}
+                    <canvas id="verificationChartCanvas" width="400" height="250"></canvas>
                 </div>
             </article>
             
@@ -332,70 +342,55 @@
                     <div class="window-nav__label">
                         Inscriptions du <span id="window-start">{{ windowStart }}</span> au <span id="window-end">{{ windowEnd }}</span>
                     </div>
-
                     <div class="window-nav__actions">
-                        <button type="button" class="btn btn--ghost" id="prev-week">
-                            ← 7 jours avant
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn--ghost"
-                            id="next-week"
-                            {{ offset <= 0 ? 'style="display:none;"' : '' }}
-                        >
-                            7 jours après →
-                        </button>
+                        <button type="button" class="btn btn--ghost" id="prev-week">← 7 jours avant</button>
+                        <button type="button" class="btn btn--ghost" id="next-week" {{ offset <= 0 ? 'style="display:none;"' : '' }}>7 jours après →</button>
                     </div>
                 </div>
-
                 <h2 class="chart-title">Inscriptions sur 7 jours</h2>
                 <p class="chart-subtitle">Navigation par fenêtres de 7 jours, sans rechargement de page.</p>
-
                 <div class="chart-box">
-                    <canvas id="daily-registrations-chart"></canvas>
+                    <canvas id="daily-registrations-chart" width="400" height="250"></canvas>
                 </div>
             </article>
         </div>
 
         <div class="stats-section">
             <div>
-                <h2 class="section-title"> Démographie par âge</h2>
+                <h2 class="section-title">Démographie par âge</h2>
                 <p class="section-subtitle">Répartition des utilisateurs par tranche d’âge et année de naissance.</p>
             </div>
-
             <div class="stats-grid">
                 <article class="stat-card">
                     <span class="stat-card__label">Âge moyen</span>
                     <span class="stat-card__value">{{ averageAge }} ans</span>
                     <span class="stat-card__meta">Moyenne globale</span>
                 </article>
-
                 <article class="stat-card">
                     <span class="stat-card__label">Plus jeune</span>
                     <span class="stat-card__value">{{ youngestAge ?? 'N/A' }} ans</span>
                     <span class="stat-card__meta">Âge minimum</span>
                 </article>
-
                 <article class="stat-card">
                     <span class="stat-card__label">Plus âgé</span>
                     <span class="stat-card__value">{{ oldestAge ?? 'N/A' }} ans</span>
                     <span class="stat-card__meta">Âge maximum</span>
                 </article>
             </div>
-
             <div class="charts-grid">
+                <!-- Age distribution chart -->
                 <article class="chart-card">
                     <h2 class="chart-title">Répartition par tranche d’âge</h2>
                     <div class="chart-box">
-                        {{ render_chart(ageDistributionChart) }}
+                        <canvas id="ageDistributionChartCanvas" width="400" height="250"></canvas>
                     </div>
                 </article>
 
+                <!-- Birth years chart -->
                 <article class="chart-card">
                     <h2 class="chart-title">Distribution par année de naissance</h2>
                     <div class="chart-box">
-                        {{ render_chart(birthYearsChart) }}
+                        <canvas id="birthYearsChartCanvas" width="400" height="250"></canvas>
                     </div>
                 </article>
             </div>
@@ -406,169 +401,203 @@
 {% block javascripts %}
     {{ parent() }}
 
-    <script type="module">
-        import {
-            Chart,
-            BarController,
-            BarElement,
-            CategoryScale,
-            LinearScale,
-            Tooltip,
-            Legend
-        } from 'chart.js';
+    <!-- Load Chart.js from CDN once -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-        Chart.register(
-            BarController,
-            BarElement,
-            CategoryScale,
-            LinearScale,
-            Tooltip,
-            Legend
-        );
-
-        function initDailyRegistrationsChart() {
-            const chartCanvas = document.getElementById('daily-registrations-chart');
-            const prevBtn = document.getElementById('prev-week');
-            const nextBtn = document.getElementById('next-week');
-            const windowStartEl = document.getElementById('window-start');
-            const windowEndEl = document.getElementById('window-end');
-
-            if (!chartCanvas || !prevBtn || !nextBtn || !windowStartEl || !windowEndEl) {
-                return;
+    <script>
+        (function() {
+            // Wait for Chart.js to be ready
+            function waitForChart(retries = 20) {
+                if (typeof Chart !== 'undefined') {
+                    initAllCharts();
+                } else if (retries > 0) {
+                    setTimeout(() => waitForChart(retries - 1), 100);
+                } else {
+                    console.error('Chart.js failed to load');
+                }
             }
 
-            let currentOffset = {{ offset }};
-            let isLoading = false;
-
-            const existingChart = Chart.getChart(chartCanvas);
-            if (existingChart) {
-                existingChart.destroy();
-            }
-
-            const ctx = chartCanvas.getContext('2d');
-
-            const dailyChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: {{ dailyLabels|json_encode|raw }},
-                    datasets: [{
-                        label: 'Inscriptions',
-                        data: {{ dailyValues|json_encode|raw }},
-                        backgroundColor: '#c46f4b',
-                        borderRadius: 10,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: 250
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
+            function initAllCharts() {
+                // 1) Role chart (donut)
+                const roleCtx = document.getElementById('roleChartCanvas')?.getContext('2d');
+                if (roleCtx) {
+                    new Chart(roleCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Administrateurs', 'Utilisateurs'],
+                            datasets: [{
+                                data: [{{ adminCount }}, {{ userCount }}],
+                                backgroundColor: ['#c46f4b', '#2f7f79'],
+                                borderWidth: 0
+                            }]
                         },
-                        tooltip: {
-                            enabled: true
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { position: 'bottom' } }
                         }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0,
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
-            });
-
-            async function updateStats(newOffset) {
-                if (isLoading) {
-                    return;
+                    });
                 }
 
-                isLoading = true;
-                prevBtn.disabled = true;
-                nextBtn.disabled = true;
+                // 2) Verification chart (donut)
+                const verifCtx = document.getElementById('verificationChartCanvas')?.getContext('2d');
+                if (verifCtx) {
+                    new Chart(verifCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Vérifiés', 'Non vérifiés'],
+                            datasets: [{
+                                data: [{{ verifiedCount }}, {{ unverifiedCount }}],
+                                backgroundColor: ['#2f7f79', '#ddbf8c'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { position: 'bottom' } }
+                        }
+                    });
+                }
 
-                try {
-                    const response = await fetch(`{{ path('app_admin_users_stats') }}?offset=${newOffset}&ajax=1`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
+                // 3) Daily registrations (bar chart with AJAX updates)
+                const dailyCanvas = document.getElementById('daily-registrations-chart');
+                const prevBtn = document.getElementById('prev-week');
+                const nextBtn = document.getElementById('next-week');
+                const windowStartEl = document.getElementById('window-start');
+                const windowEndEl = document.getElementById('window-end');
+
+                if (dailyCanvas && prevBtn && nextBtn && windowStartEl && windowEndEl) {
+                    let currentOffset = {{ offset }};
+                    let isLoading = false;
+                    let dailyChart = null;
+
+                    const existing = Chart.getChart(dailyCanvas);
+                    if (existing) existing.destroy();
+
+                    dailyChart = new Chart(dailyCanvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: {{ dailyLabels|json_encode|raw }},
+                            datasets: [{
+                                label: 'Inscriptions',
+                                data: {{ dailyValues|json_encode|raw }},
+                                backgroundColor: '#c46f4b',
+                                borderRadius: 10,
+                                borderSkipped: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            animation: { duration: 250 },
+                            plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                            scales: {
+                                x: { grid: { display: false } },
+                                y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1 } }
+                            }
                         }
                     });
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
+                    async function updateStats(newOffset) {
+                        if (isLoading) return;
+                        isLoading = true;
+                        prevBtn.disabled = true;
+                        nextBtn.disabled = true;
+
+                        try {
+                            const response = await fetch(`{{ path('app_admin_users_stats') }}?offset=${newOffset}&ajax=1`, {
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                            const data = await response.json();
+                            if (!data.labels || !data.values) throw new Error('Réponse AJAX invalide');
+
+                            dailyChart.data.labels = data.labels;
+                            dailyChart.data.datasets[0].data = data.values;
+                            dailyChart.update();
+
+                            windowStartEl.textContent = data.windowStart;
+                            windowEndEl.textContent = data.windowEnd;
+                            currentOffset = data.offset;
+                            nextBtn.style.display = data.canGoForward ? 'inline-flex' : 'none';
+
+                            const newUrl = `{{ path('app_admin_users_stats') }}?offset=${currentOffset}`;
+                            window.history.replaceState({ offset: currentOffset }, '', newUrl);
+                        } catch (error) {
+                            console.error('Erreur lors du chargement des stats:', error);
+                        } finally {
+                            isLoading = false;
+                            prevBtn.disabled = false;
+                            nextBtn.disabled = false;
+                        }
                     }
 
-                    const data = await response.json();
+                    prevBtn.onclick = (e) => { e.preventDefault(); updateStats(currentOffset + 7); };
+                    nextBtn.onclick = (e) => { e.preventDefault(); updateStats(Math.max(0, currentOffset - 7)); };
+                }
 
-                    if (!data.labels || !data.values) {
-                        throw new Error('Réponse AJAX invalide');
-                    }
+                // 4) Age distribution chart (bar)
+                const ageCtx = document.getElementById('ageDistributionChartCanvas')?.getContext('2d');
+                if (ageCtx) {
+                    new Chart(ageCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: {{ ageLabels|json_encode|raw }},
+                            datasets: [{
+                                label: 'Utilisateurs par tranche d’âge',
+                                data: {{ ageValues|json_encode|raw }},
+                                backgroundColor: '#ddbf8c',
+                                borderRadius: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
 
-                    dailyChart.data.labels = data.labels;
-                    dailyChart.data.datasets[0].data = data.values;
-                    dailyChart.update();
-
-                    windowStartEl.textContent = data.windowStart;
-                    windowEndEl.textContent = data.windowEnd;
-
-                    currentOffset = data.offset;
-
-                    nextBtn.style.display = data.canGoForward ? 'inline-flex' : 'none';
-
-                    const newUrl = `{{ path('app_admin_users_stats') }}?offset=${currentOffset}`;
-                    window.history.replaceState({ offset: currentOffset }, '', newUrl);
-                } catch (error) {
-                    console.error('Erreur lors du chargement des stats:', error);
-                } finally {
-                    isLoading = false;
-                    prevBtn.disabled = false;
-                    nextBtn.disabled = false;
+                //5) Birth years chart (line)
+                const birthCtx = document.getElementById('birthYearsChartCanvas')?.getContext('2d');
+                if (birthCtx) {
+                    new Chart(birthCtx, {
+                        type: 'line',
+                        data: {
+                            labels: {{ birthYearsLabels|json_encode|raw }},
+                            datasets: [{
+                                label: 'Utilisateurs par année de naissance',
+                                data: {{ birthYearsValues|json_encode|raw }},
+                                borderColor: '#c46f4b',
+                                backgroundColor: 'rgba(196,111,75,0.10)',
+                                fill: true,
+                                tension: 0.25,
+                                pointRadius: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                            plugins: { legend: { position: 'bottom' } }
+                        }
+                    });
                 }
             }
 
-            prevBtn.onclick = function (e) {
-                e.preventDefault();
-                updateStats(currentOffset + 7);
-            };
-
-            nextBtn.onclick = function (e) {
-                e.preventDefault();
-                updateStats(Math.max(0, currentOffset - 7));
-            };
-        }
-
-        document.addEventListener('turbo:load', initDailyRegistrationsChart);
-
-        document.addEventListener('turbo:before-cache', () => {
-            const chartCanvas = document.getElementById('daily-registrations-chart');
-            if (!chartCanvas) {
-                return;
-            }
-
-            const existingChart = Chart.getChart(chartCanvas);
-            if (existingChart) {
-                existingChart.destroy();
-            }
-        });
+            document.addEventListener('turbo:load', waitForChart);
+            document.addEventListener('turbo:before-cache', () => {
+                // destroy all charts to avoid conflicts
+                ['roleChartCanvas', 'verificationChartCanvas', 'daily-registrations-chart', 'ageDistributionChartCanvas', 'birthYearsChartCanvas'].forEach(id => {
+                    const canvas = document.getElementById(id);
+                    if (canvas && window.Chart) {
+                        const existing = window.Chart.getChart(canvas);
+                        if (existing) existing.destroy();
+                    }
+                });
+            });
+        })();
     </script>
-
-    <style>
-        #prev-week:disabled,
-        #next-week:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-        }
-    </style>
 {% endblock %}
