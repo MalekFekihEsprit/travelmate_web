@@ -1,0 +1,587 @@
+<section class="destination-detail">
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success" style="margin-bottom: 1rem;">{{ message }}</div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger" style="margin-bottom: 1rem;">{{ message }}</div>
+    {% endfor %}
+
+    <div class="destination-detail__header {{ destination.imageName ? 'destination-detail__header--with-photo' : '' }}"{% if destination.imageName %}{% set destinationHeaderImage = destination.imageName starts with 'http' ? destination.imageName : asset('uploads/destinations/' ~ destination.imageName) %} style="background-image: linear-gradient(145deg, rgba(28, 20, 14, 0.62), rgba(196, 111, 75, 0.62)), url('{{ destinationHeaderImage }}');"{% endif %}>
+        <div class="destination-detail__header-top">
+            <div class="destination-detail__flag-rating">
+                {% if destination.flagDestination %}
+                    <img src="{{ destination.flagDestination }}" alt="{{ destination.nomDestination }}" class="destination-detail__flag-image">
+                {% else %}
+                    <div class="destination-detail__flag-placeholder">🌍</div>
+                {% endif %}
+                <span class="destination-detail__rating">⭐ {{ average_score|default(destination.scoreDestination)|number_format(2, '.', '') }}/5</span>
+            </div>
+
+            {% if app.user %}
+                <form
+                    method="post"
+                    action="{{ path('app_destination_favorite_toggle', {'id_destination': destination.idDestination}) }}"
+                    class="destination-detail__favorite-form"
+                    data-destination-favorite-form
+                >
+                    <input type="hidden" name="_token" value="{{ csrf_token('favorite_destination_' ~ destination.idDestination) }}">
+                    <button
+                        type="submit"
+                        class="destination-detail__favorite-btn {{ is_favorite|default(false) ? 'is-favorite' : '' }}"
+                        aria-label="{{ is_favorite|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                        title="{{ is_favorite|default(false) ? 'Retirer des favoris' : 'Ajouter aux favoris' }}"
+                    >
+                        ♥
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+        <h1>{{ destination.nomDestination }}</h1>
+        <p class="destination-detail__location">📍 {{ destination.paysDestination }}{% if destination.regionDestination %} • {{ destination.regionDestination }}{% endif %}</p>
+    </div>
+
+    <div class="destination-detail__content">
+        <div class="destination-detail__grid">
+            <div>
+                <h3>Informations principales</h3>
+                {% if destination.climatDestination %}
+                    <p><strong>Climat:</strong> {{ destination.climatDestination }}</p>
+                {% endif %}
+                {% if destination.saisonDestination %}
+                    <p><strong>Meilleure saison:</strong> {{ destination.saisonDestination }}</p>
+                {% endif %}
+                {% if destination.currencyDestination %}
+                    <p><strong>Devise:</strong> {{ destination.currencyDestination }}</p>
+                {% endif %}
+                {% if destination.languagesDestination %}
+                    <p><strong>Langues:</strong> {{ destination.languagesDestination }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <h3>Localisation</h3>
+                {% if destination.latitudeDestination and destination.longitudeDestination %}
+                    <p><strong>Coordonnées:</strong><br>Lat: {{ destination.latitudeDestination }}<br>Long: {{ destination.longitudeDestination }}</p>
+                {% else %}
+                    <p>Coordonnées non disponibles</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if destination.descriptionDestination %}
+            <div class="destination-detail__description">
+                <h3>Description</h3>
+                <p>{{ destination.descriptionDestination }}</p>
+            </div>
+        {% endif %}
+
+        {% if app.user %}
+            <div class="destination-detail__description">
+                <h3>Noter cette destination</h3>
+                {% set currentUserNote = user_note|default(null) %}
+                {% set initialRating = currentUserNote is not null ? currentUserNote|round(0, 'common') : 0 %}
+                <form method="post" action="{{ path('app_destination_rate', {'id_destination': destination.idDestination}) }}" class="destination-rating-form">
+                    <fieldset class="destination-rating__stars" aria-label="Votre note">
+                        {% for star in 5..1 %}
+                            <input
+                                type="radio"
+                                id="destination-rating-{{ star }}"
+                                name="note"
+                                value="{{ star }}"
+                                {% if star == initialRating %}checked{% endif %}
+                                onchange="if (this.form.requestSubmit) { this.form.requestSubmit(); } else { this.form.submit(); }"
+                            >
+                            <label for="destination-rating-{{ star }}" aria-label="{{ star }} étoile{{ star > 1 ? 's' : '' }}">★</label>
+                        {% endfor %}
+                    </fieldset>
+                    <input type="hidden" name="_token" value="{{ csrf_token('rate_destination_' ~ destination.idDestination) }}">
+                </form>
+            </div>
+        {% else %}
+            <div class="destination-detail__description">
+                <h3>Noter cette destination</h3>
+                <p>Connectez-vous pour donner une note.</p>
+            </div>
+        {% endif %}
+
+        {% if destination.videoUrl and destination.videoUrl|trim %}
+            <div class="destination-detail__video-wrapper">
+                <div class="destination-detail__video-container">
+                    {% if 'youtube.com' in destination.videoUrl or 'youtu.be' in destination.videoUrl %}
+                        {% set videoUrl = destination.videoUrl|trim %}
+                        {% set videoId = '' %}
+
+                        {% if 'youtu.be/' in videoUrl %}
+                            {% set videoId = videoUrl|split('youtu.be/')|last|split('?')|first|split('&')|first|split('/')|first %}
+                        {% elseif '/shorts/' in videoUrl %}
+                            {% set videoId = videoUrl|split('/shorts/')|last|split('?')|first|split('&')|first|split('/')|first %}
+                        {% elseif 'watch?v=' in videoUrl %}
+                            {% set videoId = videoUrl|split('watch?v=')|last|split('&')|first|split('#')|first %}
+                        {% elseif '/embed/' in videoUrl %}
+                            {% set videoId = videoUrl|split('/embed/')|last|split('?')|first|split('&')|first|split('/')|first %}
+                        {% endif %}
+
+                        {% if videoId and videoId|length > 0 %}
+                            <iframe width="100%" height="500" src="https://www.youtube.com/embed/{{ videoId|trim }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        {% else %}
+                            <a href="{{ destination.videoUrl }}" target="_blank" rel="noopener noreferrer">Voir la vidéo sur YouTube</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="destination-detail__actions">
+        <a href="{{ path('app_destination_index') }}" class="btn-secondary">← Retour</a>
+        <a href="{{ path('app_hebergement_index', {'destination': destination.idDestination}) }}" class="btn-primary">🏨 Voir hébergements</a>
+    </div>
+</section>
+
+<style>
+.destination-detail {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.destination-detail__flag-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(196, 111, 75, 0.35);
+    object-fit: contain;
+}
+
+.destination-detail__flag-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 16px;
+    border: 4px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 40px rgba(196, 111, 75, 0.35);
+}
+
+.destination-detail__header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 3.5rem 2.5rem;
+    background: var(--color-primary);
+    border-radius: 20px;
+    color: white;
+    box-shadow: 0 20px 60px rgba(196, 111, 75, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.destination-detail__header--with-photo {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Overlay for photo heroes */
+.destination-detail__header--with-photo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(145deg, rgba(28, 20, 14, 0.62), rgba(196, 111, 75, 0.62));
+}
+
+.destination-detail__header h1,
+.destination-detail__header .destination-detail__location,
+.destination-detail__header .destination-detail__flag-rating { z-index: 1; position: relative; }
+
+.destination-detail__header h1 {
+    font-size: 3.2rem;
+    margin: 1.5rem 0 0.8rem 0;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    color: white;
+    position: relative;
+    z-index: 1;
+}
+
+.destination-detail__flag-rating {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.destination-detail__header-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.destination-detail__favorite-form {
+    margin: 0;
+}
+
+.destination-detail__favorite-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.75);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    cursor: pointer;
+    transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.destination-detail__favorite-btn:hover {
+    transform: translateY(-1px) scale(1.04);
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.destination-detail__favorite-btn.is-favorite {
+    background: #e53935;
+    color: #fff;
+}
+
+.destination-detail__flag {
+    font-size: 2.5rem;
+}
+
+.destination-detail__rating {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.destination-detail__location {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.2rem;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+    letter-spacing: 0.3px;
+}
+
+.destination-detail__content {
+    margin-bottom: 3rem;
+}
+
+.destination-detail__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.destination-detail__grid > div {
+    background: white;
+    padding: 2.2rem;
+    border-radius: 16px;
+    border-left: 5px solid var(--color-primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transition: all var(--transition-base);
+}
+
+.destination-detail__grid > div:hover {
+    box-shadow: 0 16px 40px rgba(196, 111, 75, 0.15);
+    transform: translateY(-2px);
+}
+
+.destination-detail__grid h3 {
+    color: var(--color-primary);
+    margin-bottom: 1.4rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+}
+
+.destination-detail__grid p {
+    margin-bottom: 1rem;
+    line-height: 1.9;
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.destination-detail__grid strong {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.destination-detail__description {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    margin-bottom: 2.5rem;
+    border-left: 5px solid var(--color-primary);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.destination-detail__description h3 {
+    color: var(--color-primary);
+    margin-bottom: 1.4rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+}
+
+.destination-detail__description p {
+    line-height: 2;
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.destination-rating-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.destination-rating__stars {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 0.25rem;
+    align-items: center;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.destination-rating__stars input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.destination-rating__stars label {
+    border: 0;
+    background: transparent;
+    font-size: 2rem;
+    line-height: 1;
+    color: #d6d9de;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.12s ease, color 0.18s ease;
+}
+
+.destination-rating__stars label:hover,
+.destination-rating__stars label:hover ~ label,
+.destination-rating__stars input:checked ~ label {
+    color: #f1b70b;
+}
+
+.destination-rating__stars label:hover,
+.destination-rating__stars label:focus-visible {
+    transform: translateY(-1px) scale(1.03);
+    outline: none;
+}
+
+.destination-rating__stars input:checked + label,
+.destination-rating__stars input:checked ~ label {
+    color: #f1b70b;
+}
+
+.destination-detail__video-wrapper {
+    margin-bottom: 2.5rem;
+}
+
+.destination-detail__video-container {
+    position: relative;
+    width: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgba(196, 111, 75, 0.2);
+    background: #000;
+}
+
+.destination-detail__video-container iframe {
+    display: block;
+    width: 100%;
+    height: 500px;
+    border: none;
+}
+
+.destination-detail__actions {
+    display: flex;
+    gap: 1.2rem;
+    padding-top: 2.5rem;
+    border-top: 2px solid var(--color-border);
+    align-items: center;
+}
+
+.destination-detail__actions a,
+.destination-detail__actions button {
+    flex: 1;
+    text-align: center;
+    padding: 1rem 1.8rem;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition-base);
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: block;
+    letter-spacing: 0.3px;
+}
+
+.destination-detail__actions form {
+    flex: 1;
+}
+
+.destination-detail__actions form button {
+    width: 100%;
+}
+
+.destination-detail__actions .btn-primary {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 6px 20px rgba(196, 111, 75, 0.25);
+}
+
+.destination-detail__actions .btn-primary:hover {
+    background: var(--color-primary-dark, #a85a3a);
+    box-shadow: 0 10px 30px rgba(196, 111, 75, 0.4);
+    transform: translateY(-2px);
+}
+
+.destination-detail__actions .btn-secondary {
+    background: white;
+    color: var(--color-primary);
+    border: 2.5px solid var(--color-primary);
+    font-weight: 700;
+}
+
+.destination-detail__actions .btn-secondary:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(196, 111, 75, 0.25);
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    padding: 1rem 1.8rem;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition-base);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.25);
+    letter-spacing: 0.3px;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+    box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .destination-detail {
+        margin: 0;
+    }
+
+    .destination-detail__header {
+        padding: 2.5rem 2rem;
+    }
+
+    .destination-detail__header h1 {
+        font-size: 2.2rem;
+    }
+
+    .destination-detail__grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .destination-detail__actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .destination-detail__flag-image {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .destination-detail__header {
+        padding: 2rem 1.5rem;
+    }
+
+    .destination-detail__header h1 {
+        font-size: 1.8rem;
+    }
+
+    .destination-detail__grid > div {
+        padding: 1.5rem;
+    }
+
+    .destination-detail__description,
+    .destination-detail__video {
+        padding: 1.8rem;
+    }
+
+    .destination-detail__actions a,
+    .destination-detail__actions button {
+        padding: 0.9rem 1.5rem;
+        font-size: 0.85rem;
+    }
+
+    .destination-rating__stars label {
+        font-size: 1.75rem;
+    }
+}
+</style>
+
+{# Runs on full-page destination show; not executed when this fragment is injected via innerHTML (modal) — index uses delegated submit for that. #}
+<script>
+document.querySelectorAll('[data-destination-favorite-form]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                const button = form.querySelector('.destination-detail__favorite-btn');
+                if (!button || typeof data.is_favorite === 'undefined') {
+                    return;
+                }
+
+                button.classList.toggle('is-favorite', data.is_favorite);
+                button.setAttribute('aria-label', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+                button.setAttribute('title', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+            })
+            .catch(function () {
+                form.submit();
+            });
+    });
+});
+</script>

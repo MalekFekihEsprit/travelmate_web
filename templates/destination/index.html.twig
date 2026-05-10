@@ -598,7 +598,9 @@ function openDestinationModal(destinationId) {
     const modalBody = document.getElementById('modalBody');
     currentDestinationModalId = destinationId;
     
-    fetch(`{{ path('app_destination_show', {'id_destination': '__ID__'}) }}`.replace('__ID__', destinationId))
+    fetch(`{{ path('app_destination_show', {'id_destination': '__ID__'}) }}`.replace('__ID__', destinationId), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
         .then(response => response.text())
         .then(html => {
             modalBody.innerHTML = html;
@@ -657,6 +659,31 @@ document.addEventListener('DOMContentLoaded', function() {
         modalBody.addEventListener('submit', function (event) {
             const form = event.target;
             if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            if (form.hasAttribute('data-destination-favorite-form')) {
+                event.preventDefault();
+                fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        const button = form.querySelector('.destination-detail__favorite-btn');
+                        if (!button || typeof data.is_favorite === 'undefined') {
+                            return;
+                        }
+                        button.classList.toggle('is-favorite', data.is_favorite);
+                        button.setAttribute('aria-label', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+                        button.setAttribute('title', data.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris');
+                    })
+                    .catch(function () {
+                        form.submit();
+                    });
                 return;
             }
 

@@ -285,7 +285,7 @@ class HebergementController extends AbstractController
     }
 
     #[Route('/{id_hebergement}', name: 'app_hebergement_show', methods: ['GET'], requirements: ['id_hebergement' => '\d+'])]
-    public function show(int $id_hebergement, HebergementRepository $hebergementRepository): Response
+    public function show(Request $request, int $id_hebergement, HebergementRepository $hebergementRepository): Response
     {
         $hebergement = $hebergementRepository->find($id_hebergement);
 
@@ -293,9 +293,12 @@ class HebergementController extends AbstractController
             throw $this->createNotFoundException('Hébergement not found');
         }
 
-        return $this->render('hebergement/show.html.twig', [
-            'hebergement' => $hebergement,
-        ]);
+        $payload = ['hebergement' => $hebergement];
+        if ($request->isXmlHttpRequest()) {
+            return $this->render('hebergement/_show_fragment.html.twig', $payload);
+        }
+
+        return $this->render('hebergement/show.html.twig', $payload);
     }
 
     #[Route('/scrape-debug', name: 'app_hebergement_scrape_debug', methods: ['GET'])]

@@ -339,6 +339,7 @@ public function testVich(
 
     #[Route('/{id_destination}', name: 'app_destination_show', methods: ['GET'])]
     public function show(
+        Request $request,
         Destination $destination,
         NoteDestinationRepository $noteDestinationRepository,
         FavoriteDestinationRepository $favoriteDestinationRepository,
@@ -356,12 +357,18 @@ public function testVich(
             $isFavorite = $favoriteDestinationRepository->findOneByDestinationAndUser($destination, $user) !== null;
         }
 
-        return $this->render('destination/show.html.twig', [
+        $payload = [
             'destination'   => $destination,
             'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
             'user_note'     => $userNote,
             'is_favorite'   => $isFavorite,
-        ]);
+        ];
+
+        if ($request->isXmlHttpRequest()) {
+            return $this->render('destination/_show_fragment.html.twig', $payload);
+        }
+
+        return $this->render('destination/show.html.twig', $payload);
     }
 
     #[Route('/{id_destination}/rate', name: 'app_destination_rate', methods: ['POST'])]
@@ -377,7 +384,7 @@ public function testVich(
         if (!$this->isCsrfTokenValid('rate_destination_' . $destination->getId_destination(), (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Token de sécurité invalide.');
             if ($isAjax) {
-                return $this->render('destination/show.html.twig', [
+                return $this->render('destination/_show_fragment.html.twig', [
                     'destination'   => $destination,
                     'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
                     'user_note'     => null,
@@ -393,7 +400,7 @@ public function testVich(
         if (!$user instanceof User) {
             $this->addFlash('error', 'Vous devez être connecté pour noter une destination.');
             if ($isAjax) {
-                return $this->render('destination/show.html.twig', [
+                return $this->render('destination/_show_fragment.html.twig', [
                     'destination'   => $destination,
                     'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
                     'user_note'     => null,
@@ -410,7 +417,7 @@ public function testVich(
             $this->addFlash('error', 'La note doit être comprise entre 0 et 5.');
             if ($isAjax) {
                 $note = $noteDestinationRepository->findOneByDestinationAndUser($destination, $user);
-                return $this->render('destination/show.html.twig', [
+                return $this->render('destination/_show_fragment.html.twig', [
                     'destination'   => $destination,
                     'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
                     'user_note'     => $note instanceof NoteDestination ? $note->getNote() : null,
@@ -439,7 +446,7 @@ public function testVich(
         $this->addFlash('success', 'Votre note a été enregistrée.');
 
         if ($isAjax) {
-            return $this->render('destination/show.html.twig', [
+            return $this->render('destination/_show_fragment.html.twig', [
                 'destination'   => $destination,
                 'average_score' => $noteDestinationRepository->getAverageForDestination($destination),
                 'user_note'     => $note->getNote(),
