@@ -189,6 +189,19 @@
     background-repeat: no-repeat;
 }
 
+/* Overlay for photo heroes */
+.destination-detail__header--with-photo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(145deg, rgba(28, 20, 14, 0.62), rgba(196, 111, 75, 0.62));
+}
+
+.destination-detail__header h1,
+.destination-detail__header .destination-detail__location,
+.destination-detail__header .destination-detail__flag-rating { z-index: 1; position: relative; }
+
 .destination-detail__header h1 {
     font-size: 3.2rem;
     margin: 1.5rem 0 0.8rem 0;

@@ -4,11 +4,10 @@
 
 {% block body %}
 <section class="destination-detail">
-    {% set hebergementHeaderImage = hebergement.imageName
-        ? (hebergement.imageName starts with 'http' ? hebergement.imageName : asset('uploads/hebergements/' ~ hebergement.imageName))
-        : (hebergement.destination and hebergement.destination.imageName
-            ? (hebergement.destination.imageName starts with 'http' ? hebergement.destination.imageName : asset('uploads/destinations/' ~ hebergement.destination.imageName))
-            : null) %}
+    {# Prefer destination image for the hero header; fall back to hebergement image #}
+    {% set hebergementHeaderImage = hebergement.destination and hebergement.destination.imageName
+        ? (hebergement.destination.imageName starts with 'http' ? hebergement.destination.imageName : asset('uploads/destinations/' ~ hebergement.destination.imageName))
+        : (hebergement.imageName ? (hebergement.imageName starts with 'http' ? hebergement.imageName : asset('uploads/hebergements/' ~ hebergement.imageName)) : null) %}
     <div class="destination-detail__header">
         {% if hebergementHeaderImage %}
             <img src="{{ hebergementHeaderImage }}" alt="{{ hebergement.nomHebergement }}" class="destination-detail__header-image">

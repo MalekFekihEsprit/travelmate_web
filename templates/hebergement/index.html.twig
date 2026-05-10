@@ -4,40 +4,45 @@
 
 {% block body %}
 <section class="destinations-page">
-    <div class="destinations-hero">
-        <div class="destinations-hero__content">
-            <span class="destinations-hero__eyebrow">HÉBERGEMENTS</span>
-            <h1 class="destinations-hero__title">Découvrez nos meilleures adresses</h1>
-            <p class="destinations-hero__text">
-                Explorez une sélection de logements soigneusement sélectionnés. Du luxe à l'économie, trouvez l'hébergement parfait pour votre prochain séjour.
+
+    <section class="eve-hero">
+        <div class="eve-hero__bg"></div>
+        <div class="eve-hero__content">
+            <span class="eve-hero__eyebrow">Hébergements</span>
+            <h1 class="eve-hero__title">Découvrez nos meilleures adresses</h1>
+            <p class="eve-hero__desc">
+                Explorez une sélection de logements soigneusement choisis. Du confort accessible au haut de gamme, trouvez l'hébergement idéal pour votre séjour.
             </p>
-
-            <div class="destinations-hero__stats">
-                <div class="destinations-stat">
-                    <strong>{{ hebergements|length }}</strong>
-                    <span>hébergements</span>
-                </div>
-                <div class="destinations-stat">
-                    <strong>{{ unique_types }}</strong>
-                    <span>types</span>
-                </div>
-                <div class="destinations-stat">
-                    <strong>{{ unique_destinations }}</strong>
-                    <span>destinations</span>
-                </div>
+            <div class="eve-hero__actions">
+                <a href="#liste-hebergements" class="btn-hero-primary js-hero-scroll-target">
+                    <span>Explorer les hébergements</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <a href="{{ path('app_destination_index') }}" class="btn-hero-ghost">Voir les destinations</a>
             </div>
+        </div>
+        <div class="eve-hero__stats">
+            <div class="hero-stat">
+                <div class="hero-stat__num">{{ hebergements|length }}</div>
+                <div class="hero-stat__label">Hébergements</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat__num">{{ unique_types }}</div>
+                <div class="hero-stat__label">Types</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat__num">{{ unique_destinations }}</div>
+                <div class="hero-stat__label">Destinations</div>
+            </div>
+        </div>
+    </section>
 
-            {% if selected_destination %}
-                <div class="toolbar-count" style="margin-top: 1rem; display: inline-flex;">
-                    Filtre actif : {{ selected_destination.nomDestination }}
-                    {% if selected_destination.paysDestination %} - {{ selected_destination.paysDestination }}{% endif %}
-                </div>
-            {% endif %}
-        </div>
-        <div class="destinations-hero__visual">
-            <img src="{{ asset('images/destination.jpg') }}" alt="Accommodations" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
-        </div>
-    </div>
+    {% if selected_destination %}
+        <p class="toolbar-count" style="margin: -1.5rem 0 1.25rem;">
+            Filtre actif : {{ selected_destination.nomDestination }}
+            {% if selected_destination.paysDestination %} — {{ selected_destination.paysDestination }}{% endif %}
+        </p>
+    {% endif %}
 
     {# ── Flash messages ──────────────────────────────────────────────────────── #}
     {% set successFlashes = app.flashes('success') %}
@@ -71,7 +76,7 @@
     {% endif %}
 
     {# ── Toolbar ─────────────────────────────────────────────────────────────── #}
-    <div class="destinations-toolbar-wrapper">
+    <div class="destinations-toolbar-wrapper" id="liste-hebergements">
         <div class="toolbar-header">
             <h2 class="toolbar-title">Filtrer & Trier</h2>
             <p class="toolbar-subtitle">Découvrez nos meilleures adresses</p>
@@ -223,6 +228,129 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+/* Hébergements index — hero (aligné sur la page Événements) */
+.eve-hero {
+    position: relative;
+    height: 480px;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: flex-end;
+}
+.eve-hero__bg {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(to top, rgba(20,14,10,0.72) 0%, rgba(20,14,10,0.18) 55%, transparent 100%),
+        url('{{ asset('images/hero-img1.png') }}') center/cover no-repeat;
+    transform: scale(1.04);
+    transition: transform 8s ease;
+}
+.eve-hero:hover .eve-hero__bg { transform: scale(1); }
+.eve-hero__content {
+    position: relative;
+    padding: 2.5rem 3rem;
+    max-width: 640px;
+}
+.eve-hero__eyebrow {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+}
+.eve-hero__title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 0.85rem;
+    letter-spacing: -0.02em;
+}
+.eve-hero__desc {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.65;
+    max-width: 480px;
+    margin-bottom: 1.75rem;
+}
+.eve-hero__actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.btn-hero-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #fff;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.btn-hero-primary:hover { background: var(--color-primary-dark); transform: translateY(-1px); }
+.btn-hero-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.3);
+    cursor: pointer;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.btn-hero-ghost:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
+.eve-hero__stats {
+    position: absolute;
+    bottom: 2.5rem;
+    right: 3rem;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: min(100% - 1.5rem, 420px);
+}
+.hero-stat { text-align: center; color: #fff; }
+.hero-stat__num {
+    font-family: 'Fraunces', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1;
+}
+.hero-stat__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.6);
+    margin-top: 0.2rem;
+}
+@media (max-width: 768px) {
+    .eve-hero { height: 420px; margin-bottom: 2rem; }
+    .eve-hero__content { padding: 1.75rem 1.25rem; padding-right: 5.5rem; max-width: 100%; }
+    .eve-hero__stats { right: 1rem; bottom: 1.25rem; gap: 1rem; max-width: 200px; }
+    .hero-stat__num { font-size: 1.25rem; }
+    .hero-stat__label { font-size: 0.65rem; }
+}
+
         /* ── Suggest button (existing) ── */
         .toolbar-suggest-btn {
             display: inline-flex; align-items: center; gap: .5rem;
@@ -695,6 +823,11 @@ function closeHebergementModal() {
 
         updateSuggestButtonState();
         applyFilters();
+
+        document.querySelector('.js-hero-scroll-target')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.getElementById('liste-hebergements')?.scrollIntoView({ behavior: 'smooth' });
+        });
 
         // ── Existing detail-modal backdrop close ──────────────────────────────
         const detailModal = document.getElementById('hebergementModal');
