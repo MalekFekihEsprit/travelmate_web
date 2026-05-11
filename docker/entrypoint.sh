@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+echo "==> Fixing permissions on var directory..."
+if [ -d "/var/www/html/var" ]; then
+    chown -R www-data:www-data /var/www/html/var
+    chmod -R 775 /var/www/html/var
+else
+    mkdir -p /var/www/html/var
+    chown -R www-data:www-data /var/www/html/var
+    chmod -R 775 /var/www/html/var
+fi
+
 echo "==> Clearing Symfony cache..."
 php bin/console cache:clear --no-warmup --env=prod 2>/dev/null || true
 
