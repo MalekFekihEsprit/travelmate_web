@@ -54,7 +54,14 @@ class QuizController extends AbstractController
 
         try {
             $allRecommendations = $aiService->getRecommendations($userProfile, $activitiesData);
-
+            if ($allRecommendations['success']) {
+                $recommendations = $allRecommendations['recommendations'];
+                // show AI-powered recommendations
+            } else {
+                // fallback: show normal recommendations, or a message
+                $recommendations = $this->getNormalRecommendations($activitiesData);
+                $this->addFlash('warning', $allRecommendations['message']);
+            }
             // Garder uniquement score > 0, max 8
             $recommendations = array_filter(
                 $allRecommendations,
