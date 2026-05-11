@@ -50,9 +50,6 @@ RUN touch .env && chmod 644 .env
 # Optimise autoloader now that all files are present
 RUN composer dump-autoload --no-dev --classmap-authoritative
 
-# Symfony production warm-up
-RUN APP_ENV=prod php bin/console cache:warmup --no-debug || true
-
 RUN mkdir -p var && chmod -R 775 var
 # Fix file permissions for Apache
 RUN chown -R www-data:www-data /var/www/html \

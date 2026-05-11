@@ -1,27 +1,25 @@
 #!/bin/bash
-set -e
 
-echo "==> Fixing permissions on var directory..."
-if [ -d "/var/www/html/var" ]; then
-    chown -R www-data:www-data /var/www/html/var
-    chmod -R 775 /var/www/html/var
-else
-    mkdir -p /var/www/html/var
-    chown -R www-data:www-data /var/www/html/var
-    chmod -R 775 /var/www/html/var
-fi
+cd /var/www/html
 
 echo "==> Clearing Symfony cache..."
-php bin/console cache:clear --no-warmup --env=prod 2>/dev/null || true
+php bin/console cache:clear --env=prod --no-warmup || true
+
+echo "==> Running Doctrine schema update..."
+php bin/console doctrine:schema:update --force --complete --no-interaction --env=prod 2>&1
+SCHEMA_EXIT=$?
+if [ $SCHEMA_EXIT -ne 0 ]; then
+    echo "WARNING: schema:update exited $SCHEMA_EXIT, trying schema:create..."
+    php bin/console doctrine:schema:create --no-interaction --env=prod 2>&1 || true
+fi
 
 echo "==> Warming up Symfony cache..."
-php bin/console cache:warmup --env=prod 2>/dev/null || true
+php bin/console cache:warmup --env=prod 2>&1 || true
 
-echo "==> Running Doctrine schema update (safe, PostgreSQL-compatible)..."
-php bin/console doctrine:schema:update --force --complete --no-interaction --env=prod 2>&1 || {
-    echo "WARNING: doctrine:schema:update failed, attempting schema:create..."
-    php bin/console doctrine:schema:create --no-interaction --env=prod 2>&1 || true
-}
+echo "==> Fixing var/ permissions (after cache creation)..."
+mkdir -p /var/www/html/var/cache /var/www/html/var/log
+chown -R www-data:www-data /var/www/html/var
+chmod -R 775 /var/www/html/var
 
-echo "==> Schema ready. Starting Apache..."
+echo "==> Starting Apache..."
 exec apache2-foreground
