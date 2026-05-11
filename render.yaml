@@ -1,0 +1,120 @@
+services:
+  - type: web
+    name: travelmate-web
+    runtime: docker
+    region: frankfurt
+    plan: free
+    branch: integration
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: APP_DEBUG
+        value: "0"
+      # ── Database ─────────────────────────────────────────────────────────────
+      - key: DATABASE_URL
+        sync: false          # set the real value in the Render dashboard
+      # ── App secret ───────────────────────────────────────────────────────────
+      - key: APP_SECRET
+        sync: false
+      # ── Mailer ───────────────────────────────────────────────────────────────
+      - key: MAILER_DSN
+        sync: false
+      # ── OAuth ────────────────────────────────────────────────────────────────
+      - key: OAUTH_GOOGLE_CLIENT_ID
+        sync: false
+      - key: OAUTH_GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: OAUTH_GITHUB_CLIENT_ID
+        sync: false
+      - key: OAUTH_GITHUB_CLIENT_SECRET
+        sync: false
+      - key: OAUTH_FACEBOOK_CLIENT_ID
+        sync: false
+      - key: OAUTH_FACEBOOK_CLIENT_SECRET
+        sync: false
+      - key: OAUTH_MICROSOFT_CLIENT_ID
+        sync: false
+      - key: OAUTH_MICROSOFT_CLIENT_SECRET
+        sync: false
+      # ── API keys ─────────────────────────────────────────────────────────────
+      - key: OPENWEATHERMAP_API_KEY
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: RAPIDAPI_KEY
+        sync: false
+      - key: RAPIDAPI_HOST
+        value: booking-com.p.rapidapi.com
+      - key: RAPIDAPI_URL
+        value: https://booking-com.p.rapidapi.com
+      - key: RAPIDAPI_CURRENCY
+        value: EUR
+      - key: RAPIDAPI_LANGUAGE
+        value: fr-fr
+      - key: UNSPLASH_ACCESS_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTESERVICE_API_KEY
+        sync: false
+      - key: OPENROUTESERVICE_GEOCODE_URL
+        value: https://api.openrouteservice.org/geocode/search
+      - key: AVIATIONSTACK_API_KEY
+        sync: false
+      - key: HF_API_KEY
+        sync: false
+      - key: TICKETMASTER_API_KEY
+        sync: false
+      - key: STABILITY_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false
+      - key: CEREBRAS_MODEL
+        value: llama3.1-8b
+      - key: REPLICATE_API_KEY
+        sync: false
+      - key: STREAM_API_KEY
+        sync: false
+      - key: STREAM_API_SECRET
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      # ── Notifications ─────────────────────────────────────────────────────────
+      - key: NTFY_URL
+        value: https://ntfy.sh
+      - key: NTFY_TOPIC
+        value: budget-validation
+      # ── AI / Face services (leave empty on Render – fallback logic handles it) ─
+      - key: FACE_API_BASE_URL
+        value: ""
+      - key: FACE_MATCH_THRESHOLD
+        value: "0.68"
+      - key: AI_SERVICE_URL
+        value: ""
+      # ── Messenger (use doctrine transport, auto-setup not needed in prod) ────
+      - key: MESSENGER_TRANSPORT_DSN
+        value: doctrine://default?auto_setup=0
+      # ── Misc ──────────────────────────────────────────────────────────────────
+      - key: MYMEMORY_EMAIL
+        sync: false
+      - key: IPAPI_BASE_URL
+        value: https://ipapi.co
+      - key: PEXELS_API_KEY
+        sync: false
