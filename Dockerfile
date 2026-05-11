@@ -52,6 +52,7 @@ RUN composer dump-autoload --no-dev --classmap-authoritative
 # Symfony production warm-up
 RUN APP_ENV=prod php bin/console cache:warmup --no-debug || true
 
+RUN mkdir -p var && chmod -R 775 var
 # Fix file permissions for Apache
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/public \
