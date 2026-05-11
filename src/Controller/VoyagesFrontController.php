@@ -23,6 +23,7 @@ use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mime\Address;
@@ -264,6 +265,27 @@ class VoyagesFrontController extends AbstractController
         }
 
         return $this->redirectToRoute('app_voyages');
+    }
+
+    #[Route('/voyages/participants/email-suggestions', name: 'app_voyages_participants_email_suggestions', methods: ['GET'])]
+    public function emailSuggestions(
+        Request $request,
+        UserRepository $userRepository,
+    ): JsonResponse {
+        $q = trim((string) $request->query->get('q', ''));
+
+        if (mb_strlen($q) < 2) {
+            return $this->json([]);
+        }
+
+        $users = $userRepository->findByEmailFragment($q, 8);
+
+        $results = array_map(static fn (User $u): array => [
+            'email' => $u->getEmail(),
+            'name'  => trim($u->getPrenom() . ' ' . $u->getNom()),
+        ], $users);
+
+        return $this->json($results);
     }
 
     #[Route('/voyages/{id_voyage}/participants', name: 'app_voyages_participants', requirements: ['id_voyage' => '\\d+'], methods: ['GET', 'POST'])]

@@ -15,6 +15,26 @@ class UserRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, User::class);
     }
+    /**
+     * Search users whose email contains $query (case-insensitive), used for autocomplete.
+     *
+     * @return User[]
+     */
+    public function findByEmailFragment(string $query, int $limit = 8): array
+    {
+        if (trim($query) === '') {
+            return [];
+        }
+
+        return $this->createQueryBuilder('u')
+            ->andWhere('LOWER(u.email) LIKE :q')
+            ->setParameter('q', '%' . mb_strtolower(trim($query)) . '%')
+            ->orderBy('u.email', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
     /** @return array<mixed> */
     public function searchForAdmin(?string $term, ?string $role = null): array
     {
