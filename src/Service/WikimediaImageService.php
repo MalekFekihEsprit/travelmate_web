@@ -12,6 +12,32 @@ class WikimediaImageService
         private readonly string $pexelsApiKey = '',
     ) {}
 
+    public function findDestinationPhotoUrl(string $destinationName, string $country = ''): ?string
+    {
+        // ── 1. Wikipedia : page exacte de la destination ───────────────────
+        $url = $this->searchWikipediaImage($destinationName);
+        if ($url) return $url;
+
+        // ── 2. Wikipedia : ville + pays ────────────────────────────────────
+        if ($country !== '') {
+            $url = $this->searchWikipediaImage($destinationName . ', ' . $country);
+            if ($url) return $url;
+        }
+
+        // ── 3. Wikimedia Commons (sans mot-clé hôtel) ──────────────────────
+        $url = $this->searchCommonsDestinationImage($destinationName);
+        if ($url) return $url;
+
+        // ── 4. Pexels : paysage de voyage ──────────────────────────────────
+        if ($this->pexelsApiKey !== '') {
+            $query = trim($destinationName . ($country !== '' ? ' ' . $country : '') . ' travel');
+            $url   = $this->searchPexelsDestinationImage($query);
+            if ($url) return $url;
+        }
+
+        return null;
+    }
+
     public function findPhotoUrl(string $hebergementName, string $destinationName = ''): ?string
     {
         // ── 1. Wikipedia : page exacte de l'hôtel ──────────────────────────
@@ -156,5 +182,65 @@ class WikimediaImageService
         }
 
         return trim($type . ($destination ? ' ' . $destination : ''));
+    }
+
+    // ── Wikimedia Commons (destinations) ─────────────────────────────────────
+
+    private function searchCommonsDestinationImage(string $query): ?string
+    {
+        try {
+            $response = $this->httpClient->request('GET', 'https://commons.wikimedia.org/w/api.php', [
+                'query' => [
+                    'action'       => 'query',
+                    'generator'    => 'search',
+                    'gsrsearch'    => 'File:' . $query,
+                    'gsrnamespace' => 6,
+                    'prop'         => 'imageinfo',
+                    'iiprop'       => 'url',
+                    'iiurlwidth'   => 800,
+                    'gsrlimit'     => 1,
+                    'format'       => 'json',
+                    'origin'       => '*',
+                ],
+                'timeout' => 5,
+            ]);
+
+            $data  = $response->toArray(false);
+            $pages = $data['query']['pages'] ?? [];
+
+            foreach ($pages as $page) {
+                $thumbUrl = $page['imageinfo'][0]['thumburl'] ?? null;
+                if ($thumbUrl) return $thumbUrl;
+            }
+        } catch (\Throwable) {}
+
+        return null;
+    }
+
+    // ── Pexels (destinations) ────────────────────────────────────────────────
+
+    private function searchPexelsDestinationImage(string $query): ?string
+    {
+        try {
+            $response = $this->httpClient->request('GET', 'https://api.pexels.com/v1/search', [
+                'headers' => [
+                    'Authorization' => $this->pexelsApiKey,
+                ],
+                'query' => [
+                    'query'       => $query,
+                    'per_page'    => 1,
+                    'orientation' => 'landscape',
+                ],
+                'timeout' => 5,
+            ]);
+
+            $data = $response->toArray(false);
+
+            if (!empty($data['photos'][0]['src']['large'])) {
+                return $data['photos'][0]['src']['large'];
+            }
+        } catch (\Throwable) {}
+
+        return null;
     }
 }

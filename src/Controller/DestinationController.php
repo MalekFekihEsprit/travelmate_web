@@ -26,6 +26,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Service\UnsplashImageService;
+use App\Service\WikimediaImageService;
 
 
 
@@ -109,6 +110,8 @@ final class DestinationController extends AbstractController
         DestinationRepository $destinationRepository,
         NoteDestinationRepository $noteDestinationRepository,
         FavoriteDestinationRepository $favoriteDestinationRepository,
+        WikimediaImageService $wikimediaImageService,
+        EntityManagerInterface $entityManager,
     ): Response {
         $destinations = $destinationRepository->findBy([], ['id_destination' => 'DESC']);
 
@@ -117,6 +120,7 @@ final class DestinationController extends AbstractController
         $climates      = [];
         $seasons       = [];
         $favoriteDestinationIds = [];
+        $needsFlush    = false;
 
         $user = $this->getUser();
         if ($user instanceof User) {
@@ -140,6 +144,23 @@ final class DestinationController extends AbstractController
             if ($destination->getSaison_destination()) {
                 $seasons[] = $destination->getSaison_destination();
             }
+
+            // Auto-fetch image from Wikimedia/Pexels for destinations without one
+            if ($destination->getImageName() === null || $destination->getImageName() === '') {
+                $imageUrl = $wikimediaImageService->findDestinationPhotoUrl(
+                    (string) $destination->getNom_destination(),
+                    (string) ($destination->getPays_destination() ?? ''),
+                );
+                if ($imageUrl !== null && $imageUrl !== '' && mb_strlen($imageUrl) <= 2048) {
+                    $destination->setImageName($imageUrl);
+                    $destination->setUpdatedAt(new \DateTimeImmutable());
+                    $needsFlush = true;
+                }
+            }
+        }
+
+        if ($needsFlush) {
+            $entityManager->flush();
         }
 
         return $this->render('destination/index.html.twig', [
