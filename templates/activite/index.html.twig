@@ -768,7 +768,7 @@
                         {# Résumé IA — affiché uniquement si l'IA a retourné un résumé #}
                         {% if aiInfo and aiInfo.ai_summary is defined and aiInfo.ai_summary %}
                             <div class="act-card__ai-summary">
-                                <span class="act-card__ai-summary-icon">🤖</span>
+                                <span class="act-card__ai-summary-icon"></span>
                                 <span>{{ aiInfo.ai_summary }}</span>
                             </div>
                         {% endif %}
