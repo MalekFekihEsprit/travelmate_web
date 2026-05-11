@@ -45,6 +45,7 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
 # Copy the rest of the application
 COPY . .
+RUN touch .env && chmod 644 .env
 
 # Optimise autoloader now that all files are present
 RUN composer dump-autoload --no-dev --classmap-authoritative
