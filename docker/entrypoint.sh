@@ -6,11 +6,10 @@ echo "==> Clearing Symfony cache..."
 php bin/console cache:clear --env=prod --no-warmup || true
 
 echo "==> Running Doctrine schema update..."
-php bin/console doctrine:schema:update --force --complete --no-interaction --env=prod 2>&1
+php bin/console doctrine:schema:update --force --no-interaction --env=prod 2>&1
 SCHEMA_EXIT=$?
 if [ $SCHEMA_EXIT -ne 0 ]; then
-    echo "WARNING: schema:update exited $SCHEMA_EXIT, trying schema:create..."
-    php bin/console doctrine:schema:create --no-interaction --env=prod 2>&1 || true
+    echo "WARNING: schema:update exited with code $SCHEMA_EXIT — continuing anyway (partial schema may already exist)"
 fi
 
 echo "==> Warming up Symfony cache..."
