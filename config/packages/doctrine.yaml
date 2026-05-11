@@ -2,10 +2,6 @@ doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
 
-        # ✅ FIX TIMEZONE : Use UTC offset to avoid MySQL named timezone issues
-        options:
-            1002: "SET time_zone = '+00:00'"
-
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
     orm:

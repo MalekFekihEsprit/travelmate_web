@@ -13,8 +13,17 @@ class FaceRecognitionClient
     ) {
     }
 
+    public function isAvailable(): bool
+    {
+        return !empty($this->faceApiBaseUrl);
+    }
+
     public function extractEmbeddingFromUploadedFile(UploadedFile $file): array
     {
+        if (!$this->isAvailable()) {
+            throw new \RuntimeException('Le service de reconnaissance faciale n\'est pas configuré sur cet environnement.');
+        }
+
         $boundary = '';
         $body = $this->buildMultipartBody([$file], $boundary, 'file'); // ← field name = "file"
     
@@ -39,6 +48,10 @@ class FaceRecognitionClient
 
     public function enrollFromUploadedFiles(array $files): array
     {
+        if (!$this->isAvailable()) {
+            throw new \RuntimeException('Le service de reconnaissance faciale n\'est pas configuré sur cet environnement.');
+        }
+
         $validFiles = array_filter($files, fn($f) => $f instanceof UploadedFile);
         if (count($validFiles) < 2) {
             throw new \RuntimeException('Au moins 2 fichiers valides sont requis');
@@ -67,6 +80,10 @@ class FaceRecognitionClient
 
     public function compareEmbeddings(array $embedding1, array $embedding2, float $threshold = 0.68): array
     {
+        if (!$this->isAvailable()) {
+            return ['similarity' => 0.0, 'is_match' => false, 'threshold' => $threshold];
+        }
+
         $response = $this->httpClient->request('POST', rtrim($this->faceApiBaseUrl, '/').'/compare', [
             'json' => [
                 'embedding1' => $embedding1,

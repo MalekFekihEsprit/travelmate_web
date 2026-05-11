@@ -1,6 +1,6 @@
 parameters:
     profile_photos_directory: '%kernel.project_dir%/public/uploads/profiles'
-    face_api_base_url: '%env(FACE_API_BASE_URL)%'
+    face_api_base_url: '%env(default::FACE_API_BASE_URL)%'
     face_match_threshold: '%env(float:FACE_MATCH_THRESHOLD)%'
     ipapi_base_url: '%env(IPAPI_BASE_URL)%'
     activites_images_directory: '%kernel.project_dir%/public/uploads/activites'
