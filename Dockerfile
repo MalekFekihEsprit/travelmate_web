@@ -51,7 +51,8 @@ RUN touch .env && chmod 644 .env
 RUN composer dump-autoload --no-dev --classmap-authoritative
 
 # Download JS vendor assets (assets/vendor/ is gitignored, must be built here)
-RUN APP_ENV=prod php bin/console importmap:install
+# DATABASE_URL is not available at build time; pass a dummy value so Symfony can boot
+RUN DATABASE_URL="postgresql://localhost/dummy" APP_ENV=prod php bin/console importmap:install
 
 RUN mkdir -p var && chmod -R 775 var
 # Fix file permissions for Apache
