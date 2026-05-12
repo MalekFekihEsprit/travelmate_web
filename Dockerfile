@@ -54,6 +54,9 @@ RUN composer dump-autoload --no-dev --classmap-authoritative
 # Use SQLite in-memory so Symfony can boot without a real DB server at build time
 RUN DATABASE_URL="sqlite:///:memory:" APP_ENV=prod php bin/console importmap:install
 
+# Compile and version all assets into public/assets/ (required by Asset Mapper in prod)
+RUN DATABASE_URL="sqlite:///:memory:" APP_ENV=prod php bin/console asset-map:compile
+
 RUN mkdir -p var && chmod -R 775 var
 # Fix file permissions for Apache
 RUN chown -R www-data:www-data /var/www/html \
