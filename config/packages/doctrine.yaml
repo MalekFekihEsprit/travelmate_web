@@ -2,19 +2,17 @@ doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
 
-        # Map Supabase-internal PostgreSQL types that Doctrine doesn't know about
-        # Without this, doctrine:schema:update crashes with "Unknown database type X"
-        types:
-            code_challenge_method:
-                class: Doctrine\DBAL\Types\StringType
-            key_status:
-                class: Doctrine\DBAL\Types\StringType
-            factor_type:
-                class: Doctrine\DBAL\Types\StringType
-            aal_level:
-                class: Doctrine\DBAL\Types\StringType
-            one_time_token_type:
-                class: Doctrine\DBAL\Types\StringType
+        # Tell DBAL how to handle Supabase-internal PostgreSQL enum types.
+        # "types" registers new Doctrine types; "mapping_types" maps existing DB types to Doctrine types.
+        # Without mapping_types, doctrine:schema:update crashes with "Unknown database type X".
+        mapping_types:
+            code_challenge_method: string
+            key_status: string
+            factor_type: string
+            aal_level: string
+            one_time_token_type: string
+            user_status: string
+            request_status: string
 
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
